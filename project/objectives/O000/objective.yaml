@@ -1,0 +1,35 @@
+id: O000
+title: Framework canary — the loop carries a known-answer hypothesis from plan to verdict
+kind: build
+priority: 1
+risk: low
+depends_on: []
+unlocks: [O001]
+hypothesis:
+  statement: >-
+    moduleforge.canary.harmonic(n) returns the n-th harmonic number with relative error at most 1e-9
+    against the asymptotic expansion ln n + γ + 1/(2n) − 1/(12n²) + 1/(120n⁴) for n in {1e3, 1e4, 1e5, 1e6}.
+  null_hypothesis: The mfos pipeline cannot produce admissible evidence for a trivial, known-answer claim.
+  why_it_matters: >-
+    Validates planner → builder → guard hooks → definition of done → merge → experiment → evaluator →
+    claim on a problem with a known answer, before any real objective depends on the machinery.
+  decision_if_pass: Approve O001.
+  decision_if_fail: Fix mfos configuration (auth, permissions, hooks) before anything else.
+scope_in: [pure-Python implementation, float64]
+scope_out: [performance]
+evidence_plan: [E000]
+acceptance:
+  required_experiments: [E000]
+  pass_all:
+    - {id: A1, metric: E000.max_rel_err, comparator: "<=", threshold: 1.0e-9, uncertainty: {use: point},
+       description: agreement with the asymptotic expansion}
+  fail_any:
+    - {id: K1, metric: E000.max_rel_err, comparator: ">", threshold: 1.0e-6, uncertainty: {use: point},
+       description: implementation clearly wrong}
+  max_evaluations: 2
+failure_modes:
+  - {id: F1, description: headless Claude Code cannot authenticate or is denied tools,
+     detection: agent_error in run records, response: fix auth/permissions (founder)}
+budget: {usd: 8, cpu_hours: 0.5, wall_days: 2}
+require_plan_approval: false
+notes: The E000 spec and runner are pre-written; the planner only needs an implement task and an experiment task.

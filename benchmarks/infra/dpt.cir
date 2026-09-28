@@ -1,0 +1,26 @@
+* Double-pulse test, 800 V SiC half-bridge, 8 nH commutation loop (parasitics from L1/L2)
+.model sicfet VDMOS(nchan Vto=3.5 Kp=18 Rd=8m Rs=4m Rg=2 Cgdmax=2n Cgdmin=15p Cgs=4n Cjo=300p Is=1e-12 Rb=5m ksubthres=0.1 lambda=0.01)
+Vdc  dc  0 800
+Cdc  dc  n1 20u
+Rdcx n1  0 1m
+Lp1  dc  dp 4n
+Rp1  dp  d_hs 0.5m
+Ll1  n_ls_s nl 4n
+Rl1  nl 0 0.5m
+M_hs d_hs g_hs sw sw sicfet
+M_ls sw   g_ls n_ls_s n_ls_s sicfet
+Lload dc nlo 100u
+Rlo nlo sw 10m
+Vg_hs g_hs sw -4
+Vg_ls g_ls_drv n_ls_s PULSE(-4 15 1u 10n 10n 4u 6u 2)
+Rg_ls g_ls_drv g_ls 2.5
+.tran 0.2n 14u 0 0.5n
+.options reltol=1e-3 method=gear rshunt=1e8 gmin=1e-10 itl4=50
+.control
+set noaskquit
+run
+meas tran ipk MAX i(Vdc) from=4.9u to=5.3u
+meas tran vpk MAX v(sw) from=4.9u to=5.4u
+quit
+.endc
+.end

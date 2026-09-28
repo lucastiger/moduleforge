@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "autoMemoryEnabled": false,
+  "permissions": {
+    "allow": [
+      "Read", "Grep", "Glob", "Edit", "Write", "TodoWrite", "Skill", "WebSearch", "WebFetch",
+      "Workflow(deep-research)",
+      "Bash(uv run *)", "Bash(uv sync)", "Bash(uv sync *)", "Bash(uv lock)",
+      "Bash(python *)", "Bash(python3 *)", "Bash(pytest *)", "Bash(ruff *)",
+      "Bash(git status)", "Bash(git status *)", "Bash(git diff)", "Bash(git diff *)",
+      "Bash(git log *)", "Bash(git show *)", "Bash(git add *)", "Bash(git commit *)",
+      "Bash(git rev-parse *)", "Bash(git branch --show-current)",
+      "Bash(ls *)", "Bash(cat *)", "Bash(head *)", "Bash(tail *)", "Bash(wc *)",
+      "Bash(rg *)", "Bash(find *)", "Bash(mkdir *)", "Bash(diff *)", "Bash(jq *)"
+    ],
+    "ask": [
+      "Bash(uv add *)", "Bash(uv remove *)"
+    ],
+    "deny": [
+      "Bash(git push)", "Bash(git push *)", "Bash(gh *)", "Bash(sudo *)",
+      "Bash(git merge *)", "Bash(git rebase *)", "Bash(git reset --hard *)",
+      "Bash(git checkout main)", "Bash(git switch main)",
+      "Bash(pip install *)", "Bash(pip3 install *)",
+      "Read(./data/holdout/**)", "Read(./.env)", "Read(./.env.*)",
+      "Read(~/.ssh/**)", "Read(~/.config/mfos/**)", "Read(~/.config/gh/**)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|compact",
+        "hooks": [
+          { "type": "command", "command": "python3",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/session_start.py"], "timeout": 20 }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit|MultiEdit|Bash",
+        "hooks": [
+          { "type": "command", "command": "python3",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard.py"], "timeout": 15 }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          { "type": "command", "if": "Read(data/holdout/**)", "command": "python3",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard.py"], "timeout": 15 }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python3",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/stop_gate.py"], "timeout": 1800,
+            "statusMessage": "mfos: verifying definition of done" }
+        ]
+      }
+    ]
+  }
+}

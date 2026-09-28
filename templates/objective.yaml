@@ -1,0 +1,43 @@
+# Objective template. Fill every field, validate with `uv run mfos objective show OXXX`,
+# then freeze with `uv run mfos objective approve OXXX` (founder only).
+id: OXXX
+title: "<one line: what we will know when this is done>"
+kind: hypothesis            # hypothesis | build | investigation | decision
+priority: 2                 # 1 = most urgent
+risk: high                  # drives review depth: low | medium | high | critical
+depends_on: []              # objectives that must PASS first
+unlocks: []                 # objectives this enables (informational)
+hypothesis:
+  statement: "<falsifiable claim, with conditions and scope>"
+  null_hypothesis: "<what we will conclude if it fails>"
+  why_it_matters: "<the decision this informs>"
+  decision_if_pass: "<what we do next>"
+  decision_if_fail: "<what we do instead>"
+scope_in: ["<conditions under which the claim is asserted>"]
+scope_out: ["<explicitly not covered>"]
+evidence_plan: [E0XX]       # experiment ids; the scientist designs them, you register them
+acceptance:
+  required_experiments: [E0XX]
+  pass_all:                 # every criterion must hold at the conservative CI bound
+    - id: A1
+      metric: E0XX.metric_name
+      comparator: ">="      # >= > <= <
+      threshold: 0.0
+      uncertainty: {use: ci}   # ci (conservative bound) | point
+      description: "<why this threshold is decision-relevant>"
+  fail_any:                 # any criterion definitely met -> FAIL (kill criteria)
+    - id: K1
+      metric: E0XX.metric_name
+      comparator: "<"
+      threshold: 0.0
+      uncertainty: {use: ci}
+      description: "<result that kills the hypothesis>"
+  max_evaluations: 3        # each evaluation spends statistical credibility
+failure_modes:
+  - id: F1
+    description: "<how the evidence could mislead us>"
+    detection: "<sanity check or diagnostic that reveals it>"
+    response: "<what the system should do>"
+budget: {usd: 60, cpu_hours: 20, wall_days: 14}
+require_plan_approval: true
+notes: ""

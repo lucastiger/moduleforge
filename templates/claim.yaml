@@ -1,0 +1,9 @@
+# Claims are created by mfos when an objective passes evaluation and review.
+id: C000
+statement: "<exactly what is supported>"
+scope: "<conditions of validity>"
+status: supported           # proposed | supported | refuted | retracted
+objective: OXXX
+evaluation: EV-OXXX-01
+reviews: []
+caveats: []

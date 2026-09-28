@@ -1,0 +1,13 @@
+# Changes to anything that defines the rules of the game require the founder's review.
+# bootstrap.sh substitutes your GitHub username for the placeholder owner on each line below.
+/CLAUDE.md                              @lucastiger
+/.claude/                               @lucastiger
+/.mfos/                                 @lucastiger
+/.github/                               @lucastiger
+/tools/mfos/                            @lucastiger
+/tests/acceptance/                      @lucastiger
+/experiments/specs/                     @lucastiger
+/project/charter.md                     @lucastiger
+/project/decisions/                     @lucastiger
+/project/objectives/*/objective.yaml    @lucastiger
+/templates/                             @lucastiger

@@ -1,0 +1,23 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.tmp
+.env
+.env.*
+# mfos runtime (never committed; recoverable state lives in project/)
+.mfos/runs/
+.mfos/packets/
+.mfos/artifacts/
+.mfos/exp_runs/
+.mfos/adhoc/
+.mfos/*.lock
+.mfos/heartbeat
+.mfos/STOP
+.mfos/budget_notice
+.mfos/backoff_until
+.mfos/last_error
+.mfos/push_diverged
+project/STOP
+experiments/results/*/*/runner.log

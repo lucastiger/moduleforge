@@ -1,0 +1,20 @@
+# systemd user unit for the orchestrator on the forge box.
+# Install:  mkdir -p ~/.config/systemd/user && cp scripts/mfos.service ~/.config/systemd/user/
+#           systemctl --user daemon-reload && systemctl --user enable --now mfos
+#           sudo loginctl enable-linger "$USER"      # keep running after you log out
+[Unit]
+Description=ModuleForge orchestrator (mfos loop)
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/mf/main
+EnvironmentFile=-%h/.config/mfos/env
+ExecStart=%h/.local/bin/uv run mfos loop --poll 30
+Restart=on-failure
+RestartSec=30
+KillSignal=SIGINT
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,126 @@
+# ModuleForge operating policy — founder-owned (protected path).
+# Read by the orchestrator (mfos) and by .claude/hooks (stdlib tomllib). Edit, commit, and
+# restart the loop to apply. `uv run mfos doctor` validates the repository against it.
+
+version = 1
+claude_bin = "claude"            # pin the version (Homebrew cask on macOS); see docs/INFRASTRUCTURE.md §12
+
+# Paths no agent may modify without an explicit founder approval (inbox: protected_change).
+protected_paths = [
+  "CLAUDE.md",
+  "project/charter.md",
+  "project/objectives/*/objective.yaml",
+  "project/decisions/**",
+  ".claude/**",
+  ".mfos/**",
+  ".github/**",
+  "tools/mfos/**",
+  "tests/acceptance/**",
+  "experiments/specs/**",
+  "data/holdout/**",
+  "templates/**",
+]
+
+[role_write_scopes]              # allow-lists; everything else is denied by the guard hook and by verify
+builder   = ["src/**", "tests/unit/**", "tests/regression/**", "benchmarks/**", "docs/**", "pyproject.toml", "uv.lock"]
+scientist = ["research/**", "experiments/drafts/**", "experiments/runners/**", "tests/acceptance_drafts/**", "project/memory/**"]
+scout     = ["project/memory/literature/**", "research/notes/**"]
+scribe    = ["project/memory/**", "docs/reports/**"]
+planner   = []
+critic    = []
+
+[read_deny]                      # sealed data; only the experiment runner (no LLM) reads it
+builder = ["data/holdout/**"]
+scientist = ["data/holdout/**"]
+
+[blinding]                       # physically removed from a critic's review checkout
+remove_paths = [
+  "project/tasks", "project/events.jsonl", "project/inbox", "project/STATUS.md",
+  "project/reviews", "project/objectives/*/state.yaml", "project/objectives/*/diagnoses",
+  "research/diagnoses", ".mfos/runs", ".mfos/packets",
+]
+
+[autonomy]
+level = 3                        # 3 for the O000 canary; set 1 for Phase 1 of the migration, raise as trust grows (§22)
+
+[concurrency]
+agents = 2                       # simultaneous Claude sessions (~1 GiB RAM each, compute is remote)
+experiments = 1                  # simultaneous experiment processes (each may use several cores)
+
+[compute]
+# Experiments whose registered cpu_hours_est exceeds this run on burst compute (scripts/burst.sh),
+# not on this machine. 6 CPU-hours is ~1.5-2 h on a MacBook Air's 4 performance cores.
+local_cpu_hours_max = 6.0
+
+[budgets]                        # USD, from Claude Code's client-side cost estimates
+daily_usd = 40.0
+weekly_usd = 200.0
+max_task_usd = 8.0
+plan_usd = 4.0
+review_usd = 3.0
+diagnosis_usd = 5.0
+
+[models]                         # Claude Code aliases; resolved by the installed CLI
+planner = "opus"
+builder = "sonnet"
+scientist = "opus"
+critic = "opus"
+scout = "sonnet"
+scribe = "haiku"
+
+[escalation]
+after_attempts = 2               # attempt >= 2 runs on the escalation model
+[escalation.models]
+builder = "opus"                 # 'fable' is never automatic: it requires a founder model_escalation approval
+
+[permission_modes]               # headless runs always add --permission-prompts none
+builder = "auto"                 # fallback if auto mode is unavailable on your plan: "acceptEdits"
+scientist = "auto"
+scout = "dontAsk"
+planner = "dontAsk"
+critic = "dontAsk"
+scribe = "dontAsk"
+
+[review_ladder]                  # critic lenses per risk level (task risk for PRs, objective risk for PASS verdicts)
+low = []
+medium = ["critic:general"]
+high = ["critic:physics", "critic:numerics"]
+critical = ["critic:physics", "critic:numerics", "critic:statistics"]
+
+[auto_merge]
+enabled = true
+max_risk = "medium"              # high/critical changes wait for the founder
+max_files = 25
+
+[gates]
+fast = [
+  "uv run ruff check src tests experiments/runners",
+  "uv run pytest -q -x -m 'not slow' tests/unit",
+]
+full = [
+  "uv run ruff check .",
+  "uv run pytest -q tests",
+  "uv run python scripts/check_licenses.py",
+  "uv run mfos doctor --ci",
+]
+
+[planning]
+max_new_tasks = 8
+max_open_tasks = 10
+
+[git]
+main_branch = "main"
+merge_mode = "local"             # Phase 1–3: local squash merges. Switch to "github" in Phase 4.
+remote = "origin"
+worktree_root = "~/mf/wt"
+gh_config_dir = "~/.config/mfos/gh"   # the bot account's gh login; never exported to agents
+push_state = true
+founder_name = "lucastiger"          # bootstrap.sh sets these to your GitHub identity
+founder_email = "lucastiger@users.noreply.github.com"
+identity_name = "mfos-bot"
+identity_email = "mfos-bot@users.noreply.github.com"
+
+[limits]
+run_wall_minutes = 90
+backoff_minutes = 30             # pause dispatch after a rate/usage-limit error (does not count as an attempt)
+sleep_gap_seconds = 300          # a longer gap between ticks means the machine slept: extend run deadlines

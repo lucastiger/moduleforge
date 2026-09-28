@@ -1,0 +1,14 @@
+# Experiment spec (schema mfos.models.ExperimentSpec). Drafts live in experiments/drafts/;
+# `uv run mfos exp register EID` freezes and hashes them into experiments/specs/.
+id: E0XX
+title: "<what is measured, against what reference>"
+objective: OXXX
+runner: uv run python experiments/runners/e0xx_name.py
+config: {}                  # everything that changes the result belongs here
+sealed_seed: true           # orchestrator injects an unseen seed per run
+metrics:
+  - {name: metric_name, description: "<definition>", unit: ""}
+sanity_checks:              # must be able to fail; separate 'broken experiment' from 'false hypothesis'
+  - {name: reference_valid, description: "<how the reference is shown trustworthy on this run>"}
+timeout_min: 120
+cpu_hours_est: 1.0

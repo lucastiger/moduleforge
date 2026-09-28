@@ -1,0 +1,18 @@
+# Tasks are normally created by the planner (validated by mfos). Hand-written tasks use this shape.
+id: T0000
+objective: O000
+title: "<imperative, one deliverable>"
+type: implement             # implement | investigate | design_experiment | research | docs | experiment
+agent: builder              # builder | scientist | scout | none (experiment tasks)
+status: todo
+depends_on: []
+description: |
+  <what to build or find out, constraints, and how it will be checked>
+context_files: []
+deliverables: []
+touches: []                 # globs this task edits (prevents concurrent conflicts)
+definition_of_done:
+  - {cmd: "uv run pytest -q tests/unit/test_x.py"}
+risk: low
+budget_usd: 3.0
+max_turns: 80

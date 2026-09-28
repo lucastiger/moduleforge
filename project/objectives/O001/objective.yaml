@@ -1,0 +1,85 @@
+id: O001
+title: L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search
+kind: hypothesis
+priority: 1
+risk: high
+depends_on: [O000]
+unlocks: [O002, O003]
+hypothesis:
+  statement: >-
+    A fast quasi-static PEEC model (L1: rectangular trace cells with skin-depth-corrected resistance,
+    bond wires as round filaments with Grover partial inductances, and the stack's conductive planes
+    represented by image planes) ranks DRC-valid wire-bonded half-bridge DBC/AMB layouts by commutation-loop inductance at
+    20 MHz consistently with a converged reference solver (L2), at a median cost of at most 50 ms per
+    evaluation on one CPU core.
+  null_hypothesis: >-
+    L1 rankings are too unreliable (rho < 0.80) or too biased (MAPE > 20%) to guide search; search
+    needs L2 in the loop or a different fast model.
+  why_it_matters: >-
+    Every downstream objective (optimization headroom, derivative re-layout prototype) assumes a cheap,
+    faithful inner-loop objective. If L1 fails, compute per design rises by two to three orders of
+    magnitude and the product architecture and unit economics change.
+  decision_if_pass: Use L1 as the search objective with periodic L2 audits; start O002 and O003.
+  decision_if_fail: >-
+    Diagnose the missing physics; if not fixable within budget, re-plan around multi-fidelity search
+    with L2 screening and re-estimate unit economics (founder decision).
+scope_in:
+  - two-level half-bridge on a single DBC or AMB substrate, 2–6 parallel dies per switch position
+  - wire-bonded top-side interconnect, fixed baseplate and housing, loop inductance at 20 MHz
+scope_out:
+  - three-level topologies, double-sided cooling, clip or planar interconnect
+  - full-wave effects above ~200 MHz; gate-loop inductance (separate objective)
+evidence_plan: [E001, E002, E003]
+acceptance:
+  required_experiments: [E001, E002, E003]
+  pass_all:
+    - {id: A1, metric: E001.max_rel_err_vs_analytic, comparator: "<=", threshold: 0.02, uncertainty: {use: point},
+       description: L2 matches closed-form partial inductances on canonical geometries within 2%}
+    - {id: A2, metric: E002.spearman_rho_Lloop, comparator: ">=", threshold: 0.85, uncertainty: {use: ci},
+       description: lower 95% bound of rank correlation — search needs reliable ordering}
+    - {id: A3, metric: E002.spearman_rho_Lloop, comparator: ">=", threshold: 0.90, uncertainty: {use: point},
+       description: point estimate of rank correlation}
+    - {id: A4, metric: E002.mape_Lloop, comparator: "<=", threshold: 0.12, uncertainty: {use: ci},
+       description: upper 95% bound of mean absolute percentage error — reported numbers must be usable}
+    - {id: A5, metric: E002.top_decile_recall, comparator: ">=", threshold: 0.70, uncertainty: {use: point},
+       description: share of L1's top 10% that lies in L2's top 20% — selection fidelity}
+    - {id: A6, metric: E003.l1_eval_ms_p50, comparator: "<=", threshold: 50.0, uncertainty: {use: point},
+       description: median wall time per L1 evaluation on one core}
+  fail_any:
+    - {id: K1, metric: E002.spearman_rho_Lloop, comparator: "<", threshold: 0.80, uncertainty: {use: ci},
+       description: ranking definitely worse than 0.80}
+    - {id: K2, metric: E002.mape_Lloop, comparator: ">", threshold: 0.20, uncertainty: {use: ci},
+       description: bias definitely above 20%}
+    - {id: K3, metric: E002.top_decile_recall, comparator: "<", threshold: 0.50, uncertainty: {use: point},
+       description: selection fidelity too low for search}
+  max_evaluations: 3
+failure_modes:
+  - id: F1
+    description: "Reference (L2) not converged or wrong"
+    detection: "E001 criterion A1; E002 sanity check l2_converged"
+    response: "Repair the reference as an experimental failure; the hypothesis is untouched"
+  - id: F2
+    description: "Layout sample unrepresentative: near-identical layouts inflate rho; unrealistic layouts mislead"
+    detection: "E002 sanity checks sample_diverse (CV of L2 >= 0.3) and all_drc_valid"
+    response: "Redesign the generator under a new experiment id"
+  - id: F3
+    description: "Missing physics: baseplate eddy currents, proximity effect, bond-wire mutual coupling"
+    detection: "L1 residuals correlate with loop area, baseplate distance, or die count"
+    response: "Model change, then re-evaluation on fresh sealed seeds"
+  - id: F4
+    description: "Ranking depends strongly on frequency"
+    detection: "E002 secondary metrics: rho at 5 MHz and at 80 MHz"
+    response: "Founder decides the operating-frequency definition"
+  - id: F5
+    description: "Overfitting to the evaluation sample"
+    detection: "Sealed seeds; evaluation count"
+    response: "Never re-evaluate on data that has been seen"
+  - id: F6
+    description: "Reference tool license unsuitable"
+    detection: "Scout license audit"
+    response: "Decision record; alternative reference"
+budget: {usd: 120, cpu_hours: 60, wall_days: 21}
+require_plan_approval: true
+notes: >-
+  Benchmarks to reconstruct as canonical cases: PowerSynth TPEL 2019 2D half-bridge; published Q3D vs
+  double-pulse loop-inductance comparisons (~4% agreement reported in the literature) as plausibility anchors.

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd agent for the mfos loop on macOS (the Mac equivalent of scripts/mfos.service).
+  Install (docs/INFRASTRUCTURE.md §12):
+    sed "s|__HOME__|$HOME|g" scripts/com.moduleforge.mfos.plist > ~/Library/LaunchAgents/com.moduleforge.mfos.plist
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.moduleforge.mfos.plist
+  Restart: launchctl kickstart -k gui/$(id -u)/com.moduleforge.mfos
+  Stop:    launchctl bootout gui/$(id -u)/com.moduleforge.mfos
+  Logs:    tail -f ~/Library/Logs/mfos.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.moduleforge.mfos</string>
+  <key>ProgramArguments</key>
+  <array>
+    <!-- caffeinate -is: no idle sleep, no system sleep on AC power, while the loop runs.
+         Closing the lid still sleeps the Mac; mfos detects the gap and extends run deadlines. -->
+    <string>/usr/bin/caffeinate</string><string>-is</string>
+    <string>__HOME__/.local/bin/uv</string><string>run</string><string>mfos</string>
+    <string>loop</string><string>--poll</string><string>30</string>
+  </array>
+  <key>WorkingDirectory</key><string>__HOME__/mf/main</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <!-- launchd's default PATH has /usr/bin/python3 = 3.9. The venv comes first so hooks get Python 3.12. -->
+    <key>PATH</key><string>__HOME__/mf/main/.venv/bin:__HOME__/.local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <!-- restart after a crash, but not after a clean stop (mfos stop, or refusal to start on stray changes) -->
+  <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
+  <!-- Standard, not Background: Background QoS confines work to the efficiency cores on Apple Silicon -->
+  <key>ProcessType</key><string>Standard</string>
+  <key>StandardOutPath</key><string>__HOME__/Library/Logs/mfos.log</string>
+  <key>StandardErrorPath</key><string>__HOME__/Library/Logs/mfos.log</string>
+</dict>
+</plist>

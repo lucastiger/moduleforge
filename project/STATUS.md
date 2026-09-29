@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-09-29T01:47:57+00:00 from repository state — do not edit_
+_generated 2026-09-29T01:48:04+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -7,19 +7,15 @@ _generated 2026-09-29T01:47:57+00:00 from repository state — do not edit_
 ## Objectives
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
-| O000 | active | - | 0/2 | $0.40/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
+| O000 | active | - | 0/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
 | O001 | draft | - | 0/3 | $0.00/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 4, done: 1, failed: 2, running: 1, todo: 1
+cancelled: 4, done: 2, failed: 2, running: 1
 
-- T0008 `running` builder/implement: Implement moduleforge.canary.harmonic(n) with unit tests (attempt 1)
+- T0009 `running` none/experiment: Run E000: harmonic(n) vs asymptotic expansion (attempt 1)
 
 ## Recent events
-- 2026-09-29T01:28:10+00:00 run_finished {"run": "T0006-planner-20260928T182357-18d1", "status": "completed", "cost": 0.8534685999999999, "subtype": "success"}
-- 2026-09-29T01:28:10+00:00 task_failed_attempt {"task": "T0006", "signal": "agent_error", "action": "repair"}
-- 2026-09-29T01:29:31+00:00 inbox_resolved {"id": "I0001", "status": "approved", "note": "usd=9.9247"}
-- 2026-09-29T01:29:35+00:00 run_started {"run": "T0006-planner-20260928T182935-3621", "task": "T0006", "role": "planner", "session": "a15defaa-fcb1-4c34-8f29-1c6dd6aa5845"}
 - 2026-09-29T01:29:35+00:00 run_started {"run": "T0004-critic-20260928T182935-6a73", "task": "T0004", "role": "critic", "session": "2bc611c3-cc68-4d02-8440-203f847332bd"}
 - 2026-09-29T01:43:02+00:00 run_finished {"run": "T0006-planner-20260928T182935-3621", "status": "completed", "cost": 0.7484523999999999, "subtype": "success", "report": "missing"}
 - 2026-09-29T01:43:02+00:00 run_finished {"run": "T0004-critic-20260928T182935-6a73", "status": "completed", "cost": 1.3914508000000003, "subtype": "success", "report": "missing"}
@@ -31,3 +27,7 @@ cancelled: 4, done: 1, failed: 2, running: 1, todo: 1
 - 2026-09-29T01:47:17+00:00 run_finished {"run": "T0007-planner-20260928T184553-6bb9", "status": "completed", "cost": 0.39817579999999997, "subtype": "success", "report": "structured_output"}
 - 2026-09-29T01:47:17+00:00 plan_applied {"objective": "O000", "created": ["T0008", "T0009"], "dropped": 0}
 - 2026-09-29T01:47:17+00:00 run_started {"run": "T0008-builder-20260928T184717-7905", "task": "T0008", "role": "builder", "session": "f47558a4-0ba5-43e8-a203-7b3171225cde"}
+- 2026-09-29T01:48:01+00:00 run_finished {"run": "T0008-builder-20260928T184717-7905", "status": "completed", "cost": 0.10002159999999999, "subtype": "success", "report": "structured_output"}
+- 2026-09-29T01:48:02+00:00 verified {"task": "T0008"}
+- 2026-09-29T01:48:04+00:00 merged {"task": "T0008"}
+- 2026-09-29T01:48:04+00:00 experiment_task_started {"task": "T0009", "experiment": "E000"}

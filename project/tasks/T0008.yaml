@@ -3,7 +3,7 @@ objective: O000
 title: Implement moduleforge.canary.harmonic(n) with unit tests
 type: implement
 agent: builder
-status: merge
+status: done
 depends_on: []
 description: 'Create `src/moduleforge/canary.py` exposing `harmonic(n: int) -> float`, returning the n-th
   harmonic number H_n = sum_{k=1}^{n} 1/k in float64. Cite the definition in the docstring (e.g. Graham,

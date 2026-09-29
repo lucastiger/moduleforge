@@ -1,1 +1,14 @@
-status: draft
+status: active
+approved_by: founder
+approved_at: '2026-09-29T01:00:20+00:00'
+criteria_hash: sha256:ddc688ee819ab18ca7a56d3f202fc6ca8cddf931be6c35d75b1246567e1f234c
+evaluations: []
+last_verdict: null
+evaluated_runs: {}
+pending_evaluation: null
+replans: 0
+max_replans: 3
+needs_replan: true
+spent_usd: 0.0
+budget_override_usd: null
+log: []

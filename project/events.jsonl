@@ -33,3 +33,6 @@
 {"ts": "2026-09-29T01:26:45+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0001", "kind": "budget_increase", "subject": "[O000] budget exhausted ($9.22/$8.00)"}
 {"ts": "2026-09-29T01:28:10+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0006-planner-20260928T182357-18d1", "status": "completed", "cost": 0.8534685999999999, "subtype": "success"}
 {"ts": "2026-09-29T01:28:10+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0006", "signal": "agent_error", "action": "repair"}
+{"ts": "2026-09-29T01:29:31+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0001", "status": "approved", "note": "usd=9.9247"}
+{"ts": "2026-09-29T01:29:35+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0006-planner-20260928T182935-3621", "task": "T0006", "role": "planner", "session": "a15defaa-fcb1-4c34-8f29-1c6dd6aa5845"}
+{"ts": "2026-09-29T01:29:35+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0004-critic-20260928T182935-6a73", "task": "T0004", "role": "critic", "session": "2bc611c3-cc68-4d02-8440-203f847332bd"}

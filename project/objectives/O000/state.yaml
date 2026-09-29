@@ -1,4 +1,4 @@
-status: needs_founder
+status: active
 approved_by: founder
 approved_at: '2026-09-29T01:00:20+00:00'
 criteria_hash: sha256:ddc688ee819ab18ca7a56d3f202fc6ca8cddf931be6c35d75b1246567e1f234c
@@ -10,7 +10,7 @@ replans: 3
 max_replans: 3
 needs_replan: true
 spent_usd: 10.0753
-budget_override_usd: null
+budget_override_usd: 20.0
 log:
 - diagnosis:T0002 of T0001 (implementation)
 - diagnosis:T0005 of T0003 (implementation)

@@ -3,7 +3,7 @@ objective: O000
 title: Review T0002 (general)
 type: review
 agent: critic
-status: todo
+status: running
 depends_on: []
 description: 2299f3d169229ddec5680a3d812f6588006bb853
 context_files: []
@@ -15,12 +15,13 @@ risk: low
 model: null
 budget_usd: 3.0
 max_turns: 60
-attempts: 1
+attempts: 2
 max_attempts: 3
 branch: null
 pr: null
 runs:
 - T0004-critic-20260928T182046-2105
+- T0004-critic-20260928T182935-6a73
 created_by: orchestrator
 created_at: '2026-09-29T01:20:46+00:00'
 protected_approved: false

@@ -3,7 +3,7 @@ objective: O000
 title: Implement moduleforge.canary.harmonic(n) with unit tests
 type: implement
 agent: builder
-status: running
+status: merge
 depends_on: []
 description: 'Create `src/moduleforge/canary.py` exposing `harmonic(n: int) -> float`, returning the n-th
   harmonic number H_n = sum_{k=1}^{n} 1/k in float64. Cite the definition in the docstring (e.g. Graham,
@@ -75,4 +75,31 @@ trigger: null
 rationale: Acceptance A1/K1 measure E000.max_rel_err, which needs moduleforge.canary.harmonic to exist.
   The smoke DoD runs the real runner on a subset before merge, so a wrong implementation fails without
   spending one of the 2 evaluations.
-history: []
+history:
+- attempt: 1
+  outcome: agent_finished
+  summary: Added moduleforge.canary.harmonic(n), which sums 1/k with math.fsum and rejects bool and non-int
+    input (TypeError) and n < 1 (ValueError). Added 11 unit tests in tests/unit/test_canary.py. Every
+    DoD command exited 0, and the E000 smoke run reported max_rel_err of about 1.8e-16. Committed as [T0008].
+  report:
+    status: completed
+    summary: Added moduleforge.canary.harmonic(n), which sums 1/k with math.fsum and rejects bool and
+      non-int input (TypeError) and n < 1 (ValueError). Added 11 unit tests in tests/unit/test_canary.py.
+      Every DoD command exited 0, and the E000 smoke run reported max_rel_err of about 1.8e-16. Committed
+      as [T0008].
+    files_changed:
+    - src/moduleforge/canary.py
+    - tests/unit/test_canary.py
+    checks_run:
+    - cmd: uv run pytest -q tests/unit/test_canary.py
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge/canary.py tests/unit/test_canary.py
+      exit_code: 0
+    - cmd: rm -rf /tmp/e000-smoke && uv run python experiments/runners/e000_canary.py --smoke && uv run
+        python -c "<assert result.json complete, sanity passed, max_rel_err<=1e-9>"
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    concerns:
+    - uv printed a VIRTUAL_ENV mismatch warning on every run; it is harmless, and uv created a local .venv
+      in the worktree.

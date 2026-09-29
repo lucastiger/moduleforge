@@ -46,3 +46,5 @@
 {"ts": "2026-09-29T01:47:17+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0007-planner-20260928T184553-6bb9", "status": "completed", "cost": 0.39817579999999997, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-09-29T01:47:17+00:00", "event": "plan_applied", "actor": "orchestrator", "objective": "O000", "created": ["T0008", "T0009"], "dropped": 0}
 {"ts": "2026-09-29T01:47:17+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0008-builder-20260928T184717-7905", "task": "T0008", "role": "builder", "session": "f47558a4-0ba5-43e8-a203-7b3171225cde"}
+{"ts": "2026-09-29T01:48:01+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0008-builder-20260928T184717-7905", "status": "completed", "cost": 0.10002159999999999, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-09-29T01:48:02+00:00", "event": "verified", "actor": "orchestrator", "task": "T0008"}

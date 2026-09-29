@@ -3,7 +3,7 @@ objective: O000
 title: Plan O000 (initial)
 type: plan
 agent: planner
-status: running
+status: failed
 depends_on: []
 description: ''
 context_files: []
@@ -44,3 +44,9 @@ history:
   failure_output: "1 validation error for PlanOutput\nassessment\n  Field required [type=missing, input_value={},\
     \ input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing"
   at: '2026-09-29T01:08:54+00:00'
+- attempt: 3
+  outcome: agent_error
+  summary: planner returned invalid plan
+  failure_output: "1 validation error for PlanOutput\nassessment\n  Field required [type=missing, input_value={},\
+    \ input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing"
+  at: '2026-09-29T01:11:55+00:00'

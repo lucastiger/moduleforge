@@ -7,3 +7,8 @@
 {"ts": "2026-09-29T01:08:54+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0001-planner-20260928T180415-2dd4", "status": "completed", "cost": 1.0064602, "subtype": "success"}
 {"ts": "2026-09-29T01:08:54+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0001", "signal": "agent_error", "action": "repair"}
 {"ts": "2026-09-29T01:08:54+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0001-planner-20260928T180854-ac72", "task": "T0001", "role": "planner", "session": "db95b00d-ccca-427d-a1b0-b3f2a7682eab"}
+{"ts": "2026-09-29T01:11:55+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0001-planner-20260928T180854-ac72", "status": "completed", "cost": 0.6746736, "subtype": "success"}
+{"ts": "2026-09-29T01:11:55+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0001", "signal": "agent_error", "action": "diagnose"}
+{"ts": "2026-09-29T01:11:55+00:00", "event": "investigation_spawned", "actor": "orchestrator", "task": "T0002", "about": "T0001", "cls": "implementation"}
+{"ts": "2026-09-29T01:11:55+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0003-planner-20260928T181155-dfa1", "task": "T0003", "role": "planner", "session": "a57d5a84-0830-4106-9cb9-d581a2334830"}
+{"ts": "2026-09-29T01:11:55+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0002-scientist-20260928T181155-1c52", "task": "T0002", "role": "scientist", "session": "fc30e1aa-2bc9-4493-95ca-8c977b8c177d"}

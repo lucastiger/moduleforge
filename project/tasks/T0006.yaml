@@ -1,0 +1,32 @@
+id: T0006
+objective: O000
+title: Plan O000 (diagnosis:T0005 of T0003 (implementation))
+type: plan
+agent: planner
+status: running
+depends_on: []
+description: ''
+context_files: []
+deliverables: []
+touches: []
+definition_of_done: []
+experiment: null
+risk: low
+model: null
+budget_usd: 4.0
+max_turns: 40
+attempts: 1
+max_attempts: 3
+branch: null
+pr: null
+runs:
+- T0006-planner-20260928T182211-49a4
+created_by: orchestrator
+created_at: '2026-09-29T01:22:11+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: diagnosis:T0005 of T0003 (implementation)
+rationale: ''
+history: []

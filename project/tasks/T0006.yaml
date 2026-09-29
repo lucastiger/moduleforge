@@ -15,12 +15,13 @@ risk: low
 model: null
 budget_usd: 4.0
 max_turns: 40
-attempts: 1
+attempts: 2
 max_attempts: 3
 branch: null
 pr: null
 runs:
 - T0006-planner-20260928T182211-49a4
+- T0006-planner-20260928T182357-18d1
 created_by: orchestrator
 created_at: '2026-09-29T01:22:11+00:00'
 protected_approved: false
@@ -29,4 +30,10 @@ target: null
 lens: null
 trigger: diagnosis:T0005 of T0003 (implementation)
 rationale: ''
-history: []
+history:
+- attempt: 1
+  outcome: agent_error
+  summary: planner returned invalid plan
+  failure_output: "1 validation error for PlanOutput\nassessment\n  Field required [type=missing, input_value={},\
+    \ input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing"
+  at: '2026-09-29T01:23:57+00:00'

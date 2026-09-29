@@ -55,3 +55,6 @@
 {"ts": "2026-09-29T01:48:27+00:00", "event": "evaluation", "actor": "orchestrator", "objective": "O000", "id": "EV-O000-01", "verdict": "PASS"}
 {"ts": "2026-09-29T01:48:27+00:00", "event": "claim_recorded", "actor": "orchestrator", "id": "C001", "status": "supported"}
 {"ts": "2026-09-29T01:48:28+00:00", "event": "objective_passed", "actor": "orchestrator", "objective": "O000", "evaluation": "EV-O000-01"}
+{"ts": "2026-09-29T21:47:40+00:00", "event": "objective_approved", "actor": "founder", "objective": "O001", "criteria_hash": "sha256:d12d77462acca9647d13f7a7092953f9d7aa450fde02ede714f7cca52ac2ad61"}
+{"ts": "2026-09-29T22:09:06+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 93920}
+{"ts": "2026-09-29T22:09:06+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0010-planner-20260929T150906-b49d", "task": "T0010", "role": "planner", "session": "5d348714-882a-4dd1-aca5-d412f5a3e63c"}

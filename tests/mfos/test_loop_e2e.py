@@ -192,6 +192,27 @@ def test_heavy_experiment_goes_to_burst_compute_and_results_flow_back(sandbox):
     assert not [i for i in s.inbox("open") if "burst compute" in i.subject]
 
 
+def test_a_run_still_being_finalized_is_not_evidence_yet(sandbox):
+    """CI, 2026-09-29: the loop evaluated a result.json while `mfos exp run` was still finishing the run (exit-code
+    check, run.json, experiment_finished), passed O000, and committed state before those last writes landed."""
+    pol = sandbox / ".mfos" / "policy.toml"
+    pol.write_text(pol.read_text().replace("local_cpu_hours_max = 6.0", "local_cpu_hours_max = 0.001"))
+    setup_objective()  # the loop builds the canary, then parks E000 for burst compute instead of running it
+    _tick_until(lambda s: any("burst compute" in i.subject for i in s.inbox("open")))
+    assert cli(["exp", "run", "E000", "--force"]) == 0
+    run_json = next((sandbox / "experiments" / "results" / "E000").glob("*/run.json"))
+    record = run_json.read_text()
+    run_json.unlink()  # the runner has written result.json; the wrapper has not finalized the run yet
+    s = Store()
+    o = Orchestrator(s)
+    assert s.results("E000") == []
+    o._maybe_evaluate("O000", s.objective("O000"), s.objective_state("O000"))
+    assert s.objective_state("O000").evaluations == []
+    run_json.write_text(record)
+    o._maybe_evaluate("O000", s.objective("O000"), s.objective_state("O000"))
+    assert len(s.objective_state("O000").evaluations) == 1
+
+
 def test_agent_whose_allow_list_hides_structured_output_is_caught(sandbox):
     """O000 canary, 2026-09-28: every run returned structured_output=null because the agents'
     `tools:` allow-lists omitted StructuredOutput; the planner's plan was validated as {}."""

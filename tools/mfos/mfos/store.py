@@ -195,6 +195,8 @@ class Store:
             return []
         out = []
         for p in sorted(d.glob("*/result.json")):
+            if not (p.parent / "run.json").exists():  # `mfos exp run` has not finalized it (exit-code check) yet
+                continue
             try:
                 out.append(m.ExperimentResult.model_validate_json(p.read_text()))
             except Exception:  # corrupted results are ignored, never trusted

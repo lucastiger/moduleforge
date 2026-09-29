@@ -28,3 +28,6 @@
 {"ts": "2026-09-29T01:23:57+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0006-planner-20260928T182211-49a4", "status": "completed", "cost": 0.4824652, "subtype": "success"}
 {"ts": "2026-09-29T01:23:57+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0006", "signal": "agent_error", "action": "repair"}
 {"ts": "2026-09-29T01:23:57+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0006-planner-20260928T182357-18d1", "task": "T0006", "role": "planner", "session": "ab59616b-a1ae-4b20-a5e1-c3af521a043a"}
+{"ts": "2026-09-29T01:26:45+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0004-critic-20260928T182046-2105", "status": "completed", "cost": 1.3759908, "subtype": "success"}
+{"ts": "2026-09-29T01:26:45+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0004", "signal": "agent_error", "action": "repair"}
+{"ts": "2026-09-29T01:26:45+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0001", "kind": "budget_increase", "subject": "[O000] budget exhausted ($9.22/$8.00)"}

@@ -1,0 +1,12 @@
+id: I0001
+kind: budget_increase
+subject: '[O000] budget exhausted ($9.22/$8.00)'
+summary: Objective paused. Raise the budget, re-scope, or abandon.
+refs:
+- O000
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-09-29T01:26:45+00:00'
+resolved_at: null

@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "tools" / "mfos"))
@@ -15,14 +16,26 @@ def sandbox(tmp_path, monkeypatch):
     """A throwaway copy of the scaffold wired to the fake claude and local merges."""
     root = tmp_path / "repo"
     root.mkdir()
-    for item in [".mfos/policy.toml", ".gitignore", "templates", "project/objectives/O000",
-                 "experiments/drafts/E000.yaml", "experiments/runners", "src", "tools", ".claude"]:
+    for item in [".mfos/policy.toml", ".gitignore", "templates", "project/objectives/O000/objective.yaml",
+                 "experiments/runners", "src", "tools", ".claude"]:
         src = REPO / item
         dst = root / item
         dst.parent.mkdir(parents=True, exist_ok=True)
         (shutil.copytree if src.is_dir() else shutil.copy2)(src, dst)
-    # The live O000 state (spend, replans, diagnoses) must not leak in: start from the bootstrap state.
+    # Start from the canary as bootstrapped, not from the live repository's progress on it: the live O000
+    # state and evaluations must not leak in, and E000 is an unregistered draft even after the founder
+    # has registered the real one (which moves it from drafts/ to specs/).
     (root / "project" / "objectives" / "O000" / "state.yaml").write_text("status: draft\n")
+    live = REPO / "experiments" / "drafts" / "E000.yaml"
+    if not live.exists():
+        live = REPO / "experiments" / "specs" / "E000.yaml"
+    e000 = yaml.safe_load(live.read_text())
+    for key in ("registered_by", "registered_at", "spec_hash"):
+        e000.pop(key, None)
+    e000["status"] = "draft"
+    draft = root / "experiments" / "drafts" / "E000.yaml"
+    draft.parent.mkdir(parents=True, exist_ok=True)
+    draft.write_text(yaml.safe_dump(e000, sort_keys=False).replace("uv run python", "python3"))
     shutil.rmtree(root / "src" / "moduleforge" / "__pycache__", ignore_errors=True)
     (root / "src" / "moduleforge" / "canary.py").unlink(missing_ok=True)
     pol = (root / ".mfos" / "policy.toml").read_text()
@@ -32,8 +45,6 @@ def sandbox(tmp_path, monkeypatch):
     end = pol.index("[planning]")
     pol = pol[:start] + '[gates]\nfast = ["PYTHONPATH=src python3 -c \'import moduleforge\'"]\nfull = []\n\n' + pol[end:]
     (root / ".mfos" / "policy.toml").write_text(pol)
-    spec = root / "experiments" / "drafts" / "E000.yaml"
-    spec.write_text(spec.read_text().replace("uv run python", "python3"))
     env_path = os.pathsep.join([str(root / "tools" / "mfos"), str(root / "src")])
     monkeypatch.setenv("PYTHONPATH", env_path)
     monkeypatch.setenv("MFOS_ROOT", str(root))

@@ -9,6 +9,6 @@ pending_evaluation: null
 replans: 1
 max_replans: 3
 needs_replan: true
-spent_usd: 0.0
+spent_usd: 0.7213
 budget_override_usd: null
 log: []

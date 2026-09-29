@@ -1,3 +1,6 @@
 {"ts": "2026-09-29T01:00:20+00:00", "event": "objective_approved", "actor": "founder", "objective": "O000", "criteria_hash": "sha256:ddc688ee819ab18ca7a56d3f202fc6ca8cddf931be6c35d75b1246567e1f234c"}
 {"ts": "2026-09-29T01:00:30+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 20700}
 {"ts": "2026-09-29T01:00:41+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0001-planner-20260928T180041-ba60", "task": "T0001", "role": "planner", "session": "68bac275-44eb-4f47-b32c-3a8ebad72ba1"}
+{"ts": "2026-09-29T01:04:15+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0001-planner-20260928T180041-ba60", "status": "completed", "cost": 0.7213225999999999, "subtype": "success"}
+{"ts": "2026-09-29T01:04:15+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0001", "signal": "agent_error", "action": "repair"}
+{"ts": "2026-09-29T01:04:15+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0001-planner-20260928T180415-2dd4", "task": "T0001", "role": "planner", "session": "a12d4025-1045-4908-ab3a-5cbda7a346bc"}

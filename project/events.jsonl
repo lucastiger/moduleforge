@@ -18,3 +18,6 @@
 {"ts": "2026-09-29T01:17:58+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0003-planner-20260928T181551-65b2", "status": "completed", "cost": 0.5669034000000001, "subtype": "success"}
 {"ts": "2026-09-29T01:17:58+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0003", "signal": "agent_error", "action": "repair"}
 {"ts": "2026-09-29T01:17:58+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0003-planner-20260928T181758-8f37", "task": "T0003", "role": "planner", "session": "a92c567b-65d6-4ed9-918b-389f2938a791"}
+{"ts": "2026-09-29T01:20:46+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0002-scientist-20260928T181155-1c52", "status": "completed", "cost": 2.2207230000000004, "subtype": "success"}
+{"ts": "2026-09-29T01:20:46+00:00", "event": "verified", "actor": "orchestrator", "task": "T0002"}
+{"ts": "2026-09-29T01:20:46+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0004-critic-20260928T182046-2105", "task": "T0004", "role": "critic", "session": "68779e1c-b61e-48e9-9b21-42cd597b1a4f"}

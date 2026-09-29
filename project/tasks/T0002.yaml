@@ -3,7 +3,7 @@ objective: O000
 title: Diagnose failure of T0001
 type: investigate
 agent: scientist
-status: running
+status: review
 depends_on: []
 description: "Task T0001 ('Plan O000 (initial)') failed with preliminary class `implementation`: planner\
   \ returned invalid plan.\nFailure output (tail):\n```\n1 validation error for PlanOutput\nassessment\n\
@@ -37,4 +37,8 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- attempt: 1
+  outcome: agent_finished
+  summary: ''
+  report: {}

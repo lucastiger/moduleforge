@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -41,6 +42,10 @@ def sandbox(tmp_path, monkeypatch):
     pol = (root / ".mfos" / "policy.toml").read_text()
     pol = pol.replace('claude_bin = "claude"', f'claude_bin = "{sys.executable} {REPO / "tests/mfos/fake_claude.py"}"')
     pol = pol.replace('worktree_root = "~/mf/wt"', f'worktree_root = "{tmp_path / "wt"}"')
+    # The scenarios run the canary at full autonomy (tests lower it themselves where needed), whatever
+    # level the live loop is currently trusted with.
+    pol, n = re.subn(r"(?m)^level = \d+", "level = 3", pol)
+    assert n == 1, "expected exactly one [autonomy] level in .mfos/policy.toml"
     start = pol.index("[gates]")
     end = pol.index("[planning]")
     pol = pol[:start] + '[gates]\nfast = ["PYTHONPATH=src python3 -c \'import moduleforge\'"]\nfull = []\n\n' + pol[end:]

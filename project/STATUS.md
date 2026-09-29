@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-09-29T01:48:17+00:00 from repository state — do not edit_
+_generated 2026-09-29T01:48:28+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -7,18 +7,14 @@ _generated 2026-09-29T01:48:17+00:00 from repository state — do not edit_
 ## Objectives
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
-| O000 | active | - | 0/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
+| O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
 | O001 | draft | - | 0/3 | $0.00/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 4, done: 2, failed: 2, running: 1
+cancelled: 4, done: 3, failed: 2
 
-- T0009 `running` none/experiment: Run E000: harmonic(n) vs asymptotic expansion (attempt 1)
 
 ## Recent events
-- 2026-09-29T01:43:02+00:00 run_finished {"run": "T0004-critic-20260928T182935-6a73", "status": "completed", "cost": 1.3914508000000003, "subtype": "success", "report": "missing"}
-- 2026-09-29T01:43:02+00:00 objective_restarted {"objective": "O000", "previous_spent_usd": 12.2152, "budget_usd": 20.0, "cancelled": ["T0002", "T0004", "T0005", "T0006"], "plan_task": "T0007"}
-- 2026-09-29T01:45:45+00:00 experiment_registered {"id": "E000", "hash": "sha256:680405e18f974dfc10a288921bfba7eccb9bea54a4ca3ed01b1afb35c344c8c2", "by": "founder"}
 - 2026-09-29T01:45:45+00:00 inbox_opened {"id": "I0002", "kind": "experiment_registration", "subject": "register E000 (direct, via CLI)"}
 - 2026-09-29T01:45:52+00:00 loop_started {"pid": 31420}
 - 2026-09-29T01:45:53+00:00 run_started {"run": "T0007-planner-20260928T184553-6bb9", "task": "T0007", "role": "planner", "session": "060bc777-b06d-4d5f-bf2d-11b79085294f"}
@@ -31,3 +27,6 @@ cancelled: 4, done: 2, failed: 2, running: 1
 - 2026-09-29T01:48:04+00:00 experiment_task_started {"task": "T0009", "experiment": "E000"}
 - 2026-09-29T01:48:04+00:00 experiment_started {"id": "E000", "run": "E000-20260928T184804-f38b", "commit": "3df96a91b83932c583cbd5813aef19974dbbc319"}
 - 2026-09-29T01:48:05+00:00 experiment_finished {"id": "E000", "run": "E000-20260928T184804-f38b", "status": "complete", "seconds": 0.9}
+- 2026-09-29T01:48:27+00:00 evaluation {"objective": "O000", "id": "EV-O000-01", "verdict": "PASS"}
+- 2026-09-29T01:48:27+00:00 claim_recorded {"id": "C001", "status": "supported"}
+- 2026-09-29T01:48:28+00:00 objective_passed {"objective": "O000", "evaluation": "EV-O000-01"}

@@ -54,3 +54,4 @@
 {"ts": "2026-09-29T01:48:05+00:00", "event": "experiment_finished", "actor": "orchestrator", "id": "E000", "run": "E000-20260928T184804-f38b", "status": "complete", "seconds": 0.9}
 {"ts": "2026-09-29T01:48:27+00:00", "event": "evaluation", "actor": "orchestrator", "objective": "O000", "id": "EV-O000-01", "verdict": "PASS"}
 {"ts": "2026-09-29T01:48:27+00:00", "event": "claim_recorded", "actor": "orchestrator", "id": "C001", "status": "supported"}
+{"ts": "2026-09-29T01:48:28+00:00", "event": "objective_passed", "actor": "orchestrator", "objective": "O000", "evaluation": "EV-O000-01"}

@@ -6,7 +6,7 @@ evaluations: []
 last_verdict: null
 evaluated_runs: {}
 pending_evaluation: null
-replans: 0
+replans: 1
 max_replans: 3
 needs_replan: true
 spent_usd: 0.0

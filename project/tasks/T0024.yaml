@@ -1,0 +1,147 @@
+id: T0024
+objective: O001
+title: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timing) + runners
+type: design_experiment
+agent: scientist
+status: proposed
+depends_on:
+- T0021
+- T0022
+- T0023
+description: 'Draft experiments/drafts/E002.yaml, experiments/drafts/E003.yaml, experiments/runners/e002_ranking.py
+  and experiments/runners/e003_timing.py. Write research/notes/o001-e002-e003-design.md with the rationale
+  and a power analysis.
+
+
+  E002 (ranking):
+
+  - sealed_seed: true. Layouts come from moduleforge.generate.halfbridge, stratified across all families
+  and dies_per_switch 2–6.
+
+  - Choose n by the written power analysis, so that A2/K1 (Spearman CI) and A4/K2 (MAPE CI) are decidable
+  at plausible effect sizes and top-decile recall (A5/K3) has adequate resolution.
+
+  - Compute L_loop with moduleforge.physics.peec (L1) and moduleforge.solvers.l2 (L2) at 20 MHz (primary)
+  and at 5 and 80 MHz (secondary, F4).
+
+  - ''Top'' means lowest L_loop. top_decile_recall is the share of L1''s top 10% that lies in L2''s top
+  20%, with the rounding rule declared in advance.
+
+  - Metrics: spearman_rho_Lloop (bootstrap 95% CI, fixed bootstrap seed); mape_Lloop (relative to L2,
+  bootstrap CI); top_decile_recall (point). Secondary: Spearman at 5 and 80 MHz; Spearman correlation
+  of the signed residual (L1−L2)/L2 with loop_area_proxy, conductive-plane distance and die count (F3
+  detection).
+
+  - Sanity checks that can fail: l2_converged (each L2 value changes < 1% under one refinement; if you
+  check only a subset, justify it); sample_diverse (CV of L2 at 20 MHz ≥ 0.3); all_drc_valid; l2_reference_valid
+  (re-solve at least one E001 canonical case in-run, within 2%); all_finite.
+
+  - Declare exclusions in advance (default: none; a failed L2 solve makes the run invalid rather than
+  being dropped).
+
+  - Give an honest cpu_hours_est and timeout_min. Above 6 CPU-h, policy routes the run to burst compute;
+  state what that requires for the L2 tool.
+
+
+  E003 (timing):
+
+  - Median wall time per L1 evaluation (Layout → L_loop at 20 MHz, including discretization) on one core,
+  with threads pinned before any import.
+
+  - Declare n_evals and the warm-up exclusion. Layouts come from the same generator.
+
+  - Metric l1_eval_ms_p50 (point); report p90 as secondary.
+
+  - Sanity checks: single_thread_enforced (verify the thread settings actually took effect) and results_finite.
+  Record the CPU model.
+
+
+  Both runners use mfos.evidence.ExperimentRun and support `--smoke` (≤ 6 layouts, an unsealed dev seed,
+  run_dir /tmp/e002-smoke and /tmp/e003-smoke). Record the smoke outputs in the note as a pipeline check
+  only. Do not change design parameters (n, strata, metrics, thresholds) because of L1-vs-L2 agreement
+  seen in smoke. Do not write under src/.'
+context_files:
+- project/objectives/O001/objective.yaml
+- research/notes/o001-l2-reference.md
+- experiments/drafts/E001.yaml
+- experiments/runners/e001_reference.py
+- src/moduleforge/generate/halfbridge.py
+- src/moduleforge/physics/peec/
+- src/moduleforge/solvers/l2.py
+- benchmarks/l1_timing.py
+- tools/mfos/mfos/evidence.py
+- tools/mfos/mfos/stats.py
+- .mfos/policy.toml
+- .claude/skills/mf-evidence/SKILL.md
+deliverables:
+- experiments/drafts/E002.yaml
+- experiments/drafts/E003.yaml
+- experiments/runners/e002_ranking.py
+- experiments/runners/e003_timing.py
+- research/notes/o001-e002-e003-design.md
+touches:
+- experiments/drafts/E002.yaml
+- experiments/drafts/E003.yaml
+- experiments/runners/e002_ranking.py
+- experiments/runners/e003_timing.py
+- research/notes/o001-e002-e003-design.md
+definition_of_done:
+- cmd: null
+  exists: experiments/drafts/E002.yaml
+  timeout_s: 900
+- cmd: null
+  exists: experiments/drafts/E003.yaml
+  timeout_s: 900
+- cmd: null
+  exists: experiments/runners/e002_ranking.py
+  timeout_s: 900
+- cmd: null
+  exists: experiments/runners/e003_timing.py
+  timeout_s: 900
+- cmd: null
+  exists: research/notes/o001-e002-e003-design.md
+  timeout_s: 900
+- cmd: uv run mfos exp check E002
+  exists: null
+  timeout_s: 120
+- cmd: uv run mfos exp check E003
+  exists: null
+  timeout_s: 120
+- cmd: uv run ruff check experiments/runners/e002_ranking.py experiments/runners/e003_timing.py
+  exists: null
+  timeout_s: 120
+- cmd: 'rm -rf /tmp/e002-smoke && uv run python experiments/runners/e002_ranking.py --smoke && uv run
+    python -c "import json,math; r=json.load(open(''/tmp/e002-smoke/result.json'')); assert r[''status'']==''complete'',
+    r[''status'']; m=r[''metrics'']; ks=(''spearman_rho_Lloop'',''mape_Lloop'',''top_decile_recall'');
+    assert all(math.isfinite(m[k][''value'']) for k in ks), m; assert m[''spearman_rho_Lloop''][''ci'']
+    and m[''mape_Lloop''][''ci''], m; names={s[''name''] for s in r[''sanity'']}; assert {''l2_converged'',''sample_diverse'',''all_drc_valid''}
+    <= names, names; print({k: m[k][''value''] for k in m})"'
+  exists: null
+  timeout_s: 3600
+- cmd: rm -rf /tmp/e003-smoke && uv run python experiments/runners/e003_timing.py --smoke && uv run python
+    -c "import json,math; r=json.load(open('/tmp/e003-smoke/result.json')); assert r['status']=='complete',
+    r['status']; v=r['metrics']['l1_eval_ms_p50']['value']; assert math.isfinite(v) and v > 0, v; print('p50
+    ms', v)"
+  exists: null
+  timeout_s: 900
+experiment: null
+risk: high
+model: null
+budget_usd: 7.0
+max_turns: 90
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: planner:T0019
+created_at: '2026-09-29T22:56:48+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: E002 produces the metrics for A2–A5 and K1–K3, with sanity checks for F1/F2 and secondary diagnostics
+  for F3/F4. E003 produces A6. The power analysis is there to avoid an INCONCLUSIVE verdict wasting one
+  of the 3 evaluations, and sealed seeds address F5.
+history: []

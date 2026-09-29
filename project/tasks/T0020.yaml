@@ -1,0 +1,107 @@
+id: T0020
+objective: O001
+title: Select the L2 reference (license + capability audit) and pre-register E001 reference validation
+type: design_experiment
+agent: scientist
+status: proposed
+depends_on: []
+description: 'Choose the L2 reference and pre-register its validation BEFORE the L2 adapter is built.
+  Three deliverables, one purpose (the reference and its validation).
+
+
+  (1) research/notes/o001-l2-reference.md — F6 audit, every fact cited with URL + access date, facts separated
+  from inferences. Candidates: MIT FastHenry 3.0, FastFieldSolvers FastHenry2, Whiteley Research fasthenry
+  (wrcad/xictools). For each give: exact license terms (quote them); whether it builds from source on
+  macOS arm64 and Linux x86-64 with the system C compiler; support for finite meshed conductive planes,
+  cross-section filament subdivision (skin/proximity effect), frequency sweeps; and its output format.
+  Recommend one, pinned to an upstream commit/tarball with sha256. Describe the in-house FastHenry-class
+  fallback and when it would be needed. mf-conventions: external tools run as separate executables for
+  internal research only, never vendored, never GPL-imported. Also collect with citations the closed forms
+  E001 uses (e.g. Ruehli 1972; Hoer & Love 1965; Grover 1946; Rosa 1908; image theory for a conductor
+  over a perfectly conducting plane; the exact Bessel-function internal impedance of a round wire). If
+  found, also collect published half-bridge loop-inductance anchors (PowerSynth TPEL 2019 2D half-bridge;
+  Q3D vs double-pulse comparisons).
+
+
+  (2) Contract section in the same note: the minimal primitive-level Python API that the E001 runner calls,
+  in module `moduleforge.solvers.l2`, to be implemented by a later builder task. SI units, float64. Inputs:
+  rectangular bars, round-wire polylines (diameter), finite rectangular conductive planes (extent, z,
+  thickness, conductivity), a port definition, frequencies, and an integer `refinement` level. Output:
+  port impedance per frequency (L = Im Z / ω). It must be implementable on the recommended tool.
+
+
+  (3) experiments/drafts/E001.yaml and experiments/runners/e001_reference.py (mfos.evidence.ExperimentRun).
+  Metric `max_rel_err_vs_analytic`: the maximum over cases and frequencies of |L2 − analytic| / analytic,
+  using the converged L2 value. Pick canonical geometries whose closed form is exact for the modeled geometry
+  to well under 2%, and state each case''s residual model error. Cover every L2 feature E002 relies on:
+  rectangular bars (self and mutual partial inductance), a bond-wire-like round-wire chain, a conductor
+  over a finite meshed plane compared with image theory in the δ ≪ t limit, and frequency dependence at
+  5/20/80 MHz. Sanity checks must be able to fail. Include at least: closed-form implementations reproduce
+  published tabulated or limit values; each L2 value changes < 1% under one refinement (l2_converged);
+  reciprocity; length scaling (doubling all lengths doubles L). sealed_seed: false (deterministic cases).
+
+
+  CLI: `--analytic-only` runs only the closed-form self-check without importing moduleforge.solvers (it
+  must run today). `--smoke` runs at least one case of every geometry class at 20 MHz with run_dir=/tmp/e001-smoke.
+  Full mode runs normally. Import moduleforge.solvers.l2 lazily, only on the L2 code path. Write nothing
+  under src/.'
+context_files:
+- project/objectives/O001/objective.yaml
+- experiments/specs/E000.yaml
+- experiments/runners/e000_canary.py
+- tools/mfos/mfos/evidence.py
+- tools/mfos/mfos/stats.py
+- .claude/skills/mf-evidence/SKILL.md
+- .claude/skills/mf-conventions/SKILL.md
+- docs/ARCHITECTURE.md
+deliverables:
+- research/notes/o001-l2-reference.md
+- experiments/drafts/E001.yaml
+- experiments/runners/e001_reference.py
+touches:
+- research/notes/o001-l2-reference.md
+- experiments/drafts/E001.yaml
+- experiments/runners/e001_reference.py
+definition_of_done:
+- cmd: null
+  exists: research/notes/o001-l2-reference.md
+  timeout_s: 900
+- cmd: null
+  exists: experiments/drafts/E001.yaml
+  timeout_s: 900
+- cmd: null
+  exists: experiments/runners/e001_reference.py
+  timeout_s: 900
+- cmd: grep -q 'moduleforge.solvers.l2' research/notes/o001-l2-reference.md
+  exists: null
+  timeout_s: 30
+- cmd: uv run mfos exp check E001
+  exists: null
+  timeout_s: 120
+- cmd: uv run ruff check experiments/runners/e001_reference.py
+  exists: null
+  timeout_s: 120
+- cmd: uv run python experiments/runners/e001_reference.py --analytic-only
+  exists: null
+  timeout_s: 600
+experiment: null
+risk: high
+model: null
+budget_usd: 6.0
+max_turns: 80
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: planner:T0019
+created_at: '2026-09-29T22:56:48+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: A1 (E001.max_rel_err_vs_analytic ≤ 2%), F1 (reference wrong) and F6 (license audit). Pre-registering
+  the reference validation first lets the L2 builder test against it and catches reference errors before
+  any evaluation is spent.
+history: []

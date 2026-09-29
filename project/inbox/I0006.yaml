@@ -1,0 +1,38 @@
+id: I0006
+kind: plan_approval
+subject: '[O001] approve initial plan (8 tasks)'
+summary: 'O001 has no code and no evidence yet: 0 of 3 evaluations used, $1.93 of $120 spent. The founder
+  rejected the last plan only to apply I0003 option (b). This plan re-issues T0011–T0018 word for word
+  as n1–n8 with the same dependencies, and changes only the L2 adapter n3 (was T0013). n3 finds FastHenry
+  from MF_FASTHENRY_BIN, then PATH, and otherwise fails with an error naming scripts/provision_compute.sh;
+  it never builds, downloads or compiles anything. It records the binary''s path, sha256 and tool version
+  in LoopResult.meta and in the disk-cache key. It writes decks in meters because the provisioned build
+  inflates inductance 1000x under `.units mm`. Machine-run checks enforce each change: the resolver must
+  fail in a stripped environment, deck unit lines are checked, the recorded sha256 must match the file,
+  and no clone or download code may exist. These sit on top of the unchanged E001 smoke gate at 2%. The
+  most likely killer is still F3: L1''s image-plane and Grover-filament model may miss baseplate eddy
+  currents and proximity effects, which would trip K1, K2 or K3. The cheaper secondary risk is A6, the
+  50 ms timing limit. The kill-shot order is unchanged: E001 validates the reference before a sealed E002
+  sample is spent, and L1 must pass a single-core p50 ≤ 50 ms benchmark before it merges. The graph cannot
+  wait on a founder action, so n3 can start as soon as n1 and n2 merge. Today provision_compute.sh clones
+  FastHenry HEAD without a pin and skips the rebuild if ~/.local/bin/fasthenry already exists. So pinning
+  alone would not replace the installed binary; the script must be run with --force. That is raised as
+  a founder request. Every required experiment has both a design task and a run task.'
+refs:
+- O001
+- T0020
+- T0021
+- T0022
+- T0023
+- T0024
+- T0025
+- T0026
+- T0027
+options:
+- approve
+- reject (with note for the planner)
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-09-29T22:56:48+00:00'
+resolved_at: null

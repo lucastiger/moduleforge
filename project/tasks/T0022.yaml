@@ -1,0 +1,163 @@
+id: T0022
+objective: O001
+title: L2 reference adapter moduleforge.solvers.l2 (provisioned FastHenry binary only, SI-meter decks,
+  meshed planes, refinement, memoization)
+type: implement
+agent: builder
+status: proposed
+depends_on:
+- T0020
+- T0021
+description: 'Implement `moduleforge.solvers.l2` with two parts.
+
+
+  (a) Exactly the primitive-level API specified in the contract section of research/notes/o001-l2-reference.md
+  and called by experiments/runners/e001_reference.py. Do not edit the runner or the note. If the contract
+  cannot be implemented, stop and report blocked; do not work around it.
+
+
+  (b) `loop_inductance(layout, freqs_hz, refinement=0) -> LoopResult` with fields `L_H` and `R_ohm` (arrays
+  aligned with freqs) and `meta` (tool version, discretization sizes, binary provenance as below), built
+  on Layout.to_conductors().
+
+
+  Binary (founder decision I0003, option b: the founder provisions the binary; this code never builds
+  it). Use the tool recommended in the note (default FastHenry) as a separate executable. Never vendor
+  or import its source, and do not edit scripts/provision_compute.sh. Implement `resolve_fasthenry() ->
+  pathlib.Path`: use `MF_FASTHENRY_BIN` if it is set, otherwise the `fasthenry` executable found on PATH.
+  Otherwise raise `FastHenryNotFoundError` (a RuntimeError subclass) whose message names both `MF_FASTHENRY_BIN`
+  and `scripts/provision_compute.sh`. If MF_FASTHENRY_BIN is set but is not an executable file, raise
+  the same error rather than silently falling through. No auto-build and no other fallback locations:
+  no network, git, downloads or C compiler at run time. Every LoopResult.meta records `binary_path` (the
+  absolute resolved path), `binary_sha256` (hex SHA-256 of the binary file''s bytes) and `tool_version`.
+  Primitive-API results carry the same provenance if the contract gives them metadata. If no binary resolves
+  in your environment, stop and report blocked; do not build FastHenry yourself.
+
+
+  Units: write every FastHenry deck in meters (`.units m`), never `.units mm`. The provisioned build mis-scales
+  inductance 1000x under `.units mm` (scripts/provision_compute.sh:52; docs/INFRASTRUCTURE.md, ''Legacy
+  C''). Expose `fasthenry_deck(layout, freqs_hz, refinement=0) -> str`, which returns the exact deck text
+  loop_inductance would run, so decks can be tested without the binary. benchmarks/infra/fh_gen.py is
+  a working meters-based example of the deck syntax (gplane, nfloat, .equiv); read it but do not import
+  it.
+
+
+  Model the physics explicitly, with no image planes:
+
+  - top-Cu traces with cross-section filament subdivision graded to resolve the skin depth at the highest
+  requested frequency;
+
+  - bond wires as segmented chains;
+
+  - backside Cu and baseplate as finite meshed conductive planes at their true extent and thickness;
+
+  - dies as ideal shorts;
+
+  - the same port definition as to_conductors().
+
+
+  `refinement` refines every discretization by a fixed, documented factor. Memoize solves on disk under
+  the temp dir, keyed by geometry fingerprint, frequencies, refinement, tool version and binary sha256,
+  so that a re-provisioned binary never reuses stale solves. Expose the tool version so runners can record
+  it.
+
+
+  Tests under tests/unit/solvers/:
+
+  - input-deck generation without the binary, including that every deck declares `.units m` and none declares
+  `.units mm`;
+
+  - binary resolution with a fake executable and a monkeypatched environment: MF_FASTHENRY_BIN takes precedence
+  over PATH, PATH is used otherwise, and the not-found error names scripts/provision_compute.sh;
+
+  - parsing a stored sample output;
+
+  - end-to-end small cases against closed forms;
+
+  - reciprocity;
+
+  - length scaling;
+
+  - L_eff non-increasing with frequency;
+
+  - a generated 2-die half-bridge within 1–100 nH.
+
+
+  Do not modify pyproject.toml; n2 already moved the runtime dependencies.'
+context_files:
+- research/notes/o001-l2-reference.md
+- experiments/runners/e001_reference.py
+- experiments/drafts/E001.yaml
+- src/moduleforge/geometry/
+- src/moduleforge/generate/halfbridge.py
+- .claude/skills/mf-conventions/SKILL.md
+- scripts/provision_compute.sh
+- benchmarks/infra/fh_gen.py
+- docs/INFRASTRUCTURE.md
+deliverables:
+- src/moduleforge/solvers/l2.py
+- tests/unit/solvers/
+touches:
+- src/moduleforge/solvers/**
+- tests/unit/solvers/**
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/solvers
+  exists: null
+  timeout_s: 1800
+- cmd: uv run ruff check src/moduleforge/solvers tests/unit/solvers
+  exists: null
+  timeout_s: 120
+- cmd: rm -rf /tmp/e001-smoke && uv run python experiments/runners/e001_reference.py --smoke && uv run
+    python -c "import json; r=json.load(open('/tmp/e001-smoke/result.json')); assert r['status']=='complete',
+    r['status']; assert r['sanity'] and all(s['passed'] for s in r['sanity']), r['sanity']; v=r['metrics']['max_rel_err_vs_analytic']['value'];
+    assert v <= 0.02, v; print('E001 smoke max_rel_err', v)"
+  exists: null
+  timeout_s: 2400
+- cmd: uv run python -c "import hashlib, os, numpy as np; from moduleforge.generate.halfbridge import
+    generate_layouts; from moduleforge.solvers.l2 import loop_inductance; l=generate_layouts(1, seed=7,
+    dies_per_switch=2)[0]; r=loop_inductance(l, freqs_hz=[5e6, 2e7, 8e7], refinement=0); L=np.asarray(r.L_H);
+    assert L.shape==(3,) and np.all(np.isfinite(L)), L; assert 1e-9 < L[1] < 1e-7, L; assert L[0] >= L[1]*(1-1e-6)
+    and L[1] >= L[2]*(1-1e-6), L; m=r.meta; p=m['binary_path']; assert os.path.isabs(p) and os.path.isfile(p),
+    m; assert m['binary_sha256'] == hashlib.sha256(open(p, 'rb').read()).hexdigest(), m; assert m['tool_version'],
+    m; print(L, p, m['binary_sha256'])"
+  exists: null
+  timeout_s: 1800
+- cmd: 'uv run python -c "import os, subprocess, sys; env={k: v for k, v in os.environ.items() if k not
+    in (''MF_FASTHENRY_BIN'',)}; env[''PATH'']=''/nonexistent''; p=subprocess.run([sys.executable, ''-c'',
+    ''from moduleforge.solvers.l2 import resolve_fasthenry; resolve_fasthenry()''], env=env, capture_output=True,
+    text=True); assert p.returncode > 0 and ''scripts/provision_compute.sh'' in p.stderr, (p.returncode,
+    p.stderr[-800:]); print(''resolver fails clearly without a provisioned binary'')"'
+  exists: null
+  timeout_s: 120
+- cmd: uv run python -c "from moduleforge.generate.halfbridge import generate_layouts; from moduleforge.solvers.l2
+    import fasthenry_deck; d=fasthenry_deck(generate_layouts(1, seed=7, dies_per_switch=2)[0], freqs_hz=[2e7],
+    refinement=0); u=[ln.split()[:2] for ln in d.lower().splitlines() if ln.strip().startswith('.units')];
+    assert u and all(t == ['.units', 'm'] for t in u), u; print('deck units', u)"
+  exists: null
+  timeout_s: 300
+- cmd: grep -rnE 'git clone|urlopen|urlretrieve|wget' src/moduleforge/solvers; test $? -eq 1
+  exists: null
+  timeout_s: 30
+experiment: null
+risk: high
+model: null
+budget_usd: 7.0
+max_turns: 100
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: planner:T0019
+created_at: '2026-09-29T22:56:48+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: L2 is the reference for E001 (A1) and E002 (A2–A5, K1–K3). Its merge is gated on the pre-registered
+  E001 smoke cases at the 2% A1 threshold, which catches F1 before any evaluation. Following the founder's
+  I0003 option (b), it uses only the provisioned binary and records the binary's path and sha256, so every
+  reference number traces back to the pinned build. Decks are written in meters because `.units mm` inflates
+  inductance 1000x in this build, an F1 trap; checks in the definition of done guard against it.
+history: []

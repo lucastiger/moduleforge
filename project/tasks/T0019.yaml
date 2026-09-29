@@ -9,7 +9,7 @@ title: 'Plan O001 (founder rejected plan: Founder chose option (b) on I0003. Re-
   the founder pins scripts/provision_compute.sh to it before T0013 runs and records D0002 at E001 registration.)'
 type: plan
 agent: planner
-status: running
+status: done
 depends_on: []
 description: ''
 context_files: []
@@ -41,4 +41,23 @@ trigger: 'founder rejected plan: Founder chose option (b) on I0003. Re-issue the
   .units mm (scripts/provision_compute.sh:52). T0011''s audit still recommends one upstream commit + sha256;
   the founder pins scripts/provision_compute.sh to it before T0013 runs and records D0002 at E001 registration.'
 rationale: ''
-history: []
+history:
+- outcome: planned
+  summary: 'O001 has no code and no evidence yet: 0 of 3 evaluations used, $1.93 of $120 spent. The founder
+    rejected the last plan only to apply I0003 option (b). This plan re-issues T0011–T0018 word for word
+    as n1–n8 with the same dependencies, and changes only the L2 adapter n3 (was T0013). n3 finds FastHenry
+    from MF_FASTHENRY_BIN, then PATH, and otherwise fails with an error naming scripts/provision_compute.sh;
+    it never builds, downloads or compiles anything. It records the binary''s path, sha256 and tool version
+    in LoopResult.meta and in the disk-cache key. It writes decks in meters because the provisioned build
+    inflates inductance 1000x under `.units mm`. Machine-run checks enforce each change: the resolver
+    must fail in a stripped environment, deck unit lines are checked, the recorded sha256 must '
+  created:
+  - T0020
+  - T0021
+  - T0022
+  - T0023
+  - T0024
+  - T0025
+  - T0026
+  - T0027
+  dropped_for_limits: 0

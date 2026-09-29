@@ -1,0 +1,30 @@
+id: I0005
+kind: external_action
+subject: '[O001] [O001] Pin FastHenry and rebuild it with --force before the L2 adapter (n3) starts; record
+  D0002 at E001 registration'
+summary: 'Following your I0003 answer, the L2 adapter n3 (was T0013) uses only the provisioned binary.
+  It resolves MF_FASTHENRY_BIN, then PATH; otherwise it fails with an error naming scripts/provision_compute.sh.
+  It records the binary''s path and sha256 in LoopResult.meta and in its disk-cache key. The task graph
+  cannot wait on a founder action, so n3 can start as soon as n1 (the audit) and n2 (the generator) merge.
+  Two details in scripts/provision_compute.sh matter here. Line 21 clones hohe/fasthenry-3.0wr at HEAD
+  with `--depth 1`, so it is not pinned. Line 47 skips the build when ~/.local/bin/fasthenry already exists.
+  As a result, pinning the script will not replace the binary installed now unless you run the script
+  with `--force`. If n3 runs first, it will record the sha256 of a build from an unrecorded commit. Once
+  n1 merges: (1) pin the script to the commit and sha256 recommended in research/notes/o001-l2-reference.md;
+  (2) run `scripts/provision_compute.sh --force` and confirm the self-test prints PASS; (3) do this before
+  n3 is dispatched. Record D0002 when you register E001, as you planned. n3 stops and reports blocked
+  if no binary resolves. Because its cache is keyed by the binary''s sha256, a later rebuild cannot reuse
+  solves from the old binary.'
+refs:
+- O001
+- T0019
+options:
+- Pin the script and rebuild with --force after n1 merges, before n3 is dispatched (as planned on I0004)
+- Let n3 run on the current unpinned build and pin later (n3's recorded sha256 would then describe an
+  unrecorded upstream commit, and E001/E002 provenance would need re-establishing)
+recommendation: Pin the script and rebuild with --force after n1 merges, before n3 is dispatched. Record
+  D0002 at E001 registration.
+status: open
+response: ''
+created_at: '2026-09-29T22:56:48+00:00'
+resolved_at: null

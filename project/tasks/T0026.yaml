@@ -1,0 +1,37 @@
+id: T0026
+objective: O001
+title: 'Run E002: L1 vs L2 loop-inductance ranking on sealed generated layouts'
+type: experiment
+agent: none
+status: proposed
+depends_on:
+- T0024
+- T0022
+- T0023
+- T0025
+description: The orchestrator runs the registered E002 spec on a sealed seed after E002 is designed and
+  registered and after both models have merged. It is ordered after E001 so the reference is validated
+  before a sealed sample is spent. It feeds A2, A3, A4, A5 and K1, K2, K3, plus the F3/F4 secondary metrics.
+context_files: []
+deliverables: []
+touches: []
+definition_of_done: []
+experiment: E002
+risk: low
+model: null
+budget_usd: 0.5
+max_turns: 1
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: planner:T0019
+created_at: '2026-09-29T22:56:48+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: 'Required experiment E002: the core test of the hypothesis.'
+history: []

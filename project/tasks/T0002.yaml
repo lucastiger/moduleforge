@@ -3,7 +3,7 @@ objective: O000
 title: Diagnose failure of T0001
 type: investigate
 agent: scientist
-status: review
+status: cancelled
 depends_on: []
 description: "Task T0001 ('Plan O000 (initial)') failed with preliminary class `implementation`: planner\
   \ returned invalid plan.\nFailure output (tail):\n```\n1 validation error for PlanOutput\nassessment\n\
@@ -42,3 +42,7 @@ history:
   outcome: agent_finished
   summary: ''
   report: {}
+- outcome: cancelled
+  summary: 'O000 restarted by founder: agents could not return structured reports (StructuredOutput missing
+    from tools: allow-lists)'
+  at: '2026-09-29T01:43:02+00:00'

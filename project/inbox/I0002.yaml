@@ -1,0 +1,12 @@
+id: I0002
+kind: experiment_registration
+subject: register E000 (direct, via CLI)
+summary: Registered directly by the founder. spec_hash=sha256:680405e18f974dfc10a288921bfba7eccb9bea54a4ca3ed01b1afb35c344c8c2
+refs:
+- E000
+options: []
+recommendation: ''
+status: approved
+response: registered via mfos exp register
+created_at: '2026-09-29T01:45:45+00:00'
+resolved_at: '2026-09-29T01:45:45+00:00'

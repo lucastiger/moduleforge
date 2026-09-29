@@ -6,11 +6,11 @@ evaluations: []
 last_verdict: null
 evaluated_runs: {}
 pending_evaluation: null
-replans: 3
+replans: 1
 max_replans: 3
 needs_replan: true
-spent_usd: 10.0753
+spent_usd: 0.0
 budget_override_usd: 20.0
 log:
-- diagnosis:T0002 of T0001 (implementation)
-- diagnosis:T0005 of T0003 (implementation)
+- restart:founder 2026-09-29T01:43:02+00:00 — T0001–T0006 void (harness could not receive agent reports);
+  $12.22 spent before restart

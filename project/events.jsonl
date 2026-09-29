@@ -36,3 +36,10 @@
 {"ts": "2026-09-29T01:29:31+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0001", "status": "approved", "note": "usd=9.9247"}
 {"ts": "2026-09-29T01:29:35+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0006-planner-20260928T182935-3621", "task": "T0006", "role": "planner", "session": "a15defaa-fcb1-4c34-8f29-1c6dd6aa5845"}
 {"ts": "2026-09-29T01:29:35+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0004-critic-20260928T182935-6a73", "task": "T0004", "role": "critic", "session": "2bc611c3-cc68-4d02-8440-203f847332bd"}
+{"ts": "2026-09-29T01:43:02+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0006-planner-20260928T182935-3621", "status": "completed", "cost": 0.7484523999999999, "subtype": "success", "report": "missing"}
+{"ts": "2026-09-29T01:43:02+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0004-critic-20260928T182935-6a73", "status": "completed", "cost": 1.3914508000000003, "subtype": "success", "report": "missing"}
+{"ts": "2026-09-29T01:43:02+00:00", "event": "objective_restarted", "actor": "founder", "objective": "O000", "previous_spent_usd": 12.2152, "budget_usd": 20.0, "cancelled": ["T0002", "T0004", "T0005", "T0006"], "plan_task": "T0007"}
+{"ts": "2026-09-29T01:45:45+00:00", "event": "experiment_registered", "actor": "orchestrator", "id": "E000", "hash": "sha256:680405e18f974dfc10a288921bfba7eccb9bea54a4ca3ed01b1afb35c344c8c2", "by": "founder"}
+{"ts": "2026-09-29T01:45:45+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0002", "kind": "experiment_registration", "subject": "register E000 (direct, via CLI)"}
+{"ts": "2026-09-29T01:45:52+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 31420}
+{"ts": "2026-09-29T01:45:53+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0007-planner-20260928T184553-6bb9", "task": "T0007", "role": "planner", "session": "060bc777-b06d-4d5f-bf2d-11b79085294f"}

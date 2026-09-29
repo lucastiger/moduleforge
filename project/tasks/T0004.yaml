@@ -3,7 +3,7 @@ objective: O000
 title: Review T0002 (general)
 type: review
 agent: critic
-status: running
+status: cancelled
 depends_on: []
 description: 2299f3d169229ddec5680a3d812f6588006bb853
 context_files: []
@@ -37,3 +37,7 @@ history:
   failure_output: "1 validation error for Review\nverdict\n  Field required [type=missing, input_value={},\
     \ input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing"
   at: '2026-09-29T01:26:45+00:00'
+- outcome: cancelled
+  summary: 'O000 restarted by founder: agents could not return structured reports (StructuredOutput missing
+    from tools: allow-lists)'
+  at: '2026-09-29T01:43:02+00:00'

@@ -1,9 +1,8 @@
 # ModuleForge status
-_generated 2026-09-29T22:18:25+00:00 from repository state — do not edit_
+_generated 2026-09-29T22:52:07+00:00 from repository state — do not edit_
 
-## Founder inbox (2 open)
-- **I0003** [decision] [O001] O001 L2 reference tool and licensing decision record (F6)
-- **I0004** [plan_approval] [O001] approve initial plan (8 tasks)
+## Founder inbox (0 open)
+- nothing needs you
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -12,21 +11,11 @@ _generated 2026-09-29T22:18:25+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $1.93/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 4, done: 4, failed: 2, proposed: 8
+cancelled: 12, done: 4, failed: 2, running: 1
 
-- T0011 `proposed` scientist/design_experiment: Select the L2 reference (license + capability audit) and pre-register E001 reference validation (attempt 0)
-- T0012 `proposed` builder/implement: Layout IR, layer stack, DRC and DRC-valid half-bridge generator (3 families, 2–6 dies/switch) (attempt 0)
-- T0013 `proposed` builder/implement: L2 reference adapter moduleforge.solvers.l2 (FastHenry-class, meshed planes, refinement, memoization) (attempt 0)
-- T0014 `proposed` builder/implement: L1 fast PEEC moduleforge.physics.peec (trace cells, skin-corrected R, Grover bond wires, image planes) + single-core timing benchmark (attempt 0)
-- T0015 `proposed` scientist/design_experiment: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timing) + runners (attempt 0)
-- T0016 `proposed` none/experiment: Run E001: L2 reference vs closed-form partial inductances (attempt 0)
-- T0017 `proposed` none/experiment: Run E002: L1 vs L2 loop-inductance ranking on sealed generated layouts (attempt 0)
-- T0018 `proposed` none/experiment: Run E003: L1 median single-core evaluation time (attempt 0)
+- T0019 `running` planner/plan: Plan O001 (founder rejected plan: Founder chose option (b) on I0003. Re-issue the plan in project/tasks/T0011-T0018 unchanged (read their YAML) except T0013: the L2 adapter resolves the FastHenry binary from MF_FASTHENRY_BIN, then PATH, and otherwise fails with a clear error naming scripts/provision_compute.sh. No auto-build: no network or C compiler at run time. Record the resolved binary's path and sha256 in LoopResult.meta alongside the tool version. Write decks in meters: the provisioned build mis-scales inductance under .units mm (scripts/provision_compute.sh:52). T0011's audit still recommends one upstream commit + sha256; the founder pins scripts/provision_compute.sh to it before T0013 runs and records D0002 at E001 registration.) (attempt 1)
 
 ## Recent events
-- 2026-09-29T01:48:02+00:00 verified {"task": "T0008"}
-- 2026-09-29T01:48:04+00:00 merged {"task": "T0008"}
-- 2026-09-29T01:48:04+00:00 experiment_task_started {"task": "T0009", "experiment": "E000"}
 - 2026-09-29T01:48:04+00:00 experiment_started {"id": "E000", "run": "E000-20260928T184804-f38b", "commit": "3df96a91b83932c583cbd5813aef19974dbbc319"}
 - 2026-09-29T01:48:05+00:00 experiment_finished {"id": "E000", "run": "E000-20260928T184804-f38b", "status": "complete", "seconds": 0.9}
 - 2026-09-29T01:48:27+00:00 evaluation {"objective": "O000", "id": "EV-O000-01", "verdict": "PASS"}
@@ -39,3 +28,6 @@ cancelled: 4, done: 4, failed: 2, proposed: 8
 - 2026-09-29T22:18:25+00:00 inbox_opened {"id": "I0003", "kind": "decision", "subject": "[O001] O001 L2 reference tool and licensing decision record (F6)"}
 - 2026-09-29T22:18:25+00:00 inbox_opened {"id": "I0004", "kind": "plan_approval", "subject": "[O001] approve initial plan (8 tasks)"}
 - 2026-09-29T22:18:25+00:00 plan_applied {"objective": "O001", "created": ["T0011", "T0012", "T0013", "T0014", "T0015", "T0016", "T0017", "T0018"], "dropped": 0}
+- 2026-09-29T22:51:55+00:00 inbox_resolved {"id": "I0003", "status": "answered", "note": "(b): use the provisioned binary (MF_FASTHENRY_BIN, then PATH); no auto-build. Pin scripts/provision_compute.sh to
+- 2026-09-29T22:51:55+00:00 inbox_resolved {"id": "I0004", "status": "rejected", "note": "Founder chose option (b) on I0003. Re-issue the plan in project/tasks/T0011-T0018 unchanged (read their YAML) exc
+- 2026-09-29T22:52:07+00:00 run_started {"run": "T0019-planner-20260929T155207-42aa", "task": "T0019", "role": "planner", "session": "1860d385-998a-4048-8c98-677e1ba36e5a"}

@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E003: L1 median single-core evaluation time'
 type: experiment
 agent: none
-status: proposed
+status: cancelled
 depends_on:
 - T0015
 - T0014

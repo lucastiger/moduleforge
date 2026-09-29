@@ -3,7 +3,7 @@ objective: O001
 title: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timing) + runners
 type: design_experiment
 agent: scientist
-status: proposed
+status: cancelled
 depends_on:
 - T0012
 - T0013

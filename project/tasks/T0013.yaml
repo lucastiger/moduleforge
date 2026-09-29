@@ -3,7 +3,7 @@ objective: O001
 title: L2 reference adapter moduleforge.solvers.l2 (FastHenry-class, meshed planes, refinement, memoization)
 type: implement
 agent: builder
-status: proposed
+status: cancelled
 depends_on:
 - T0011
 - T0012

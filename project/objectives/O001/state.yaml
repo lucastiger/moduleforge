@@ -6,9 +6,19 @@ evaluations: []
 last_verdict: null
 evaluated_runs: {}
 pending_evaluation: null
-replans: 1
+replans: 2
 max_replans: 3
-needs_replan: false
+needs_replan: true
 spent_usd: 1.9345
 budget_override_usd: null
-log: []
+log:
+- 'founder answered I0003: (b): use the provisioned binary (MF_FASTHENRY_BIN, then PATH); no auto-build.
+  Pin scripts/provision_compute.sh to the commit+sha256 the T0011 audit recommends. D0002 to be recorded
+  at E001 registration.'
+- 'founder rejected plan: Founder chose option (b) on I0003. Re-issue the plan in project/tasks/T0011-T0018
+  unchanged (read their YAML) except T0013: the L2 adapter resolves the FastHenry binary from MF_FASTHENRY_BIN,
+  then PATH, and otherwise fails with a clear error naming scripts/provision_compute.sh. No auto-build:
+  no network or C compiler at run time. Record the resolved binary''s path and sha256 in LoopResult.meta
+  alongside the tool version. Write decks in meters: the provisioned build mis-scales inductance under
+  .units mm (scripts/provision_compute.sh:52). T0011''s audit still recommends one upstream commit + sha256;
+  the founder pins scripts/provision_compute.sh to it before T0013 runs and records D0002 at E001 registration.'

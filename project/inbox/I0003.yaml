@@ -22,7 +22,8 @@ options:
 recommendation: (a) with (b) as a hardening step if the audit shows the tool is permissively licensed
   and builds cleanly on macOS arm64. Choose (c) only if the audit finds the license or build unsuitable,
   in which case n3 needs re-planning.
-status: open
-response: ''
+status: answered
+response: '(b): use the provisioned binary (MF_FASTHENRY_BIN, then PATH); no auto-build. Pin scripts/provision_compute.sh
+  to the commit+sha256 the T0011 audit recommends. D0002 to be recorded at E001 registration.'
 created_at: '2026-09-29T22:18:25+00:00'
-resolved_at: null
+resolved_at: '2026-09-29T22:51:55+00:00'

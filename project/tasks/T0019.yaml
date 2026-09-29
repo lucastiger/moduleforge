@@ -1,0 +1,44 @@
+id: T0019
+objective: O001
+title: 'Plan O001 (founder rejected plan: Founder chose option (b) on I0003. Re-issue the plan in project/tasks/T0011-T0018
+  unchanged (read their YAML) except T0013: the L2 adapter resolves the FastHenry binary from MF_FASTHENRY_BIN,
+  then PATH, and otherwise fails with a clear error naming scripts/provision_compute.sh. No auto-build:
+  no network or C compiler at run time. Record the resolved binary''s path and sha256 in LoopResult.meta
+  alongside the tool version. Write decks in meters: the provisioned build mis-scales inductance under
+  .units mm (scripts/provision_compute.sh:52). T0011''s audit still recommends one upstream commit + sha256;
+  the founder pins scripts/provision_compute.sh to it before T0013 runs and records D0002 at E001 registration.)'
+type: plan
+agent: planner
+status: running
+depends_on: []
+description: ''
+context_files: []
+deliverables: []
+touches: []
+definition_of_done: []
+experiment: null
+risk: low
+model: null
+budget_usd: 4.0
+max_turns: 40
+attempts: 1
+max_attempts: 3
+branch: null
+pr: null
+runs:
+- T0019-planner-20260929T155207-42aa
+created_by: orchestrator
+created_at: '2026-09-29T22:52:07+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: 'founder rejected plan: Founder chose option (b) on I0003. Re-issue the plan in project/tasks/T0011-T0018
+  unchanged (read their YAML) except T0013: the L2 adapter resolves the FastHenry binary from MF_FASTHENRY_BIN,
+  then PATH, and otherwise fails with a clear error naming scripts/provision_compute.sh. No auto-build:
+  no network or C compiler at run time. Record the resolved binary''s path and sha256 in LoopResult.meta
+  alongside the tool version. Write decks in meters: the provisioned build mis-scales inductance under
+  .units mm (scripts/provision_compute.sh:52). T0011''s audit still recommends one upstream commit + sha256;
+  the founder pins scripts/provision_compute.sh to it before T0013 runs and records D0002 at E001 registration.'
+rationale: ''
+history: []

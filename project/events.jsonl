@@ -31,3 +31,5 @@
 {"ts": "2026-09-29T01:26:45+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0004-critic-20260928T182046-2105", "status": "completed", "cost": 1.3759908, "subtype": "success"}
 {"ts": "2026-09-29T01:26:45+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0004", "signal": "agent_error", "action": "repair"}
 {"ts": "2026-09-29T01:26:45+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0001", "kind": "budget_increase", "subject": "[O000] budget exhausted ($9.22/$8.00)"}
+{"ts": "2026-09-29T01:28:10+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0006-planner-20260928T182357-18d1", "status": "completed", "cost": 0.8534685999999999, "subtype": "success"}
+{"ts": "2026-09-29T01:28:10+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0006", "signal": "agent_error", "action": "repair"}

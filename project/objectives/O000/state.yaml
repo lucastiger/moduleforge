@@ -9,7 +9,7 @@ pending_evaluation: null
 replans: 3
 max_replans: 3
 needs_replan: true
-spent_usd: 9.2218
+spent_usd: 10.0753
 budget_override_usd: null
 log:
 - diagnosis:T0002 of T0001 (implementation)

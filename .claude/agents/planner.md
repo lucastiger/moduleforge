@@ -1,7 +1,7 @@
 ---
 name: planner
 description: Engineering manager for one ModuleForge objective. Turns a frozen objective plus current evidence into a small task graph. Read-only; returns a structured plan that the orchestrator validates. Use for planning and replanning, never for implementation.
-tools: Read, Grep, Glob
+tools: Read, Grep, Glob, StructuredOutput
 model: opus
 effort: high
 skills:

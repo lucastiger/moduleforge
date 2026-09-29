@@ -337,6 +337,11 @@ def cmd_doctor(a: argparse.Namespace) -> int:
     free_gb = shutil.disk_usage(s.root).free / 1e9
     if free_gb < 20 and not a.ci:
         problems.append(f"only {free_gb:.0f} GB free disk: prune artifacts and caches (docs/INFRASTRUCTURE.md §9)")
+    for p in sorted((s.root / ".claude" / "agents").glob("*.md")):
+        tools = next((x for x in p.read_text().splitlines() if x.startswith("tools:")), None)
+        if tools is not None and "StructuredOutput" not in tools.split(":", 1)[1].replace(",", " ").split():
+            problems.append(f"{p.relative_to(s.root)}: tools: allow-list omits StructuredOutput, "
+                            "so the agent never sees the --json-schema report format")
     claude_md = s.root / "CLAUDE.md"
     if claude_md.exists() and len(claude_md.read_text().splitlines()) > 200:
         problems.append("CLAUDE.md exceeds 200 lines; move procedures into skills")

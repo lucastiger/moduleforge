@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shlex
 import signal
 import subprocess
@@ -53,6 +54,25 @@ class RunRecord:
     result_text: str = ""
     deadline: float = 0.0
     extra: dict[str, Any] = field(default_factory=dict)
+
+
+def report_from_text(text: str) -> Optional[dict[str, Any]]:
+    """The final report when the CLI returned it only as text (no `structured_output`).
+
+    Accepted only when the whole message is one JSON object, bare or in a single ```json fence;
+    JSON quoted inside prose is never taken as the report. Callers still validate it against the
+    role's schema. An agent whose `tools:` allow-list omits StructuredOutput never sees the schema
+    and ends up here (O000 canary, 2026-09-28; `mfos doctor` now checks the allow-lists).
+    """
+    body = text.strip()
+    fenced = re.fullmatch(r"```(?:json)?\s*\n(.*)\n```", body, re.S)
+    if fenced:
+        body = fenced.group(1)
+    try:
+        obj = json.loads(body)
+    except ValueError:
+        return None
+    return obj if isinstance(obj, dict) else None
 
 
 class AgentRunner:
@@ -189,11 +209,15 @@ class AgentRunner:
         rec.is_error = bool(data.get("is_error"))
         rec.subtype = str(data.get("subtype", ""))
         rec.structured_output = data.get("structured_output")
+        if rec.structured_output is None:
+            rec.structured_output = report_from_text(str(data.get("result") or ""))
+            rec.extra["report_source"] = "result_text" if rec.structured_output is not None else "missing"
         rec.result_text = str(data.get("result") or "")[-4000:]
         rec.session_id = data.get("session_id", rec.session_id)
         rec.status = "error" if rec.is_error or rec.subtype.startswith("error") else "completed"
         self.save(rec)
-        self.s.event("run_finished", run=rec.run_id, status=rec.status, cost=rec.cost_usd, subtype=rec.subtype)
+        self.s.event("run_finished", run=rec.run_id, status=rec.status, cost=rec.cost_usd, subtype=rec.subtype,
+                     report=rec.extra.get("report_source", "structured_output"))
         return rec
 
     @staticmethod

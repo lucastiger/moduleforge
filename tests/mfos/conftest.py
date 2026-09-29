@@ -21,6 +21,8 @@ def sandbox(tmp_path, monkeypatch):
         dst = root / item
         dst.parent.mkdir(parents=True, exist_ok=True)
         (shutil.copytree if src.is_dir() else shutil.copy2)(src, dst)
+    # The live O000 state (spend, replans, diagnoses) must not leak in: start from the bootstrap state.
+    (root / "project" / "objectives" / "O000" / "state.yaml").write_text("status: draft\n")
     shutil.rmtree(root / "src" / "moduleforge" / "__pycache__", ignore_errors=True)
     (root / "src" / "moduleforge" / "canary.py").unlink(missing_ok=True)
     pol = (root / ".mfos" / "policy.toml").read_text()

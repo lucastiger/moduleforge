@@ -125,6 +125,19 @@ def test_loop_refuses_to_start_on_stray_changes(sandbox, capsys):
     assert "non-state changes" in capsys.readouterr().err
 
 
+def test_a_left_over_status_refresh_does_not_block_a_restart(sandbox):
+    """A timestamp-only STATUS.md is deliberately left uncommitted; as the first `git status` line
+    it once lost a character to output stripping and read as a stray change ("roject/STATUS.md")."""
+    s = Store()
+    (s.project / "STATUS.md").write_text("# status\n")
+    s.git("add", "-A")
+    s.git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "status")
+    (s.project / "STATUS.md").write_text("# status, fresher\n")
+    assert Orchestrator(s).unexpected_changes() == []
+    (sandbox / "src" / "moduleforge" / "__init__.py").write_text("# stray\n")
+    assert Orchestrator(s).unexpected_changes() == ["src/moduleforge/__init__.py"]
+
+
 def test_founder_files_are_never_committed_by_the_bot(sandbox):
     setup_objective()
     s = drive()
@@ -177,3 +190,39 @@ def test_heavy_experiment_goes_to_burst_compute_and_results_flow_back(sandbox):
     s = drive()
     assert s.objective_state("O000").status == "passed"
     assert not [i for i in s.inbox("open") if "burst compute" in i.subject]
+
+
+def test_agent_whose_allow_list_hides_structured_output_is_caught(sandbox):
+    """O000 canary, 2026-09-28: every run returned structured_output=null because the agents'
+    `tools:` allow-lists omitted StructuredOutput; the planner's plan was validated as {}."""
+    assert cli(["doctor", "--ci"]) == 0
+    md = sandbox / ".claude" / "agents" / "planner.md"
+    md.write_text(md.read_text().replace(", StructuredOutput", ""))
+    assert cli(["doctor", "--ci"]) == 1
+    setup_objective()
+    s = _tick_until(lambda s: any(h.get("outcome") == "agent_error"
+                                  for t in s.tasks("O000") if t.type == "plan" for h in t.history))
+    plan = next(t for t in s.tasks("O000") if t.type == "plan")
+    failure = next(h for h in plan.history if h.get("outcome") == "agent_error")
+    assert "no structured report" in failure["summary"] and "StructuredOutput" in failure["summary"]
+    assert "schema but did not provide it" in failure["failure_output"]  # what the agent actually said
+
+
+def test_report_written_as_json_text_is_recovered_and_flagged(sandbox, monkeypatch):
+    monkeypatch.setenv("FAKE_REPORT_AS_TEXT", "1")
+    setup_objective()
+    s = drive()
+    assert s.objective_state("O000").status == "passed"
+    finished = [e for e in s.events(1000) if e["event"] == "run_finished"]
+    assert finished and all(e["report"] == "result_text" for e in finished)
+
+
+def test_report_from_text_accepts_only_a_whole_json_object():
+    from mfos.agents import report_from_text
+    assert report_from_text('{"a": 1}') == {"a": 1}
+    assert report_from_text('  ```json\n{"a": 1}\n```\n') == {"a": 1}
+    assert report_from_text('```\n{"a": 1}\n```') == {"a": 1}
+    assert report_from_text('Done. Report:\n```json\n{"a": 1}\n```') is None  # prose around it
+    assert report_from_text('The config is {"a": 1}.') is None
+    assert report_from_text("[1, 2]") is None
+    assert report_from_text("") is None

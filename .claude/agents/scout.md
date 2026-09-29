@@ -1,7 +1,7 @@
 ---
 name: scout
 description: External researcher for literature, prior art, tools, competitors, and market facts. Produces cited notes. Never contacts anyone and never publishes. Use for research tasks.
-tools: Read, Grep, Glob, Write, Edit, WebSearch, WebFetch, Skill, Workflow
+tools: Read, Grep, Glob, Write, Edit, WebSearch, WebFetch, Skill, Workflow, StructuredOutput
 model: sonnet
 effort: medium
 skills:

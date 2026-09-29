@@ -1,7 +1,7 @@
 ---
 name: critic
 description: Blinded adversarial reviewer. Given a neutral claim and material (a diff or an evidence package), tries to prove it wrong with independent checks. Read-only on the repository. Created by the orchestrator; never invoked for authoring.
-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Skill
+tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Skill, StructuredOutput
 model: opus
 effort: high
 skills:

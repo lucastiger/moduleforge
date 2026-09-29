@@ -6,6 +6,9 @@ Behaviour by --agent:
   builder  -> writes src/moduleforge/canary.py (wrong on the first attempt if FAKE_BUILDER_FAIL_FIRST=1)
   critic   -> accepts with one independent check
   scientist-> writes the diagnosis notes it was asked for
+
+The report goes in `structured_output`, unless the agent's `tools:` allow-list hides the StructuredOutput
+tool (then only prose comes back, as with the real CLI) or FAKE_REPORT_AS_TEXT=1 (bare JSON in `result`).
 """
 import json
 import os
@@ -66,6 +69,18 @@ elif role == "scientist":
 else:
     out = {"summary": "ok", "notes_file": "none"}
 
-print(json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": "done",
-                  "structured_output": out, "session_id": sid or str(uuid.uuid4()),
-                  "total_cost_usd": 0.02, "num_turns": 3}))
+envelope = {"type": "result", "subtype": "success", "is_error": False, "result": "done",
+            "structured_output": out, "session_id": sid or str(uuid.uuid4()),
+            "total_cost_usd": 0.02, "num_turns": 3}
+# Like the real CLI (checked with 2.1.284): an agent whose `tools:` allow-list omits StructuredOutput
+# never sees the schema, so its report exists only as prose in `result`.
+agent_md = Path(".claude") / "agents" / f"{role}.md"
+tools = next((x for x in agent_md.read_text().splitlines() if x.startswith("tools:")), None) \
+    if agent_md.exists() else None
+if tools is not None and "StructuredOutput" not in tools:
+    del envelope["structured_output"]
+    envelope["result"] = "Finished. You mentioned a required schema but did not provide it, so in short: done."
+elif os.environ.get("FAKE_REPORT_AS_TEXT") == "1":  # an agent that writes its report instead of calling the tool
+    del envelope["structured_output"]
+    envelope["result"] = "```json\n" + json.dumps(out, indent=1) + "\n```"
+print(json.dumps(envelope))

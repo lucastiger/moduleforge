@@ -1,7 +1,7 @@
 ---
 name: builder
 description: Implementation engineer. Implements one well-specified task in its own git worktree - code, tests, and small docs - and must make the task's definition-of-done commands pass. Use for implement and docs tasks.
-tools: Read, Edit, Write, Grep, Glob, Bash, TodoWrite, Skill
+tools: Read, Edit, Write, Grep, Glob, Bash, TodoWrite, Skill, StructuredOutput
 model: sonnet
 effort: medium
 skills:

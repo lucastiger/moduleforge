@@ -108,7 +108,9 @@ class Orchestrator:
 
     def unexpected_changes(self) -> list[str]:
         out = self.s.git("status", "--porcelain", check=False).splitlines()
-        paths = [line[3:] for line in out if line.strip()]
+        # Store.git strips the output, so the first line may have lost the leading space of " M path":
+        # split off the status code instead of slicing a fixed width.
+        paths = [line.split(None, 1)[1] for line in out if line.strip()]
         return [p for p in paths if not p.startswith(self.STATE_PATHS)]
 
     def _account_for_sleep(self) -> None:
@@ -224,6 +226,11 @@ class Orchestrator:
             self._fail(t, "agent_error", f"agent ended with {rec.subtype}", rec.result_text)
             return
         out = rec.structured_output or {}
+        if not out and t.type in ("plan", "review"):
+            # Say so plainly: validating {} reads like a bad plan, not a missing one (O000, 2026-09-28).
+            self._fail(t, "agent_error", f"{t.agent} returned no structured report (run {rec.run_id}); "
+                       "check that its tools: allow-list includes StructuredOutput", rec.result_text)
+            return
         handler = {
             "plan": self._on_plan, "review": self._on_review,
         }.get(t.type, self._on_work)

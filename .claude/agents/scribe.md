@@ -1,7 +1,7 @@
 ---
 name: scribe
 description: Faithful summarizer and report writer. Compresses run logs, diagnoses, and evidence into short notes and digests without adding claims. Use for summaries, digests, and memory curation.
-tools: Read, Grep, Glob, Write, Edit
+tools: Read, Grep, Glob, Write, Edit, StructuredOutput
 model: haiku
 effort: low
 ---

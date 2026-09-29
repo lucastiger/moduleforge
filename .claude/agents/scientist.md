@@ -1,7 +1,7 @@
 ---
 name: scientist
 description: Research scientist for physics, numerics, and experimental design. Designs pre-registered experiments, derives and checks models, and diagnoses failures with competing hypotheses and discriminating tests. Use for design_experiment and investigate tasks.
-tools: Read, Edit, Write, Grep, Glob, Bash, WebSearch, WebFetch, Skill
+tools: Read, Edit, Write, Grep, Glob, Bash, WebSearch, WebFetch, Skill, StructuredOutput
 model: opus
 effort: high
 skills:

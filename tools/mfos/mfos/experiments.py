@@ -9,7 +9,6 @@ Rules enforced here:
 """
 from __future__ import annotations
 
-import json
 import os
 import secrets
 import shutil
@@ -95,9 +94,10 @@ def run(store: Store, eid: str, *, ref: Optional[str] = None, force: bool = Fals
         res.status = "error"
         res.notes += f"\nrunner exited with code {code} after writing a result; downgraded to error"
         store.write_json(res_path, res)
-    (run_dir / "run.json").write_text(json.dumps({"exit_code": code, "seconds": round(time.time() - t0, 1),
-                                                  "cwd_commit": commit}, indent=2))
-    store.event("experiment_finished", id=eid, run=run_id, status=res.status, seconds=round(time.time() - t0, 1))
+    seconds = round(time.time() - t0, 1)
+    store.event("experiment_finished", id=eid, run=run_id, status=res.status, seconds=seconds)
+    # Last tracked write: once run.json exists the loop may evaluate the run and commit state (Store.results).
+    store.write_json(run_dir / "run.json", {"exit_code": code, "seconds": seconds, "cwd_commit": commit})
     if not here:
         git.remove_worktree(cwd)
     return res

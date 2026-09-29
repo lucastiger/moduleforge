@@ -50,3 +50,7 @@
 {"ts": "2026-09-29T01:48:02+00:00", "event": "verified", "actor": "orchestrator", "task": "T0008"}
 {"ts": "2026-09-29T01:48:04+00:00", "event": "merged", "actor": "orchestrator", "task": "T0008"}
 {"ts": "2026-09-29T01:48:04+00:00", "event": "experiment_task_started", "actor": "orchestrator", "task": "T0009", "experiment": "E000"}
+{"ts": "2026-09-29T01:48:04+00:00", "event": "experiment_started", "actor": "orchestrator", "id": "E000", "run": "E000-20260928T184804-f38b", "commit": "3df96a91b83932c583cbd5813aef19974dbbc319"}
+{"ts": "2026-09-29T01:48:05+00:00", "event": "experiment_finished", "actor": "orchestrator", "id": "E000", "run": "E000-20260928T184804-f38b", "status": "complete", "seconds": 0.9}
+{"ts": "2026-09-29T01:48:27+00:00", "event": "evaluation", "actor": "orchestrator", "objective": "O000", "id": "EV-O000-01", "verdict": "PASS"}
+{"ts": "2026-09-29T01:48:27+00:00", "event": "claim_recorded", "actor": "orchestrator", "id": "C001", "status": "supported"}

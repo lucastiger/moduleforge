@@ -1,0 +1,58 @@
+{
+  "experiment_id": "E000",
+  "run_id": "E000-20260928T184804-f38b",
+  "status": "complete",
+  "seed": null,
+  "config": {
+    "ns": [
+      1000,
+      10000,
+      100000,
+      1000000
+    ]
+  },
+  "provenance": {
+    "git_commit": "3df96a91b83932c583cbd5813aef19974dbbc319",
+    "git_dirty": false,
+    "git_branch": "HEAD",
+    "spec_hash": "sha256:680405e18f974dfc10a288921bfba7eccb9bea54a4ca3ed01b1afb35c344c8c2",
+    "lock_hash": "470d78cb8b99dac88b64a8265fbfe6681af0d0ddd7aad120dd575b6bbfd34347",
+    "python": "3.12.14",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "host": "Lucass-MacBook-Air-6.local",
+    "packages": {
+      "numpy": "2.5.3",
+      "pydantic": "2.13.5"
+    },
+    "tools": {},
+    "started": "2026-09-29T01:48:05+00:00",
+    "finished": "2026-09-29T01:48:05+00:00"
+  },
+  "metrics": {
+    "max_rel_err": {
+      "value": 1.814904311492044e-16,
+      "ci": null,
+      "level": 0.95,
+      "n": 4,
+      "unit": ""
+    }
+  },
+  "sanity": [
+    {
+      "name": "exact_small_cases",
+      "passed": true,
+      "value": null,
+      "threshold": null,
+      "detail": ""
+    },
+    {
+      "name": "reference_valid",
+      "passed": true,
+      "value": 1.3408560104260107e-9,
+      "threshold": 1e-8,
+      "detail": ""
+    }
+  ],
+  "artifacts": [],
+  "notes": ""
+}

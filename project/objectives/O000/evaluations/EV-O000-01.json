@@ -1,0 +1,35 @@
+{
+  "id": "EV-O000-01",
+  "objective": "O000",
+  "timestamp": "2026-09-29T01:48:27+00:00",
+  "criteria_hash": "sha256:ddc688ee819ab18ca7a56d3f202fc6ca8cddf931be6c35d75b1246567e1f234c",
+  "evaluator_version": "1.0.0",
+  "results_used": {
+    "E000": "E000-20260928T184804-f38b"
+  },
+  "validity_problems": [],
+  "pass_checks": [
+    {
+      "id": "A1",
+      "metric": "E000.max_rel_err",
+      "comparator": "<=",
+      "threshold": 1e-09,
+      "value": 1.814904311492044e-16,
+      "bound_used": 1.814904311492044e-16,
+      "verdict": "satisfied"
+    }
+  ],
+  "fail_checks": [
+    {
+      "id": "K1",
+      "metric": "E000.max_rel_err",
+      "comparator": ">",
+      "threshold": 1e-06,
+      "value": 1.814904311492044e-16,
+      "bound_used": 1.814904311492044e-16,
+      "verdict": "not_satisfied"
+    }
+  ],
+  "verdict": "PASS",
+  "explanation": "All pass criteria met at the conservative bound"
+}

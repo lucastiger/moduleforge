@@ -3,7 +3,7 @@ objective: O000
 title: 'Run E000: harmonic(n) vs asymptotic expansion'
 type: experiment
 agent: none
-status: running
+status: done
 depends_on:
 - T0008
 description: Orchestrator runs the registered E000 spec (`uv run python experiments/runners/e000_canary.py`,
@@ -32,4 +32,7 @@ target: null
 lens: null
 trigger: null
 rationale: The only required experiment for O000. It produces the evidence the evaluator uses for A1/K1.
-history: []
+history:
+- attempt: 1
+  outcome: experiment_complete
+  summary: E000-20260928T184804-f38b

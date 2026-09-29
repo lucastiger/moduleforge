@@ -1,10 +1,12 @@
-status: active
+status: passed
 approved_by: founder
 approved_at: '2026-09-29T01:00:20+00:00'
 criteria_hash: sha256:ddc688ee819ab18ca7a56d3f202fc6ca8cddf931be6c35d75b1246567e1f234c
-evaluations: []
-last_verdict: null
-evaluated_runs: {}
+evaluations:
+- EV-O000-01
+last_verdict: PASS
+evaluated_runs:
+  E000: E000-20260928T184804-f38b
 pending_evaluation: null
 replans: 1
 max_replans: 3

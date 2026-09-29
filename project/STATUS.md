@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-09-29T01:48:04+00:00 from repository state — do not edit_
+_generated 2026-09-29T01:48:17+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -16,8 +16,6 @@ cancelled: 4, done: 2, failed: 2, running: 1
 - T0009 `running` none/experiment: Run E000: harmonic(n) vs asymptotic expansion (attempt 1)
 
 ## Recent events
-- 2026-09-29T01:29:35+00:00 run_started {"run": "T0004-critic-20260928T182935-6a73", "task": "T0004", "role": "critic", "session": "2bc611c3-cc68-4d02-8440-203f847332bd"}
-- 2026-09-29T01:43:02+00:00 run_finished {"run": "T0006-planner-20260928T182935-3621", "status": "completed", "cost": 0.7484523999999999, "subtype": "success", "report": "missing"}
 - 2026-09-29T01:43:02+00:00 run_finished {"run": "T0004-critic-20260928T182935-6a73", "status": "completed", "cost": 1.3914508000000003, "subtype": "success", "report": "missing"}
 - 2026-09-29T01:43:02+00:00 objective_restarted {"objective": "O000", "previous_spent_usd": 12.2152, "budget_usd": 20.0, "cancelled": ["T0002", "T0004", "T0005", "T0006"], "plan_task": "T0007"}
 - 2026-09-29T01:45:45+00:00 experiment_registered {"id": "E000", "hash": "sha256:680405e18f974dfc10a288921bfba7eccb9bea54a4ca3ed01b1afb35c344c8c2", "by": "founder"}
@@ -31,3 +29,5 @@ cancelled: 4, done: 2, failed: 2, running: 1
 - 2026-09-29T01:48:02+00:00 verified {"task": "T0008"}
 - 2026-09-29T01:48:04+00:00 merged {"task": "T0008"}
 - 2026-09-29T01:48:04+00:00 experiment_task_started {"task": "T0009", "experiment": "E000"}
+- 2026-09-29T01:48:04+00:00 experiment_started {"id": "E000", "run": "E000-20260928T184804-f38b", "commit": "3df96a91b83932c583cbd5813aef19974dbbc319"}
+- 2026-09-29T01:48:05+00:00 experiment_finished {"id": "E000", "run": "E000-20260928T184804-f38b", "status": "complete", "seconds": 0.9}

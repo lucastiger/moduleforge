@@ -58,3 +58,7 @@
 {"ts": "2026-09-29T21:47:40+00:00", "event": "objective_approved", "actor": "founder", "objective": "O001", "criteria_hash": "sha256:d12d77462acca9647d13f7a7092953f9d7aa450fde02ede714f7cca52ac2ad61"}
 {"ts": "2026-09-29T22:09:06+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 93920}
 {"ts": "2026-09-29T22:09:06+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0010-planner-20260929T150906-b49d", "task": "T0010", "role": "planner", "session": "5d348714-882a-4dd1-aca5-d412f5a3e63c"}
+{"ts": "2026-09-29T22:18:25+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0010-planner-20260929T150906-b49d", "status": "completed", "cost": 1.9345092, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-09-29T22:18:25+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0003", "kind": "decision", "subject": "[O001] O001 L2 reference tool and licensing decision record (F6)"}
+{"ts": "2026-09-29T22:18:25+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0004", "kind": "plan_approval", "subject": "[O001] approve initial plan (8 tasks)"}
+{"ts": "2026-09-29T22:18:25+00:00", "event": "plan_applied", "actor": "orchestrator", "objective": "O001", "created": ["T0011", "T0012", "T0013", "T0014", "T0015", "T0016", "T0017", "T0018"], "dropped": 0}

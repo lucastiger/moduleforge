@@ -1,0 +1,105 @@
+id: T0014
+objective: O001
+title: L1 fast PEEC moduleforge.physics.peec (trace cells, skin-corrected R, Grover bond wires, image
+  planes) + single-core timing benchmark
+type: implement
+agent: builder
+status: proposed
+depends_on:
+- T0012
+description: 'Implement `moduleforge.physics.peec.loop_inductance(layout, freqs_hz) -> LoopResult`, with
+  the same field names as L2: `L_H`, `R_ohm`, `meta`. The model must be exactly the hypothesis:
+
+  - top-Cu traces as rectangular cells, with partial inductances from cited closed forms (e.g. Ruehli
+  1972, Hoer & Love 1965);
+
+  - skin-depth-corrected resistance (cite the formula);
+
+  - bond wires as round filaments with Grover partial self and mutual inductances;
+
+  - the stack''s conductive planes as image planes (state and justify in the docstring which plane(s)
+  are imaged at each frequency, from skin depth vs layer thickness);
+
+  - a quasi-static solve for the port impedance, with the same port definition as Layout.to_conductors().
+
+
+  Independence: do not import moduleforge.solvers, do not call L2, and do not fit any correction factor
+  to L2 outputs.
+
+
+  Performance: vectorized kernels, with no Python loops over cells or filaments. Target a median ≤ 50
+  ms per evaluation on one core with 6 dies per switch, where one evaluation is Layout → L_loop at 20
+  MHz including discretization. If using JAX, enable x64 and avoid recompiling per layout (fixed shape
+  buckets); numpy is equally acceptable.
+
+
+  Tests under tests/unit/physics/peec/, per the mf-conventions physics testing standard:
+
+  - analytic checks: bar self and mutual inductance vs Hoer–Love, round wire vs Grover, wire over a plane
+  vs image theory;
+
+  - limiting case: far-field mutual inductance tends to the filament formula;
+
+  - the L matrix is symmetric positive definite;
+
+  - length scaling;
+
+  - R ∝ √f when δ ≪ t.
+
+
+  Add benchmarks/l1_timing.py. It pins one thread (OMP/MKL/OpenBLAS/XLA env vars set before any import),
+  generates ≥ 30 layouts with 6 dies per switch (fixed dev seed), excludes one declared warm-up call,
+  prints p50/p90, and exits non-zero if p50 > 50 ms. Do not modify pyproject.toml.'
+context_files:
+- project/objectives/O001/objective.yaml
+- src/moduleforge/geometry/
+- src/moduleforge/generate/halfbridge.py
+- .claude/skills/mf-conventions/SKILL.md
+deliverables:
+- src/moduleforge/physics/peec/
+- tests/unit/physics/peec/
+- benchmarks/l1_timing.py
+touches:
+- src/moduleforge/physics/**
+- tests/unit/physics/**
+- benchmarks/l1_timing.py
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/physics/peec
+  exists: null
+  timeout_s: 900
+- cmd: uv run ruff check src/moduleforge/physics tests/unit/physics benchmarks
+  exists: null
+  timeout_s: 120
+- cmd: uv run python -c "import sys, moduleforge.physics.peec; assert not any(m.startswith('moduleforge.solvers')
+    for m in sys.modules), 'L1 must not import L2'"
+  exists: null
+  timeout_s: 120
+- cmd: uv run python -c "import numpy as np; from moduleforge.generate.halfbridge import generate_layouts;
+    from moduleforge.physics.peec import loop_inductance; l=generate_layouts(1, seed=7, dies_per_switch=3)[0];
+    r=loop_inductance(l, freqs_hz=[5e6, 2e7, 8e7]); L=np.asarray(r.L_H); assert L.shape==(3,) and np.all(np.isfinite(L)),
+    L; assert 1e-9 < L[1] < 1e-7, L; assert L[0] >= L[1]*(1-1e-6) and L[1] >= L[2]*(1-1e-6), L; print(L)"
+  exists: null
+  timeout_s: 600
+- cmd: uv run python benchmarks/l1_timing.py
+  exists: null
+  timeout_s: 900
+experiment: null
+risk: high
+model: null
+budget_usd: 7.0
+max_turns: 100
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: planner:T0010
+created_at: '2026-09-29T22:18:25+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: L1 is the model under test for A2–A5 and A6. The single-core timing benchmark in the definition
+  of done front-loads the A6 kill shot, and the import check guards L1's independence from the reference.
+history: []

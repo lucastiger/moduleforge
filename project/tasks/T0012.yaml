@@ -1,0 +1,101 @@
+id: T0012
+objective: O001
+title: Layout IR, layer stack, DRC and DRC-valid half-bridge generator (3 families, 2–6 dies/switch)
+type: implement
+agent: builder
+status: proposed
+depends_on: []
+description: 'Build the shared input layer that L1, L2 and the E002/E003 runners consume. Follow skill
+  mf-conventions: SI float64, z = 0 at the baseplate bottom, stacks listed bottom-up, explicit seeds,
+  cited defaults.
+
+
+  - src/moduleforge/geometry/: a LayerStack for baseplate, solder, backside Cu, ceramic and top Cu. Provide
+  default DBC (Al2O3) and AMB (Si3N4) stacks, with thicknesses and conductivities cited. A Layout dataclass
+  holding: substrate outline; rectilinear top-Cu trace polygons with net labels (DC+, DC−, PHASE); dies
+  (position, size, HS/LS switch position, pad regions); bond wires (3D polylines with loop height and
+  diameter); and housing-fixed terminals (DC+, DC−, PHASE). Required attributes: `family`, `dies_per_switch`,
+  `fingerprint()` (a stable hash of the geometry). `Layout.to_conductors()` returns a solver-neutral ConductorModel:
+  traces decomposed into rectangles (z, thickness, σ); wire segments; the stack''s conductive planes (backside
+  Cu, baseplate) with their true extents; dies as ideal shorts (switches on); and the commutation-loop
+  port between the DC+ and DC− terminals with PHASE open. Document this port definition in the docstring
+  (L_loop(f) plus port definition, per mf-conventions).
+
+  - src/moduleforge/drc/: `check(layout) -> list[Violation]` for the rules the generator must respect:
+  min trace width, min Cu–Cu spacing, Cu-to-substrate-edge margin, die-to-trace-edge margin, die–die spacing,
+  bond-wire length limits, min wire pitch, and each wire landing on Cu of the correct net. Cite typical
+  DBC/AMB design-guide values as defaults.
+
+  - src/moduleforge/generate/halfbridge.py: `generate_layouts(n, seed, family=None, dies_per_switch=None)
+  -> list[Layout]`, seeded with numpy.random.Generator. At least 3 topologically distinct families (e.g.
+  side-by-side, interleaved/overlapping DC+/DC−, U-shaped long loop), 2–6 dies per switch position, and
+  fixed housing terminal positions. Return only DRC-valid layouts (bounded reject-and-resample; raise
+  if exhausted). Also `loop_area_proxy(layout)`.
+
+  - Move scipy, shapely and jax from the physics dependency group into [project].dependencies (all permissive
+  licenses). Experiments run under plain `uv run` in a clean checkout, so optional groups are not installed
+  there. Update uv.lock.
+
+  - Tests under tests/unit/{geometry,drc,generate}/: stack z bookkeeping; each DRC rule caught on a deliberately
+  bad layout and a good layout passing; rectangle decomposition preserves copper area; seeded determinism;
+  coverage of families and die counts; CV of loop_area_proxy ≥ 0.3 over 60 generated layouts (early check
+  for E002''s sample_diverse, F2).'
+context_files:
+- project/objectives/O001/objective.yaml
+- .claude/skills/mf-conventions/SKILL.md
+- pyproject.toml
+- src/moduleforge/__init__.py
+deliverables:
+- src/moduleforge/geometry/
+- src/moduleforge/drc/
+- src/moduleforge/generate/halfbridge.py
+- tests/unit/geometry/
+- tests/unit/drc/
+- tests/unit/generate/
+touches:
+- src/moduleforge/geometry/**
+- src/moduleforge/drc/**
+- src/moduleforge/generate/**
+- tests/unit/geometry/**
+- tests/unit/drc/**
+- tests/unit/generate/**
+- pyproject.toml
+- uv.lock
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/geometry tests/unit/drc tests/unit/generate
+  exists: null
+  timeout_s: 600
+- cmd: uv run ruff check src/moduleforge tests/unit
+  exists: null
+  timeout_s: 120
+- cmd: uv run python -c "import tomllib; d=' '.join(tomllib.load(open('pyproject.toml','rb'))['project']['dependencies']);
+    assert all(p in d for p in ('scipy','shapely','jax')), d"
+  exists: null
+  timeout_s: 60
+- cmd: uv run python -c "from moduleforge.generate.halfbridge import generate_layouts; from moduleforge.drc
+    import check; a=generate_layouts(60, seed=12345); b=generate_layouts(60, seed=12345); assert len(a)==60;
+    bad=[l.fingerprint() for l in a if check(l)]; assert not bad, bad; assert [l.fingerprint() for l in
+    a]==[l.fingerprint() for l in b]; assert len({l.family for l in a})>=3; assert {l.dies_per_switch
+    for l in a}=={2,3,4,5,6}; c=a[0].to_conductors(); print('ok', len(a))"
+  exists: null
+  timeout_s: 600
+experiment: null
+risk: medium
+model: null
+budget_usd: 7.0
+max_turns: 100
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: planner:T0010
+created_at: '2026-09-29T22:18:25+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: Infrastructure required by E002 (all_drc_valid and sample_diverse sanity checks, F2; scope
+  of 2–6 dies per switch) and consumed by both L1 and L2. Nothing can be compared without it.
+history: []

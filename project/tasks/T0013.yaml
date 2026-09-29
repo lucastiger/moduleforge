@@ -1,0 +1,114 @@
+id: T0013
+objective: O001
+title: L2 reference adapter moduleforge.solvers.l2 (FastHenry-class, meshed planes, refinement, memoization)
+type: implement
+agent: builder
+status: proposed
+depends_on:
+- T0011
+- T0012
+description: 'Implement `moduleforge.solvers.l2` with two parts.
+
+  (a) Exactly the primitive-level API specified in the contract section of research/notes/o001-l2-reference.md
+  and called by experiments/runners/e001_reference.py. Do not edit the runner or the note. If the contract
+  cannot be implemented, stop and report blocked; do not work around it.
+
+  (b) `loop_inductance(layout, freqs_hz, refinement=0) -> LoopResult` with fields `L_H` and `R_ohm` (arrays
+  aligned with freqs) and `meta` (tool version, discretization sizes), built on Layout.to_conductors().
+
+
+  Use the tool recommended in the note (default FastHenry) as a separate executable. Resolve it from `MF_FASTHENRY_BIN`,
+  then PATH, then by building the pinned upstream source (commit and sha256 from the note, verified) into
+  a cache under the system temp directory. Never vendor or import its source.
+
+
+  Model the physics explicitly, with no image planes:
+
+  - top-Cu traces with cross-section filament subdivision graded to resolve the skin depth at the highest
+  requested frequency;
+
+  - bond wires as segmented chains;
+
+  - backside Cu and baseplate as finite meshed conductive planes at their true extent and thickness;
+
+  - dies as ideal shorts;
+
+  - the same port definition as to_conductors().
+
+
+  `refinement` refines every discretization by a fixed, documented factor. Memoize solves on disk under
+  the temp dir, keyed by geometry fingerprint, frequencies, refinement and tool version. Expose the tool
+  version so runners can record it.
+
+
+  Tests under tests/unit/solvers/:
+
+  - input-deck generation without the binary;
+
+  - parsing a stored sample output;
+
+  - end-to-end small cases against closed forms;
+
+  - reciprocity;
+
+  - length scaling;
+
+  - L_eff non-increasing with frequency;
+
+  - a generated 2-die half-bridge within 1–100 nH.
+
+
+  Do not modify pyproject.toml; n2 already moved the runtime dependencies.'
+context_files:
+- research/notes/o001-l2-reference.md
+- experiments/runners/e001_reference.py
+- experiments/drafts/E001.yaml
+- src/moduleforge/geometry/
+- src/moduleforge/generate/halfbridge.py
+- .claude/skills/mf-conventions/SKILL.md
+deliverables:
+- src/moduleforge/solvers/l2.py
+- tests/unit/solvers/
+touches:
+- src/moduleforge/solvers/**
+- tests/unit/solvers/**
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/solvers
+  exists: null
+  timeout_s: 1800
+- cmd: uv run ruff check src/moduleforge/solvers tests/unit/solvers
+  exists: null
+  timeout_s: 120
+- cmd: rm -rf /tmp/e001-smoke && uv run python experiments/runners/e001_reference.py --smoke && uv run
+    python -c "import json; r=json.load(open('/tmp/e001-smoke/result.json')); assert r['status']=='complete',
+    r['status']; assert r['sanity'] and all(s['passed'] for s in r['sanity']), r['sanity']; v=r['metrics']['max_rel_err_vs_analytic']['value'];
+    assert v <= 0.02, v; print('E001 smoke max_rel_err', v)"
+  exists: null
+  timeout_s: 2400
+- cmd: uv run python -c "import numpy as np; from moduleforge.generate.halfbridge import generate_layouts;
+    from moduleforge.solvers.l2 import loop_inductance; l=generate_layouts(1, seed=7, dies_per_switch=2)[0];
+    r=loop_inductance(l, freqs_hz=[5e6, 2e7, 8e7], refinement=0); L=np.asarray(r.L_H); assert L.shape==(3,)
+    and np.all(np.isfinite(L)), L; assert 1e-9 < L[1] < 1e-7, L; assert L[0] >= L[1]*(1-1e-6) and L[1]
+    >= L[2]*(1-1e-6), L; print(L)"
+  exists: null
+  timeout_s: 1800
+experiment: null
+risk: high
+model: null
+budget_usd: 7.0
+max_turns: 100
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: planner:T0010
+created_at: '2026-09-29T22:18:25+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: L2 is the reference for E001 (A1) and E002 (A2–A5, K1–K3). Its merge is gated on the pre-registered
+  E001 smoke cases at the 2% A1 threshold, which catches F1 before evaluation.
+history: []

@@ -8,7 +8,7 @@ evaluated_runs: {}
 pending_evaluation: null
 replans: 1
 max_replans: 3
-needs_replan: true
-spent_usd: 0.0
+needs_replan: false
+spent_usd: 1.9345
 budget_override_usd: null
 log: []

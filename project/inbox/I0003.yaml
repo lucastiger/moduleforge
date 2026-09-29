@@ -1,0 +1,28 @@
+id: I0003
+kind: decision
+subject: '[O001] O001 L2 reference tool and licensing decision record (F6)'
+summary: The plan uses a FastHenry-class reference for L2, recommended by the audit in task n1 (research/notes/o001-l2-reference.md).
+  It would run as a separate executable for internal research only, which mf-conventions allows but says
+  must be recorded in a decision record; project/decisions/ is founder-owned. The adapter (n3) finds the
+  binary from MF_FASTHENRY_BIN, then PATH, and otherwise builds a pinned, sha256-verified upstream source
+  into the system temp cache. That fallback needs network access and a C compiler on the machine running
+  the experiment, including any burst VM if E002 exceeds 6 CPU-hours. Please (1) record the decision (e.g.
+  D0002) once you have read n1's audit, ideally when you register E001, and (2) choose how the binary
+  is provided.
+refs:
+- O001
+- T0010
+options:
+- (a) The adapter auto-builds the pinned FastHenry source into the temp cache (no founder action beyond
+  the decision record)
+- (b) The founder pre-installs the pinned FastHenry binary on the Mac (~/.local/bin, already on the loop's
+  PATH) and in the burst image
+- '(c) Reject external tools: re-scope n3 as an in-house FastHenry-class dense PEEC in numpy/scipy (no
+  third-party license; less independent of L1 and memory-limited when planes are meshed)'
+recommendation: (a) with (b) as a hardening step if the audit shows the tool is permissively licensed
+  and builds cleanly on macOS arm64. Choose (c) only if the audit finds the license or build unsuitable,
+  in which case n3 needs re-planning.
+status: open
+response: ''
+created_at: '2026-09-29T22:18:25+00:00'
+resolved_at: null

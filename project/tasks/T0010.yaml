@@ -3,7 +3,7 @@ objective: O001
 title: Plan O001 (initial)
 type: plan
 agent: planner
-status: running
+status: done
 depends_on: []
 description: ''
 context_files: []
@@ -29,4 +29,24 @@ target: null
 lens: null
 trigger: initial
 rationale: ''
-history: []
+history:
+- outcome: planned
+  summary: 'O001 starts from zero. The repository holds only the O000 canary: there is no geometry IR,
+    generator, L1 model, L2 reference or experiment design, and there is no evidence yet (0 of 3 evaluations
+    used, $0 of $120 spent). The hypothesis is most likely to die on F3, missing physics. L1 represents
+    the DBC backside copper and baseplate as image planes and bond-wire coupling as Grover filaments,
+    which could bias L_loop by more than 20% (K2) or reorder layouts with similar loop areas (K1/K3).
+    A second, cheaper risk is the 50 ms single-core budget (A6), especially if JAX recompiles for each
+    layout shape. Neither risk can be judged until the reference itself is trustworthy (F1) and legally
+    usable (F6). So the plan starts with a scientist task that audits the reference tool and pre-registers
+    E001 a'
+  created:
+  - T0011
+  - T0012
+  - T0013
+  - T0014
+  - T0015
+  - T0016
+  - T0017
+  - T0018
+  dropped_for_limits: 0

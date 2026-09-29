@@ -1,0 +1,35 @@
+id: T0009
+objective: O000
+title: 'Run E000: harmonic(n) vs asymptotic expansion'
+type: experiment
+agent: none
+status: todo
+depends_on:
+- T0008
+description: Orchestrator runs the registered E000 spec (`uv run python experiments/runners/e000_canary.py`,
+  ns = 1e3, 1e4, 1e5, 1e6) against merged main after n1. The result feeds acceptance A1 (max_rel_err ≤
+  1e-9) and kill criterion K1 (max_rel_err > 1e-6). Sanity checks exact_small_cases and reference_valid
+  must both pass for the result to count.
+context_files: []
+deliverables: []
+touches: []
+definition_of_done: []
+experiment: E000
+risk: low
+model: null
+budget_usd: 0.5
+max_turns: 1
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: planner:T0007
+created_at: '2026-09-29T01:47:17+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: The only required experiment for O000. It produces the evidence the evaluator uses for A1/K1.
+history: []

@@ -1,0 +1,78 @@
+id: T0008
+objective: O000
+title: Implement moduleforge.canary.harmonic(n) with unit tests
+type: implement
+agent: builder
+status: running
+depends_on: []
+description: 'Create `src/moduleforge/canary.py` exposing `harmonic(n: int) -> float`, returning the n-th
+  harmonic number H_n = sum_{k=1}^{n} 1/k in float64. Cite the definition in the docstring (e.g. Graham,
+  Knuth, Patashnik, Concrete Mathematics §6.3). Keep it pure Python, with no numpy and no performance
+  work. Use `math.fsum(1.0 / k for k in range(1, n + 1))` (correctly rounded summation) so the float error
+  stays near 1e-16 for n up to 1e6. harmonic(1) must return exactly 1.0 and harmonic(2) exactly 1.5. Input
+  validation: raise TypeError for non-int input, including bool; raise ValueError for n < 1.
+
+
+  Add `tests/unit/test_canary.py` with these tests: (a) harmonic(1) == 1.0 and harmonic(2) == 1.5 exactly;
+  (b) harmonic(10) matches float(sum(Fraction(1, k) for k in 1..10)) to relative error ≤ 1e-15; (c) for
+  n in {1000, 10000, 100000, 1000000}, relative error against ln n + γ + 1/(2n) − 1/(12n²) + 1/(120n⁴)
+  is ≤ 1e-12, with γ = 0.57721566490153286061 (OEIS A001620) and the expansion cited in a comment (Concrete
+  Mathematics §9.6); (d) the return type is float and harmonic is strictly increasing on a few sample
+  n; (e) ValueError for 0 and −1, TypeError for 2.5 and True.
+
+
+  Do NOT modify `experiments/runners/e000_canary.py` or `experiments/specs/E000.yaml`. Both are founder-owned
+  and outside your write scope. The runner imports `from moduleforge.canary import harmonic`, so keep
+  that exact name and module path.'
+context_files:
+- experiments/runners/e000_canary.py
+- experiments/specs/E000.yaml
+- src/moduleforge/__init__.py
+- project/objectives/O000/objective.yaml
+deliverables:
+- src/moduleforge/canary.py
+- tests/unit/test_canary.py
+touches:
+- src/moduleforge/canary.py
+- tests/unit/test_canary.py
+definition_of_done:
+- cmd: null
+  exists: src/moduleforge/canary.py
+  timeout_s: 900
+- cmd: null
+  exists: tests/unit/test_canary.py
+  timeout_s: 900
+- cmd: uv run pytest -q tests/unit/test_canary.py
+  exists: null
+  timeout_s: 300
+- cmd: uv run ruff check src/moduleforge/canary.py tests/unit/test_canary.py
+  exists: null
+  timeout_s: 120
+- cmd: rm -rf /tmp/e000-smoke && uv run python experiments/runners/e000_canary.py --smoke && uv run python
+    -c "import json; r=json.load(open('/tmp/e000-smoke/result.json')); assert r['status']=='complete',
+    r['status']; assert r['sanity'] and all(s['passed'] for s in r['sanity']), r['sanity']; v=r['metrics']['max_rel_err']['value'];
+    assert v <= 1e-9, v; print('smoke max_rel_err', v)"
+  exists: null
+  timeout_s: 300
+experiment: null
+risk: low
+model: null
+budget_usd: 3.0
+max_turns: 40
+attempts: 1
+max_attempts: 3
+branch: task/T0008-implement-moduleforge-canary-harmonic-n-
+pr: null
+runs:
+- T0008-builder-20260928T184717-7905
+created_by: planner:T0007
+created_at: '2026-09-29T01:47:17+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: Acceptance A1/K1 measure E000.max_rel_err, which needs moduleforge.canary.harmonic to exist.
+  The smoke DoD runs the real runner on a subset before merge, so a wrong implementation fails without
+  spending one of the 2 evaluations.
+history: []

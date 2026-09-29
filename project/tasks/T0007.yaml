@@ -3,7 +3,7 @@ objective: O000
 title: Plan O000 (initial)
 type: plan
 agent: planner
-status: running
+status: done
 depends_on: []
 description: ''
 context_files: []
@@ -29,4 +29,17 @@ target: null
 lens: null
 trigger: initial
 rationale: ''
-history: []
+history:
+- outcome: planned
+  summary: 'O000 has no evidence yet. Evaluations used: 0 of 2. The previous planning attempts (T0001,
+    T0003) failed because the planner returned no structured output, not because of a planning problem.
+    The founder already registered the E000 spec (experiments/specs/E000.yaml) and wrote its runner (experiments/runners/e000_canary.py).
+    The runner checks its own reference first, comparing the truncated expansion against the exact H_10,
+    so no design_experiment task is needed, as the objective notes say. The only missing piece is `moduleforge.canary.harmonic`.
+    The hypothesis is numerically easy: the expansion''s truncation error at n≥1e3 is about 4e-21, and
+    summing 1/k with math.fsum is accurate to about 1e-16, so the real risk is the F1 failure mode (headless
+    auth, tool denial, or guard hooks) and bugs in'
+  created:
+  - T0008
+  - T0009
+  dropped_for_limits: 0

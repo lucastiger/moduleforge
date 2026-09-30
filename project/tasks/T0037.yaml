@@ -4,7 +4,7 @@ title: 'Fingerprint: hash LayerStack.kind, pin every hashed input with a test, f
   review)'
 type: implement
 agent: builder
-status: running
+status: review
 depends_on:
 - T0033
 - T0034
@@ -362,3 +362,108 @@ history:
     included) reads it; DRC and to_conductors use the dict key. So the behaviour matches the docstring,
     but the headline ''plus the labels'' is slightly loose.'
   at: '2026-09-30T18:48:54+00:00'
+- attempt: 3
+  outcome: agent_finished
+  summary: 'All the definition-of-done commands and `mfos gate --fast` now pass. Attempt 2''s work was
+    kept and its review findings fixed. Commit 21633b1.
+
+
+    When I started, the DoD mutation check failed on its 3 new "label re-paired with geometry" mutants:
+    die pad names, trace net/polygon and wire net/points. The old pad-name test added a pad, which changed
+    the pad count, so a fingerprint that ignored pad names still noticed the change and the test passed.
+
+
+    Test changes, all in tests/unit/geometry/test_layout.py:
+
+    - **Pad-name test:** it now renames a pad (source → kelvin) and keeps the pad count.
+
+    - **Swapping between elements:** for every field of every element, the test swaps two different values
+    between two elements and checks that the fingerprint changes. The element types are traces, dies,
+    wires, te'
+  report:
+    status: completed
+    summary: 'All the definition-of-done commands and `mfos gate --fast` now pass. Attempt 2''s work was
+      kept and its review findings fixed. Commit 21633b1.
+
+
+      When I started, the DoD mutation check failed on its 3 new "label re-paired with geometry" mutants:
+      die pad names, trace net/polygon and wire net/points. The old pad-name test added a pad, which changed
+      the pad count, so a fingerprint that ignored pad names still noticed the change and the test passed.
+
+
+      Test changes, all in tests/unit/geometry/test_layout.py:
+
+      - **Pad-name test:** it now renames a pad (source → kelvin) and keeps the pad count.
+
+      - **Swapping between elements:** for every field of every element, the test swaps two different
+      values between two elements and checks that the fingerprint changes. The element types are traces,
+      dies, wires, terminals and layers. Each die''s source and gate rectangles are also swapped. Where
+      the layout has no two different values, one value is changed first so the test always does something.
+      A completeness test ties this table to the existing table of hashed fields.
+
+      - **Swapping between fields:** every pair of same-type fields within an element is swapped (e.g.
+      outline ↔ baseplate_outline, die cx ↔ cy, w ↔ h, layer sigma ↔ k), 26 cases.
+
+      - **Order:** reordering traces, dies or wires changes the fingerprint. Reordering the pad and terminal
+      dicts does not.
+
+      - **Rounding boundary:** a 0.002 nm change across a half-nanometre boundary is seen; the same change
+      away from a boundary is not.
+
+
+      The DoD mutation check now reports all 48 mutants caught. I also wrote 10 extra mutants the DoD
+      does not include, run the same way from a temporary script outside the repo. They were: terminal
+      cy pairing, outline/baseplate pairing, die cx/cy within a die, die w/h within a die, layer sigma
+      across layers, layer sigma/k within a layer, die switch pairing, wire diameter pairing, dies sorted,
+      and backside_inset/wire_sigma. All 10 were caught.
+
+
+      Docstring changes in layout.py (the fingerprint code itself is unchanged):
+
+      - The headline now says "every IR field but the two listed last" instead of "plus the labels", since
+      Terminal.net is not hashed.
+
+      - It no longer claims changes under 0.5 nm are always ignored. It now says what is guaranteed: a
+      change of more than 1 nm to one length always changes the fingerprint. It also says what isn''t:
+      a smaller change can still change it at a rounding boundary, or when `shapely.normalize` picks a
+      different starting vertex for a polygon.
+
+      - It keeps "1 nm per field" and "12 significant digits". The ''Not covered'' list names exactly
+      BondWire.loop_height and Terminal.net. It makes no thermal-model claim.'
+    files_changed:
+    - src/moduleforge/geometry/layout.py
+    - tests/unit/geometry/test_layout.py
+    checks_run:
+    - cmd: 'uv run python /tmp/t0037/mut.py  (DoD mutation check, before changes: 3 survivors)'
+      exit_code: 1
+    - cmd: uv run pytest -q tests/unit/geometry  (after first docstring edit; docstring test failed on
+        headline wording, fixed by rewording docstring)
+      exit_code: 1
+    - cmd: uv run pytest -q tests/unit/geometry
+      exit_code: 0
+    - cmd: uv run python /tmp/t0037/mut2.py  (10 extra re-pairing mutants; all killed)
+      exit_code: 0
+    - cmd: uv run pytest -q tests/unit/geometry tests/unit/generate tests/unit/drc
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge tests/unit
+      exit_code: 0
+    - cmd: 'uv run python - <<EOF (DoD: LayerStack.kind is hashed)'
+      exit_code: 0
+    - cmd: 'uv run python /tmp/t0037/mut.py  (DoD mutation check verbatim: all 48 mutants caught)'
+      exit_code: 0
+    - cmd: 'uv run python - <<EOF (DoD: length quantum 0.01 nm absorbed / 2 nm seen)'
+      exit_code: 0
+    - cmd: uv run python -c "...inspect.getdoc(Layout.fingerprint)... fingerprint docstring ok"
+      exit_code: 0
+    - cmd: uv run python -c "...generate_layouts(60, seed=12345)... print('ok', len(a))"
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    concerns:
+    - The swap tests exchange values between the first pair of elements whose values differ, not between
+      every pair. That catches any fingerprint that hashes a field's values without the element they belong
+      to, but not one that is blind to pairing for only some elements. That seems unlikely, but it is
+      a limit of the test design.
+    - 'The new order test fixes current behaviour: reordering traces, dies or wires changes the fingerprint.
+      If the fingerprint is later made order-independent on purpose, that test and the docstring must
+      change together.'

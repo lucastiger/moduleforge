@@ -210,3 +210,4 @@
 {"ts": "2026-09-30T18:48:20+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 14564}
 {"ts": "2026-09-30T18:51:06+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0045-critic-20260930T113013-ea65", "status": "completed", "cost": 1.5063718000000001, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-09-30T18:51:06+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0041-scientist-20260930T115106-58f7", "task": "T0041", "role": "scientist", "session": "d6adbdbf-37a0-4df4-86d5-9ceaaca5d8fa"}
+{"ts": "2026-09-30T18:52:42+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0044-critic-20260930T113013-7ce6", "status": "completed", "cost": 2.1548241999999993, "subtype": "success", "report": "structured_output"}

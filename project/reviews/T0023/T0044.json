@@ -1,0 +1,66 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "Trace cells carry uniform current through the full 0.3 mm Cu thickness at 20 MHz; the docstring's claim that bar internal inductance is 'neglected' is false",
+      "detail": "The Hoer-Love uniform-current self and image mutuals put each bar's current at the mid-thickness of the copper. That means the bars keep their full DC internal inductance: current is not pushed toward the face nearest the backside Cu, even though skin depth is about 15 \u00b5m against t = 0.3 mm. The module docstring says the opposite ('the bar internal inductance is neglected (delta << t)'). As a result the trace contribution to L does not depend on frequency and is biased high. The bias differs by family, so cross-family ranking can shift slightly. The planned L2 reference (research/notes/o001-l2-reference.md) layers filaments through the thickness down to \u03b4/2, so this bias will appear directly in E002's MAPE, where criterion A4 allows at most 12%.",
+      "evidence": "18 layouts (seed 31337) at 20 MHz, compared with the same layouts where top Cu is thinned to 0.03 mm (a current sheet at the bottom face). L(0.3 mm)/L(sheet) \u2212 1: side_by_side +6.1..+8.5%, interleaved +11.9..+13.2%, u_shaped +11.7..+12.4%. Within-family Spearman \u03c1 between the two: 1.000 / 1.000 / 0.964.",
+      "suggested_check": "Correct the docstring, and either split the bars into 2\u20133 thickness layers or state the expected HF bias in the pre-registered E002 analysis."
+    },
+    {
+      "severity": "minor",
+      "title": "Loop inductance is not mesh-converged at the default hmax = 4 mm, and the convergence test is too loose to detect it",
+      "detail": "The refinement sequence is not monotone and not clearly converging. The 2 mm vs 1 mm gap stays as large as the 4 mm vs 2 mm gap, so 1 mm is not converged either. The unit test only asks for mid within 10% of fine (with fine = 2 mm), which would pass a clearly unconverged answer. The approximation tiers were ruled out as the cause: forcing exact Hoer-Love for every pair changes L by only \u22120.16..\u22120.71%. Rankings within a family hold up (\u03c1 0.965\u20130.993), so for O001 this is mainly an absolute-accuracy (MAPE) risk.",
+      "evidence": "L at 20 MHz for hmax 8/4/2/1 mm, in nH. u_shaped n=5: 10.993/10.424/10.052/9.656. side_by_side n=4: 3.886/4.014/4.014/3.846. Over 36 layouts (12 per family, seed 555), L(4 mm)/L(1 mm) \u2212 1 has mean +4.0..+6.1% and max +10.7%. Spearman \u03c1(4 mm, 1 mm) per family: 0.965 / 0.993 / 0.993.",
+      "suggested_check": "Report L at 4/2/1/0.5 mm on a few layouts with a Richardson estimate, and tighten the test tolerance to what the mesh actually achieves."
+    },
+    {
+      "severity": "minor",
+      "title": "Splitting a bond wire into segments inflates its self-inductance at realistic radii; the author's additivity test avoids that regime",
+      "detail": "Each segment's self-inductance uses Grover's round-wire form, i.e. a filament mutual at distance a. Touching neighbouring segments of the same wire, however, are coupled as zero-radius filaments (d \u2248 1e-12). At the model's a/l_seg of about 0.1\u20130.25 the sum over segments exceeds the self-inductance of the unsplit wire. test_segment_mutual_touching_collinear_segments_finite_and_additive uses a = 10 \u00b5m, where this error vanishes, so it does not test the regime the model actually runs in.",
+      "evidence": "Straight wire split into 6 segments with the model's own _seg_matrix plus Grover diagonal, compared with Grover self of the whole wire. a = 0.15 mm: +4.45% / +2.50% / +1.53% at 5 / 8 / 12 mm length. a = 0.20 mm: +6.36% / +3.55% / +2.17%.",
+      "suggested_check": "Compute the mutual between touching segments of the same wire at distance a (consistent with the GMD), and rerun the additivity test with a = 0.15\u20130.2 mm."
+    },
+    {
+      "severity": "minor",
+      "title": "Skin-corrected bar resistance counts internal cell side walls as skin surfaces, so R(f) does not converge under refinement",
+      "detail": "The perimeter skin-layer formula A_eff = wt \u2212 (w \u2212 2\u03b4)(t \u2212 2\u03b4) is applied to every PEEC cell. For cells inside a trace this counts the two shared side walls as current-carrying surfaces. Total A_eff therefore grows with the number of cells across a trace, and R keeps falling as the mesh is refined, at an accelerating rate. R_ohm is a reported output and 'skin-corrected R' is a named deliverable, but it is not an O001 acceptance metric.",
+      "evidence": "R at 20 MHz for hmax 8/4/2/1 mm, in m\u03a9. interleaved: 17.105/16.230/16.108/15.154 (a step of \u22120.8% followed by \u22125.9%). u_shaped: 16.404/15.608/14.898/13.965. R(4 mm)/R(1 mm) \u2212 1 = +6.7%, +7.1%, +11.8%.",
+      "suggested_check": "Apply the skin layer only to exposed trace faces (top and bottom, plus true polygon edges), or flag R_ohm as mesh-dependent."
+    },
+    {
+      "severity": "note",
+      "title": "The 50 ms median timing limit passes with a machine-dependent margin",
+      "detail": "The benchmark passed at p50 39.5 ms (p90 56.5 ms), and at p50 32.7 ms in a repeat run. CPU/wall ratio was 1.00, which confirms the thread pinning works (numpy 2.5.3 with Accelerate). A mixed set of die counts gives p50 25.1 ms. The headroom is 20\u201335% on this machine and could shrink on slower CI hardware.",
+      "evidence": "benchmarks/l1_timing.py printed l1_eval_ms_p50=39.50 l1_eval_ms_p90=56.46. In the independent re-run, wall p50 was 32.7 ms and CPU p50 32.6 ms.",
+      "suggested_check": "Record CPU model and numpy BLAS in the E003 run metadata."
+    },
+    {
+      "severity": "note",
+      "title": "The infinite-image-plane assumption is weakest at the substrate edge",
+      "detail": "Traces start at y = 1.5 mm while the backside Cu begins at 1.0 mm (a 1 mm inset). The trace edge is therefore only about 0.5 mm from the edge of the image plane, at a height of roughly 0.5 mm. Image theory is least accurate there. This is documented as neglected and is consistent with the hypothesis.",
+      "evidence": "halfbridge.Y_BOT = 1.5 mm; Layout.backside_inset = 1.0 mm; the image is at z_top(backside_cu), 0.53 mm below the mid-plane of the top Cu.",
+      "suggested_check": "Include edge-adjacent layouts in E002 residual analysis (failure mode F3)."
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran every definition-of-done command. pytest: 30 passed. ruff: clean. No L2 import: ok. End-to-end seed-7 check: L = [10.115, 10.097, 10.089] nH at 5/20/80 MHz, finite and monotone. Benchmark: p50 39.5 ms, exit 0.",
+    "Hoer-Love superposition identities in touching configurations, which no author test covers: width, length and thickness splits, a 2\u00d72 corner-touching split, a split bar against its image, and a 0.1 mm sliver split. All hold to \u22642.3e-13 relative.",
+    "End-to-end image plus parallel-network check against a published formula: a 50 mm \u00d7 6 mm thin strip at 0.385 mm above the backside-Cu image, 40 cosine-graded lanes, using the model's _bar_block. Result 3.277 nH vs 3.330 nH from Hammerstad microstrip (\u03b5r = 1), a \u22121.6% difference.",
+    "Approximation-tier accuracy: forced exact Hoer-Love for all bar, image and segment pairs. L at 20 MHz changes by \u22120.20..\u22120.71% at 4 mm and \u22120.16..\u22120.23% at 2 mm.",
+    "Mesh-convergence study (hmax 8/4/2/1 mm) on 9 mixed layouts, plus within-family rank stability on 36 layouts. Bias +4..+6% on average, up to +10.7%. \u03c1 0.965\u20130.993.",
+    "Passivity and SPD on 8 layouts at 4 mm and 2 mm: L, L \u2212 M_img(backside) and L \u2212 M_img(baseplate) are all SPD, with minimum eigenvalue \u22651.9e-11 H and asymmetry \u22644e-25. Over 15 layouts across 10 kHz\u2013316 MHz: R > 0, R increasing and L non-increasing in f, with no violations.",
+    "Single-core timing check: CPU time equals wall time (ratio 1.00), p50 32.7 ms on 36 layouts with 6 dies per switch; p50 25.1 ms on 60 mixed layouts.",
+    "Trace-thickness sensitivity: L with a 0.3 mm uniform-current trace vs a 0.03 mm bottom-face sheet, on 18 layouts. L is 6\u201313% higher with uniform current, and the size of the gap depends on family.",
+    "Bond-wire segmentation additivity at the model's radii (0.15\u20130.2 mm): split wires come out +1.5..+6.4% above the unsplit wire.",
+    "Resistance under mesh refinement: R falls 6.7\u201311.8% from 4 mm to 1 mm, with larger steps at finer meshes."
+  ],
+  "caveats": [
+    "Holds as an implementation of the O001 L1 hypothesis (uniform-current rectangular cells, skin-corrected R only, Grover wires, ideal infinite image planes). It is not a converged or unbiased estimate of loop inductance. At default settings, absolute L is likely 5\u201315% high against a reference with thickness-resolved, converged meshing, and that gap bears on criterion A4 (MAPE \u2264 12%).",
+    "Rankings within a family are stable under mesh refinement (\u03c1 \u2265 0.965). Cross-family ordering is dominated by large gaps between families (about 4 vs 8\u201313 nH) in the samples tested.",
+    "The timing result was reproduced only on this machine (Apple Accelerate BLAS). The 50 ms median has 20\u201335% headroom here.",
+    "R_ohm depends on the mesh and should not be used quantitatively without fixing how interior side walls are handled.",
+    "Scratch work had to be run as inline scripts because file writes to /tmp were blocked. No L2 solver is in the repository, so L1 could not be compared against it."
+  ]
+}

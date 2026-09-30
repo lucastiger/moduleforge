@@ -3,7 +3,7 @@ objective: O001
 title: Select the L2 reference (license + capability audit) and pre-register E001 reference validation
 type: design_experiment
 agent: scientist
-status: needs_founder
+status: merge
 depends_on: []
 description: 'Choose the L2 reference and pre-register its validation BEFORE the L2 adapter is built.
   Three deliverables, one purpose (the reference and its validation).
@@ -97,8 +97,8 @@ runs:
 - T0020-scientist-20260929T172320-c0d9
 created_by: planner:T0019
 created_at: '2026-09-29T22:56:48+00:00'
-protected_approved: false
-approval: null
+protected_approved: true
+approval: I0011
 target: null
 lens: null
 trigger: null

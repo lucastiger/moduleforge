@@ -1,9 +1,8 @@
 # ModuleForge status
-_generated 2026-09-30T01:46:12+00:00 from repository state — do not edit_
+_generated 2026-09-30T02:00:56+00:00 from repository state — do not edit_
 
-## Founder inbox (3 open)
+## Founder inbox (2 open)
 - **I0005** [external_action] [O001] [O001] Pin FastHenry and rebuild it with --force before the L2 adapter (n3) starts; record D0002 at E001 registration
-- **I0011** [protected_change] T0020: merge needs founder approval
 - **I0012** [protected_change] T0038: merge needs founder approval
 
 ## Objectives
@@ -13,13 +12,12 @@ _generated 2026-09-30T01:46:12+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $21.36/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 15, failed: 2, needs_founder: 2, todo: 7
+cancelled: 14, done: 15, failed: 2, merge: 1, needs_founder: 1, todo: 7
 
-- T0020 `needs_founder` scientist/design_experiment: Select the L2 reference (license + capability audit) and pre-register E001 reference validation (attempt 1)
+- T0020 `merge` scientist/design_experiment: Select the L2 reference (license + capability audit) and pre-register E001 reference validation (attempt 1)
 - T0038 `needs_founder` builder/implement: DRC: per-net copper connectivity, neck detection, terminal clearance, wire start margin, no KeyError (T0036 review) (attempt 1)
 
 ## Recent events
-- 2026-09-30T01:37:35+00:00 run_finished {"run": "T0029-critic-20260929T183110-7915", "status": "completed", "cost": 1.7509468000000004, "subtype": "success", "report": "structured_output"}
 - 2026-09-30T01:37:41+00:00 run_started {"run": "T0037-builder-20260929T183741-757d", "task": "T0037", "role": "builder", "session": "eb48c050-6838-4272-bd78-95b0af4b2550"}
 - 2026-09-30T01:39:12+00:00 run_finished {"run": "T0037-builder-20260929T183741-757d", "status": "completed", "cost": 0.1809562, "subtype": "success", "report": "structured_output"}
 - 2026-09-30T01:39:19+00:00 run_started {"run": "T0038-builder-20260929T183919-a124", "task": "T0038", "role": "builder", "session": "04590944-3de8-4a2a-82ea-aa2bc4a148c1"}
@@ -34,3 +32,4 @@ cancelled: 14, done: 15, failed: 2, needs_founder: 2, todo: 7
 - 2026-09-30T01:43:29+00:00 task_failed_attempt {"task": "T0037", "signal": "review_rejected", "action": "repair"}
 - 2026-09-30T01:46:09+00:00 run_finished {"run": "T0040-critic-20260929T184121-e5d4", "status": "completed", "cost": 1.2127989999999997, "subtype": "success", "report": "structured_output"}
 - 2026-09-30T01:46:12+00:00 inbox_opened {"id": "I0012", "kind": "protected_change", "subject": "T0038: merge needs founder approval"}
+- 2026-09-30T02:00:56+00:00 inbox_resolved {"id": "I0011", "status": "approved", "note": "Approved (founder): merge audit note + E001 draft + runner; T0029/T0030 findings go to a scientist follow-up befo

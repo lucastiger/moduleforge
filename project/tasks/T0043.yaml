@@ -3,7 +3,7 @@ objective: O001
 title: 'DRC: loop-closing necks, unknown die.switch, diameter-aware wire-start margin (T0040 review)'
 type: implement
 agent: builder
-status: merge
+status: done
 depends_on:
 - T0038
 description: 'Follow-up to the T0040 review of T0038 (project/reviews/T0038/T0040.json). Low priority:

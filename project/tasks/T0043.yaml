@@ -3,7 +3,7 @@ objective: O001
 title: 'DRC: loop-closing necks, unknown die.switch, diameter-aware wire-start margin (T0040 review)'
 type: implement
 agent: builder
-status: running
+status: todo
 depends_on:
 - T0038
 description: 'Follow-up to the T0040 review of T0038 (project/reviews/T0038/T0040.json). Low priority:
@@ -63,7 +63,7 @@ risk: medium
 model: null
 budget_usd: 4.0
 max_turns: 80
-attempts: 1
+attempts: 0
 max_attempts: 3
 branch: task/T0043-drc-loop-closing-necks-unknown-die-switc
 pr: null
@@ -77,4 +77,7 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: capacity_backoff
+  summary: You've hit your session limit · resets 11:30am (America/Los_Angeles)
+  at: '2026-09-30T14:35:12+00:00'

@@ -1,0 +1,38 @@
+id: T0049
+objective: O001
+title: 'BACKLOG (do not start before vendor design rules): DRC findings of review T0046'
+type: implement
+agent: builder
+status: todo
+depends_on:
+- T0043
+description: Backlog from the T0046 review of T0043 (project/reviews/T0043/T0046.json); none is reachable
+  by current code (the generator makes one trace per net and valid switches). (1) Detect necks where two
+  same-net Trace objects meet (run the width/neck checks on each net's union). (2) Replace the d/2 wire-start
+  margin with a cited wedge-bond foot model (~1.5-2.5 x d wide) once vendor rules exist. (3) Decide square
+  vs round erosion element (square over-flags diagonal necks by up to sqrt 2). (4) Layout.to_conductors()
+  raises KeyError on an unknown die.switch. Start only when vendor design rules replace the DesignRules
+  placeholders.
+context_files: []
+deliverables: []
+touches: []
+definition_of_done: []
+experiment: null
+risk: low
+model: null
+budget_usd: 3.0
+max_turns: 80
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: founder
+created_at: '2026-09-30T19:08:45+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

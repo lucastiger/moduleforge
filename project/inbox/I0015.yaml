@@ -8,7 +8,10 @@ refs:
 - T0043
 options: []
 recommendation: ''
-status: open
-response: ''
+status: approved
+response: 'Approved per the founder''s standing instruction: DoD verified; T0046 accept_with_caveats with
+  minor findings only (multi-trace same-net necks, d/2 foot margin uncited, square-element convention,
+  to_conductors KeyError) recorded as backlog T-task, not started: DRC rules are placeholders until vendor
+  rules exist.'
 created_at: '2026-09-30T19:08:03+00:00'
-resolved_at: null
+resolved_at: '2026-09-30T19:08:45+00:00'

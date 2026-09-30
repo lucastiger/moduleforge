@@ -4,7 +4,7 @@ title: 'Fingerprint: hash LayerStack.kind, pin every hashed input with a test, f
   review)'
 type: implement
 agent: builder
-status: running
+status: review
 depends_on:
 - T0033
 - T0034
@@ -121,4 +121,35 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- attempt: 1
+  outcome: agent_finished
+  summary: 'Layout.fingerprint() now hashes LayerStack.kind. The docstring no longer mentions a thermal
+    model, and it says what is covered: lengths are quantized to 1 nm per field, and sigma and k to 12
+    significant digits. Only layout.py and tests/unit/geometry/test_layout.py changed, and I committed
+    them. The new tests are a parametrized test with one case per hashed input (23 cases) and a 1 nm quantization
+    test. All DoD commands exit 0. The mutation script killed all 23 blind-fingerprint mutants.'
+  report:
+    status: completed
+    summary: 'Layout.fingerprint() now hashes LayerStack.kind. The docstring no longer mentions a thermal
+      model, and it says what is covered: lengths are quantized to 1 nm per field, and sigma and k to
+      12 significant digits. Only layout.py and tests/unit/geometry/test_layout.py changed, and I committed
+      them. The new tests are a parametrized test with one case per hashed input (23 cases) and a 1 nm
+      quantization test. All DoD commands exit 0. The mutation script killed all 23 blind-fingerprint
+      mutants.'
+    files_changed:
+    - src/moduleforge/geometry/layout.py
+    - tests/unit/geometry/test_layout.py
+    checks_run:
+    - cmd: uv run pytest -q tests/unit/geometry tests/unit/generate tests/unit/drc
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge tests/unit
+      exit_code: 0
+    - cmd: kind-relabelled fingerprint script
+      exit_code: 0
+    - cmd: mutation script (23 mutants, saved to /tmp/mut.py)
+      exit_code: 0
+    - cmd: generate_layouts 60 / drc / determinism one-liner
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0

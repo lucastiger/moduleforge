@@ -3,7 +3,7 @@ objective: O001
 title: Review T0038 (general)
 type: review
 agent: critic
-status: running
+status: done
 depends_on: []
 description: f774958f6bf0124e699c3777b40d6ca8fc6c0a06
 context_files: []
@@ -29,4 +29,6 @@ target: T0038
 lens: general
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: review:accept_with_caveats
+  summary: 4 findings

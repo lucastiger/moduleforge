@@ -20,12 +20,12 @@ cfg = dict(R.DEFAULT_CFG)
 sig = {R.CU: float(cfg["sigma_cu"]), R.AL: float(cfg["sigma_al"])}
 case = next(c for c in R.build_cases(cfg) if c["id"] == "B1")
 (p0, p1), a = case["conductors"][0]["pts"], case["conductors"][0]["diameter"] / 2
-l = math.dist(p0, p1)
+length = math.dist(p0, p1)
 s = sig[case["conductors"][0]["mat"]]
 
 
 def M(d):
-    return MU0 / (2 * math.pi) * (l * math.asinh(l / d) - math.hypot(l, d) + d)
+    return MU0 / (2 * math.pi) * (length * math.asinh(length / d) - math.hypot(length, d) + d)
 
 
 def disk_pdf(d):
@@ -36,7 +36,7 @@ def disk_pdf(d):
 L_dc = integrate.quad(lambda d: M(d) * disk_pdf(d), 0, 2 * a, limit=400, points=[1e-9 * a])[0]
 f_hi = 1e10
 L_hi = (integrate.quad(lambda th: M(2 * a * math.sin(th / 2)), 0, math.pi, limit=400)[0] / math.pi
-        + l * math.sqrt(MU0 / (2 * s * 2 * math.pi * f_hi)) / (2 * math.pi * a))
+        + length * math.sqrt(MU0 / (2 * s * 2 * math.pi * f_hi)) / (2 * math.pi * a))
 problems = []
 for f, ref in ((100.0, L_dc), (f_hi, L_hi)):
     ana = R.analytic_values(case, [f], sig)[("L11", f)]

@@ -105,3 +105,5 @@
 {"ts": "2026-09-30T01:12:20+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 15938}
 {"ts": "2026-09-30T01:13:24+00:00", "event": "task_added", "actor": "founder", "task": "T0033"}
 {"ts": "2026-09-30T01:13:24+00:00", "event": "task_added", "actor": "founder", "task": "T0034"}
+{"ts": "2026-09-30T01:13:50+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0033-builder-20260929T181350-f8eb", "task": "T0033", "role": "builder", "session": "b828768c-b160-4cac-937a-402cc5d20782"}
+{"ts": "2026-09-30T01:13:50+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0034-builder-20260929T181350-3a67", "task": "T0034", "role": "builder", "session": "a9206f69-5b68-4ca0-9fb4-2a079707271f"}

@@ -78,3 +78,4 @@
 {"ts": "2026-09-30T00:37:30+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0028-critic-20260929T173142-bcfd", "status": "completed", "cost": 1.6899538000000003, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-09-30T00:37:37+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0007", "kind": "protected_change", "subject": "T0021: merge needs founder approval"}
 {"ts": "2026-09-30T00:42:03+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0007", "status": "approved", "note": "Approved per T0028 accept_with_caveats; all findings to be fixed via follow-up tasks (fingerprint/die-short z before T0022/T0023; DRC hardening) plus the --group physics doc references."}
+{"ts": "2026-09-30T00:42:22+00:00", "event": "merged", "actor": "orchestrator", "task": "T0021"}

@@ -72,3 +72,6 @@
 {"ts": "2026-09-30T00:18:54+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0006", "status": "approved", "note": "Approved: re-issued plan with I0003 option (b) applied to T0022; verified field-by-field against T0011-T0018."}
 {"ts": "2026-09-30T00:23:20+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0020-scientist-20260929T172320-c0d9", "task": "T0020", "role": "scientist", "session": "db25861a-1be4-4f3b-9fac-62ace7fbbe9a"}
 {"ts": "2026-09-30T00:23:20+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0021-builder-20260929T172320-d25b", "task": "T0021", "role": "builder", "session": "222fefeb-c158-4bfd-a133-6f39c9e0babc"}
+{"ts": "2026-09-30T00:31:39+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0021-builder-20260929T172320-d25b", "status": "completed", "cost": 1.1800618, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-09-30T00:31:42+00:00", "event": "verified", "actor": "orchestrator", "task": "T0021"}
+{"ts": "2026-09-30T00:31:42+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0028-critic-20260929T173142-bcfd", "task": "T0028", "role": "critic", "session": "7223def8-71e0-48ec-becb-80cf67cf2e9e"}

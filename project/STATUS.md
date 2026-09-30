@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-09-30T13:37:26+00:00 from repository state — do not edit_
+_generated 2026-09-30T13:37:59+00:00 from repository state — do not edit_
 
 ## Founder inbox (2 open)
 - **I0012** [protected_change] T0038: merge needs founder approval
@@ -12,12 +12,12 @@ _generated 2026-09-30T13:37:26+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $21.36/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 16, failed: 2, needs_founder: 1, todo: 7
+cancelled: 14, done: 16, failed: 2, needs_founder: 1, running: 1, todo: 6
 
+- T0037 `running` builder/implement: Fingerprint: hash LayerStack.kind, pin every hashed input with a test, fix the docstring (T0035 review) (attempt 2)
 - T0038 `needs_founder` builder/implement: DRC: per-net copper connectivity, neck detection, terminal clearance, wire start margin, no KeyError (T0036 review) (attempt 1)
 
 ## Recent events
-- 2026-09-30T01:39:25+00:00 verified {"task": "T0037"}
 - 2026-09-30T01:39:58+00:00 run_finished {"run": "T0030-critic-20260929T183110-ad7a", "status": "completed", "cost": 2.0264781999999997, "subtype": "success", "report": "structured_output"}
 - 2026-09-30T01:40:00+00:00 inbox_opened {"id": "I0011", "kind": "protected_change", "subject": "T0020: merge needs founder approval"}
 - 2026-09-30T01:40:01+00:00 run_started {"run": "T0039-critic-20260929T184001-0075", "task": "T0039", "role": "critic", "session": "fd6fb6f0-c659-4a64-ae2e-92bac2a034e7"}
@@ -32,3 +32,4 @@ cancelled: 14, done: 16, failed: 2, needs_founder: 1, todo: 7
 - 2026-09-30T02:01:05+00:00 merged {"task": "T0020"}
 - 2026-09-30T02:01:05+00:00 inbox_opened {"id": "I0013", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}
 - 2026-09-30T02:09:35+00:00 inbox_resolved {"id": "I0005", "status": "answered", "note": "Done (founder session, 2026-09-30): provision_compute.sh pinned to fasthenry-3.0wr-031424 (xictools d28932a, sha2
+- 2026-09-30T13:37:31+00:00 run_started {"run": "T0037-builder-20260930T063731-ab29", "task": "T0037", "role": "builder", "session": "f91e6d4a-da51-41f7-8a37-58fb22f69ed6"}

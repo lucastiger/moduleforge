@@ -25,3 +25,30 @@ def test_review_checkout_has_no_history_to_recover_blinded_files(sandbox):
     assert blinded not in git(path, "log", "--all", "--name-only").stdout.split()
     assert str(path) not in git(sandbox, "worktree", "list").stdout  # not linked to the repository
     assert git(path, "status", "--porcelain").stdout == ""  # a clean snapshot the critic can diff against
+
+
+def test_critics_get_the_orchestrator_settings_in_their_untrusted_snapshot(sandbox, monkeypatch):
+    """2026-09-30: a fresh snapshot repository is an untrusted workspace, so Claude Code ignored its
+    .claude/settings.json ("Ignoring 38 permissions.allow entries ... has not been trusted") and critics could not
+    run uv or python. Settings passed with --settings do apply there (probe, same day)."""
+    from mfos import models as m
+    from mfos.agents import RunRecord
+    from mfos.loop import Orchestrator
+    s = Store()
+    o = Orchestrator(s)
+    seen = {}
+
+    def start(**kw):
+        seen[kw["task"].id] = kw
+        return RunRecord(run_id="r", task_id=kw["task"].id, role=kw["role"], session_id="x", cwd=str(kw["cwd"]),
+                         started="")
+
+    monkeypatch.setattr(o.runner, "start", start)
+    s.save_task(m.Task(id="T9000", objective="O000", title="Change", type="implement", agent="builder", status="todo"))
+    s.save_task(m.Task(id="T9001", objective="O000", title="Review T9000 (general)", type="review", agent="critic",
+                       status="todo", target="T9000", lens="general", description=s.git("rev-parse", "HEAD")))
+    o._start_agent(s.task("T9001"))
+    o._start_agent(s.task("T9000"))
+    assert seen["T9001"]["settings_file"] == s.root / ".claude" / "settings.json"  # the orchestrator's own copy
+    assert seen["T9001"]["settings_file"].is_file()
+    assert seen["T9000"]["settings_file"] is None  # task worktrees inherit the main repository's trust

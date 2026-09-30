@@ -802,6 +802,7 @@ class Orchestrator:
         if t.attempts >= esc.get("after_attempts", 2) and role in esc.get("models", {}):
             model = esc["models"][role]
         run_key = f"{t.id}-a{t.attempts}"
+        settings = None
         if t.type == "plan":
             cwd = self.s.root
             rel = packets.plan_packet(self.s, t.objective, cwd, run_key, t.trigger or "periodic")
@@ -809,11 +810,15 @@ class Orchestrator:
             cwd = self.git.review_checkout(f"review-{t.id}", t.description or self.git.main)
             claim, material = self._review_material(t, cwd)
             rel = packets.review_packet(self.s, cwd, run_key, claim, material, t.lens or "general")
+            # The blinded snapshot is a fresh repository, which Claude Code does not trust, so it ignores the
+            # snapshot's project settings. Pass the orchestrator's own permissions and hooks explicitly.
+            settings = self.s.root / ".claude" / "settings.json"
         else:
             cwd = self.git.task_worktree(t)
             rel = packets.work_packet(self.s, t, cwd, run_key)
         rec = self.runner.start(task=t, role=role, cwd=cwd, packet_rel=rel, schema=packets.schema_for(role),
-                                budget_usd=t.budget_usd, max_turns=t.max_turns, model=model, resume_session=resume)
+                                budget_usd=t.budget_usd, max_turns=t.max_turns, model=model, resume_session=resume,
+                                settings_file=settings)
         t.status = "running"
         t.runs.append(rec.run_id)
         self.s.save_task(t)

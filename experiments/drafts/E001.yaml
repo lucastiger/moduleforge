@@ -1,0 +1,70 @@
+id: E001
+title: L2 reference validation against closed-form partial and loop inductances (bars, round-wire chains, image plane, 5/20/80 MHz)
+objective: O001
+status: draft
+runner: uv run python experiments/runners/e001_reference.py
+config:
+  # frequencies (Hz): LF comparison for the DC closed forms of bars; HF set used by O001 (F4) and E002
+  f_lf_hz: 100.0
+  freqs_hf_hz: [5.0e6, 2.0e7, 8.0e7]
+  # conductivities (S/m): annealed copper (IEC 60028, 100 % IACS); 99.99 % Al (resistivity 2.65e-8 ohm m)
+  sigma_cu: 5.8e7
+  sigma_al: 3.77e7
+  # C1 floating plane extends this far beyond the 10 x 5 mm loop footprint on every side
+  plane_margin_mm: 15.0
+  # pre-registered convergence rule: levels start, start+1, ... until one refinement changes every L < conv_tol
+  refinement_start: 1
+  refinement_max: 5
+  conv_tol: 0.01
+  recip_tol: 1.0e-3
+  monotone_tol: 1.0e-3
+  scaling_tol: 0.01
+  scaling_cases: [A1, B2, C1]
+  tol_published: 1.0e-9
+  tol_independent: 1.0e-3
+  tol_truncation: 1.0e-3
+  smoke_cases: [A1, A3, B2, B4, C1]
+  # geometry of cases A1-A4, B1-B4, C0, C1 is defined in the runner (build_cases) and documented in
+  # research/notes/o001-l2-reference.md section 4; it is frozen with the runner at registration
+  cases: [A1, A2, A3, A4, B1, B2, B3, B4, C0, C1]
+sealed_seed: false
+metrics:
+  - name: max_rel_err_vs_analytic
+    description: >-
+      max over cases, compared quantities (L11, M12, L22) and frequencies of |L2 - closed form| / |closed form|,
+      L2 at the finest level reached by the pre-registered refinement rule. Interval = deterministic
+      discretization-plus-residual-model-error bound (not a sampling CI; the cases are deterministic).
+    unit: ''
+  - {name: max_rel_err_hf, description: same maximum restricted to 5/20/80 MHz comparisons, unit: ''}
+  - {name: max_rel_err_lf, description: same maximum restricted to the LF (100 Hz) comparisons, unit: ''}
+  - {name: analytic_value_span, description: diversity statistic - max/min of the compared closed-form values, unit: ''}
+  - {name: n_geometry_classes, description: number of distinct geometry classes compared (design has 7), unit: ''}
+sanity_checks:
+  - name: closed_forms_published_values
+    description: >-
+      Kelvin ber/bei at x=1,2,5 vs exact rational series; rectangle GMD of a square = 0.44705 a and thin-strip
+      limit e^-1.5 w (Grover); round-wire internal impedance DC limits (mu0/8pi, 1/(sigma pi r^2)) and HF limit
+      (1+j)/(2 pi r sigma delta) within O(delta/r)
+  - name: closed_forms_independent_check
+    description: >-
+      Hoer-Love mutual vs 6-D Gauss-Legendre quadrature; filament formula vs quadrature; Bessel series vs Hankel
+      asymptotics; Hoer-Love self vs GMD formula for long bars and thin-bar -> filament limit; partial-inductance
+      rectangle vs Grover rectangle closed form in the thin-wire limit
+  - name: analytic_length_scaling
+    description: every closed-form case value doubles (rtol 1e-9) when all lengths double and f -> f/4
+  - name: regime_valid
+    description: >-
+      assumptions of each closed form hold for the registered geometry - LF bars show < 1e-3 internal-inductance
+      skin deficit (round-wire bound); plane delta/t <= 0.2 and (delta/2h)^2 <= 1e-3 at every plane frequency
+  - name: plane_truncation_bound
+    description: 2-D PEC-strip BEM (validated to 2e-4 against the infinite image) bounds C1 finite-plane truncation below 1e-3
+  - name: l2_converged
+    description: every compared L2 value changes < 1% under one refinement (pre-registered rule)
+  - name: reciprocity
+    description: "|Z12 - Z21| / |Z12| <= 1e-3 for every two-port case and frequency"
+  - name: l_monotone_in_frequency
+    description: driving-point Im(Z11)/omega never increases with frequency by more than 0.1% (RL driving-point theorem)
+  - name: length_scaling
+    description: L2 with all lengths doubled and f -> f/4 returns 2 L within 1% (A1, B2, C1)
+timeout_min: 240
+cpu_hours_est: 2.0

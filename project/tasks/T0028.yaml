@@ -3,7 +3,7 @@ objective: O001
 title: Review T0021 (general)
 type: review
 agent: critic
-status: running
+status: done
 depends_on: []
 description: 9575da2a7c663363f63e72f24f943c9e3a08b1df
 context_files: []
@@ -29,4 +29,6 @@ target: T0021
 lens: general
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: review:accept_with_caveats
+  summary: 9 findings

@@ -1,0 +1,86 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "DRC 'correct net' landing check trusts the wire's own net label; a DC-link short and an empty layout both pass",
+      "detail": "`check()` only verifies that a wire's end lands on copper of `w.net`, which is whatever label the wire carries. It never works out the required net from the die the wire starts on (an HS source must go to PHASE, an LS source to DC\u2212). There is also no check that every die has wires. Result: an HS die (drain on DC+) bonded straight to DC\u2212, bypassing PHASE and the LS switch, is reported DRC-clean. So are a layout with no dies and no wires, and an HS die with all its wires removed. The existing test `test_wire_landing_wrong_net_and_off_copper` only relabels a wire while its geometry stays on PHASE, so this gap goes unnoticed. Generated layouts are not affected: in 60 layouts, 0 wires had a net different from what their die's switch requires. But `check()` is a public deliverable that downstream mutation or optimisation will rely on.",
+      "evidence": "interleaved, seed=1, 3 dies: three HS wires relabelled 'DC-' landing on the DC\u2212 row (6.4 mm long) \u2192 check()==[]; dataclasses.replace(good, wires=[], dies=[]) \u2192 []; HS die's wires removed \u2192 [].",
+      "suggested_check": "In check(), work out the expected landing net from the switch of the die whose source pad holds the wire start, and require at least one wire per die."
+    },
+    {
+      "severity": "minor",
+      "title": "No keep-out rules: a die on a terminal pad, or a wire landing under a die, passes DRC",
+      "detail": "The DRC has no die-to-terminal, wire-landing-to-die or wire-landing-to-terminal clearance rules. A die that overlaps the housing DC+ terminal pad by 8.4 mm\u00b2 is reported clean. So is an HS bond wire whose landing point lies on PHASE copper covered by an LS die.",
+      "evidence": "interleaved seed=1: extra HS die at (64.5, 13.5) mm \u2192 [] (8.41 mm\u00b2 overlap with DC+ pad). side_by_side seed=4: HS wire end moved to the LS die centre (12.3 mm long, end inside LS die box) \u2192 [].",
+      "suggested_check": "Add keep-out rules that subtract die footprints and terminal pads from the allowed landing area and die-placement area."
+    },
+    {
+      "severity": "minor",
+      "title": "Wire-pitch rule ignores wire diameter; zero or negative diameters are accepted",
+      "detail": "`min_wire_pitch` is a fixed 0.6 mm between centrelines, while the module docstring's own reasoning is about 2 wire diameters. The generator uses 0.4 mm wires, for which 2\u00d7 diameter is 0.8 mm. Two 0.6 mm-diameter wires 0.6 mm apart (touching) pass, as do wires with diameter 0 or \u22121 mm. Generated layouts use a 1.0 mm pitch, so they are not affected.",
+      "evidence": "BondWire pair with diameter 0.6e-3 m, offset 0.6e-3 m \u2192 []; all wires diameter 0.0 \u2192 []; diameter \u22121e-3 \u2192 [].",
+      "suggested_check": "Measure pitch against the edge-to-edge gap (distance \u2212 (d_i + d_j)/2), or scale the rule with diameter, and add a diameter range check."
+    },
+    {
+      "severity": "minor",
+      "title": "min_trace_width flags features exactly at the minimum (effective limit \u2248 1.0001 mm)",
+      "detail": "The morphological opening uses a 1 nm tolerance, which is smaller than the precision GEOS keeps when shrinking a shape. A straight 1.000 mm (and even 1.00001 mm) bar collapses and is flagged; the first width that passes is about 1.0001 mm. The spacing rule, by contrast, passes at exactly 1.0 mm. The engineering impact is negligible, but the two rules treat the boundary inconsistently, which matters for optimisers that push against constraints.",
+      "evidence": "box 20 mm \u00d7 1.0 mm: thin area 20 mm\u00b2 \u2192 FLAG; 1.00001 mm \u2192 FLAG; 1.0001 mm \u2192 ok. DC\u2212 trace moved to 1.0 mm spacing \u2192 no min_spacing violation.",
+      "suggested_check": "Use a tolerance of about 1e-7 m in the width rule, or test the eroded shape with a small negative-width guard."
+    },
+    {
+      "severity": "minor",
+      "title": "Two DRC rules are untested; one test only repeats the implementation's own formula",
+      "detail": "No test asserts `wire_start` or `terminal_off_trace`. With both rules removed from check() output, all 30 tests still pass. `test_loop_area_proxy_known_value` describes itself as 'checked on a hand-built case', but it recomputes the same shoelace formula on a generated layout, so it proves nothing.",
+      "evidence": "Mutant: check output filtered to drop 'wire_start' and 'terminal_off_trace', patched into drc and halfbridge \u2192 '30 passed', rc 0.",
+      "suggested_check": "Add bad-layout tests for both rules, and check loop_area_proxy against a hand-computed quadrilateral."
+    },
+    {
+      "severity": "minor",
+      "title": "Removing the `physics` dependency group breaks documented commands",
+      "detail": "benchmarks/infra/run_all.sh (line 3) and docs/INFRASTRUCTURE.md (line 410) still say `uv run --group physics ...`. That command now fails.",
+      "evidence": "`uv run --group physics python -c ...` \u2192 \"Error: Group `physics` is not defined in the project's `dependency-groups` table\".",
+      "suggested_check": "Update both references to plain `uv run`."
+    },
+    {
+      "severity": "note",
+      "title": "Fingerprint omits inputs that change to_conductors() output",
+      "detail": "`fingerprint()` hashes stack names and thicknesses but not sigma or k. It also omits `backside_inset` (which changes the backside-Cu plane extent), `attach_thickness` (which changes DieShort z_top) and `wire_sigma`. Two layouts that produce different conductor models can therefore share a fingerprint. That is a problem if fingerprints become solver-result cache keys.",
+      "evidence": "Found by reading Layout.fingerprint() (layout.py): none of these fields are hashed.",
+      "suggested_check": "Hash every field that to_conductors() uses, or document that the fingerprint covers geometry only."
+    },
+    {
+      "severity": "note",
+      "title": "DieShort.z_bottom is the bottom of the top-Cu layer; the computed die z range is thrown away",
+      "detail": "`to_conductors` computes `zb, zt = self.die_z_range(d)` but passes z0 (bottom of top Cu, 3.78 mm) as z_bottom. The trace top is at 4.08 mm and the die bottom at 4.13 mm. The docstring says the short is 'on the trace'. A solver that models the short as a vertical conductor would see 0.53 mm instead of about 0.23 mm.",
+      "evidence": "L[0]: short.z_bottom=0.00378, top_cu top=0.00408, die_z_range=(0.00413, 0.00431).",
+      "suggested_check": "Document the intended node height, or use the trace top."
+    },
+    {
+      "severity": "note",
+      "title": "The 'interleaved' family does not have a small loop by the included proxy",
+      "detail": "Median loop_area_proxy by family: side_by_side 224 mm\u00b2, interleaved 467 mm\u00b2, u_shaped 431 mm\u00b2. The PHASE C-shaped return makes the interleaved loop large even though the DC+ and DC\u2212 rows sit side by side. The families are topologically distinct as claimed; this is only a physics observation about the proxy.",
+      "evidence": "60 layouts, seed 12345: side_by_side 131\u2013323, interleaved 287\u2013618, u_shaped 355\u2013532 mm\u00b2; overall CV 0.329.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran all four definition-of-done commands in the review worktree: 30 tests passed, ruff clean, dependency assertion passed, generator one-liner printed 'ok 60'.",
+    "Checked rectangle decomposition of every trace in 120 layouts (seeds 12345 and 1) with shapely: largest symmetric difference between the rectangle union and the polygon = 0, pairwise rectangle overlaps = 0.",
+    "Fingerprint determinism across processes with PYTHONHASHSEED=1, 999 and random: identical combined SHA-256 for generate_layouts(60, 12345).",
+    "Wire routing in 60 generated layouts: 0 wires whose net differs from what the die's switch requires, 0 wire paths crossing another die, 0 crossings over copper of another net.",
+    "Rejection rate: 750 layouts over 5 seeds needed 750 _build calls. The generator is valid by construction; the DRC is only a guard.",
+    "Built adversarial layouts: HS die wired to DC\u2212 (short), empty layout, die with no wires, die on a terminal pad, wire landing under a die, touching thick wires, zero or negative diameters. All reported DRC-clean.",
+    "Boundary tests: min_trace_width flags 1.0 mm and 1.00001 mm features and passes at 1.0001 mm; min_spacing passes at 1.0 mm and flags at 0.999 mm.",
+    "Mutation test: dropped the wire_start and terminal_off_trace violations from check() (patched into drc and halfbridge); all 30 tests still passed.",
+    "Confirmed that `uv run --group physics` now errors, and found remaining references to it in benchmarks/infra/run_all.sh and docs/INFRASTRUCTURE.md.",
+    "Per-family loop_area_proxy distributions and overall CV (0.329) on seed 12345."
+  ],
+  "caveats": [
+    "The claim holds for layouts produced by generate_layouts: they are deterministic, cover 3 families \u00d7 2\u20136 dies/switch, are electrically consistent and are DRC-clean. check() should NOT be treated as a connectivity or netlist validator for layouts built or changed by any other code. It certifies DC-link shorts, open dies and empty layouts as clean.",
+    "The DRC is a geometric and manufacturing check with placeholder rule values. I did not check the default values against actual Rogers/curamik, Heraeus or Kyocera design guides.",
+    "The Layout IR has no gate or Kelvin-source nets or gate wires; gate pads are placed but nothing constrains them. Gate-loop analysis cannot be done on this IR as it stands.",
+    "Disclosure: early in the review I read the blinded task file via `git show HEAD:project/tasks/T0021.yaml` before noticing it was on the blinding list. My verdict rests on the packet's claim and my independent checks, not on that file."
+  ]
+}

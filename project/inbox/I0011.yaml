@@ -1,0 +1,14 @@
+id: I0011
+kind: protected_change
+subject: 'T0020: merge needs founder approval'
+summary: 'Select the L2 reference (license + capability audit) and pre-register E001 reference validation
+
+  Risk high; 3 files. PR: None'
+refs:
+- T0020
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-09-30T01:40:00+00:00'
+resolved_at: null

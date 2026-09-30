@@ -76,3 +76,4 @@
 {"ts": "2026-09-30T00:31:42+00:00", "event": "verified", "actor": "orchestrator", "task": "T0021"}
 {"ts": "2026-09-30T00:31:42+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0028-critic-20260929T173142-bcfd", "task": "T0028", "role": "critic", "session": "7223def8-71e0-48ec-becb-80cf67cf2e9e"}
 {"ts": "2026-09-30T00:37:30+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0028-critic-20260929T173142-bcfd", "status": "completed", "cost": 1.6899538000000003, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-09-30T00:37:37+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0007", "kind": "protected_change", "subject": "T0021: merge needs founder approval"}

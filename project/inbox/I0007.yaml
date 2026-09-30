@@ -1,0 +1,14 @@
+id: I0007
+kind: protected_change
+subject: 'T0021: merge needs founder approval'
+summary: 'Layout IR, layer stack, DRC and DRC-valid half-bridge generator (3 families, 2–6 dies/switch)
+
+  Risk medium; 15 files. PR: None'
+refs:
+- T0021
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-09-30T00:37:37+00:00'
+resolved_at: null

@@ -83,3 +83,6 @@
 {"ts": "2026-09-30T00:43:26+00:00", "event": "verified", "actor": "orchestrator", "task": "T0020"}
 {"ts": "2026-09-30T00:43:26+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0029-critic-20260929T174326-6921", "task": "T0029", "role": "critic", "session": "23b67348-4763-4f15-8ebc-17c45eb25c4f"}
 {"ts": "2026-09-30T00:43:26+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0030-critic-20260929T174326-3950", "task": "T0030", "role": "critic", "session": "4a888c29-dd74-4582-a88e-95868347f72c"}
+{"ts": "2026-09-30T00:45:33+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0030-critic-20260929T174326-3950", "status": "error", "cost": 0.6945508, "subtype": "success", "report": "missing"}
+{"ts": "2026-09-30T00:45:33+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0030", "signal": "agent_error", "action": "repair"}
+{"ts": "2026-09-30T00:45:33+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0030-critic-20260929T174533-39d5", "task": "T0030", "role": "critic", "session": "ca2bc868-19f0-4ba3-b465-dbf6c7f0c51d"}

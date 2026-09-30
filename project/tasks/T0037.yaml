@@ -18,13 +18,18 @@ description: 'Follow-up to the T0035 review of T0033 (project/reviews/T0033/T003
   exactly what it covers and that lengths are quantized to 1 nm per field and conductivities to 12 significant
   digits.
 
-  (3) Tests under tests/unit/geometry/ must pin every hashed input: for each one, a test that changes
-  it and asserts the fingerprint changes. The definition of done checks this by mutation: for each input
-  it replaces Layout.fingerprint with a version blind to that input and requires an assertion failure
-  in tests/unit/geometry. The inputs are: wire points, diameter and net; die source pad, position and
-  attach_thickness; terminal centres; substrate and baseplate outlines; trace polygons and nets; backside_inset;
-  wire_sigma; LayerStack.kind; every layer thickness; baseplate, backside_cu and top_cu sigma; ceramic
-  k.
+  (3) Tests under tests/unit/geometry/ must pin EVERY hashed field of the Layout IR (attempt 1 was rejected
+  by review T0039 for pinning only the 23 listed below: die w/h, terminal cy/w/h, family, dies_per_switch,
+  the gate pad, solder sigma and non-ceramic k were unpinned). The definition of done now blinds the fingerprint
+  to each of all 45 hashed fields in turn; only BondWire.loop_height and Terminal.net are exempt, and
+  the docstring''s ''Not covered'' list must name exactly those two. Also make the quantization test two-sided:
+  0.01 nm is ignored, 2 nm is seen. Original wording: tests under tests/unit/geometry/ must pin every
+  hashed input: for each one, a test that changes it and asserts the fingerprint changes. The definition
+  of done checks this by mutation: for each input it replaces Layout.fingerprint with a version blind
+  to that input and requires an assertion failure in tests/unit/geometry. The inputs are: wire points,
+  diameter and net; die source pad, position and attach_thickness; terminal centres; substrate and baseplate
+  outlines; trace polygons and nets; backside_inset; wire_sigma; LayerStack.kind; every layer thickness;
+  baseplate, backside_cu and top_cu sigma; ceramic k.
 
 
   Change nothing outside src/moduleforge/geometry and tests/unit/geometry.'
@@ -64,37 +69,54 @@ definition_of_done:
     \ as ET\nfrom pathlib import Path\n\ndef killed(xml):\n    \"\"\"A kill is an assertion failure in\
     \ some test, not a crash, collection or fixture error.\"\"\"\n    return xml.exists() and any(\"AssertionError\"\
     \ in (f.text or \"\") + (f.get(\"message\") or \"\")\n                                for f in ET.parse(xml).iter(\"\
-    failure\"))\n\n\nLAYER = (\"dataclasses.replace(x, stack=dataclasses.replace(x.stack, layers=tuple(dataclasses.replace(la,\
-    \ {kw}) \"\n         \"if la.name == {name!r} else la for la in x.stack.layers)))\")\nMUTANTS = {\n\
-    \    \"wire points\": \"dataclasses.replace(x, wires=[dataclasses.replace(w, points=w.points * 0.0)\
-    \ for w in x.wires])\",\n    \"wire diameter\": \"dataclasses.replace(x, wires=[dataclasses.replace(w,\
-    \ diameter=1.0) for w in x.wires])\",\n    \"wire net\": \"dataclasses.replace(x, wires=[dataclasses.replace(w,\
-    \ net='X') for w in x.wires])\",\n    \"die source pad\": \"dataclasses.replace(x, dies=[dataclasses.replace(d,\
-    \ pads={**d.pads, 'source': (0.0, 0.0, 1.0, 1.0)}) for d in x.dies])\",\n    \"die position\": \"\
-    dataclasses.replace(x, dies=[dataclasses.replace(d, cx=0.0, cy=0.0) for d in x.dies])\",\n    \"die\
-    \ attach_thickness\": \"dataclasses.replace(x, dies=[dataclasses.replace(d, attach_thickness=1.0)\
-    \ for d in x.dies])\",\n    \"terminal centres\": \"dataclasses.replace(x, terminals={k: dataclasses.replace(t,\
-    \ cx=0.0, cy=0.0) for k, t in x.terminals.items()})\",\n    \"substrate outline\": \"dataclasses.replace(x,\
-    \ outline=box(0.0, 0.0, 1.0, 1.0))\",\n    \"baseplate outline\": \"dataclasses.replace(x, baseplate_outline=box(0.0,\
-    \ 0.0, 1.0, 1.0))\",\n    \"trace polygons\": \"dataclasses.replace(x, traces=[dataclasses.replace(t,\
-    \ polygon=box(0.0, 0.0, 1.0, 1.0)) for t in x.traces])\",\n    \"trace nets\": \"dataclasses.replace(x,\
-    \ traces=[dataclasses.replace(t, net='X') for t in x.traces])\",\n    \"backside_inset\": \"dataclasses.replace(x,\
-    \ backside_inset=1.0)\",\n    \"wire_sigma\": \"dataclasses.replace(x, wire_sigma=1.0)\",\n    \"\
-    stack kind\": \"dataclasses.replace(x, stack=dataclasses.replace(x.stack, kind='custom'))\",\n   \
-    \ **{f\"{n} thickness\": LAYER.format(kw=\"thickness=1.0\", name=n)\n       for n in (\"baseplate\"\
-    , \"solder\", \"backside_cu\", \"ceramic\", \"top_cu\")},\n    **{f\"{n} sigma\": LAYER.format(kw=\"\
-    sigma=1.0\", name=n) for n in (\"baseplate\", \"backside_cu\", \"top_cu\")},\n    \"ceramic k\": LAYER.format(kw=\"\
-    k=1.0\", name=\"ceramic\"),\n}\nPROG = (\"import dataclasses; from shapely.geometry import box; from\
-    \ moduleforge.geometry import Layout; \"\n        \"o = Layout.fingerprint; Layout.fingerprint = lambda\
-    \ self: o((lambda x: {expr})(self)); \"\n        \"import pytest, sys; sys.exit(pytest.main(['-q',\
-    \ '-p', 'no:cacheprovider', '--junitxml={xml}', \"\n        \"'tests/unit/geometry']))\")\nsurvivors\
-    \ = []\nwith tempfile.TemporaryDirectory() as tmp:\n    for name, expr in MUTANTS.items():\n     \
-    \   xml = Path(tmp) / \"r.xml\"\n        subprocess.run([sys.executable, \"-c\", PROG.format(expr=expr,\
+    failure\"))\n\n\nR = \"dataclasses.replace\"\nLAYER = R + \"(x, stack=\" + R + \"(x.stack, layers=tuple(\"\
+    \ + R + \"(la, {kw}) if la.name == {name!r} else la for la in x.stack.layers)))\"\nDIE = R + \"(x,\
+    \ dies=[\" + R + \"(d, {kw}) for d in x.dies])\"\nWIRE = R + \"(x, wires=[\" + R + \"(w, {kw}) for\
+    \ w in x.wires])\"\nTERM = R + \"(x, terminals={{k: \" + R + \"(t, {kw}) for k, t in x.terminals.items()}})\"\
+    \nTRACE = R + \"(x, traces=[\" + R + \"(t, {kw}) for t in x.traces])\"\n# Every hashed field of the\
+    \ Layout IR, normalised to a constant. Not covered by design (and listed as such in the\n# fingerprint\
+    \ docstring): BondWire.loop_height (the points are hashed) and Terminal.net (the dict key is hashed).\n\
+    MUTANTS = {\n    \"family\": R + \"(x, family='F')\",\n    \"dies_per_switch\": R + \"(x, dies_per_switch=0)\"\
+    ,\n    \"substrate outline\": R + \"(x, outline=box(0.0, 0.0, 1.0, 1.0))\",\n    \"baseplate outline\"\
+    : R + \"(x, baseplate_outline=box(0.0, 0.0, 1.0, 1.0))\",\n    \"backside_inset\": R + \"(x, backside_inset=1.0)\"\
+    ,\n    \"wire_sigma\": R + \"(x, wire_sigma=1.0)\",\n    \"stack kind\": R + \"(x, stack=\" + R +\
+    \ \"(x.stack, kind='K'))\",\n    \"trace net\": TRACE.format(kw=\"net='X'\"),\n    \"trace polygon\"\
+    : TRACE.format(kw=\"polygon=box(0.0, 0.0, 1.0, 1.0)\"),\n    **{f\"die {f}\": DIE.format(kw=f\"{f}={v}\"\
+    ) for f, v in ((\"cx\", 0.0), (\"cy\", 0.0), (\"w\", 1.0), (\"h\", 1.0),\n                       \
+    \                                     (\"switch\", \"'HS'\"), (\"thickness\", 1.0),\n            \
+    \                                                (\"attach_thickness\", 1.0))},\n    **{f\"die {p}\
+    \ pad\": DIE.format(kw=f\"pads={{**d.pads, {p!r}: (0.0, 0.0, 1.0, 1.0)}}\") for p in (\"source\",\
+    \ \"gate\")},\n    \"wire points\": WIRE.format(kw=\"points=w.points * 0.0\"),\n    \"wire diameter\"\
+    : WIRE.format(kw=\"diameter=1.0\"),\n    \"wire net\": WIRE.format(kw=\"net='X'\"),\n    **{f\"terminal\
+    \ {f}\": TERM.format(kw=f\"{f}=0.0\") for f in (\"cx\", \"cy\", \"w\", \"h\")},\n    **{f\"{n} {f}\"\
+    : LAYER.format(kw=kw, name=n)\n       for n in (\"baseplate\", \"solder\", \"backside_cu\", \"ceramic\"\
+    , \"top_cu\")\n       for f, kw in ((\"material\", \"material='M'\"), (\"thickness\", \"thickness=1.0\"\
+    ), (\"sigma\", \"sigma=1.0\"),\n                     (\"k\", \"k=1.0\"))},\n}\nPROG = (\"import dataclasses;\
+    \ from shapely.geometry import box; from moduleforge.geometry import Layout; \"\n        \"o = Layout.fingerprint;\
+    \ Layout.fingerprint = lambda self: o((lambda x: {expr})(self)); \"\n        \"import pytest, sys;\
+    \ sys.exit(pytest.main(['-q', '-p', 'no:cacheprovider', '--junitxml={xml}', \"\n        \"'tests/unit/geometry']))\"\
+    )\nsurvivors = []\nwith tempfile.TemporaryDirectory() as tmp:\n    for name, expr in MUTANTS.items():\n\
+    \        xml = Path(tmp) / \"r.xml\"\n        subprocess.run([sys.executable, \"-c\", PROG.format(expr=expr,\
     \ xml=xml)], capture_output=True)\n        if not killed(xml):\n            survivors.append(name)\n\
-    assert not survivors, f\"no test in tests/unit/geometry fails when the fingerprint ignores: {survivors}\"\
-    \nprint(f\"tests catch a fingerprint blind to any of {len(MUTANTS)} inputs\")\nEOF"
+    assert not survivors, f\"no test in tests/unit/geometry fails by assertion when the fingerprint ignores:\
+    \ {survivors}\"\nprint(f\"tests catch a fingerprint blind to any of all {len(MUTANTS)} hashed fields\"\
+    )\nEOF"
   exists: null
-  timeout_s: 900
+  timeout_s: 1800
+- cmd: "uv run python - <<'EOF'\nimport dataclasses\nfrom moduleforge.generate.halfbridge import generate_layouts\n\
+    \ng = generate_layouts(1, seed=7, dies_per_switch=2)[0]\nd0 = g.dies[0]\n\n\ndef shifted(dx):\n  \
+    \  return dataclasses.replace(g, dies=[dataclasses.replace(d0, cx=d0.cx + dx), *g.dies[1:]])\n\n\n\
+    assert shifted(0.01e-9).fingerprint() == g.fingerprint(), \"a 0.01 nm change must be quantized away\"\
+    \nassert shifted(2e-9).fingerprint() != g.fingerprint(), \"a 2 nm change must change the fingerprint\
+    \ (1 nm quantum)\"\nprint(\"length quantum is 1 nm on both sides\")\nEOF"
+  exists: null
+  timeout_s: 300
+- cmd: uv run python -c "import inspect; from moduleforge.geometry import Layout; d = inspect.getdoc(Layout.fingerprint);
+    assert 'thermal' not in d.lower(), 'docstring still mentions a thermal model'; assert 'loop_height'
+    in d and 'Terminal.net' in d, 'the Not covered list must name BondWire.loop_height and Terminal.net';
+    print('fingerprint docstring ok')"
+  exists: null
+  timeout_s: 120
 - cmd: uv run python -c "from moduleforge.generate.halfbridge import generate_layouts; from moduleforge.drc
     import check; a=generate_layouts(60, seed=12345); b=generate_layouts(60, seed=12345); assert len(a)==60;
     bad=[l.fingerprint() for l in a if check(l)]; assert not bad, bad; assert [l.fingerprint() for l in
@@ -183,3 +205,7 @@ history:
     is correct: `put("stack", self.stack.kind, ...)`. Changing kind now changes the fingerprint. The repo
     stores no fingerprints (they appear only in tests), so no saved caches or results are invalidated.'
   at: '2026-09-30T01:43:29+00:00'
+- outcome: dod_strengthened
+  summary: 'founder session: DoD made exhaustive (45 fields), two-sided 1 nm quantum, docstring completeness,
+    per review T0039'
+  at: '2026-09-30T13:36:45+00:00'

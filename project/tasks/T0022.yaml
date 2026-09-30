@@ -8,6 +8,7 @@ status: todo
 depends_on:
 - T0020
 - T0021
+- T0033
 description: 'Implement `moduleforge.solvers.l2` with two parts.
 
 

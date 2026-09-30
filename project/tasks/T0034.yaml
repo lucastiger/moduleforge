@@ -1,0 +1,140 @@
+id: T0034
+objective: O001
+title: 'DRC hardening from the T0028 review: connectivity, keep-outs, diameter-aware pitch, width boundary,
+  full rule coverage'
+type: implement
+agent: builder
+status: todo
+depends_on:
+- T0021
+description: 'Follow-up to the T0028 review of T0021 (project/reviews/T0021/T0028.json). check() must
+  reject the adversarial layouts the critic built, while generated layouts stay DRC-clean. The rule names
+  below are part of the contract: the definition of done refers to them.
+
+
+  (1) Connectivity. Work out each wire''s expected landing net from the die whose source pad holds its
+  start (HS source -> PHASE, LS source -> DC-). Emit `wire_net` when the net of the copper under the landing
+  point, or the wire''s own `net` label, differs from that. Emit `die_unbonded` for a die with no wire
+  starting on its source pad. Emit `missing_switch` when the layout has no HS die or no LS die (this covers
+  an empty layout).
+
+
+  (2) Keep-outs. Emit `die_on_terminal` when a die footprint overlaps a terminal pad. Emit `wire_landing_keepout`
+  when a landing point lies within wire_landing_margin of a die footprint or terminal pad.
+
+
+  (3) Wire pitch and diameter. `wire_pitch` requires centreline distance >= max(min_wire_pitch, wire_pitch_diameters
+  * max(d_i, d_j)), with a new DesignRules field wire_pitch_diameters = 2.0 (the module docstring''s ~2
+  wire diameters). Emit `wire_diameter` for diameters outside a new [min_wire_diameter, max_wire_diameter]
+  range; use placeholder values for heavy Al wire and cite the source, as the module docstring does for
+  the others.
+
+
+  (4) Width boundary. min_trace_width must treat the boundary like min_spacing: a feature exactly min_trace_width
+  wide passes and one 0.001 mm narrower fails. Use a tolerance well above GEOS''s precision (for example
+  1e-7 m) instead of 1 nm.
+
+
+  (5) Tests. Every rule check() emits needs a test that fails when that rule is removed (the definition
+  of done checks this by mutation). Add bad-layout tests for wire_start and terminal_off_trace, which
+  have none today. Replace test_loop_area_proxy_known_value, which recomputes the implementation''s own
+  formula, with a hand-built case whose area is known in closed form.
+
+
+  If a generated layout violates a new rule, fix the generator (src/moduleforge/generate/halfbridge.py)
+  rather than relaxing the rule, and say so in your report. Do not change the Layout IR (src/moduleforge/geometry).'
+context_files: []
+deliverables:
+- src/moduleforge/drc/rules.py
+- tests/unit/drc/
+- tests/unit/generate/test_halfbridge.py
+touches:
+- src/moduleforge/drc/**
+- tests/unit/drc/**
+- src/moduleforge/generate/**
+- tests/unit/generate/**
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/drc tests/unit/generate tests/unit/geometry
+  exists: null
+  timeout_s: 900
+- cmd: uv run ruff check src/moduleforge tests/unit
+  exists: null
+  timeout_s: 900
+- cmd: "uv run python - <<'EOF'\nimport dataclasses\nimport numpy as np\nfrom shapely.geometry import\
+    \ box\nfrom moduleforge.drc import check\nfrom moduleforge.generate.halfbridge import generate_layouts,\
+    \ loop_area_proxy\nfrom moduleforge.geometry.layout import BondWire, Terminal, Trace, arc_wire\n\n\
+    \ndef rules(lay):\n    return {v.rule for v in check(lay)}\n\n\ndef starts_on(w, d):\n    x0, y0,\
+    \ x1, y1 = d.pads[\"source\"]\n    return x0 - 1e-9 <= w.points[0, 0] <= x1 + 1e-9 and y0 - 1e-9 <=\
+    \ w.points[0, 1] <= y1 + 1e-9\n\n\ng = generate_layouts(1, seed=1, family=\"interleaved\", dies_per_switch=3)[0]\n\
+    assert check(g) == [], check(g)\nhs = next(d for d in g.dies if d.switch == \"HS\")\nls = next(d for\
+    \ d in g.dies if d.switch == \"LS\")\nhs_wires = [w for w in g.wires if starts_on(w, hs)]\nw0 = hs_wires[0]\n\
+    cases = {}\ndcm = next(t for t in g.traces if t.net == \"DC-\").polygon.representative_point()\nshorted\
+    \ = [arc_wire(w.points[0, :2], (dcm.x, dcm.y), w.points[0, 2], w.points[-1, 2], w.loop_height, w.diameter,\
+    \ \"DC-\")\n           if any(w is h for h in hs_wires) else w for w in g.wires]\ncases[\"HS die bonded\
+    \ to DC- (DC-link short) -> wire_net\"] = \"wire_net\" in rules(dataclasses.replace(g, wires=shorted))\n\
+    cases[\"empty layout -> missing_switch\"] = \"missing_switch\" in rules(dataclasses.replace(g, wires=[],\
+    \ dies=[]))\ncases[\"HS die without wires -> die_unbonded\"] = \"die_unbonded\" in rules(\n    dataclasses.replace(g,\
+    \ wires=[w for w in g.wires if not any(w is h for h in hs_wires)]))\ntm = g.terminals[\"DC+\"]\ncases[\"\
+    die on the DC+ terminal pad -> die_on_terminal\"] = \"die_on_terminal\" in rules(\n    dataclasses.replace(g,\
+    \ dies=[*g.dies, dataclasses.replace(hs, cx=tm.cx, cy=tm.cy)]))\nunder = arc_wire(w0.points[0, :2],\
+    \ (ls.cx, ls.cy), w0.points[0, 2], w0.points[-1, 2], w0.loop_height, w0.diameter,\n              \
+    \   \"PHASE\")\ncases[\"wire landing under an LS die -> wire_landing_keepout\"] = \"wire_landing_keepout\"\
+    \ in rules(\n    dataclasses.replace(g, wires=[under if w is w0 else w for w in g.wires]))\na = BondWire(w0.points,\
+    \ 0.6e-3, w0.loop_height, w0.net)\nb = BondWire(w0.points + np.array([0.6e-3, 0.0, 0.0]), 0.6e-3,\
+    \ w0.loop_height, w0.net)\ncases[\"touching 0.6 mm wires at 0.6 mm pitch -> wire_pitch\"] = \"wire_pitch\"\
+    \ in rules(dataclasses.replace(g, wires=[a, b]))\nfor dia in (0.0, -1e-3):\n    cases[f\"diameter\
+    \ {dia} m -> wire_diameter\"] = \"wire_diameter\" in rules(\n        dataclasses.replace(g, wires=[BondWire(w.points,\
+    \ dia, w.loop_height, w.net) for w in g.wires]))\ns = generate_layouts(3, seed=3, family=\"side_by_side\"\
+    , dies_per_switch=3)[0]\nt = next(t for t in s.traces if t.net == \"DC-\")\nminx, _, _, maxy = t.polygon.bounds\n\
+    \n\ndef with_stub(width):\n    poly = t.polygon.union(box(minx + 0.010, maxy, minx + 0.010 + width,\
+    \ maxy + 0.006))\n    return rules(dataclasses.replace(s, traces=[Trace(\"DC-\", poly) if x is t else\
+    \ x for x in s.traces]))\n\n\ncases[\"1.000 mm feature passes min_trace_width\"] = \"min_trace_width\"\
+    \ not in with_stub(1.0e-3)\ncases[\"0.999 mm feature fails min_trace_width\"] = \"min_trace_width\"\
+    \ in with_stub(0.999e-3)\nhsd = [dataclasses.replace(d, cx=4e-3, cy=0.0) for d in s.dies if d.switch\
+    \ == \"HS\"]\nlsd = [dataclasses.replace(d, cx=4e-3, cy=3e-3) for d in s.dies if d.switch == \"LS\"\
+    ]\nterms = {**s.terminals, \"DC+\": Terminal(\"DC+\", 0.0, 0.0, 1e-3, 1e-3), \"DC-\": Terminal(\"\
+    DC-\", 0.0, 3e-3, 1e-3, 1e-3)}\ncases[\"loop_area_proxy of a 4 x 3 mm rectangle = 12 mm^2\"] = abs(\n\
+    \    loop_area_proxy(dataclasses.replace(s, dies=hsd + lsd, terminals=terms)) - 12e-6) < 1e-15\nmissed\
+    \ = [k for k, ok in cases.items() if not ok]\nassert not missed, \"not caught: \" + \"; \".join(missed)\n\
+    print(f\"all {len(cases)} T0028 adversarial cases handled\")\nEOF"
+  exists: null
+  timeout_s: 900
+- cmd: "uv run python - <<'EOF'\nimport subprocess\nimport sys\n\nRULES = [\"min_trace_width\", \"min_spacing\"\
+    , \"edge_margin\", \"die_off_trace\", \"die_wrong_net\", \"die_edge_margin\",\n         \"die_spacing\"\
+    , \"die_on_terminal\", \"die_unbonded\", \"missing_switch\", \"wire_length\", \"wire_landing\",\n\
+    \         \"wire_landing_keepout\", \"wire_start\", \"wire_net\", \"wire_pitch\", \"wire_diameter\"\
+    , \"terminal_off_trace\"]\nPROG = (\"import moduleforge.drc as d, moduleforge.drc.rules as r; o =\
+    \ r.check; \"\n        \"d.check = r.check = lambda *a, **k: [v for v in o(*a, **k) if v.rule != {rule!r}];\
+    \ \"\n        \"import pytest, sys; sys.exit(pytest.main(['-q', '-x', '-p', 'no:cacheprovider', 'tests/unit/drc']))\"\
+    )\nsurvivors = [rule for rule in RULES\n             if subprocess.run([sys.executable, \"-c\", PROG.format(rule=rule)],\
+    \ capture_output=True).returncode == 0]\nassert not survivors, f\"no test in tests/unit/drc fails\
+    \ when these rules are removed from check(): {survivors}\"\nprint(f\"all {len(RULES)} rules are covered\
+    \ by a failing test\")\nEOF"
+  exists: null
+  timeout_s: 900
+- cmd: uv run python -c "from moduleforge.generate.halfbridge import generate_layouts; from moduleforge.drc
+    import check; a=generate_layouts(60, seed=12345); b=generate_layouts(60, seed=12345); assert len(a)==60;
+    bad=[l.fingerprint() for l in a if check(l)]; assert not bad, bad; assert [l.fingerprint() for l in
+    a]==[l.fingerprint() for l in b]; assert len({l.family for l in a})>=3; assert {l.dies_per_switch
+    for l in a}=={2,3,4,5,6}; c=a[0].to_conductors(); print('ok', len(a))"
+  exists: null
+  timeout_s: 900
+experiment: null
+risk: medium
+model: null
+budget_usd: 6.0
+max_turns: 80
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: founder
+created_at: '2026-09-30T01:13:24+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

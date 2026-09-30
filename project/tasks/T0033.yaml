@@ -1,0 +1,98 @@
+id: T0033
+objective: O001
+title: Layout fingerprint covers every to_conductors() input; die shorts span trace top to die top
+type: implement
+agent: builder
+status: todo
+depends_on:
+- T0021
+description: 'Follow-up to the T0028 review of T0021 (project/reviews/T0021/T0028.json, notes "Fingerprint
+  omits inputs that change to_conductors() output" and "DieShort.z_bottom is the bottom of the top-Cu
+  layer"). It must merge before T0022 (the L2 adapter keys its on-disk solve cache on Layout.fingerprint())
+  and T0023 (L1 PEEC consumes to_conductors()); both now depend on it.
+
+
+  (1) Layout.fingerprint() must change whenever anything that to_conductors() or a later thermal model
+  reads changes. In addition to what it hashes today, hash every LayerStack layer field (name, material,
+  thickness, sigma, k), Layout.backside_inset, Layout.wire_sigma and every Die field, including attach_thickness.
+  Keep it deterministic across processes and keep the 1 nm rounding for lengths. Hash conductivities with
+  a relative rounding (for example 12 significant digits), not a 1 nm grid. Say in the docstring exactly
+  what it covers. Fingerprints of existing layouts will change; nothing stored depends on them yet.
+
+
+  (2) to_conductors(): each DieShort must span from the top surface of its trace (z_bottom = the top-Cu
+  z_top, the die-attach interface) to the die top (z_top = die_z_range(d)[1]), i.e. attach + die thickness
+  (about 0.23 mm), not from the bottom of the top Cu (0.53 mm today). State both node heights in the DieShort
+  docstring.
+
+
+  (3) Tests under tests/unit/geometry/: the fingerprint changes under each perturbation above and is identical
+  for a regenerated layout; die-short z ranges for generated layouts.
+
+
+  Change nothing outside src/moduleforge/geometry and tests/unit/geometry.'
+context_files: []
+deliverables:
+- src/moduleforge/geometry/layout.py
+- tests/unit/geometry/
+touches:
+- src/moduleforge/geometry/**
+- tests/unit/geometry/**
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/geometry tests/unit/generate tests/unit/drc
+  exists: null
+  timeout_s: 900
+- cmd: uv run ruff check src/moduleforge tests/unit
+  exists: null
+  timeout_s: 900
+- cmd: "uv run python - <<'EOF'\nimport dataclasses\nfrom moduleforge.generate.halfbridge import generate_layouts\n\
+    \ng = generate_layouts(1, seed=7, dies_per_switch=2)[0]\nf0 = g.fingerprint()\nassert generate_layouts(1,\
+    \ seed=7, dies_per_switch=2)[0].fingerprint() == f0, \"fingerprint not deterministic\"\n\n\ndef with_layer(lay,\
+    \ name, **kw):\n    layers = tuple(dataclasses.replace(la, **kw) if la.name == name else la for la\
+    \ in lay.stack.layers)\n    return dataclasses.replace(lay, stack=dataclasses.replace(lay.stack, layers=layers))\n\
+    \n\nd0 = g.dies[0]\nvariants = {\n    \"top_cu sigma\": with_layer(g, \"top_cu\", sigma=5.0e7),\n\
+    \    \"backside_cu sigma\": with_layer(g, \"backside_cu\", sigma=5.0e7),\n    \"baseplate sigma\"\
+    : with_layer(g, \"baseplate\", sigma=5.0e7),\n    \"ceramic k\": with_layer(g, \"ceramic\", k=90.0),\n\
+    \    \"backside_inset\": dataclasses.replace(g, backside_inset=g.backside_inset + 0.5e-3),\n    \"\
+    wire_sigma\": dataclasses.replace(g, wire_sigma=g.wire_sigma * 0.9),\n    \"die attach_thickness\"\
+    : dataclasses.replace(\n        g, dies=[dataclasses.replace(d0, attach_thickness=d0.attach_thickness\
+    \ + 20e-6), *g.dies[1:]]),\n}\nignored = [k for k, v in variants.items() if v.fingerprint() == f0]\n\
+    assert not ignored, f\"fingerprint ignores: {ignored}\"\nprint(f\"fingerprint covers all {len(variants)}\
+    \ perturbations\")\nEOF"
+  exists: null
+  timeout_s: 900
+- cmd: "uv run python - <<'EOF'\nfrom moduleforge.generate.halfbridge import generate_layouts\n\nfor lay\
+    \ in generate_layouts(6, seed=11):\n    z1 = lay.top_cu_z()[1]\n    for s, d in zip(lay.to_conductors().shorts,\
+    \ lay.dies, strict=True):\n        zb, zt = lay.die_z_range(d)\n        assert abs(s.z_bottom - z1)\
+    \ < 1e-12, (\"die short must start at the trace top\", s.z_bottom, z1)\n        assert abs(s.z_top\
+    \ - zt) < 1e-12, (\"die short must end at the die top\", s.z_top, zt)\n        assert abs((s.z_top\
+    \ - s.z_bottom) - (d.attach_thickness + d.thickness)) < 1e-12\nprint(\"every die short spans trace\
+    \ top -> die top (attach + die)\")\nEOF"
+  exists: null
+  timeout_s: 900
+- cmd: uv run python -c "from moduleforge.generate.halfbridge import generate_layouts; from moduleforge.drc
+    import check; a=generate_layouts(60, seed=12345); b=generate_layouts(60, seed=12345); assert len(a)==60;
+    bad=[l.fingerprint() for l in a if check(l)]; assert not bad, bad; assert [l.fingerprint() for l in
+    a]==[l.fingerprint() for l in b]; assert len({l.family for l in a})>=3; assert {l.dies_per_switch
+    for l in a}=={2,3,4,5,6}; c=a[0].to_conductors(); print('ok', len(a))"
+  exists: null
+  timeout_s: 900
+experiment: null
+risk: medium
+model: null
+budget_usd: 4.0
+max_turns: 80
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: founder
+created_at: '2026-09-30T01:13:24+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

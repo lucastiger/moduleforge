@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-09-30T15:45:30+00:00 from repository state — do not edit_
+_generated 2026-09-30T15:57:38+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
@@ -16,7 +16,6 @@ cancelled: 14, done: 18, failed: 2, review: 1, todo: 10
 - T0023 `review` builder/implement: L1 fast PEEC moduleforge.physics.peec (trace cells, skin-corrected R, Grover bond wires, image planes) + single-core timing benchmark (attempt 1)
 
 ## Recent events
-- 2026-09-30T14:04:20+00:00 capacity_backoff {"task": "T0044", "minutes": 30}
 - 2026-09-30T14:34:37+00:00 run_started {"run": "T0043-builder-20260930T073437-9b41", "task": "T0043", "role": "builder", "session": "e635ccc6-f1d7-40fc-ac3a-1c50eb888559"}
 - 2026-09-30T14:34:39+00:00 run_started {"run": "T0044-critic-20260930T073439-7ca3", "task": "T0044", "role": "critic", "session": "7833b620-12b1-4a15-8d5b-fc7861dc6691"}
 - 2026-09-30T14:35:12+00:00 run_finished {"run": "T0043-builder-20260930T073437-9b41", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
@@ -31,3 +30,4 @@ cancelled: 14, done: 18, failed: 2, review: 1, todo: 10
 - 2026-09-30T15:45:30+00:00 capacity_backoff {"task": "T0044", "minutes": 30}
 - 2026-09-30T15:45:30+00:00 run_finished {"run": "T0045-critic-20260930T080916-d621", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-09-30T15:45:30+00:00 capacity_backoff {"task": "T0045", "minutes": 30}
+- 2026-09-30T15:57:36+00:00 sleep_detected {"gap_s": 333, "runs_extended": 0}

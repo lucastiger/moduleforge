@@ -186,3 +186,4 @@
 {"ts": "2026-09-30T15:45:30+00:00", "event": "capacity_backoff", "actor": "orchestrator", "task": "T0044", "minutes": 30}
 {"ts": "2026-09-30T15:45:30+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0045-critic-20260930T080916-d621", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 {"ts": "2026-09-30T15:45:30+00:00", "event": "capacity_backoff", "actor": "orchestrator", "task": "T0045", "minutes": 30}
+{"ts": "2026-09-30T15:57:36+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 333, "runs_extended": 0}

@@ -1,0 +1,15 @@
+id: I0014
+kind: protected_change
+subject: 'T0023: merge needs founder approval'
+summary: 'L1 fast PEEC moduleforge.physics.peec (trace cells, skin-corrected R, Grover bond wires, image
+  planes) + single-core timing benchmark
+
+  Risk high; 7 files. PR: None'
+refs:
+- T0023
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-09-30T18:52:45+00:00'
+resolved_at: null

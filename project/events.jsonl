@@ -211,3 +211,5 @@
 {"ts": "2026-09-30T18:51:06+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0045-critic-20260930T113013-ea65", "status": "completed", "cost": 1.5063718000000001, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-09-30T18:51:06+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0041-scientist-20260930T115106-58f7", "task": "T0041", "role": "scientist", "session": "d6adbdbf-37a0-4df4-86d5-9ceaaca5d8fa"}
 {"ts": "2026-09-30T18:52:42+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0044-critic-20260930T113013-7ce6", "status": "completed", "cost": 2.1548241999999993, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-09-30T18:52:45+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0014", "kind": "protected_change", "subject": "T0023: merge needs founder approval"}
+{"ts": "2026-09-30T18:52:45+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0043-builder-20260930T115245-bba7", "task": "T0043", "role": "builder", "session": "02133b8f-da4d-4047-b677-daba8f9a7386"}

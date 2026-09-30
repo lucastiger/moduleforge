@@ -3,7 +3,7 @@ objective: O001
 title: Select the L2 reference (license + capability audit) and pre-register E001 reference validation
 type: design_experiment
 agent: scientist
-status: running
+status: review
 depends_on: []
 description: 'Choose the L2 reference and pre-register its validation BEFORE the L2 adapter is built.
   Three deliverables, one purpose (the reference and its validation).
@@ -105,4 +105,124 @@ trigger: null
 rationale: A1 (E001.max_rel_err_vs_analytic ≤ 2%), F1 (reference wrong) and F6 (license audit). Pre-registering
   the reference validation first lets the L2 builder test against it and catches reference errors before
   any evaluation is spent.
-history: []
+history:
+- attempt: 1
+  outcome: agent_finished
+  summary: 'I''ve delivered all three T0020 deliverables and committed them on the task branch (0d1e9a4).
+    All definition-of-done commands and the fast gate exit 0, but three things need a founder decision
+    or follow-up before the L2 adapter is built.
+
+
+    **Recommended L2 tool: Whiteley Research FastHenry `fasthenry-3.0wr-031424`.**
+
+    - Pin: xictools commit d28932afd22acf116c8bcd22e56a57faf3fb6d07, file `fasthenry/fasthenry-3.0wr-031424.tar.gz`,
+    sha256 6da40d0e31425bca85be46434b33ecc194205d705b47f4459d91568c9f4301ef.
+
+    - Build with the bundled Sparse solver only; do not enable the optional KLU or MKL solvers.
+
+    - It is the only candidate whose sources carry a permissive license: MIT''s 2003 text allows use,
+    sale and distribution "for any purpose".
+
+    - That license makes the licensee indemnify MIT, which is not stand'
+  report:
+    summary: "I've delivered all three T0020 deliverables and committed them on the task branch (0d1e9a4).\
+      \ All definition-of-done commands and the fast gate exit 0, but three things need a founder decision\
+      \ or follow-up before the L2 adapter is built.\n\n**Recommended L2 tool: Whiteley Research FastHenry\
+      \ `fasthenry-3.0wr-031424`.**\n- Pin: xictools commit d28932afd22acf116c8bcd22e56a57faf3fb6d07,\
+      \ file `fasthenry/fasthenry-3.0wr-031424.tar.gz`, sha256 6da40d0e31425bca85be46434b33ecc194205d705b47f4459d91568c9f4301ef.\n\
+      - Build with the bundled Sparse solver only; do not enable the optional KLU or MKL solvers.\n- It\
+      \ is the only candidate whose sources carry a permissive license: MIT's 2003 text allows use, sale\
+      \ and distribution \"for any purpose\".\n- That license makes the licensee indemnify MIT, which\
+      \ is not standard MIT/BSD wording. It needs your acceptance in a decision record before the tool\
+      \ is adopted.\n\n**Rejected: FastHenry2 (FastFieldSolvers).** Its source carries MIT's 1996 notice,\
+      \ which grants use only for \"internal, noncommercial purposes\". The original MIT 1996 tarball\
+      \ very likely carries the same notice, but I did not download it to confirm.\n\n**Not verified:\
+      \ building from source.** My local build attempt was blocked by the session's permission policy,\
+      \ and I did not try to get around it. The note cites packaging evidence instead: the tool's own\
+      \ build notes, FreeBSD packages for aarch64 and amd64, and MacPorts arm64 packages of an older version.\
+      \ The L2 builder task must build it on macOS arm64 and Linux x86-64 and reproduce the bundled examples.\n\
+      \n**Research note** (`research/notes/o001-l2-reference.md`):\n- Quoted license terms and a capability\
+      \ check for each candidate.\n- An in-house Python fallback solver and the conditions that would\
+      \ trigger it.\n- Citations for every closed form.\n- The contract for the `moduleforge.solvers.l2`\
+      \ Python API that the E001 runner calls.\n\n**E001 design:**\n- Ten cases in seven geometry classes,\
+      \ compared at 32 values:\n  - rectangular copper bars (self and mutual) at 100 Hz;\n  - round aluminium\
+      \ wires: a straight wire, a bond-wire-like staple, and a coupled pair, both open and tied in parallel;\n\
+      \  - a rectangular wire loop in free space and over a floating finite copper plane, at 5/20/80 MHz.\n\
+      - The largest stated residual model error is 0.9%, against the 2% pass threshold.\n- There are nine\
+      \ sanity checks: five test the closed forms themselves, and four test the L2 solver (convergence\
+      \ under refinement, reciprocity, inductance not rising with frequency, and length scaling).\n- `--analytic-only`\
+      \ runs today and exits 1 if any closed-form self-check fails. The self-checks caught three errors\
+      \ while I built the runner:\n  - a wrong digit in the bei(5) Bessel value I recalled from the A&S\
+      \ table;\n  - a comparison with Grover's rectangle formula that has to be made in the thin-wire\
+      \ limit;\n  - the wrong evaluation point in the plane-truncation calculation.\n- `--smoke` currently\
+      \ ends with status `error` because `moduleforge.solvers` doesn't exist yet.\n- I checked the L2\
+      \ path with a throwaway stand-in solver in /tmp. It is not evidence. With no error injected all\
+      \ checks pass; with a 3% error injected the metric reads 0.035, which fails the 2% criterion as\
+      \ it should.\n\n**Decision for you on the packet wording.** The packet asks smoke to run every geometry\
+      \ class at 20 MHz, but the bar formulas are exact only at low frequency. I have smoke solve bars\
+      \ at both 20 MHz and 100 Hz and compare only at 100 Hz; please confirm or change this.\n\n**Known\
+      \ gaps:** rectangular bars at high frequency, inclined bond-wire legs, and wires connected directly\
+      \ to a plane have no exact closed form. They are covered only by the convergence and frequency checks,\
+      \ so an E001 pass does not validate them. I also did not extract the PowerSynth 2019 loop-inductance\
+      \ numbers or find the Q3D-vs-double-pulse comparison.\n\nCommands run (all exit 0 unless noted):\n\
+      - the three `test -f` deliverable checks;\n- `grep -q 'moduleforge.solvers.l2'` on the note;\n-\
+      \ `uv run mfos exp check E001`;\n- `uv run ruff check experiments/runners/e001_reference.py`;\n\
+      - `uv run python experiments/runners/e001_reference.py --analytic-only`;\n- `uv run mfos gate --fast`\
+      \ (\"all gates passed\");\n- `--smoke`: exit 1, expected until the L2 module exists."
+    failure_class: none
+    confidence: 0.75
+    evidence:
+    - '[F] wr fasthenry-3.0wr-031424 src/fasthenry/mulGlobal.h header: ''Copyright (C) 2003 by the Board
+      of Trustees of Massachusetts Institute of Technology ... License to use, copy, modify, sell and/or
+      distribute this software ... for any purpose is hereby granted without royalty'' + indemnification
+      clause; grep for ''noncommercial'' in the wr tree hits only doc/old_ps/license_.tex'
+    - '[F] ediloren/FastHenry2 @363e43e src/fasthenry/mulGlobal.h: ''Permission to use, copy and modify
+      for internal, noncommercial purposes is hereby granted. Any distribution ... strictly prohibited'';
+      GitHub API license null'
+    - '[F] sha256 of the pinned wr tarball (xictools d28932a): 6da40d0e31425bca85be46434b33ecc194205d705b47f4459d91568c9f4301ef;
+      FreeBSD port science/fasthenry uses this tarball, declares MIT, builds aarch64/amd64'
+    - '[F] wr readGeom.c/examples: g-card planes with thick/seg1/seg2/nhinc; nwinc/nhinc/rw/rh filament
+      subdivision; .freq fmin/fmax/ndec; .external/.equiv'
+    - '[F] Hoer-Love function in runner matches FastHenry joelself.c eval_eq term by term; HL vs 6-D Gauss-Legendre
+      9.3e-15; filament formula vs quadrature 1.9e-15; Bessel series vs Hankel 4.4e-13; rectangle partial
+      sum vs Grover (r=1um) 5.3e-5'
+    - '[F] 2-D strip BEM reproduces infinite-image closed form to 2.4e-8 at W=400h; C1 margin 15 mm gives
+      2-D truncation 1.4e-5'
+    - '[F] closed-form values (nH): A1 12.171, B1 8.316/8.057/7.937/7.877 at 100Hz/5/20/80 MHz, C0 18.66
+      vs C1 14.39 at 20 MHz'
+    - '[F] Commands: exp check E001 exit 0; ruff exit 0; --analytic-only exit 0; mfos gate --fast exit
+      0 (''all gates passed''); --smoke exit 1 (ModuleNotFoundError moduleforge.solvers, expected)'
+    - '[F] /tmp stand-in solver: bias 0 -> metric 0.005, all L2 checks pass; bias 0.03 -> metric 0.035
+      (interval 0.030-0.049), exceeds the A1 threshold'
+    alternative_explanations:
+    - explanation: The original MIT fasthenry-3.0-12Nov96 tarball might carry different license terms
+        than inferred (not downloaded).
+      how_to_discriminate: Download the tarball from rle.mit.edu/cpg/codes, hash it, and grep its headers
+        for 'noncommercial' vs the 2003 'Board of Trustees' text.
+    - explanation: The wr build could fail on macOS arm64 or Linux x86-64 (only third-party packaging
+        evidence, no first-hand build).
+      how_to_discriminate: 'Builder task: make all from the pinned tarball on both platforms; run examples/
+        and diff against examples/results.'
+    discriminating_tests:
+    - Build the pinned wr tarball on macOS arm64 and Linux x86-64 and reproduce the bundled examples
+    - 'Once moduleforge.solvers.l2 exists: uv run python experiments/runners/e001_reference.py --smoke
+      (run_dir /tmp/e001-smoke) must complete with all L2 sanity checks reported'
+    recommended_actions:
+    - 'Founder: decision record (F6) accepting or rejecting the 2003 MIT license of fasthenry-3.0wr, including
+      its licensee-indemnification clause; if rejected, plan the in-house PEEC fallback (note section
+      2)'
+    - 'Planner: builder task to implement moduleforge.solvers.l2 per the contract in note section 3 on
+      the pinned wr tarball, including a first-hand build on macOS arm64 and Linux x86-64 and reproduction
+      of the bundled examples'
+    - 'Founder: confirm the smoke-mode handling of bar classes (solved at 20 MHz and 100 Hz, compared
+      only at 100 Hz), then register E001'
+    - 'E002 design task: extract PowerSynth TPEL 2019 loop-inductance numbers and locate the Q3D vs double-pulse
+      anchor; note E001 does not cover HF rectangular bars, inclined bond-wire legs or galvanic plane
+      contacts'
+    files_written:
+    - research/notes/o001-l2-reference.md
+    - experiments/drafts/E001.yaml
+    - experiments/runners/e001_reference.py
+    experiment_drafts:
+    - experiments/drafts/E001.yaml
+    affects_acceptance_criteria: false

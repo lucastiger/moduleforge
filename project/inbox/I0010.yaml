@@ -9,7 +9,9 @@ refs:
 - T0034
 options: []
 recommendation: ''
-status: open
-response: ''
+status: approved
+response: 'Approved: DoD verified (11 adversarial cases, 18-rule mutation coverage, 60 layouts clean).
+  T0036 static-only review; its major finding (no per-net copper connectivity) and KeyError confirmed
+  by founder session and go to a follow-up task.'
 created_at: '2026-09-30T01:25:32+00:00'
-resolved_at: null
+resolved_at: '2026-09-30T01:32:53+00:00'

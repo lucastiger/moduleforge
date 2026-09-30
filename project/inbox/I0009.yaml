@@ -8,7 +8,9 @@ refs:
 - T0033
 options: []
 recommendation: ''
-status: open
-response: ''
+status: approved
+response: 'Approved: DoD verified (fingerprint covers all 7 perturbations; die shorts trace top -> die
+  top). T0035 review was static-only (untrusted snapshot, fixed in cd008fa); its minor findings go to
+  a follow-up task.'
 created_at: '2026-09-30T01:18:34+00:00'
-resolved_at: null
+resolved_at: '2026-09-30T01:32:53+00:00'

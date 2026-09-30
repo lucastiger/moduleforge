@@ -1,0 +1,46 @@
+id: T0032
+objective: O001
+title: Diagnose failure of T0029
+type: investigate
+agent: scientist
+status: todo
+depends_on: []
+description: 'Task T0029 (''Review T0020 (physics)'') failed with preliminary class `implementation`:
+  agent ended with success.
+
+  Failure output (tail):
+
+  ```
+
+  You''ve hit your session limit · resets 6pm (America/Los_Angeles)
+
+  ```
+
+  Determine the true failure class and root cause. Follow skill mf-diagnosis: list at least two alternative
+  explanations, design a discriminating test, run it if cheap, and write your notes to research/diagnoses/T0032.md.'
+context_files:
+- project/tasks/T0029.yaml
+deliverables:
+- research/diagnoses/T0032.md
+touches:
+- research/diagnoses/T0032.md
+definition_of_done: []
+experiment: null
+risk: medium
+model: null
+budget_usd: 5.0
+max_turns: 80
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: orchestrator
+created_at: '2026-09-30T00:47:12+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

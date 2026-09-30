@@ -98,3 +98,7 @@
 {"ts": "2026-09-30T00:46:40+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0030", "signal": "agent_error", "action": "diagnose"}
 {"ts": "2026-09-30T00:46:40+00:00", "event": "investigation_spawned", "actor": "orchestrator", "task": "T0031", "about": "T0030", "cls": "implementation"}
 {"ts": "2026-09-30T00:46:40+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0029-critic-20260929T174640-8d79", "task": "T0029", "role": "critic", "session": "b07ce2d2-ee5d-48c9-a638-d45ae102eb9a"}
+{"ts": "2026-09-30T00:47:12+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0029-critic-20260929T174640-8d79", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
+{"ts": "2026-09-30T00:47:12+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0029", "signal": "agent_error", "action": "diagnose"}
+{"ts": "2026-09-30T00:47:12+00:00", "event": "investigation_spawned", "actor": "orchestrator", "task": "T0032", "about": "T0029", "cls": "implementation"}
+{"ts": "2026-09-30T00:47:12+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0008", "kind": "decision", "subject": "T0020: review could not be completed"}

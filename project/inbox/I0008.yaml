@@ -1,0 +1,12 @@
+id: I0008
+kind: decision
+subject: 'T0020: review could not be completed'
+summary: A critic run failed; decide whether to merge without it.
+refs:
+- T0020
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-09-30T00:47:12+00:00'
+resolved_at: null

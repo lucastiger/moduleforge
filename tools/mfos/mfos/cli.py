@@ -2,7 +2,9 @@
 
 Founder commands:  status, inbox, approve, reject, answer, objective, loop, stop, start, costs, report
 Agent/CI commands: gate, exp check, doctor
-Migration helpers: packet (render a task packet to paste into Claude Code), run (one task, synchronously)
+Level-1 trigger:   task start (start one task; the running loop finishes it)
+Migration helpers: packet (render a task packet to paste into Claude Code), run (one task, synchronously,
+                   only while no loop runs)
 """
 from __future__ import annotations
 
@@ -173,6 +175,13 @@ def cmd_task(a: argparse.Namespace) -> int:
     t = s.task(a.id)
     if a.action == "show":
         print(yaml.safe_dump(t.model_dump(mode="json"), sort_keys=False))
+    elif a.action == "start":
+        from .loop import Orchestrator
+        why = Orchestrator(s).start_task(t.id)
+        if why:
+            print(f"{t.id} not started: " + "; ".join(why), file=sys.stderr)
+            return 1
+        print(f"{t.id} started; the loop verifies, reviews and merges it")
     elif a.action == "retry":
         t.status, t.max_attempts = "todo", max(t.max_attempts, t.attempts + 1)
         s.save_task(t)
@@ -194,9 +203,14 @@ def cmd_packet(a: argparse.Namespace) -> int:
 
 
 def cmd_run(a: argparse.Namespace) -> int:
-    """Run the orchestrator until one task leaves the pipeline (Phase 3 helper)."""
-    from .loop import Orchestrator
+    """Run the orchestrator until one task leaves the pipeline (Phase 3 helper; only while no loop runs)."""
+    from .loop import Orchestrator, acquire_loop_lock
     s = _store()
+    lock = acquire_loop_lock(s)  # held until return
+    if lock is None:
+        print(f"the orchestrator loop is running; use `mfos task start {a.id}` and the loop finishes the task",
+              file=sys.stderr)
+        return 1
     o = Orchestrator(s)
     t = s.task(a.id)
     if t.status in ("todo", "proposed"):
@@ -265,9 +279,13 @@ def cmd_gate(a: argparse.Namespace) -> int:
 
 
 def cmd_loop(a: argparse.Namespace) -> int:
-    from .loop import Orchestrator
+    from .loop import Orchestrator, acquire_loop_lock
     o = Orchestrator()
     if a.once:
+        lock = acquire_loop_lock(o.s)  # held until return
+        if lock is None:
+            print("the orchestrator loop is running; it already ticks", file=sys.stderr)
+            return 1
         print(json.dumps(o.tick()))
         return 0
     o.run_forever(poll_s=a.poll, max_cycles=a.cycles)
@@ -381,8 +399,8 @@ def _parser() -> argparse.ArgumentParser:
     an.add_argument("id")
     an.add_argument("text")
 
-    t = cmd("task", cmd_task, "add, list, show, retry, cancel tasks")
-    t.add_argument("action", choices=["add", "list", "show", "retry", "cancel"])
+    t = cmd("task", cmd_task, "add, list, show, start, retry, cancel tasks")
+    t.add_argument("action", choices=["add", "list", "show", "start", "retry", "cancel"])
     t.add_argument("id", nargs="?")
     t.add_argument("--objective")
     t.add_argument("--status")

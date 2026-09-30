@@ -555,7 +555,7 @@ verdict and a rejecting critic go to you.
 ### 10.3 Merge policy
 | Autonomy level | low / medium risk | high / critical risk | protected paths |
 |---|---|---|---|
-| 1 plan-only | you run the task (`mfos run T…`), then approve the merge | you | you |
+| 1 plan-only | you start the task (`mfos task start T…`; the loop finishes it), then approve the merge | you | you |
 | 2 execute | you approve every merge (inbox) | you | you |
 | 3 autonomous | auto-merge if verify + reviews pass and ≤ 25 files | you | you |
 
@@ -1040,7 +1040,7 @@ The autonomy knob (`[autonomy] level` in policy) makes each phase a one-line cha
 | Phase | When | What changes | Your routine | Exit criterion |
 |---|---|---|---|---|
 | **0 Install** | day 1 | this repository; your manual prompts become `CLAUDE.md`, agents, skills (done) | §20 | O000 passes with the real CLI |
-| **1 State and evidence** (`level = 1`) | week 1 | objectives, tasks, registrations, evaluator are live; the planner decomposes and writes packets; hooks and gates check everything | run each task with `uv run mfos run T…` (headless) or `/work T…` (paired), then approve its merge | first evaluation of O001 produced; you stopped editing packets |
+| **1 State and evidence** (`level = 1`) | week 1 | objectives, tasks, registrations, evaluator are live; the planner decomposes and writes packets; hooks and gates check everything | start each task with `uv run mfos task start T…` (headless; the running loop verifies, reviews and merges it) or `/work T…` (paired), then approve its merge. `mfos run T…` is for when no loop runs | first evaluation of O001 produced; you stopped editing packets |
 | **2 Execution** (`level = 2`) | weeks 2–3 | the loop runs all tasks and experiments | `/inbox` once or twice a day: every merge waits for you | ≥ 10 merges approved without changes; no guard or audit incidents; spend within ±30 % of budgets |
 | **3 Autonomy within policy** (`level = 3`) | weeks 3–6 | low/medium merges automatic; replanning after diagnoses automatic | `/inbox` daily, `/status` whenever | one objective completed end to end, including a failure cycle; < 3 h/week of your time |
 | **4 GitHub-native** | month 2 | `merge_mode = "github"`, bot account, PRs, code-owner review | review high-risk PRs on GitHub (phone-friendly) | a week with zero audit failures |

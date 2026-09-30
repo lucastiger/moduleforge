@@ -119,6 +119,46 @@ def test_level2_every_merge_needs_founder_and_is_traceable(sandbox):
     assert r.returncode == 0, r.stdout + r.stderr
 
 
+def test_level1_founder_starts_each_task_beside_the_running_loop(sandbox):
+    """Level 1: the loop plans and finishes work but never starts it; `mfos task start` does, with dispatch's
+    checks, and leaves polling, verification and merging to the loop (no second orchestrator)."""
+    pol = sandbox / ".mfos" / "policy.toml"
+    pol.write_text(pol.read_text().replace("level = 3", "level = 1"))
+    setup_objective()
+    s = _tick_until(lambda s: any(t.agent == "builder" and t.status == "todo" for t in s.tasks("O000")))
+    o = Orchestrator(s)
+    for _ in range(3):
+        o.tick()
+    build = next(t for t in Store().tasks("O000") if t.agent == "builder")
+    assert build.status == "todo" and build.attempts == 0  # the loop leaves it to the founder
+    exp = next(t for t in Store().tasks("O000") if t.type == "experiment")
+    assert cli(["task", "start", exp.id]) == 1  # experiments are the loop's to dispatch
+    full = Orchestrator(Store())
+    full.pol = {**full.pol, "concurrency": {"agents": 0}}
+    assert any("agent slots" in w for w in full.start_task(build.id))
+    assert Store().task(build.id).status == "todo"
+    assert cli(["task", "start", build.id]) == 0
+    assert cli(["task", "start", build.id]) == 1  # already running
+    s = _tick_until(lambda s: any(i.kind == "protected_change" for i in s.inbox("open")))
+    item = next(i for i in s.inbox("open") if i.kind == "protected_change")
+    assert cli(["approve", item.id]) == 0
+    s = drive()
+    assert s.objective_state("O000").status == "passed"
+    assert Store().task(build.id).attempts == 1
+
+
+def test_run_and_single_tick_refuse_while_a_loop_holds_the_lock(sandbox):
+    """`mfos run` and `mfos loop --once` build their own orchestrator; beside a running loop both would poll
+    the same finished runs and bill, verify and merge them twice."""
+    from mfos.loop import acquire_loop_lock
+    held = acquire_loop_lock(Store())
+    assert held is not None and acquire_loop_lock(Store()) is None
+    assert cli(["run", "T9999"]) == 1  # refused before the task is even looked up
+    assert cli(["loop", "--once"]) == 1
+    held.close()
+    assert cli(["loop", "--once"]) == 0
+
+
 def test_loop_refuses_to_start_on_stray_changes(sandbox, capsys):
     (sandbox / "src" / "moduleforge" / "__init__.py").write_text("# edited in the orchestrator checkout\n")
     Orchestrator(Store()).run_forever(poll_s=0, max_cycles=1)

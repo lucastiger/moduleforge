@@ -33,6 +33,21 @@ TERMINAL = {"done", "cancelled", "failed", "needs_founder"}
 OBJ_IDLE = {"draft", "passed", "failed", "abandoned", "superseded", "needs_founder"}
 
 
+def acquire_loop_lock(store: Store) -> Optional[Any]:
+    """Take the single-orchestrator lock; None if a loop already holds it. Keep the handle open while running.
+
+    Anything that polls runs and advances tasks (the loop, `mfos run`, `mfos loop --once`) must hold it: two
+    orchestrators polling the same finished run would both bill, verify and merge it."""
+    store.mfos.mkdir(exist_ok=True)
+    fh = open(store.mfos / "loop.lock", "w")
+    try:
+        fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        fh.close()
+        return None
+    return fh
+
+
 class Orchestrator:
     def __init__(self, store: Optional[Store] = None):
         self.s = store or Store()
@@ -45,10 +60,8 @@ class Orchestrator:
 
     # ================================================================== loop
     def run_forever(self, poll_s: int = 30, max_cycles: Optional[int] = None) -> None:
-        lock = open(self.s.mfos / "loop.lock", "w")
-        try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
+        lock = acquire_loop_lock(self.s)  # held until this process exits
+        if lock is None:
             print("another orchestrator loop is already running", file=sys.stderr)
             return
         stray = self.unexpected_changes()
@@ -680,11 +693,20 @@ class Orchestrator:
                 self.s.save_task(t)
 
     # ================================================================== dispatch
-    def _deps_done(self, t: m.Task) -> bool:
-        for d in t.depends_on:
-            if not self.s.task_path(d).exists() or self.s.task(d).status != "done":
-                return False
-        return True
+    def _blockers(self, t: m.Task, running: list[m.Task]) -> list[str]:
+        """Why ``t`` cannot be dispatched now; empty when it can. Shared by dispatch and `mfos task start`."""
+        why = []
+        if t.status != "todo":
+            why.append(f"status is {t.status}, not todo")
+        waiting = [d for d in t.depends_on if not self.s.task_path(d).exists() or self.s.task(d).status != "done"]
+        if waiting:
+            why.append("waiting on " + ", ".join(waiting))
+        ost = self.s.objective_state(t.objective).status
+        if ost not in ("active", "evaluating"):
+            why.append(f"objective {t.objective} is {ost}")
+        if self._conflicts(t, running):
+            why.append("touches overlap a running task")
+        return why
 
     def _conflicts(self, t: m.Task, running: list[m.Task]) -> bool:
         for r in running:
@@ -706,7 +728,34 @@ class Orchestrator:
             return False
         return True
 
+    def start_task(self, tid: str) -> list[str]:
+        """Start one agent task now with dispatch's checks: the founder's trigger at level 1 (`mfos task start`).
+
+        Returns why it was not started (empty: started). Safe while the loop runs: it only starts the run, under
+        the dispatch lock; the loop then polls, verifies, reviews and merges it like any other."""
+        with self.s.lock("dispatch"):
+            t = self.s.task(tid)
+            if t.agent == "none":
+                return [f"{t.type} tasks are dispatched by the loop itself"]
+            running = [x for x in self.s.tasks() if x.status == "running"]
+            why = self._blockers(t, running)
+            if sum(1 for x in running if x.agent != "none") >= self.pol.get("concurrency", {}).get("agents", 2):
+                why.append("all agent slots are busy (policy concurrency.agents)")
+            if self._backoff_active():
+                why.append("capacity backoff is active (.mfos/backoff_until)")
+            if self.s.stop_requested():
+                why.append("a stop is requested (`mfos start` clears it)")
+            if not why and not self._budget_ok(t):
+                why.append("the daily LLM budget is reached")
+            if not why:
+                self._start_agent(t)
+            return why
+
     def _dispatch(self) -> int:
+        with self.s.lock("dispatch"):  # serializes with `mfos task start`
+            return self._dispatch_locked()
+
+    def _dispatch_locked(self) -> int:
         if self._backoff_active():
             return 0
         conc = self.pol.get("concurrency", {})
@@ -715,9 +764,7 @@ class Orchestrator:
         n_agents = sum(1 for t in running if t.agent != "none")
         n_exps = sum(1 for t in running if t.agent == "none")
         prio = {oid: self.s.objective(oid).priority for oid in self.s.objective_ids()}
-        ready = [t for t in tasks if t.status == "todo" and self._deps_done(t)
-                 and self.s.objective_state(t.objective).status in ("active", "evaluating")
-                 and not self._conflicts(t, running)]
+        ready = [t for t in tasks if not self._blockers(t, running)]
         ready.sort(key=lambda t: (prio.get(t.objective, 9), t.type != "plan", t.type != "review", t.id))
         started = 0
         for t in ready:
@@ -732,7 +779,7 @@ class Orchestrator:
                     started += 1
                 continue
             if self.level < 2 and t.type not in ("plan", "review"):
-                continue  # level 1: the founder triggers execution (`mfos run <task>` or /work)
+                continue  # level 1: the founder triggers execution (`mfos task start <task>` or /work)
             if n_agents >= conc.get("agents", 2) or not self._budget_ok(t):
                 continue
             self._start_agent(t)

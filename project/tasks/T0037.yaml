@@ -91,16 +91,21 @@ definition_of_done:
     \ {f}\": TERM.format(kw=f\"{f}=0.0\") for f in (\"cx\", \"cy\", \"w\", \"h\")},\n    **{f\"{n} {f}\"\
     : LAYER.format(kw=kw, name=n)\n       for n in (\"baseplate\", \"solder\", \"backside_cu\", \"ceramic\"\
     , \"top_cu\")\n       for f, kw in ((\"material\", \"material='M'\"), (\"thickness\", \"thickness=1.0\"\
-    ), (\"sigma\", \"sigma=1.0\"),\n                     (\"k\", \"k=1.0\"))},\n}\nPROG = (\"import dataclasses;\
-    \ from shapely.geometry import box; from moduleforge.geometry import Layout; \"\n        \"o = Layout.fingerprint;\
-    \ Layout.fingerprint = lambda self: o((lambda x: {expr})(self)); \"\n        \"import pytest, sys;\
-    \ sys.exit(pytest.main(['-q', '-p', 'no:cacheprovider', '--junitxml={xml}', \"\n        \"'tests/unit/geometry']))\"\
-    )\nsurvivors = []\nwith tempfile.TemporaryDirectory() as tmp:\n    for name, expr in MUTANTS.items():\n\
-    \        xml = Path(tmp) / \"r.xml\"\n        subprocess.run([sys.executable, \"-c\", PROG.format(expr=expr,\
-    \ xml=xml)], capture_output=True)\n        if not killed(xml):\n            survivors.append(name)\n\
-    assert not survivors, f\"no test in tests/unit/geometry fails by assertion when the fingerprint ignores:\
-    \ {survivors}\"\nprint(f\"tests catch a fingerprint blind to any of all {len(MUTANTS)} hashed fields\"\
-    )\nEOF"
+    ), (\"sigma\", \"sigma=1.0\"),\n                     (\"k\", \"k=1.0\"))},\n    # labels re-paired\
+    \ with other geometry: a fingerprint that hashes labels apart from what they label\n    \"die pad\
+    \ names\": DIE.format(kw=\"pads=dict(zip(('p0', 'p1', 'p2', 'p3'), sorted(d.pads.values())))\"),\n\
+    \    \"trace net/polygon pairing\": R + \"(x, traces=[\" + R + \"(t, net=n) for t, n in zip(x.traces,\
+    \ sorted(t.net for t in x.traces))])\",\n    \"wire net/points pairing\": R + \"(x, wires=[\" + R\
+    \ + \"(w, net=n) for w, n in zip(x.wires, sorted(w.net for w in x.wires))])\",\n}\nPROG = (\"import\
+    \ dataclasses; from shapely.geometry import box; from moduleforge.geometry import Layout; \"\n   \
+    \     \"o = Layout.fingerprint; Layout.fingerprint = lambda self: o((lambda x: {expr})(self)); \"\n\
+    \        \"import pytest, sys; sys.exit(pytest.main(['-q', '-p', 'no:cacheprovider', '--junitxml={xml}',\
+    \ \"\n        \"'tests/unit/geometry']))\")\nsurvivors = []\nwith tempfile.TemporaryDirectory() as\
+    \ tmp:\n    for name, expr in MUTANTS.items():\n        xml = Path(tmp) / \"r.xml\"\n        subprocess.run([sys.executable,\
+    \ \"-c\", PROG.format(expr=expr, xml=xml)], capture_output=True)\n        if not killed(xml):\n  \
+    \          survivors.append(name)\nassert not survivors, f\"no test in tests/unit/geometry fails by\
+    \ assertion when the fingerprint ignores: {survivors}\"\nprint(f\"tests catch a fingerprint blind\
+    \ to any of all {len(MUTANTS)} hashed fields\")\nEOF"
   exists: null
   timeout_s: 1800
 - cmd: "uv run python - <<'EOF'\nimport dataclasses\nfrom moduleforge.generate.halfbridge import generate_layouts\n\
@@ -313,3 +318,46 @@ history:
     is correct: `put("stack", self.stack.kind, ...)`. Changing kind now changes the fingerprint. The repo
     stores no fingerprints (they appear only in tests), so no saved caches or results are invalidated.'
   at: '2026-09-30T13:48:19+00:00'
+- attempt: 2
+  outcome: dod_strengthened
+  summary: 'founder session: the fingerprint mutation check now also re-pairs labels with other geometry
+    (die pad names, trace net/polygon, wire net/points), per review T0042'
+  at: '2026-09-30T18:48:54+00:00'
+- attempt: 2
+  outcome: review_findings
+  summary: Attempt 2 was ACCEPTED WITH CAVEATS by its critic (T0042). The 'review_rejected' entry above
+    is attempt 1's stale review (T0039), counted by a loop bug fixed in 60a2713. Keep attempt 2's work
+    and fix these findings in attempt 3; the docstring must not claim that sub-0.5 nm changes are always
+    absorbed (rounding ties and ring normalisation can change the hash).
+  failure_output: '- [major] The ''die pad names'' pin tests the number of pads, not their names: a fingerprint
+    that ignores pad names passes every geometry test: The pin adds a third pad (`kelvin`). Any fingerprint
+    that hashes the pad rectangles as a list catches that change, whether or not it hashes the names.
+    Nothing in the suite renames or swaps pads. A fingerprint that replaces pad names with ordinal labels
+    (sorted by rectangle) therefore survives all of tests/unit/geometry. The completeness test still reports
+    pad names as pinned, so it gives false assurance. This is inside the tests'' own stated scope (''a
+    fingerprint that ignored the field ... fails the pin''). It also matters physically: `to_conductors()`
+    reads `d.pads["source"]`, so swapping the source and gate rectangles changes the conductor model,
+    yet that swap collides under the name-blind fingerprint. The production fingerprint itself is correct;
+    it hashes the sorted (name, rectangle) pairs.
+
+    - [minor] The pins do not tie each trace''s net label to its polygon: a fingerprint that sorts trace
+    nets separately from the polygons survives: The ''trace net'' pin changes one trace''s net at a time.
+    That changes the multiset of nets, so a fingerprint that hashes the sorted net labels apart from the
+    polygons also sees it. Swapping the nets of two traces does change the conductor model (RectCell net
+    labels) and would collide under such a fingerprint. This is outside the tests'' stated ''ignored or
+    normalised to a constant'' scope. It is still a gap under ''pin every hashed input'', and the same
+    pattern very likely applies to wire nets (I did not run that case).
+
+    - [minor] The new docstring overstates quantization: sub-0.5 nm changes are not always absorbed: The
+    docstring says ''sub-0.5 nm changes are absorbed''. Rounding each field to its own 1 nm grid only
+    absorbs changes that do not cross a rounding tie. In addition, `_ring_ints` runs `shapely.normalize`
+    before rounding, so moving one polygon vertex by less than 1 nm can change which vertex the ring starts
+    at, and with it the hash. The quantum tests hide both effects: they snap to the grid first and shift
+    all coordinates uniformly. The digest errs toward reporting a change, never toward a collision, but
+    the statement itself is false.
+
+    - [note] The docstring says the hash covers ''the labels'', but one label, Terminal.net, is unhashed:
+    Terminal.net is explicitly listed under ''Not covered'', and grep shows that nothing in src/ (DRC
+    included) reads it; DRC and to_conductors use the dict key. So the behaviour matches the docstring,
+    but the headline ''plus the labels'' is slightly loose.'
+  at: '2026-09-30T18:48:54+00:00'

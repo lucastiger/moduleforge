@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-09-30T13:43:46+00:00 from repository state — do not edit_
+_generated 2026-09-30T13:44:31+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
@@ -18,7 +18,6 @@ cancelled: 14, done: 17, failed: 2, review: 1, running: 2, todo: 6
 - T0042 `running` critic/review: Review T0037 (general) (attempt 1)
 
 ## Recent events
-- 2026-09-30T01:43:29+00:00 task_failed_attempt {"task": "T0037", "signal": "review_rejected", "action": "repair"}
 - 2026-09-30T01:46:09+00:00 run_finished {"run": "T0040-critic-20260929T184121-e5d4", "status": "completed", "cost": 1.2127989999999997, "subtype": "success", "report": "structured_output"}
 - 2026-09-30T01:46:12+00:00 inbox_opened {"id": "I0012", "kind": "protected_change", "subject": "T0038: merge needs founder approval"}
 - 2026-09-30T02:00:56+00:00 inbox_resolved {"id": "I0011", "status": "approved", "note": "Approved (founder): merge audit note + E001 draft + runner; T0029/T0030 findings go to a scientist follow-up befo
@@ -33,3 +32,4 @@ cancelled: 14, done: 17, failed: 2, review: 1, running: 2, todo: 6
 - 2026-09-30T13:43:30+00:00 run_finished {"run": "T0037-builder-20260930T063731-ab29", "status": "completed", "cost": 1.2335206, "subtype": "success", "report": "structured_output"}
 - 2026-09-30T13:43:45+00:00 verified {"task": "T0037"}
 - 2026-09-30T13:43:46+00:00 run_started {"run": "T0042-critic-20260930T064346-d42f", "task": "T0042", "role": "critic", "session": "e5cc6f49-1f17-42ef-9307-c742ed57d8ba"}
+- 2026-09-30T13:44:30+00:00 loop_started {"pid": 1039}

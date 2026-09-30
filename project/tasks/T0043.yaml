@@ -3,7 +3,7 @@ objective: O001
 title: 'DRC: loop-closing necks, unknown die.switch, diameter-aware wire-start margin (T0040 review)'
 type: implement
 agent: builder
-status: running
+status: review
 depends_on:
 - T0038
 description: 'Follow-up to the T0040 review of T0038 (project/reviews/T0038/T0040.json). Low priority:
@@ -82,3 +82,39 @@ history:
 - outcome: capacity_backoff
   summary: You've hit your session limit · resets 11:30am (America/Los_Angeles)
   at: '2026-09-30T14:35:12+00:00'
+- attempt: 1
+  outcome: agent_finished
+  summary: Implemented all three DRC changes in rules.py and added tests. (1) min_trace_width now also
+    compares topology (pieces and holes) before and after erosion, so a neck closing a copper loop is
+    flagged. (2) A die with a switch other than HS or LS emits die_bad_switch and skips die_wrong_net
+    and wire_net for that die. No crash. (3) wire_start requires max(wire_start_margin, diameter/2) inside
+    the source pad. No generated layout violated the changed rules, so the generator is unchanged. Layout
+    IR is unchanged. The new tests are a loop-closing neck (plus a wide-ring negative), die_bad_switch
+    (with a check that the switch-dependent rules are skipped), and wire_start scaling with diameter.
+    rule_coverage.py confirms removing die_bad_switch fails a test by assertion.
+  report:
+    status: completed
+    summary: Implemented all three DRC changes in rules.py and added tests. (1) min_trace_width now also
+      compares topology (pieces and holes) before and after erosion, so a neck closing a copper loop is
+      flagged. (2) A die with a switch other than HS or LS emits die_bad_switch and skips die_wrong_net
+      and wire_net for that die. No crash. (3) wire_start requires max(wire_start_margin, diameter/2)
+      inside the source pad. No generated layout violated the changed rules, so the generator is unchanged.
+      Layout IR is unchanged. The new tests are a loop-closing neck (plus a wide-ring negative), die_bad_switch
+      (with a check that the switch-dependent rules are skipped), and wire_start scaling with diameter.
+      rule_coverage.py confirms removing die_bad_switch fails a test by assertion.
+    files_changed:
+    - src/moduleforge/drc/rules.py
+    - tests/unit/drc/test_drc.py
+    checks_run:
+    - cmd: uv run pytest -q tests/unit/drc tests/unit/generate tests/unit/geometry
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge tests/unit
+      exit_code: 0
+    - cmd: uv run python project/dod/drc-t0040/cases.py
+      exit_code: 0
+    - cmd: uv run python project/dod/drc-t0040/rule_coverage.py
+      exit_code: 0
+    - cmd: uv run python -c <generate_layouts 60 seeds DoD one-liner>
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0

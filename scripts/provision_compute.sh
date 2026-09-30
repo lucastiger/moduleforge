@@ -2,7 +2,8 @@
 # Install and self-test the reference solvers ModuleForge experiments need.
 # Idempotent. macOS (Apple Silicon, Apple clang) and Ubuntu (gcc). Usage: scripts/provision_compute.sh [--force]
 #   ngspice   : Homebrew / apt
-#   FastHenry : built from source into ~/.local/bin, then checked against a closed-form inductance.
+#   FastHenry : built from the pinned wr tarball (project/decisions/D0002) into ~/.local/bin, then checked
+#               against a closed-form inductance. --force rebuilds it.
 # FEniCSx is installed only when an objective needs it: see docs/INFRASTRUCTURE.md §5.
 set -euo pipefail
 BIN="$HOME/.local/bin"
@@ -13,12 +14,23 @@ if ! command -v ngspice > /dev/null; then
   if [ "$(uname)" = "Darwin" ]; then brew install ngspice; else sudo apt-get install -y -qq ngspice; fi
 fi
 
+# L2 reference pinned by project/decisions/D0002 (MIT 2003 license, indemnity clause accepted by the founder).
+FH_URL="https://raw.githubusercontent.com/wrcad/xictools/d28932afd22acf116c8bcd22e56a57faf3fb6d07/fasthenry/fasthenry-3.0wr-031424.tar.gz"
+FH_SHA256="6da40d0e31425bca85be46434b33ecc194205d705b47f4459d91568c9f4301ef"
+
 build_fasthenry() {
-  local work src real_cc flags name
+  local work src real_cc flags name got
   work="$(mktemp -d)"
-  src="$work/fasthenry"
-  echo "building FastHenry (log: $work/build.log)"
-  git clone -q --depth 1 https://github.com/hohe/fasthenry-3.0wr "$src"
+  src="$work/fasthenry-3.0wr"
+  echo "building FastHenry 3.0wr-031424 (log: $work/build.log)"
+  curl -fsSL -o "$work/fasthenry.tar.gz" "$FH_URL"
+  got="$(python3 -c 'import hashlib, sys; print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest())' \
+         "$work/fasthenry.tar.gz")"
+  if [ "$got" != "$FH_SHA256" ]; then
+    echo "FastHenry tarball sha256 mismatch: got $got, pinned $FH_SHA256 (D0002)" >&2
+    exit 1
+  fi
+  tar -xzf "$work/fasthenry.tar.gz" -C "$work"
   # FastHenry is K&R-era C. Modern compilers reject it by default: clang >= 16 (including Apple's) and
   # gcc >= 14 turn implicit declarations, pointer mismatches and `return;` in implicit-int functions
   # into errors, and both default to
@@ -35,8 +47,9 @@ build_fasthenry() {
     printf '#!/bin/sh\nexec "%s" "$@" %s\n' "$real_cc" "$flags" > "$work/cc-wrap/$name"
     chmod +x "$work/cc-wrap/$name"
   done
-  if ! (cd "$src" && ./config default > /dev/null && mkdir -p bin \
-        && PATH="$work/cc-wrap:$PATH" make fasthenry > "$work/build.log" 2>&1); then
+  # The wr BUILD file: `make all` from the top directory with the bundled Sparse solver; the old `config`
+  # step is for MinGW only. KLU/MKL stay off (D0002).
+  if ! (cd "$src" && mkdir -p bin && PATH="$work/cc-wrap:$PATH" make all > "$work/build.log" 2>&1); then
     echo "FastHenry build FAILED. Last lines of $work/build.log:" >&2
     tail -25 "$work/build.log" >&2
     exit 1
@@ -49,7 +62,8 @@ if [ "$FORCE" = "--force" ] || ! [ -x "$BIN/fasthenry" ]; then
 fi
 
 # Self-test: 10 x 1 x 1 mm copper bar in SI units. Closed form (Ruehli/Grover): 5.695 nH.
-# (The geometry is in meters on purpose: this FastHenry build mis-scales inductance under `.units mm`.)
+# (The geometry is in meters on purpose: this FastHenry build scales the impedance by 1000 under `.units mm`;
+# checked on the pinned build, D0002.)
 t="$(mktemp -d)"
 cat > "$t/bar.inp" << 'INP'
 .units m

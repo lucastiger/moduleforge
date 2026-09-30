@@ -82,3 +82,53 @@ def test_fingerprint_stable_and_sensitive(layouts):
                                            *lay.dies[1:]])
     assert moved.fingerprint() != lay.fingerprint()
     assert dataclasses.replace(lay, stack=default_amb_stack()).fingerprint() != lay.fingerprint()
+
+
+def _with_layer(lay, name, **kw):
+    layers = tuple(dataclasses.replace(la, **kw) if la.name == name else la for la in lay.stack.layers)
+    return dataclasses.replace(lay, stack=dataclasses.replace(lay.stack, layers=layers))
+
+
+def test_fingerprint_deterministic_and_covers_conductor_inputs():
+    g = generate_layouts(1, seed=7, dies_per_switch=2)[0]
+    f0 = g.fingerprint()
+    assert generate_layouts(1, seed=7, dies_per_switch=2)[0].fingerprint() == f0
+    d0 = g.dies[0]
+    variants = {
+        "top_cu sigma": _with_layer(g, "top_cu", sigma=5.0e7),
+        "backside_cu sigma": _with_layer(g, "backside_cu", sigma=5.0e7),
+        "baseplate sigma": _with_layer(g, "baseplate", sigma=5.0e7),
+        "ceramic k": _with_layer(g, "ceramic", k=90.0),
+        "ceramic material": _with_layer(g, "ceramic", material="other"),
+        "top_cu thickness": _with_layer(g, "top_cu", thickness=g.stack.layer("top_cu").thickness + 10e-6),
+        "backside_inset": dataclasses.replace(g, backside_inset=g.backside_inset + 0.5e-3),
+        "wire_sigma": dataclasses.replace(g, wire_sigma=g.wire_sigma * 0.9),
+        "die attach_thickness": dataclasses.replace(
+            g, dies=[dataclasses.replace(d0, attach_thickness=d0.attach_thickness + 20e-6), *g.dies[1:]]),
+        "die thickness": dataclasses.replace(
+            g, dies=[dataclasses.replace(d0, thickness=d0.thickness + 20e-6), *g.dies[1:]]),
+        "die switch": dataclasses.replace(
+            g, dies=[dataclasses.replace(d0, switch="LS" if d0.switch == "HS" else "HS"), *g.dies[1:]]),
+    }
+    for name, v in variants.items():
+        assert v.fingerprint() != f0, name
+
+
+def test_fingerprint_conductivity_relative_rounding():
+    g = generate_layouts(1, seed=7)[0]
+    sigma = g.stack.layer("top_cu").sigma
+    # sub-1e-12 relative change is absorbed; 1e-6 relative change is not (a 1 nm grid would fail both)
+    assert _with_layer(g, "top_cu", sigma=sigma * (1 + 1e-14)).fingerprint() == g.fingerprint()
+    assert _with_layer(g, "top_cu", sigma=sigma * (1 + 1e-6)).fingerprint() != g.fingerprint()
+
+
+def test_die_shorts_span_trace_top_to_die_top(layouts):
+    for lay in layouts:
+        z1 = lay.top_cu_z()[1]
+        shorts = lay.to_conductors().shorts
+        assert len(shorts) == len(lay.dies)
+        for s, d in zip(shorts, lay.dies, strict=True):
+            assert s.z_bottom == pytest.approx(z1, abs=1e-12)
+            assert s.z_top == pytest.approx(lay.die_z_range(d)[1], abs=1e-12)
+            assert s.z_top - s.z_bottom == pytest.approx(d.attach_thickness + d.thickness, abs=1e-12)
+            assert s.z_top - s.z_bottom == pytest.approx(230e-6, abs=1e-12)

@@ -60,7 +60,11 @@ class Plane:
 @dataclass(frozen=True)
 class DieShort:
     """Die with the switch on: ideal short between the die footprint on the trace of ``bottom_net``
-    (z_bottom) and the source pad at the die top (z_top), where the wires start."""
+    and the source pad at the die top, where the wires start.
+
+    Node heights: ``z_bottom`` is the top surface of the trace (top-Cu z_top, the die-attach interface);
+    ``z_top`` is the die top surface (top-Cu z_top + attach_thickness + die thickness). The short therefore
+    spans attach + die (about 0.23 mm for the default 50 um attach and 180 um die)."""
 
     die_index: int
     switch: str

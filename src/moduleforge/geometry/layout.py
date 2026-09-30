@@ -130,25 +130,41 @@ class Layout:
     wire_sigma: float = SIGMA_AL_WIRE
 
     def fingerprint(self) -> str:
-        """Stable SHA-256 hash of the geometry (coordinates rounded to 1 nm, canonical polygon rings)."""
+        """Stable SHA-256 hash of everything ``to_conductors()`` and a thermal model read.
+
+        Covers: family and ``dies_per_switch``; every LayerStack layer (name, material, thickness, sigma, k);
+        substrate and baseplate outlines; every trace (net, canonical rings); every Die field (position, size,
+        switch, thickness, attach_thickness, pads); every wire (net, 3D points, diameter); terminals;
+        ``backside_inset`` and ``wire_sigma``. Lengths are rounded to 1 nm; conductivities (sigma, k) are
+        rounded to 12 significant digits (relative rounding). Not covered: ``LayerStack.kind`` and
+        ``BondWire.loop_height`` (a label and a redundant generator parameter; the wire points are hashed).
+        """
         h = hashlib.sha256()
 
         def put(*items):
             h.update(repr(items).encode())
 
+        def nm(v):
+            return int(round(v * 1e9))
+
+        def sig(v):
+            return f"{float(v):.12g}"
+
         put("family", self.family, self.dies_per_switch)
-        put("stack", [(la.name, int(round(la.thickness * 1e9))) for la in self.stack.layers])
+        put("stack", [(la.name, la.material, nm(la.thickness), sig(la.sigma), sig(la.k))
+                      for la in self.stack.layers])
+        put("backside_inset", nm(self.backside_inset), "wire_sigma", sig(self.wire_sigma))
         put("outline", _ring_ints(self.outline), _ring_ints(self.baseplate_outline))
         for t in self.traces:
             put("trace", t.net, _ring_ints(t.polygon))
         for d in self.dies:
-            put("die", d.switch, [int(round(v * 1e9)) for v in (d.cx, d.cy, d.w, d.h, d.thickness)],
-                sorted((k, [int(round(v * 1e9)) for v in r]) for k, r in d.pads.items()))
+            put("die", d.switch, [nm(v) for v in (d.cx, d.cy, d.w, d.h, d.thickness, d.attach_thickness)],
+                sorted((k, [nm(v) for v in r]) for k, r in d.pads.items()))
         for w in self.wires:
-            put("wire", w.net, np.round(w.points * 1e9).astype(np.int64).tolist(), int(round(w.diameter * 1e9)))
+            put("wire", w.net, np.round(w.points * 1e9).astype(np.int64).tolist(), nm(w.diameter))
         for n in sorted(self.terminals):
             t = self.terminals[n]
-            put("term", n, [int(round(v * 1e9)) for v in (t.cx, t.cy, t.w, t.h)])
+            put("term", n, [nm(v) for v in (t.cx, t.cy, t.w, t.h)])
         return h.hexdigest()
 
     def top_cu_z(self) -> tuple[float, float]:
@@ -182,8 +198,8 @@ class Layout:
         net_of_switch = {"HS": DC_PLUS, "LS": PHASE}
         shorts = []
         for i, d in enumerate(self.dies):
-            zb, zt = self.die_z_range(d)
-            shorts.append(DieShort(i, d.switch, d.cx, d.cy, d.w, d.h, z0, zt, net_of_switch[d.switch],
+            zt = self.die_z_range(d)[1]
+            shorts.append(DieShort(i, d.switch, d.cx, d.cy, d.w, d.h, z1, zt, net_of_switch[d.switch],
                                    d.pads["source"]))
         tp, tn = self.terminals[DC_PLUS], self.terminals[DC_MINUS]
         port = Port((tp.cx, tp.cy, z1), (tn.cx, tn.cy, z1), phase_open=True)

@@ -3,7 +3,7 @@ objective: O001
 title: Review T0020 (numerics)
 type: review
 agent: critic
-status: running
+status: done
 depends_on: []
 description: 0d1e9a402132bab65be9389da807b26fd69f8d09
 context_files: []
@@ -58,3 +58,5 @@ history:
     (fixed in cd008fa)'
   run: T0030-critic-20260929T182714-cf28
   at: '2026-09-30T01:31:02+00:00'
+- outcome: review:accept_with_caveats
+  summary: 6 findings

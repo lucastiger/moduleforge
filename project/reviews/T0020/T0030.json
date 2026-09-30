@@ -1,0 +1,69 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "--smoke omits two of the seven geometry classes (wire_mutual, loop_free)",
+      "detail": "The runner docstring says '--smoke one case per geometry class at 20 MHz', and the note quotes the brief as requiring '--smoke runs at least one case of every geometry class at 20 MHz'. smoke_cases = [A1, A3, B2, B4, C1] maps to classes {bar_self, bar_mutual, wire_chain, wire_parallel_tied, loop_over_plane}. wire_mutual (B3) and loop_free (C0) are never exercised. So the Im Z12 > 0 sign convention for round wires, and the free-loop class, are untested in smoke. The full run covers all classes, and smoke is not a definition-of-done command, so this is not a blocker.",
+      "evidence": "build_cases assigns cls: B3='wire_mutual', C0='loop_free'; E001.yaml and DEFAULT_CFG both give smoke_cases [A1, A3, B2, B4, C1]; main() filters cases by smoke_cases.",
+      "suggested_check": "Add B3 and C0 to smoke_cases, or correct the docstring and the note to say which classes smoke covers."
+    },
+    {
+      "severity": "minor",
+      "title": "Residual model error for round wires is mis-ordered (O(r/l), not O((r/l)^2)), so the 'deterministic bound' interval is not a bound",
+      "detail": "residual_model_error uses 0.5*(r/l_min)^2 for the tube substitution (external self = filament mutual at distance r). The filament mutual contains a linear '+d' term. Averaging it over the actual current distribution gives the arithmetic mean distance: 4r/pi for surface current, 0.905r for uniform current. It does not give r. The resulting error is first order in r/l. I computed the exact finite-tube partial self by averaging over the circumference. The discrepancy is about 8.1e-3 nH per segment. That is 1.03e-3 relative for B1, against the stated 1.1e-4 (about 9x under), and about 1.7e-3 for C0, against the stated 4.5e-4 (about 4x under). B2 (about 3.3e-3 vs 5e-3) and C1 stay within their stated totals. The objective's A1 criterion uses the point estimate, so the 2% decision is unaffected. But the pre-registered description of the interval as a 'deterministic discretization-plus-residual-model-error bound' is false for B1 and C0.",
+      "evidence": "Scratch computation: tube_self(l)-mfil(l,r) = 8.07e-3 nH (l=10 mm, rel 1.03e-3), 7.96e-3 nH (l=5 mm), 7.45e-3 nH (l=1.5 mm, rel 1.19e-2); predicted mu0/(2pi)*(4/pi-1)*r = 8.20e-3 nH.",
+      "suggested_check": "Replace the (r/l)^2 term with the AMD term mu0/(2pi)*(4/pi-1)*r per segment, divided by the case's closed-form L."
+    },
+    {
+      "severity": "minor",
+      "title": "Convergence rule and disc_unc treat a one-step change as the discretization error",
+      "detail": "l2_converged passes when the change between levels k and k+1 is below 1%, and disc_unc = |L(k+1) - L(k)|. For geometric convergence with ratio rho, the remaining error is change*rho/(1-rho). That equals the change at rho = 0.5, but is 4x the change at rho = 0.8 and 9x at rho = 0.9. A correct but slowly converging L2 could pass l2_converged with about 4% remaining error, then fail the 2% A1 criterion and be wrongly attributed to failure mode F1. The upper end of the metric interval is also not a bound. The rule does not estimate the observed order, even though up to five levels are available.",
+      "evidence": "l2_converged_solve returns (z, z_prev, change, k+1); l2_phase uses disc_unc = |l2v - l2p| / |la| directly in the interval.",
+      "suggested_check": "Pre-register a three-level observed-order (Richardson) estimate, and use rho/(1-rho) times the last change as the discretization uncertainty."
+    },
+    {
+      "severity": "minor",
+      "title": "Registered config key tol_independent is unused",
+      "detail": "tol_independent: 1.0e-3 appears in E001.yaml and DEFAULT_CFG, but analytic_checks never reads it. The independent-check tolerances are hard-coded (1e-9, 1e-6, 1e-4, 2e-4, an O(w/l) expression). A frozen config knob that has no effect is misleading in a pre-registered spec.",
+      "evidence": "grep finds tol_independent only in the YAML (line 24) and DEFAULT_CFG (runner line 670).",
+      "suggested_check": "Remove the key, or wire it into the independent checks before registration."
+    },
+    {
+      "severity": "note",
+      "title": "The LF bar comparisons are ill-conditioned for extracting L; the solver tolerance is required but never verified",
+      "detail": "At 100 Hz, R/(omega L) is about 50 for A1 and A2 (R = 3.8e-4 ohm vs omega L = 7.6e-6 ohm for A1). A port-Z error of epsilon relative to |Z| therefore becomes about 50*epsilon relative error in L. The contract's 1e-6 solver tolerance is adequate. FastHenry's default iterative tolerance is much looser, however, and no sanity check confirms the tolerance actually used. Separately, the metric interval is recorded through run.metric with the default level = 0.95, although it is described as a deterministic bound.",
+      "evidence": "R = l/(sigma w t) = 0.02/(5.8e7*3e-3*3e-4) = 3.83e-4 ohm; omega L = 2*pi*100*12.17e-9 = 7.65e-6 ohm.",
+      "suggested_check": "Require res.meta to record the solver tolerance or direct-solve flag, and assert it in l2_converged."
+    },
+    {
+      "severity": "note",
+      "title": "Minor factual imprecision in the license table",
+      "detail": "The note calls the FastHenry2 mulGlobal.h text 'MIT's 1996 notice'. The file header reads 'Copyright (c) 1992 Massachusetts Institute of Technology'. The quoted noncommercial and no-distribution clauses are confirmed verbatim, so the rejection stands.",
+      "evidence": "WebFetch of raw.githubusercontent.com/ediloren/FastHenry2/363e43e.../src/fasthenry/mulGlobal.h",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Recomputed the A1 and A2 bar self-inductances by 2-D difference-variable integration of the exact filament mutual with scipy dblquad. This does not use the Hoer-Love code. Results: 12.1708 nH and 5.7043 nH, against 12.171 and 5.704 in the note.",
+    "Recomputed the A3 mutual by the same 2-D difference-variable method: 6.1790 nH against 6.179. Recomputed the A4 mutual by 40^4 Gauss-Legendre over the cross-sections of the general-offset filament formula, after first checking that formula against double quadrature (2e-13): 4.6702 nH against 4.670.",
+    "Checked the Kelvin ber/bei reference values at x = 1, 2, 5 against scipy.special: all within 4e-12.",
+    "Recomputed B1 at 100 Hz, 5, 20 and 80 MHz with scipy.special.jv for the internal impedance: 8.3156, 8.0566, 7.9374, 7.8766 nH, matching the note.",
+    "Recomputed C0 as a partial-inductance sum, and C1 with a numerical Neumann integral between the loop and its image recessed by delta/2: C0 19.020/18.663/18.481 nH and C1 14.775/14.387/14.189 nH, matching the note.",
+    "Quantified the tube-substitution residual by averaging the filament mutual over the circumference. It is O(r/l): 1.03e-3 for B1 and about 1.7e-3 for C0, above the runner's stated 1.1e-4 and 4.5e-4.",
+    "Checked by hand that Grover's rectangle formula differs from the partial sum by 0.6% at r = 0.15 mm, which confirms the runner is right to compare only in the thin-wire limit.",
+    "Read the Hoer-Love function term by term against the published form, and the sign pattern of the second differences.",
+    "Read the draft YAML against mfos ExperimentSpec, MetricSpec and SanitySpec (strict schema) and against validate_draft. All fields and types are accepted, the metric E001.max_rel_err_vs_analytic required by the objective is declared, and the runner file exists.",
+    "Checked that the nine sanity checks declared in the YAML are all reported by the full-mode code path (five analytic plus four L2), so the run would not be marked invalid.",
+    "Confirmed through the GitHub contents API that fasthenry-3.0wr-031424.tar.gz at xictools commit d28932a is 5,211,870 bytes, as the note states.",
+    "Confirmed verbatim that FastHenry2's mulGlobal.h at commit 363e43e carries the 'internal, noncommercial purposes' and no-distribution clauses.",
+    "Ran the definition-of-done grep: 'moduleforge.solvers.l2' appears three times in the note. Confirmed all three deliverable files exist."
+  ],
+  "caveats": [
+    "I could not execute these definition-of-done commands because the session permission policy denied them: 'uv run mfos exp check E001', 'uv run ruff check experiments/runners/e001_reference.py', and 'uv run python experiments/runners/e001_reference.py --analytic-only'. Running the runner with system python was also denied. My schema and closed-form checks were done by reading the code and with independent scratch computations, not by running these commands. The orchestrator's deterministic checks must confirm them.",
+    "I did not verify the tarball's sha256 or its 2003 MIT relicensing header first-hand; only the file size was checked. The founder or legal decision on the indemnity clause is still open, as the note itself says.",
+    "I did not independently verify the 2-D PEC-strip BEM truncation estimate (1.4e-5). The claim that 3-D truncation is smaller is marked as inference and remains unproven. A 2-D model estimates a 3-D finite-plane truncation; it does not bound it.",
+    "No L2 solver exists yet, so the E001 design cannot demonstrate convergence behaviour. The acceptance rests on the correctness of the closed-form references and the experiment's plumbing, not on any L2 evidence.",
+    "The metric interval is not a valid bound as pre-registered, because of the round-wire residual and convergence-rule findings. Only the point value, which objective criterion A1 uses, should be relied on."
+  ]
+}

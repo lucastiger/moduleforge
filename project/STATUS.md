@@ -1,28 +1,26 @@
 # ModuleForge status
-_generated 2026-09-30T01:25:25+00:00 from repository state — do not edit_
+_generated 2026-09-30T01:25:33+00:00 from repository state — do not edit_
 
-## Founder inbox (3 open)
+## Founder inbox (4 open)
 - **I0005** [external_action] [O001] [O001] Pin FastHenry and rebuild it with --force before the L2 adapter (n3) starts; record D0002 at E001 registration
 - **I0008** [decision] T0020: review could not be completed
 - **I0009** [protected_change] T0033: merge needs founder approval
+- **I0010** [protected_change] T0034: merge needs founder approval
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $13.61/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $15.01/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 12, done: 8, failed: 4, needs_founder: 2, review: 1, running: 1, todo: 8
+cancelled: 12, done: 9, failed: 4, needs_founder: 3, todo: 8
 
 - T0020 `needs_founder` scientist/design_experiment: Select the L2 reference (license + capability audit) and pre-register E001 reference validation (attempt 1)
 - T0033 `needs_founder` builder/implement: Layout fingerprint covers every to_conductors() input; die shorts span trace top to die top (attempt 1)
-- T0034 `review` builder/implement: DRC hardening from the T0028 review: connectivity, keep-outs, diameter-aware pitch, width boundary, full rule coverage (attempt 1)
-- T0036 `running` critic/review: Review T0034 (general) (attempt 1)
+- T0034 `needs_founder` builder/implement: DRC hardening from the T0028 review: connectivity, keep-outs, diameter-aware pitch, width boundary, full rule coverage (attempt 1)
 
 ## Recent events
-- 2026-09-30T00:47:12+00:00 investigation_spawned {"task": "T0032", "about": "T0029", "cls": "implementation"}
-- 2026-09-30T00:47:12+00:00 inbox_opened {"id": "I0008", "kind": "decision", "subject": "T0020: review could not be completed"}
 - 2026-09-30T01:12:20+00:00 loop_started {"pid": 15938}
 - 2026-09-30T01:13:24+00:00 task_added {"task": "T0033"}
 - 2026-09-30T01:13:24+00:00 task_added {"task": "T0034"}
@@ -36,3 +34,5 @@ cancelled: 12, done: 8, failed: 4, needs_founder: 2, review: 1, running: 1, todo
 - 2026-09-30T01:16:19+00:00 run_started {"run": "T0036-critic-20260929T181619-4563", "task": "T0036", "role": "critic", "session": "8cdae978-09fc-46a4-b8e9-c2fd3fba6947"}
 - 2026-09-30T01:18:32+00:00 run_finished {"run": "T0035-critic-20260929T181506-35f5", "status": "completed", "cost": 0.9418561999999999, "subtype": "success", "report": "structured_output"}
 - 2026-09-30T01:18:34+00:00 inbox_opened {"id": "I0009", "kind": "protected_change", "subject": "T0033: merge needs founder approval"}
+- 2026-09-30T01:25:30+00:00 run_finished {"run": "T0036-critic-20260929T181619-4563", "status": "completed", "cost": 1.3998818, "subtype": "success", "report": "structured_output"}
+- 2026-09-30T01:25:32+00:00 inbox_opened {"id": "I0010", "kind": "protected_change", "subject": "T0034: merge needs founder approval"}

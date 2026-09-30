@@ -228,3 +228,4 @@
 {"ts": "2026-09-30T19:08:45+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0015", "status": "approved", "note": "Approved per the founder's standing instruction: DoD verified; T0046 accept_with_caveats with minor findings only (multi-trace same-net necks, d/2 foot margin uncited, square-element convention, to_conductors KeyError) recorded as backlog T-task, not started: DRC rules are placeholders until vendor rules exist."}
 {"ts": "2026-09-30T19:08:45+00:00", "event": "task_added", "actor": "founder", "task": "T0049"}
 {"ts": "2026-09-30T19:09:12+00:00", "event": "merged", "actor": "orchestrator", "task": "T0043"}
+{"ts": "2026-09-30T19:11:54+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0048-critic-20260930T120804-4a4b", "status": "completed", "cost": 1.1029698, "subtype": "success", "report": "structured_output"}

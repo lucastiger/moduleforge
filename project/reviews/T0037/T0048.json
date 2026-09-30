@@ -1,0 +1,49 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "Pins work per IR field, not per hashed value: a fingerprint that hashes only each polygon's bounding box passes every new test",
+      "detail": "The claim says 'pin every hashed input with a test'. The pins apply coarse whole-field changes: _grow buffers the polygon by 1 mm, the quantum test shifts every coordinate together, and the swaps exchange whole polygons. Each of those also changes the polygon's bounding box, so none of them checks that the vertex content is hashed. I swapped in reduced-hash versions of the fingerprint and ran the new test functions against them. All of these passed every fingerprint test: (a) _ring_ints hashing only poly.bounds for traces, outline and baseplate_outline; (b) _ring_ints dropping interiors (holes); (c) no shapely.normalize. The generator never makes traces with holes (0 in 60 layouts), but decompose_polygon explicitly supports them, so holes do change to_conductors(). The real implementation is correct: replacing the PHASE trace with its envelope keeps the same bounds, changes area from 8.69e-4 to 2.04e-3 m\u00b2 and RectCells from 5 to 3, and does change the digest. The problem is that no test would catch a regression to hashing bounds only. The DoD mutation script only tries mutants that set a whole field to a constant, which is why it does not see this.",
+      "evidence": "Called the test module's own functions (FP_PINS, _QUANTUM_PATHS, FP_SWAPS, _FIELD_SWAPS pins, the order, unsnapped and boundary tests, the exempt-field test) with L._ring_ints monkeypatched. control: 0 failures; 'bounds only': 0 failures; 'drop holes': 0 failures; 'no normalize': 0 failures.",
+      "suggested_check": "Add a pin that changes a trace polygon's shape inside a fixed bounding box (e.g. polygon -> polygon.envelope, or notch a vertex), one that adds a hole, and one that checks ring-start/orientation invariance."
+    },
+    {
+      "severity": "minor",
+      "title": "Values inside a field are not pinned one by one: pad corners, interior wire points, conductivity digits",
+      "detail": "Three more reduced fingerprints pass the whole new suite: (1) hashing only (x0, y0) of each pad rectangle; the pad pins and quantum test shift all four coordinates together, so x1 and y1 are never pinned. (2) Hashing only 3 of the 7 wire points (first, middle, last); _raise_apex changes only the middle point. (3) Rounding sigma/k to 2 or 3 significant digits instead of 12. The '12 significant digits' promise is only checked as a string in the docstring; every sigma/k pin changes the value by 10% or more. So the docstring's quantization promise for conductivities, and its promise that changing any single coordinate by more than 1 nm changes the digest, are not backed by a test.",
+      "evidence": "Same harness, patching Layout.fingerprint: 'sigma/k .3g' 0 failures, 'sigma/k .2g' 0 failures, 'pads: lower-left corner only' 0 failures, 'wire: only first/last/middle point' 0 failures.",
+      "suggested_check": "Add pins that change one pad coordinate (x1), a non-middle wire point, and sigma by a relative 1e-9 (seen) versus 1e-14 (absorbed)."
+    },
+    {
+      "severity": "minor",
+      "title": "Docstring overstates the exchange guarantee: swapping two different values below the quantum leaves the digest unchanged",
+      "detail": "The docstring says 'exchanging two different values between two elements or two fields changes the digest'. This is false when the two values differ by less than half a nanometre, because both round to the same integer. Example: Die.w = x and Die.h = x + 1e-13 m, exchanged: the digest is unchanged. The quantization paragraph partly covers this, but the exchange sentence states it without qualification.",
+      "evidence": "w != h is True; fingerprint(w=x, h=x+1e-13) == fingerprint(w=x+1e-13, h=x), so 'exchange changes digest' is False.",
+      "suggested_check": "Qualify the sentence as 'two values that differ after quantization'."
+    },
+    {
+      "severity": "note",
+      "title": "A test comment misquotes the docstring",
+      "detail": "The comment in test_fingerprint_rounding_boundary_is_not_absorbed says 'The docstring promises no absorption below the quantum'. The docstring actually says rounding 'does not guarantee that a smaller change is absorbed'. The assertion itself matches the docstring; only the comment is wrong.",
+      "evidence": "tests/unit/geometry/test_layout.py, test_fingerprint_rounding_boundary_is_not_absorbed comment vs the fingerprint docstring's Quantization paragraph.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran `uv run pytest -q tests/unit/geometry tests/unit/generate tests/unit/drc`: 160 passed. Ran `uv run ruff check src/moduleforge tests/unit`: all checks passed.",
+    "Re-ran the DoD scripts for kind hashing, the 1 nm quantum on both sides, the docstring content, and 60-layout generation/DRC/determinism: all passed.",
+    "Listed every IR dataclass field against the fingerprint code: every field is hashed except BondWire.loop_height and Terminal.net, matching the docstring's 'Not covered' list.",
+    "Checked what consumes the exempt fields: DRC and to_conductors() look terminals up by dict key and never read Terminal.net; loop_height is used only in arc_wire. The exemptions are sound.",
+    "Checked that to_conductors() reads only hashed fields, in list order for wires and dies.",
+    "Confirmed the real implementation gives the same digest for a trace polygon with a rotated ring start or reversed orientation (normalization works).",
+    "Mutation-tested the new tests in-process by calling the test module's functions against monkeypatched fingerprints: bounds-only polygons, holes dropped, no normalize, sigma at .2g/.3g, pad lower-left corner only, wire points reduced to 3. All survived; the unmodified control passes.",
+    "Built a bounding-box collision case (PHASE trace replaced by its envelope): same bounds, area 8.69e-4 -> 2.04e-3 m\u00b2, RectCells 5 -> 3. The real digest changes, but the bounds-only mutant, which passes all tests, would not see it.",
+    "Built a counterexample to the docstring's exchange guarantee (Die.w/h differing by 1e-13 m)."
+  ],
+  "caveats": [
+    "The implementation change itself is correct and complete: LayerStack.kind is hashed, the docstring is fixed, and the exemptions are exact. The caveats concern test completeness only.",
+    "'Pin every hashed input' holds only at IR-field granularity, i.e. each field changed as a whole. Several things are not pinned: polygon vertex content inside the bounding box, polygon holes, ring normalization, individual pad corners, individual wire points, and the 12-significant-digit conductivity rounding. A regression in any of these would pass the suite.",
+    "The sandbox denied my attempt to run the DoD subprocess mutation script verbatim, so I did not re-run it myself. Instead I did the mutation testing in-process against the same test functions."
+  ]
+}

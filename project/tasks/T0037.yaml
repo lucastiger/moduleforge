@@ -4,7 +4,7 @@ title: 'Fingerprint: hash LayerStack.kind, pin every hashed input with a test, f
   review)'
 type: implement
 agent: builder
-status: review
+status: merge
 depends_on:
 - T0033
 - T0034

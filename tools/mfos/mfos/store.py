@@ -186,8 +186,10 @@ class Store:
         return self.read_yaml(self.spec_path(eid), m.ExperimentSpec)
 
     def spec_hash(self, spec: m.ExperimentSpec) -> str:
-        body = spec.model_dump(mode="json", exclude={"status", "registered_by", "registered_at", "spec_hash"})
-        return canonical_hash(body)
+        exclude = {"status", "registered_by", "registered_at", "spec_hash"}
+        if not spec.runner_files:  # specs registered before runner freezing keep their original hash
+            exclude.add("runner_files")
+        return canonical_hash(spec.model_dump(mode="json", exclude=exclude))
 
     def results(self, eid: str) -> list[m.ExperimentResult]:
         d = self.root / "experiments" / "results" / eid

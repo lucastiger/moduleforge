@@ -58,4 +58,6 @@ done includes `uv run mfos exp check <EID>` and the runner's `--smoke` invocatio
 - Decide exclusions, outlier handling, and metrics before registration. Never after seeing data.
 - Never tune a model on the evaluation sample. Sealed seeds exist so you cannot.
 - Large outputs go through `run.artifact(...)` (content-addressed), never into git.
-- A changed design is a new experiment id. Registered specs are immutable.
+- A changed design is a new experiment id. Registered specs are immutable, and so are the runner files the
+  `runner` command names: registration records their sha256 and `mfos exp run` refuses a changed one. Keep
+  every design decision (cases, tolerances, error models) in the spec or in those files.

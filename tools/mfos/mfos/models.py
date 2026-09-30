@@ -183,6 +183,8 @@ class ExperimentSpec(_Strict):
     registered_by: Optional[str] = None
     registered_at: Optional[str] = None
     spec_hash: Optional[str] = None
+    # repo path -> sha256 of each file the runner command names, frozen at registration (covered by spec_hash)
+    runner_files: dict[str, str] = {}
 
 
 class MetricValue(_Strict):

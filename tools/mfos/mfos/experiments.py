@@ -9,11 +9,14 @@ Rules enforced here:
 """
 from __future__ import annotations
 
+import hashlib
 import os
 import secrets
+import shlex
 import shutil
 import subprocess
 import time
+from pathlib import Path
 from typing import Optional
 
 from . import models as m
@@ -21,10 +24,29 @@ from .gitops import GitOps
 from .store import Store, now
 
 
+def _file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def runner_files(root: Path, runner: str) -> dict[str, str]:
+    """sha256 of every repository file the runner command names (the code that defines the experiment)."""
+    return {tok: _file_sha256(root / tok) for tok in shlex.split(runner)
+            if not tok.startswith("-") and (root / tok).is_file()}
+
+
+def runner_changes(root: Path, spec: m.ExperimentSpec) -> list[str]:
+    """Frozen runner files that are missing or differ in the checkout at ``root``."""
+    return [rel for rel, want in spec.runner_files.items()
+            if not (root / rel).is_file() or _file_sha256(root / rel) != want]
+
+
 def register(store: Store, eid: str, by: str = "founder") -> m.ExperimentSpec:
     draft = store.spec_path(eid, draft=True)
     src = draft if draft.exists() else store.spec_path(eid)
     spec = store.read_yaml(src, m.ExperimentSpec)
+    spec.runner_files = runner_files(store.root, spec.runner)
+    if not spec.runner_files:
+        raise RuntimeError(f"{eid}: cannot freeze the runner: `{spec.runner}` names no file in the repository")
     spec.status = "registered"
     spec.registered_by = by
     spec.registered_at = now()
@@ -55,6 +77,12 @@ def run(store: Store, eid: str, *, ref: Optional[str] = None, force: bool = Fals
         cwd = store.root
     else:
         cwd = git.detached_worktree(f"exp-{eid}", ref or git.main)
+    changed = runner_changes(cwd, spec)  # checked in the checkout that will actually run
+    if changed:
+        if not here:
+            git.remove_worktree(cwd)
+        raise RuntimeError(f"{eid}: runner file(s) {changed} changed since registration; refusing to run "
+                           "(register a new experiment id for a new design)")
     commit = store.git("rev-parse", "HEAD", cwd=cwd)
     if not force and not here:
         hit = _cached(store, spec, commit)

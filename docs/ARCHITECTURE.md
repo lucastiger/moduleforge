@@ -358,7 +358,8 @@ scientist task ──► experiments/drafts/E002.yaml + experiments/runners/e002
       │ critic (always at least one lens) reviews the design, blinded
       ▼
 founder registers (inbox approval or `mfos exp register E002`)
-      │ spec moved to experiments/specs/, spec_hash frozen; audit trail recorded
+      │ spec moved to experiments/specs/, spec_hash frozen with the sha256 of every runner file the
+      │ command names (`runner_files`; `exp run` and `doctor` refuse a changed runner); audit trail recorded
       ▼
 experiment task (orchestrator, no LLM) ──► clean detached checkout of main at commit C
       │ env: MFOS_SPEC_JSON, MFOS_SPEC_HASH, MFOS_SEED (sealed), MFOS_RUN_DIR
@@ -376,7 +377,7 @@ FAIL / INCONCLUSIVE / INVALID → scientist diagnosis (+ statistics critic) → 
 ### 7.2 Identifiers and hashes
 `O###` objective · `T####` task · `E###` experiment design (a changed design is a new id) · run id
 `E002-20261003T120501-3f9a` · `EV-O001-02` evaluation · `C###` claim · `I####` inbox item · `D####`
-decision. Hashes: `criteria_hash` (objective), `spec_hash` (canonical JSON of the spec), `lock_hash`
+decision. Hashes: `criteria_hash` (objective), `spec_hash` (canonical JSON of the spec, including `runner_files`), `lock_hash`
 (`uv.lock`), git commit + dirty flag, sha256 for every artifact.
 
 ### 7.3 Provenance recorded automatically by `ExperimentRun`

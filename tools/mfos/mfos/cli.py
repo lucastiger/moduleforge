@@ -343,6 +343,8 @@ def cmd_doctor(a: argparse.Namespace) -> int:
         spec = s.read_yaml(p, m.ExperimentSpec)
         if spec.status == "registered" and spec.spec_hash != s.spec_hash(spec):
             problems.append(f"{spec.id}: registered spec modified after registration")
+        elif spec.status == "registered" and experiments.runner_changes(s.root, spec):
+            problems.append(f"{spec.id}: runner changed after registration: {experiments.runner_changes(s.root, spec)}")
     try:
         s.tasks()  # every task file is schema-validated on load
     except Exception as e:

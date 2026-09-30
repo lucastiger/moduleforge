@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-09-30T13:41:50+00:00 from repository state — do not edit_
+_generated 2026-09-30T13:42:24+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
@@ -11,13 +11,12 @@ _generated 2026-09-30T13:41:50+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $21.36/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 17, failed: 2, running: 1, todo: 6
+cancelled: 14, done: 17, failed: 2, running: 2, todo: 6
 
 - T0037 `running` builder/implement: Fingerprint: hash LayerStack.kind, pin every hashed input with a test, fix the docstring (T0035 review) (attempt 2)
+- T0041 `running` scientist/design_experiment: Fix E001's design before registration: wire model error bounds, convergence estimate, L2 contract, coverage (T0029/T0030 reviews) (attempt 1)
 
 ## Recent events
-- 2026-09-30T01:40:01+00:00 run_started {"run": "T0039-critic-20260929T184001-0075", "task": "T0039", "role": "critic", "session": "fd6fb6f0-c659-4a64-ae2e-92bac2a034e7"}
-- 2026-09-30T01:41:05+00:00 run_finished {"run": "T0038-builder-20260929T183919-a124", "status": "completed", "cost": 0.2498322, "subtype": "success", "report": "structured_output"}
 - 2026-09-30T01:41:20+00:00 verified {"task": "T0038"}
 - 2026-09-30T01:41:21+00:00 run_started {"run": "T0040-critic-20260929T184121-e5d4", "task": "T0040", "role": "critic", "session": "8d6d2424-6974-4eae-88d5-054a4af70099"}
 - 2026-09-30T01:43:28+00:00 run_finished {"run": "T0039-critic-20260929T184001-0075", "status": "completed", "cost": 0.9315315999999998, "subtype": "success", "report": "structured_output"}
@@ -31,3 +30,5 @@ cancelled: 14, done: 17, failed: 2, running: 1, todo: 6
 - 2026-09-30T13:37:31+00:00 run_started {"run": "T0037-builder-20260930T063731-ab29", "task": "T0037", "role": "builder", "session": "f91e6d4a-da51-41f7-8a37-58fb22f69ed6"}
 - 2026-09-30T13:38:05+00:00 inbox_resolved {"id": "I0012", "status": "approved", "note": "Approved per founder's standing instruction to follow the recommendation: DoD verified; T0040 accept_with_caveats
 - 2026-09-30T13:38:35+00:00 merged {"task": "T0038"}
+- 2026-09-30T13:42:17+00:00 task_added {"task": "T0041"}
+- 2026-09-30T13:42:22+00:00 run_started {"run": "T0041-scientist-20260930T064222-9471", "task": "T0041", "role": "scientist", "session": "3cd7c2d3-b028-4a92-9f50-8f4f732a257a"}

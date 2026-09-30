@@ -9,6 +9,7 @@ depends_on:
 - T0020
 - T0021
 - T0033
+- T0041
 description: 'Implement `moduleforge.solvers.l2` with two parts.
 
 

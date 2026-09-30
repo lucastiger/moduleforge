@@ -1,0 +1,98 @@
+id: T0041
+objective: O001
+title: 'Fix E001''s design before registration: wire model error bounds, convergence estimate, L2 contract,
+  coverage (T0029/T0030 reviews)'
+type: design_experiment
+agent: scientist
+status: running
+depends_on:
+- T0020
+description: 'Follow-up to the physics (T0029) and numerics (T0030) reviews of T0020 (project/reviews/T0020/).
+  E001 is still an unregistered draft; registration will freeze it, so fix its design first. Do not register
+  it, and do not change O001''s acceptance criteria (frozen).
+
+
+  (1) Wire model error. The external self-inductance of a round wire is modelled as a filament at distance
+  r. The leftover error is first order in r/l, not O((r/l)^2): averaging the filament mutual over the
+  current distribution gives the arithmetic mean distance (4r/pi for surface current, 128r/(45pi) for
+  uniform current), not r. B1''s stated bound is ~3x too small at DC and ~9x at high frequency; C0''s
+  ~4x. Either correct the closed forms (use the mean distance for the current distribution, covering the
+  transition between the uniform and surface limits) or state a bound that holds; in both cases the stated
+  residual_model_error must bound the error against exact references (project/dod/e001-design/b1_exact_limits.py
+  checks B1 at DC and in the thin-skin limit) and stay <= 2e-3, well below the 2 % criterion. Apply the
+  same analysis to every wire class (B1-B4, C0, C1) and state each bound''s derivation in the note.
+
+
+  (2) Convergence. l2_converged treats a one-step change as the discretization error; for geometric convergence
+  with ratio rho the remaining error is change * rho / (1 - rho). Expose `remaining_discretization_error(values)`
+  (L at successive refinement levels, finest last; estimate the observed ratio from >= 3 levels, and state
+  the conservative rule when fewer are available) and use it for both the convergence decision and disc_unc.
+
+
+  (3) L2 contract (note section 3; T0022 implements it). Require one mesh per refinement level shared
+  by all frequencies of a solve (the monotonicity theorem holds only for a fixed mesh), and require `meta[''solver_tol'']`;
+  the runner checks it against the tolerance the LF bar comparisons need (at 100 Hz R/(omega L) ~ 50 amplifies
+  a port-Z error ~50x in L; raise f_lf or tighten the requirement, and say which).
+
+
+  (4) Coverage. --smoke must cover all 7 geometry classes (it skips wire_mutual and loop_free). Add independent
+  analytic self-checks recorded as sanity entries `image_plane_independent` (3-D image code), `wheeler_recession_independent`
+  and `tied_branch_independent`; each must be able to fail.
+
+
+  (5) Hygiene. Every config key in the draft must be read by the runner, and the draft''s keys must equal
+  DEFAULT_CFG''s (`tol_independent` and `cases` do nothing today). Record max_rel_err_vs_analytic''s interval
+  as the deterministic bound it is (level=1.0). In the license table, FastHenry2''s mulGlobal.h notice
+  is dated 1992, not 1996.
+
+
+  The definition of done runs project/dod/e001-design/*.py (founder-authored; outside your write scope).
+  Keep E001 solver-agnostic; the chosen tool and its pin are recorded in project/decisions/D0002.'
+context_files: []
+deliverables:
+- experiments/drafts/E001.yaml
+- experiments/runners/e001_reference.py
+- research/notes/o001-l2-reference.md
+touches:
+- experiments/drafts/E001.yaml
+- experiments/runners/e001_reference.py
+- research/notes/o001-l2-reference.md
+definition_of_done:
+- cmd: uv run mfos exp check E001
+  exists: null
+  timeout_s: 900
+- cmd: uv run ruff check experiments/runners/e001_reference.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python experiments/runners/e001_reference.py --analytic-only
+  exists: null
+  timeout_s: 900
+- cmd: uv run python project/dod/e001-design/b1_exact_limits.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python project/dod/e001-design/convergence_estimator.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python project/dod/e001-design/design_contract.py
+  exists: null
+  timeout_s: 900
+experiment: null
+risk: high
+model: null
+budget_usd: 8.0
+max_turns: 80
+attempts: 1
+max_attempts: 3
+branch: task/T0041-fix-e001-s-design-before-registration-wi
+pr: null
+runs:
+- T0041-scientist-20260930T064222-9471
+created_by: founder
+created_at: '2026-09-30T13:42:17+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

@@ -4,7 +4,7 @@ title: L1 fast PEEC moduleforge.physics.peec (trace cells, skin-corrected R, Gro
   planes) + single-core timing benchmark
 type: implement
 agent: builder
-status: proposed
+status: todo
 depends_on:
 - T0021
 description: 'Implement `moduleforge.physics.peec.loop_inductance(layout, freqs_hz) -> LoopResult`, with

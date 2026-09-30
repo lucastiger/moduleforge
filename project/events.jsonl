@@ -69,3 +69,4 @@
 {"ts": "2026-09-29T22:56:48+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0005", "kind": "external_action", "subject": "[O001] [O001] Pin FastHenry and rebuild it with --force before the L2 adapter (n3) starts; record D0002 at E001 registration"}
 {"ts": "2026-09-29T22:56:48+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0006", "kind": "plan_approval", "subject": "[O001] approve initial plan (8 tasks)"}
 {"ts": "2026-09-29T22:56:48+00:00", "event": "plan_applied", "actor": "orchestrator", "objective": "O001", "created": ["T0020", "T0021", "T0022", "T0023", "T0024", "T0025", "T0026", "T0027"], "dropped": 0}
+{"ts": "2026-09-30T00:18:54+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0006", "status": "approved", "note": "Approved: re-issued plan with I0003 option (b) applied to T0022; verified field-by-field against T0011-T0018."}

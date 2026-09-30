@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E001: L2 reference vs closed-form partial inductances'
 type: experiment
 agent: none
-status: proposed
+status: todo
 depends_on:
 - T0020
 - T0022

@@ -4,7 +4,7 @@ title: L2 reference adapter moduleforge.solvers.l2 (provisioned FastHenry binary
   meshed planes, refinement, memoization)
 type: implement
 agent: builder
-status: proposed
+status: todo
 depends_on:
 - T0020
 - T0021

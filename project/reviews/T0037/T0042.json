@@ -1,0 +1,50 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "The 'die pad names' pin tests the number of pads, not their names: a fingerprint that ignores pad names passes every geometry test",
+      "detail": "The pin adds a third pad (`kelvin`). Any fingerprint that hashes the pad rectangles as a list catches that change, whether or not it hashes the names. Nothing in the suite renames or swaps pads. A fingerprint that replaces pad names with ordinal labels (sorted by rectangle) therefore survives all of tests/unit/geometry. The completeness test still reports pad names as pinned, so it gives false assurance. This is inside the tests' own stated scope ('a fingerprint that ignored the field ... fails the pin'). It also matters physically: `to_conductors()` reads `d.pads[\"source\"]`, so swapping the source and gate rectangles changes the conductor model, yet that swap collides under the name-blind fingerprint. The production fingerprint itself is correct; it hashes the sorted (name, rectangle) pairs.",
+      "evidence": "Monkeypatched `Layout.fingerprint` to `o(replace(x, dies=[replace(d, pads={'p%d'%i: r for i, r in enumerate(sorted(d.pads.values()))}) ...]))`. Result: 1 failed, 73 passed. The one failure is `test_fingerprint_docstring_not_covered_list_is_exact`, which fails with AttributeError only because the patched lambda has no docstring; no test fails on an assertion. Separately: swapping source/gate on dies[0] leaves the real fingerprint sensitive (True), changes `to_conductors().shorts[0]` (True), and collides under the name-blind fingerprint (True).",
+      "suggested_check": "Add a pin that swaps the 'source' and 'gate' rectangles on every die; it must change the fingerprint."
+    },
+    {
+      "severity": "minor",
+      "title": "The pins do not tie each trace's net label to its polygon: a fingerprint that sorts trace nets separately from the polygons survives",
+      "detail": "The 'trace net' pin changes one trace's net at a time. That changes the multiset of nets, so a fingerprint that hashes the sorted net labels apart from the polygons also sees it. Swapping the nets of two traces does change the conductor model (RectCell net labels) and would collide under such a fingerprint. This is outside the tests' stated 'ignored or normalised to a constant' scope. It is still a gap under 'pin every hashed input', and the same pattern very likely applies to wire nets (I did not run that case).",
+      "evidence": "Mutant `traces=[Trace(n, t.polygon) for n, t in zip(sorted(t.net for t in x.traces), x.traces)]`: 1 failed, 73 passed. The only failure is the docstring test's AttributeError from the monkeypatch.",
+      "suggested_check": "Add a pin that swaps the nets of two traces with different nets, and likewise for two wires."
+    },
+    {
+      "severity": "minor",
+      "title": "The new docstring overstates quantization: sub-0.5 nm changes are not always absorbed",
+      "detail": "The docstring says 'sub-0.5 nm changes are absorbed'. Rounding each field to its own 1 nm grid only absorbs changes that do not cross a rounding tie. In addition, `_ring_ints` runs `shapely.normalize` before rounding, so moving one polygon vertex by less than 1 nm can change which vertex the ring starts at, and with it the hash. The quantum tests hide both effects: they snap to the grid first and shift all coordinates uniformly. The digest errs toward reporting a change, never toward a collision, but the statement itself is false.",
+      "evidence": "A die cx at an integer-nm value + 0.49 nm, shifted by 0.02 nm: fingerprint changes (absorbed? False). `box(0,0,1mm,1mm)` against the same square with one vertex moved by \u22120.1 nm: `shapely.normalize` starts the ring at a different vertex, and `_ring_ints` differs (same after quantization? False).",
+      "suggested_check": "Reword to 'values are rounded to the nearest nm; changes that do not cross a rounding boundary are absorbed', or quantize the coordinates before normalizing."
+    },
+    {
+      "severity": "note",
+      "title": "The docstring says the hash covers 'the labels', but one label, Terminal.net, is unhashed",
+      "detail": "Terminal.net is explicitly listed under 'Not covered', and grep shows that nothing in src/ (DRC included) reads it; DRC and to_conductors use the dict key. So the behaviour matches the docstring, but the headline 'plus the labels' is slightly loose.",
+      "evidence": "grep for `.net` and `loop_height` across src/moduleforge: the DRC terminal rule iterates `layout.terminals.items()` and uses the key; `loop_height` is used only in `arc_wire`.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran `uv run pytest -q tests/unit/geometry tests/unit/generate tests/unit/drc`: 109 passed. Ran `uv run ruff check src/moduleforge tests/unit`: all checks passed.",
+    "Ran the definition-of-done scripts for kind hashing (relabelled kind gives a different fingerprint), the 1 nm quantum (a 0.01 nm shift is absorbed, a 2 nm shift is seen), the docstring content, and the 60-layout generator/DRC/determinism check: all passed.",
+    "Mutation-tested the pins by hand (monkeypatching Layout.fingerprint, running tests/unit/geometry): mutants blind to stack kind, ceramic sigma (the sigma=0 edge case) and die switch were all killed by assertion failures.",
+    "Wrote a pad-name-blind fingerprint mutant, which is not in the DoD list: it survives all geometry tests. Showed that a source/gate swap changes to_conductors() and collides under that mutant.",
+    "Wrote a trace net/polygon decoupling mutant: it survives all geometry tests.",
+    "Probed the quantization claims: a 0.02 nm shift near a rounding tie changes the digest; a 0.1 nm single-vertex polygon perturbation changes the shapely.normalize start vertex and the digest.",
+    "Grepped the repository for stored layout fingerprints that the hash change would invalidate: none found (the 64-hex values in E000 and O000 are spec and lock hashes). Confirmed that loop_height and Terminal.net are not read downstream (DRC uses the terminals dict key).",
+    "Checked scope: the diff touches only layout.py and tests/unit/geometry/test_layout.py; existing tests are unchanged apart from reorganised imports."
+  ],
+  "caveats": [
+    "The claim holds for: LayerStack.kind is now hashed; the docstring no longer mentions a thermal model and names exactly the two unhashed fields; every hashed scalar field fails its pin if the fingerprint ignores it or normalises it to a constant.",
+    "Pad-name identity is not pinned. The 'die pad names' pin only detects a change in pad count, so a fingerprint that confuses source and gate pads would pass the whole suite.",
+    "Associations between fields (trace net\u2194polygon; likely also wire net\u2194points) are not pinned; a fingerprint that permutes labels among elements would pass.",
+    "The docstring's 'sub-0.5 nm changes are absorbed' only holds away from rounding ties and for polygon perturbations that keep the normalized ring's start vertex.",
+    "I could not run the full 49-mutant DoD script myself: the harness denied the long multi-mutant subprocess command twice, and I did not work around the denial. I checked 3 of the listed mutants individually and reasoned through the rest against the pin table; the orchestrator's own DoD run is authoritative."
+  ]
+}

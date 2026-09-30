@@ -4,7 +4,7 @@ title: L1 fast PEEC moduleforge.physics.peec (trace cells, skin-corrected R, Gro
   planes) + single-core timing benchmark
 type: implement
 agent: builder
-status: todo
+status: running
 depends_on:
 - T0021
 - T0033
@@ -90,11 +90,12 @@ risk: high
 model: null
 budget_usd: 7.0
 max_turns: 100
-attempts: 0
+attempts: 1
 max_attempts: 3
-branch: null
+branch: task/T0023-l1-fast-peec-moduleforge-physics-peec-tr
 pr: null
-runs: []
+runs:
+- T0023-builder-20260930T064818-74f0
 created_by: planner:T0019
 created_at: '2026-09-29T22:56:48+00:00'
 protected_approved: false

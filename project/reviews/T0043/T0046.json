@@ -1,0 +1,62 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "minor",
+      "title": "Loop-closing (and bridging) necks across two same-net Trace objects are not detected",
+      "detail": "The neck check runs on each Trace polygon separately. A copper loop built as two same-net Trace objects that meet only at a 0.1 mm zero-length contact passes min_trace_width. net_split doesn't catch it either, because the union of the two traces is a single piece. The Layout model allows several traces per net (net_split exists to union them), so the check is only complete for one-trace-per-net layouts. Today the generator is the only code that builds Traces, one per net, so no current code path reaches this. The same gap already existed for bridge necks.",
+      "evidence": "Probe using the 'AUX' net added to the seed=3 fixture: ring as 2 traces (A + B box(19.9,10,21.9,18) mm) -> rules ['edge_margin','min_spacing'] (no min_trace_width); same copper as 1 trace -> ['edge_margin','min_spacing','min_trace_width']. `grep -rn 'Trace(' src/moduleforge` -> only generate/halfbridge.py:114.",
+      "suggested_check": "Also run the neck erosion/topology test on the per-net union already computed for net_split."
+    },
+    {
+      "severity": "minor",
+      "title": "d/2 wire-start margin is smaller than a real wedge-bond foot; the comment overstates what is enforced",
+      "detail": "The new line is margin = max(wire_start_margin, d/2) with the comment 'bond foot must not overhang the pad'. d/2 only keeps the undeformed wire's cross-section on the pad. A heavy-Al wedge bond deforms to about 1.5\u20132.5\u00d7d wide, so keeping the foot on the pad needs roughly 0.75\u20131.25\u00d7d in width, and more along the bond. The scaling is uncited (the conventions require citing closed-form formulas) and is not conservative for its stated purpose. It is consistent with the existing 'placeholder' framing in DesignRules, and the diameter-aware behaviour asked for is implemented correctly.",
+      "evidence": "Boundary probe (seed=3 fixture): wire_start flagged exactly when inset < max(0.15, d/2) mm for d = 0.1/0.3/0.4/0.5 mm (e.g. d=0.5: 0.249 flagged, 0.251 clean). Literature: USPTO 8012869 / 7629688 give Al wedge deformed width \u22651.5\u00d7d, typically 1.5\u20132.5\u00d7d (https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8012869).",
+      "suggested_check": "Either cite d/2 as a wire-section-only placeholder and reword the comment, or add a bond-width factor to DesignRules."
+    },
+    {
+      "severity": "note",
+      "title": "Square-element (mitre) erosion over-flags diagonal necks, and this now applies to loops too",
+      "detail": "Loops closed through a 45\u00b0 overlap are flagged even when the Euclidean neck width is 1.06\u20131.27 mm, above the 1 mm minimum. The criterion is effectively Chebyshev at reflex corners, conservative by up to \u221a2. This convention predates the change (the docstring states a square element) and already applied to bridge necks; the change extends it to loop closures.",
+      "evidence": "Diagonal overlap square of side d closing a ring: d=0.75 (Euclidean 1.061 mm) flagged, d=0.9 (1.273 mm) flagged, d=1.0 (1.414 mm) clean. The old code flagged none of these loop cases.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "The generator-based DoD command cannot exercise the neck fix",
+      "detail": "No generated candidate contains a trace with a hole, so the 60-layout generator DoD command gives no evidence for the loop-neck rule. Only the new unit test and cases.py exercise it (both do discriminate; see checks). Positive side effect: generator output for fixed seeds is byte-identical before and after the change.",
+      "evidence": "2250 _build candidates (all 3 families \u00d7 die counts 2\u20136 \u00d7 150): 0 old/new verdict differences, 0 traces with interiors; generate_layouts(30, seed) fingerprints identical under the old and new check for seeds 0, 3, 11, 12345.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "Code outside DRC still raises KeyError on an unknown die.switch",
+      "detail": "Layout.to_conductors() still does net_of_switch[d.switch] (layout.py:198\u2013202), which raises KeyError for an unknown value. The new die_bad_switch rule only protects callers that run check() first. This is outside the stated deliverables.",
+      "evidence": "src/moduleforge/geometry/layout.py:198 `net_of_switch = {\"HS\": DC_PLUS, \"LS\": PHASE}` indexed at line 202.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran all five DoD commands myself: pytest drc/generate/geometry (60 passed), ruff (clean), cases.py (3/3 handled), rule_coverage.py (21/21 rules killed by assertion), 60-layout generator determinism check ('ok 60').",
+    "Ran the full tests/unit suite: 72 passed, no regressions outside DRC.",
+    "Tested the tests: rebuilt the pre-change rules.py in /tmp (full revert plus single-item reverts) and ran the new tests against it. Neck test fails by AssertionError under the old piece-count check; test_die_bad_switch fails with KeyError 'hs'; the margin test fails by AssertionError with a fixed 0.15 mm margin.",
+    "Checked for false positives and changed behaviour: 2250 generator candidates across all families and die counts gave 0 old/new verdict differences; seeded generate_layouts fingerprints are identical before and after for 4 seeds.",
+    "Neck-width threshold sweep on a ring: 0.1\u20130.999 mm flagged, 0.9999/1.0/1.001/1.5 mm clean, consistent with WIDTH_TOL = 0.1 \u00b5m. Old code flagged none.",
+    "Rotation invariance: the 0.1 mm-neck ring is flagged when rotated 17\u00b0, 30\u00b0 and 45\u00b0.",
+    "No false positives on closed rings with legs of exactly 1.0 mm (0\u00b0, 17\u00b0, 45\u00b0) or on annuli of radial width 1.0\u20131.5 mm.",
+    "A point-touch loop (C shape whose ends meet at a corner) is flagged as a neck.",
+    "Diagonal-overlap neck probe showed \u221a2 over-conservatism at reflex corners.",
+    "A loop split across two same-net traces showed the cross-trace gap.",
+    "Unknown switch values None, ' HS', 'LS ', 'Hs' give die_bad_switch with no crash; all HS dies set to 'X' gives die_bad_switch plus missing_switch; a relabelled wire from an unknown-switch die is still caught by wire_landing.",
+    "Wire-start margin boundary probed for d = 0.1/0.3/0.4/0.5 mm at \u00b11 \u00b5m around max(0.15 mm, d/2): all exact.",
+    "Checked generator geometry: wire starts sit \u22650.4 mm inside the pad (0.10\u00b7s in y; 0.35\u00b7s \u2212 1 mm pitch in x), above the largest d/2 of 0.2 mm, so the new margin cannot reject generated layouts.",
+    "Literature check on Al wedge-bond deformed width: 1.5\u20132.5\u00d7d (USPTO 8012869 / 7629688)."
+  ],
+  "caveats": [
+    "The loop-neck detection is complete only when each net's copper is a single Trace object; necks formed where two same-net traces meet are not seen, which already applied to bridge necks.",
+    "The diameter-aware margin keeps only the wire's own cross-section (d/2) on the pad, not the deformed wedge-bond foot (about 1.5\u20132.5\u00d7d wide); treat it as a placeholder rule, not a real overhang guarantee.",
+    "Width is measured with a square element at reflex corners, so diagonal necks up to \u221a2 \u00d7 the minimum width are flagged; this is conservative, not wrong in the unsafe direction.",
+    "No T0040 review document exists in the repo (only project/dod/drc-t0040/cases.py), so what the fixes should cover was judged from the claim text and the DoD scripts."
+  ]
+}

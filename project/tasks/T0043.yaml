@@ -1,0 +1,79 @@
+id: T0043
+objective: O001
+title: 'DRC: loop-closing necks, unknown die.switch, diameter-aware wire-start margin (T0040 review)'
+type: implement
+agent: builder
+status: todo
+depends_on:
+- T0038
+description: 'Follow-up to the T0040 review of T0038 (project/reviews/T0038/T0040.json). Low priority:
+  nothing in O001 depends on it (generated layouts are valid by construction), but check() is the guard
+  any later layout mutation or optimisation will rely on. Rule names are part of the contract.
+
+
+  (1) Loop-closing necks. min_trace_width must also flag a narrow neck that closes a copper loop (a trace
+  with a hole): eroding by half the minimum width turns the ring into a C, so the piece count stays 1
+  and the check misses it; the hole count drops. Compare topology (pieces and holes) before and after
+  erosion, or equivalent.
+
+  (2) Unknown die.switch. A die whose switch is not ''HS'' or ''LS'' must not crash check(): emit `die_bad_switch`
+  and skip the switch-dependent rules for that die.
+
+  (3) Wire-start margin. wire_start must require the start to lie at least max(wire_start_margin, diameter
+  / 2) inside the source pad (the rule''s own rationale: the bond foot must not overhang the pad), so
+  it scales with the wire.
+
+  (4) Tests in tests/unit/drc for each, including one that removing `die_bad_switch` from check() fails
+  by assertion.
+
+
+  If a generated layout violates a changed rule, fix the generator rather than relaxing the rule, and
+  say so. Do not change the Layout IR. The definition of done runs project/dod/drc-t0040/*.py (founder-authored).'
+context_files: []
+deliverables:
+- src/moduleforge/drc/rules.py
+- tests/unit/drc/
+touches:
+- src/moduleforge/drc/**
+- tests/unit/drc/**
+- src/moduleforge/generate/**
+- tests/unit/generate/**
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/drc tests/unit/generate tests/unit/geometry
+  exists: null
+  timeout_s: 900
+- cmd: uv run ruff check src/moduleforge tests/unit
+  exists: null
+  timeout_s: 900
+- cmd: uv run python project/dod/drc-t0040/cases.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python project/dod/drc-t0040/rule_coverage.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python -c "from moduleforge.generate.halfbridge import generate_layouts; from moduleforge.drc
+    import check; a=generate_layouts(60, seed=12345); b=generate_layouts(60, seed=12345); assert len(a)==60;
+    bad=[l.fingerprint() for l in a if check(l)]; assert not bad, bad; assert [l.fingerprint() for l in
+    a]==[l.fingerprint() for l in b]; assert len({l.family for l in a})>=3; assert {l.dies_per_switch
+    for l in a}=={2,3,4,5,6}; c=a[0].to_conductors(); print('ok', len(a))"
+  exists: null
+  timeout_s: 900
+experiment: null
+risk: medium
+model: null
+budget_usd: 4.0
+max_turns: 80
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: founder
+created_at: '2026-09-30T13:46:04+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

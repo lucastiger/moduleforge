@@ -4,7 +4,7 @@ title: 'DRC hardening from the T0028 review: connectivity, keep-outs, diameter-a
   full rule coverage'
 type: implement
 agent: builder
-status: running
+status: review
 depends_on:
 - T0021
 description: 'Follow-up to the T0028 review of T0021 (project/reviews/T0021/T0028.json). check() must
@@ -138,4 +138,50 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- attempt: 1
+  outcome: agent_finished
+  summary: 'I added the new DRC rules to check() and a test for each, and every DoD command passes. That
+    includes the adversarial-layout script, the rule-removal (mutation) check over all 18 rules, and the
+    60-layout generator check. New rules: wire_net, die_unbonded, missing_switch, die_on_terminal, wire_landing_keepout
+    and wire_diameter. wire_pitch is now diameter-aware, with a new field wire_pitch_diameters = 2.0.
+    The min_trace_width tolerance is now 1e-7 m, so a 1.000 mm feature passes and a 0.999 mm one fails.
+    New wire_diameter defaults are 0.1–0.5 mm placeholders for heavy Al wire, cited in the module docstring.
+    I did not change the generator: all 15 family × die-count combinations were already clean under the
+    new rules (checked with 6 seeds each). I also replaced test_loop_area_proxy_known_value'
+  report:
+    status: completed
+    summary: 'I added the new DRC rules to check() and a test for each, and every DoD command passes.
+      That includes the adversarial-layout script, the rule-removal (mutation) check over all 18 rules,
+      and the 60-layout generator check. New rules: wire_net, die_unbonded, missing_switch, die_on_terminal,
+      wire_landing_keepout and wire_diameter. wire_pitch is now diameter-aware, with a new field wire_pitch_diameters
+      = 2.0. The min_trace_width tolerance is now 1e-7 m, so a 1.000 mm feature passes and a 0.999 mm
+      one fails. New wire_diameter defaults are 0.1–0.5 mm placeholders for heavy Al wire, cited in the
+      module docstring. I did not change the generator: all 15 family × die-count combinations were already
+      clean under the new rules (checked with 6 seeds each). I also replaced test_loop_area_proxy_known_value
+      with hand-built cases: a 4×3 mm rectangle (12 mm²) and a right triangle (6 mm²). I added bad-layout
+      tests for wire_start and terminal_off_trace, plus boundary tests for min_spacing and wire_pitch.
+      Work is committed on the branch.'
+    files_changed:
+    - src/moduleforge/drc/rules.py
+    - tests/unit/drc/test_drc.py
+    - tests/unit/generate/test_halfbridge.py
+    checks_run:
+    - cmd: uv run pytest -q tests/unit/drc tests/unit/generate tests/unit/geometry
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge tests/unit
+      exit_code: 0
+    - cmd: DoD adversarial-cases script (saved to /tmp/adv.py, same code)
+      exit_code: 0
+    - cmd: DoD rule-mutation coverage script (saved to /tmp/mut.py, same code)
+      exit_code: 0
+    - cmd: DoD generate_layouts(60, seed=12345) DRC/determinism check
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    concerns:
+    - min_spacing and the other rules still use the 1 nm TOL. I only widened the min_trace_width tolerance,
+      as the packet asked.
+    - wire_net emits when the wire's own net label differs from the expected net, or when the copper under
+      the landing point exists but is not the expected net. If no trace lies under the landing point,
+      only wire_landing fires.

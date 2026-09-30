@@ -130,9 +130,12 @@ name = "moduleforge"
 version = "0.0.1"
 source = { editable = "." }
 dependencies = [
+    { name = "jax" },
     { name = "numpy" },
     { name = "pydantic" },
     { name = "pyyaml" },
+    { name = "scipy" },
+    { name = "shapely" },
 ]
 
 [package.dev-dependencies]
@@ -140,28 +143,21 @@ dev = [
     { name = "pytest" },
     { name = "ruff" },
 ]
-physics = [
-    { name = "jax" },
-    { name = "scipy" },
-    { name = "shapely" },
-]
 
 [package.metadata]
 requires-dist = [
+    { name = "jax", specifier = ">=0.4.30" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "pydantic", specifier = ">=2.6" },
     { name = "pyyaml", specifier = ">=6.0" },
+    { name = "scipy", specifier = ">=1.13" },
+    { name = "shapely", specifier = ">=2.0" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "pytest", specifier = ">=8" },
     { name = "ruff", specifier = ">=0.6" },
-]
-physics = [
-    { name = "jax", specifier = ">=0.4.30" },
-    { name = "scipy", specifier = ">=1.13" },
-    { name = "shapely", specifier = ">=2.0" },
 ]
 
 [[package]]

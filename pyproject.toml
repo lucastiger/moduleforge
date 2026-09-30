@@ -7,11 +7,13 @@ dependencies = [
   "numpy>=1.26",
   "pydantic>=2.6",
   "pyyaml>=6.0",
+  "scipy>=1.13",
+  "shapely>=2.0",
+  "jax>=0.4.30",
 ]
 
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.6"]
-physics = ["scipy>=1.13", "shapely>=2.0", "jax>=0.4.30"]
 
 [project.scripts]
 mfos = "mfos.cli:main"

@@ -3,7 +3,7 @@ objective: O001
 title: Diagnose failure of T0029
 type: investigate
 agent: scientist
-status: todo
+status: cancelled
 depends_on: []
 description: 'Task T0029 (''Review T0020 (physics)'') failed with preliminary class `implementation`:
   agent ended with success.
@@ -43,4 +43,7 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: cancelled
+  summary: 'diagnosed already: account plan limit, not the review'
+  at: '2026-09-30T01:26:46+00:00'

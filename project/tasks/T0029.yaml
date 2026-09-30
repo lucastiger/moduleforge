@@ -3,7 +3,7 @@ objective: O001
 title: Review T0020 (physics)
 type: review
 agent: critic
-status: failed
+status: running
 depends_on: []
 description: 0d1e9a402132bab65be9389da807b26fd69f8d09
 context_files: []
@@ -15,7 +15,7 @@ risk: low
 model: null
 budget_usd: 3.0
 max_turns: 60
-attempts: 3
+attempts: 1
 max_attempts: 3
 branch: null
 pr: null
@@ -23,6 +23,7 @@ runs:
 - T0029-critic-20260929T174326-6921
 - T0029-critic-20260929T174607-5ff4
 - T0029-critic-20260929T174640-8d79
+- T0029-critic-20260929T182714-e3f4
 created_by: orchestrator
 created_at: '2026-09-30T00:43:26+00:00'
 protected_approved: false
@@ -47,3 +48,7 @@ history:
   summary: agent ended with success
   failure_output: You've hit your session limit · resets 6pm (America/Los_Angeles)
   at: '2026-09-30T00:47:12+00:00'
+- outcome: attempts_restored
+  summary: 'founder re-ran the review (I0008): all 3 attempts were plan-limit failures (''session limit''),
+    not agent errors'
+  at: '2026-09-30T01:26:46+00:00'

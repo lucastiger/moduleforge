@@ -118,3 +118,7 @@
 {"ts": "2026-09-30T01:25:30+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0036-critic-20260929T181619-4563", "status": "completed", "cost": 1.3998818, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-09-30T01:25:32+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0010", "kind": "protected_change", "subject": "T0034: merge needs founder approval"}
 {"ts": "2026-09-30T01:26:07+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 19536}
+{"ts": "2026-09-30T01:26:46+00:00", "event": "reviews_rerun", "actor": "founder", "task": "T0020", "reviews": ["T0029", "T0030"], "cancelled": ["T0031", "T0032"], "inbox": "I0008"}
+{"ts": "2026-09-30T01:26:46+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0008", "status": "answered", "note": "Re-run both reviews: T0029/T0030 failed only on the account's session limit (capacity, now detected by d9fe0cc). Attempts restored, T0020 back in review, diagnosis tasks T0031/T0032 cancelled. Merge still needs founder approval after the reviews."}
+{"ts": "2026-09-30T01:27:14+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0029-critic-20260929T182714-e3f4", "task": "T0029", "role": "critic", "session": "065113dc-134f-44ef-86e8-8415db3bd08c"}
+{"ts": "2026-09-30T01:27:14+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0030-critic-20260929T182714-cf28", "task": "T0030", "role": "critic", "session": "f385ac85-b082-4112-9f92-d62e350b2aae"}

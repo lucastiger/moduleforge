@@ -6,7 +6,9 @@ refs:
 - T0020
 options: []
 recommendation: ''
-status: open
-response: ''
+status: answered
+response: 'Re-run both reviews: T0029/T0030 failed only on the account''s session limit (capacity, now
+  detected by d9fe0cc). Attempts restored, T0020 back in review, diagnosis tasks T0031/T0032 cancelled.
+  Merge still needs founder approval after the reviews.'
 created_at: '2026-09-30T00:47:12+00:00'
-resolved_at: null
+resolved_at: '2026-09-30T01:26:46+00:00'

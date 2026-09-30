@@ -3,7 +3,7 @@ objective: O001
 title: Select the L2 reference (license + capability audit) and pre-register E001 reference validation
 type: design_experiment
 agent: scientist
-status: needs_founder
+status: review
 depends_on: []
 description: 'Choose the L2 reference and pre-register its validation BEFORE the L2 adapter is built.
   Three deliverables, one purpose (the reference and its validation).
@@ -226,3 +226,7 @@ history:
     experiment_drafts:
     - experiments/drafts/E001.yaml
     affects_acceptance_criteria: false
+- outcome: review_rerun
+  summary: 'founder re-ran the review (I0008): all 3 attempts were plan-limit failures (''session limit''),
+    not agent errors'
+  at: '2026-09-30T01:26:46+00:00'

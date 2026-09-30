@@ -107,3 +107,6 @@
 {"ts": "2026-09-30T01:13:24+00:00", "event": "task_added", "actor": "founder", "task": "T0034"}
 {"ts": "2026-09-30T01:13:50+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0033-builder-20260929T181350-f8eb", "task": "T0033", "role": "builder", "session": "b828768c-b160-4cac-937a-402cc5d20782"}
 {"ts": "2026-09-30T01:13:50+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0034-builder-20260929T181350-3a67", "task": "T0034", "role": "builder", "session": "a9206f69-5b68-4ca0-9fb4-2a079707271f"}
+{"ts": "2026-09-30T01:15:03+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0033-builder-20260929T181350-f8eb", "status": "completed", "cost": 0.16680340000000002, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-09-30T01:15:05+00:00", "event": "verified", "actor": "orchestrator", "task": "T0033"}
+{"ts": "2026-09-30T01:15:06+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0035-critic-20260929T181506-35f5", "task": "T0035", "role": "critic", "session": "3a41c548-68e5-4430-b893-20fa6ceab2df"}

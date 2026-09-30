@@ -407,7 +407,7 @@ tail -f ~/Library/Logs/mfos.log          # restart: launchctl kickstart -k gui/$
                                          # stop:    launchctl bootout gui/$(id -u)/com.moduleforge.mfos
 
 # 6. Benchmarks (§13) — about 25 minutes
-uv run --group physics --with pyamg bash benchmarks/infra/run_all.sh | tee ~/mf/bench-$(date +%F).txt
+uv run --with pyamg bash benchmarks/infra/run_all.sh | tee ~/mf/bench-$(date +%F).txt
 for k in 1 2 3; do benchmarks/infra/cc_concurrency.sh $k; done
 ```
 

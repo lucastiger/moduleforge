@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Infrastructure benchmarks B2-B5 (B1 is cc_concurrency.sh). Run from the repository root:
-#   uv run --group physics bash benchmarks/infra/run_all.sh
+#   uv run bash benchmarks/infra/run_all.sh
 # Compare with the reference numbers in docs/INFRASTRUCTURE.md §13.
 set -euo pipefail
 cd "$(dirname "$0")"

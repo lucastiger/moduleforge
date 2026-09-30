@@ -31,6 +31,10 @@ from .store import Store, now
 
 TERMINAL = {"done", "cancelled", "failed", "needs_founder"}
 OBJ_IDLE = {"draft", "passed", "failed", "abandoned", "superseded", "needs_founder"}
+# The account, not the agent, ran out of capacity: back off without using an attempt. "session limit", "weekly
+# limit" and "limit reached" are the Claude Code CLI's plan-limit messages (O001 critics, 2026-09-30).
+CAPACITY_SIGNS = ("rate limit", "usage limit", "session limit", "weekly limit", "limit reached", "overloaded",
+                  "429", "529", "quota")
 
 
 def acquire_loop_lock(store: Store) -> Optional[Any]:
@@ -223,7 +227,7 @@ class Orchestrator:
             return
         if rec.status == "error":
             text = (rec.result_text + " " + rec.subtype).lower()
-            if any(k in text for k in ("rate limit", "usage limit", "overloaded", "429", "529", "quota")):
+            if any(k in text for k in CAPACITY_SIGNS):
                 minutes = int(self.pol.get("limits", {}).get("backoff_minutes", 30))
                 (self.s.mfos / "backoff_until").write_text(str(time.time() + 60 * minutes))
                 t.attempts = max(0, t.attempts - 1)  # capacity problems are not the agent's failure

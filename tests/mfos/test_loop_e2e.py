@@ -147,6 +147,35 @@ def test_level1_founder_starts_each_task_beside_the_running_loop(sandbox):
     assert Store().task(build.id).attempts == 1
 
 
+def test_a_plan_limit_backs_off_instead_of_burning_attempts(sandbox):
+    """O001, 2026-09-30: both T0020 critics died on "You've hit your session limit". Not recognized as capacity,
+    every hit used an attempt (all three within 90 s), failed the reviews and spawned two diagnosis tasks."""
+    from mfos import models as m
+    from mfos.agents import RunRecord
+    s = Store()
+    o = Orchestrator(s)
+    s.save_task(m.Task(id="T9001", objective="O000", title="Review T9000 (physics)", type="review", agent="critic",
+                       status="running", attempts=1, target="T9000", lens="physics"))
+    n_tasks = len(s.tasks())
+
+    def finish(text):
+        t = s.task("T9001")
+        t.status, t.attempts = "running", 1
+        s.save_task(t)
+        o._on_run_done(t, RunRecord(run_id="r", task_id=t.id, role="critic", session_id="x", cwd=str(sandbox),
+                                    started="", status="error", is_error=True, subtype="success", result_text=text))
+        return s.task("T9001")
+
+    for text in ("You've hit your session limit · resets 6pm (America/Los_Angeles)",
+                 "You've hit your weekly limit · resets Oct 3, 9am", "5-hour limit reached ∙ resets 3pm"):
+        t = finish(text)
+        assert (t.status, t.attempts, t.history[-1]["outcome"]) == ("todo", 0, "capacity_backoff"), text
+    assert o._backoff_active()
+    t = finish("Traceback (most recent call last): KeyError: 'x'")  # a real failure still counts
+    assert (t.attempts, t.history[-1]["outcome"]) == (1, "agent_error")
+    assert len(s.tasks()) == n_tasks  # no diagnosis tasks for capacity
+
+
 def test_run_and_single_tick_refuse_while_a_loop_holds_the_lock(sandbox):
     """`mfos run` and `mfos loop --once` build their own orchestrator; beside a running loop both would poll
     the same finished runs and bill, verify and merge them twice."""

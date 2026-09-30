@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-09-30T01:25:33+00:00 from repository state — do not edit_
+_generated 2026-09-30T01:26:09+00:00 from repository state — do not edit_
 
 ## Founder inbox (4 open)
 - **I0005** [external_action] [O001] [O001] Pin FastHenry and rebuild it with --force before the L2 adapter (n3) starts; record D0002 at E001 registration
@@ -21,7 +21,6 @@ cancelled: 12, done: 9, failed: 4, needs_founder: 3, todo: 8
 - T0034 `needs_founder` builder/implement: DRC hardening from the T0028 review: connectivity, keep-outs, diameter-aware pitch, width boundary, full rule coverage (attempt 1)
 
 ## Recent events
-- 2026-09-30T01:12:20+00:00 loop_started {"pid": 15938}
 - 2026-09-30T01:13:24+00:00 task_added {"task": "T0033"}
 - 2026-09-30T01:13:24+00:00 task_added {"task": "T0034"}
 - 2026-09-30T01:13:50+00:00 run_started {"run": "T0033-builder-20260929T181350-f8eb", "task": "T0033", "role": "builder", "session": "b828768c-b160-4cac-937a-402cc5d20782"}
@@ -36,3 +35,4 @@ cancelled: 12, done: 9, failed: 4, needs_founder: 3, todo: 8
 - 2026-09-30T01:18:34+00:00 inbox_opened {"id": "I0009", "kind": "protected_change", "subject": "T0033: merge needs founder approval"}
 - 2026-09-30T01:25:30+00:00 run_finished {"run": "T0036-critic-20260929T181619-4563", "status": "completed", "cost": 1.3998818, "subtype": "success", "report": "structured_output"}
 - 2026-09-30T01:25:32+00:00 inbox_opened {"id": "I0010", "kind": "protected_change", "subject": "T0034: merge needs founder approval"}
+- 2026-09-30T01:26:07+00:00 loop_started {"pid": 19536}

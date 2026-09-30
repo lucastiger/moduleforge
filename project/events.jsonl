@@ -92,3 +92,9 @@
 {"ts": "2026-09-30T00:46:07+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0030", "signal": "agent_error", "action": "repair"}
 {"ts": "2026-09-30T00:46:07+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0029-critic-20260929T174607-5ff4", "task": "T0029", "role": "critic", "session": "b94b8db2-3ad4-4d4c-990b-f8375ebe90f5"}
 {"ts": "2026-09-30T00:46:07+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0030-critic-20260929T174607-ea79", "task": "T0030", "role": "critic", "session": "c31b01f3-fb86-4d45-add6-75ce4e5e8abd"}
+{"ts": "2026-09-30T00:46:40+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0029-critic-20260929T174607-5ff4", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
+{"ts": "2026-09-30T00:46:40+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0029", "signal": "agent_error", "action": "repair"}
+{"ts": "2026-09-30T00:46:40+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0030-critic-20260929T174607-ea79", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
+{"ts": "2026-09-30T00:46:40+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0030", "signal": "agent_error", "action": "diagnose"}
+{"ts": "2026-09-30T00:46:40+00:00", "event": "investigation_spawned", "actor": "orchestrator", "task": "T0031", "about": "T0030", "cls": "implementation"}
+{"ts": "2026-09-30T00:46:40+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0029-critic-20260929T174640-8d79", "task": "T0029", "role": "critic", "session": "b07ce2d2-ee5d-48c9-a638-d45ae102eb9a"}

@@ -3,7 +3,7 @@ objective: O001
 title: Review T0020 (numerics)
 type: review
 agent: critic
-status: running
+status: failed
 depends_on: []
 description: 0d1e9a402132bab65be9389da807b26fd69f8d09
 context_files: []
@@ -42,3 +42,8 @@ history:
   summary: agent ended with success
   failure_output: You've hit your session limit · resets 6pm (America/Los_Angeles)
   at: '2026-09-30T00:46:07+00:00'
+- attempt: 3
+  outcome: agent_error
+  summary: agent ended with success
+  failure_output: You've hit your session limit · resets 6pm (America/Los_Angeles)
+  at: '2026-09-30T00:46:40+00:00'

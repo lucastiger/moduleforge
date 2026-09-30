@@ -22,3 +22,4 @@ log:
   alongside the tool version. Write decks in meters: the provisioned build mis-scales inductance under
   .units mm (scripts/provision_compute.sh:52). T0011''s audit still recommends one upstream commit + sha256;
   the founder pins scripts/provision_compute.sh to it before T0013 runs and records D0002 at E001 registration.'
+- diagnosis:T0031 of T0030 (implementation)

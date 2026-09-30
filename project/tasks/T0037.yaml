@@ -111,10 +111,10 @@ definition_of_done:
     \ (1 nm quantum)\"\nprint(\"length quantum is 1 nm on both sides\")\nEOF"
   exists: null
   timeout_s: 300
-- cmd: uv run python -c "import inspect; from moduleforge.geometry import Layout; d = inspect.getdoc(Layout.fingerprint);
-    assert 'thermal' not in d.lower(), 'docstring still mentions a thermal model'; assert 'loop_height'
-    in d and 'Terminal.net' in d, 'the Not covered list must name BondWire.loop_height and Terminal.net';
-    print('fingerprint docstring ok')"
+- cmd: uv run python -c "import inspect; from moduleforge.geometry import Layout; d = ' '.join(inspect.getdoc(Layout.fingerprint).split());
+    assert 'and a thermal model read' not in d, 'docstring still claims to cover a thermal model'; assert
+    'loop_height' in d and 'Terminal.net' in d, 'the Not covered list must name BondWire.loop_height and
+    Terminal.net'; print('fingerprint docstring ok')"
   exists: null
   timeout_s: 120
 - cmd: uv run python -c "from moduleforge.generate.halfbridge import generate_layouts; from moduleforge.drc

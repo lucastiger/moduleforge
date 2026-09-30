@@ -1,0 +1,123 @@
+id: T0037
+objective: O001
+title: 'Fingerprint: hash LayerStack.kind, pin every hashed input with a test, fix the docstring (T0035
+  review)'
+type: implement
+agent: builder
+status: todo
+depends_on:
+- T0033
+- T0034
+description: 'Follow-up to the T0035 review of T0033 (project/reviews/T0033/T0035.json).
+
+
+  (1) Hash LayerStack.kind in Layout.fingerprint(), so that the fingerprint really covers every to_conductors()
+  input (to_conductors() returns the whole LayerStack, label included).
+
+  (2) Docstring: drop the claim that the fingerprint covers "a thermal model" (none exists yet); state
+  exactly what it covers and that lengths are quantized to 1 nm per field and conductivities to 12 significant
+  digits.
+
+  (3) Tests under tests/unit/geometry/ must pin every hashed input: for each one, a test that changes
+  it and asserts the fingerprint changes. The definition of done checks this by mutation: for each input
+  it replaces Layout.fingerprint with a version blind to that input and requires an assertion failure
+  in tests/unit/geometry. The inputs are: wire points, diameter and net; die source pad, position and
+  attach_thickness; terminal centres; substrate and baseplate outlines; trace polygons and nets; backside_inset;
+  wire_sigma; LayerStack.kind; every layer thickness; baseplate, backside_cu and top_cu sigma; ceramic
+  k.
+
+
+  Change nothing outside src/moduleforge/geometry and tests/unit/geometry.'
+context_files: []
+deliverables:
+- src/moduleforge/geometry/layout.py
+- tests/unit/geometry/
+touches:
+- src/moduleforge/geometry/**
+- tests/unit/geometry/**
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/geometry tests/unit/generate tests/unit/drc
+  exists: null
+  timeout_s: 900
+- cmd: uv run ruff check src/moduleforge tests/unit
+  exists: null
+  timeout_s: 900
+- cmd: 'uv run python - <<''EOF''
+
+    import dataclasses
+
+    from moduleforge.generate.halfbridge import generate_layouts
+
+
+    g = generate_layouts(1, seed=7, dies_per_switch=2)[0]
+
+    relabelled = dataclasses.replace(g, stack=dataclasses.replace(g.stack, kind=g.stack.kind + "-relabelled"))
+
+    assert relabelled.fingerprint() != g.fingerprint(), "LayerStack.kind is not hashed"
+
+    print("LayerStack.kind is hashed")
+
+    EOF'
+  exists: null
+  timeout_s: 900
+- cmd: "uv run python - <<'EOF'\nimport subprocess\nimport sys\nimport tempfile\nimport xml.etree.ElementTree\
+    \ as ET\nfrom pathlib import Path\n\ndef killed(xml):\n    \"\"\"A kill is an assertion failure in\
+    \ some test, not a crash, collection or fixture error.\"\"\"\n    return xml.exists() and any(\"AssertionError\"\
+    \ in (f.text or \"\") + (f.get(\"message\") or \"\")\n                                for f in ET.parse(xml).iter(\"\
+    failure\"))\n\n\nLAYER = (\"dataclasses.replace(x, stack=dataclasses.replace(x.stack, layers=tuple(dataclasses.replace(la,\
+    \ {kw}) \"\n         \"if la.name == {name!r} else la for la in x.stack.layers)))\")\nMUTANTS = {\n\
+    \    \"wire points\": \"dataclasses.replace(x, wires=[dataclasses.replace(w, points=w.points * 0.0)\
+    \ for w in x.wires])\",\n    \"wire diameter\": \"dataclasses.replace(x, wires=[dataclasses.replace(w,\
+    \ diameter=1.0) for w in x.wires])\",\n    \"wire net\": \"dataclasses.replace(x, wires=[dataclasses.replace(w,\
+    \ net='X') for w in x.wires])\",\n    \"die source pad\": \"dataclasses.replace(x, dies=[dataclasses.replace(d,\
+    \ pads={**d.pads, 'source': (0.0, 0.0, 1.0, 1.0)}) for d in x.dies])\",\n    \"die position\": \"\
+    dataclasses.replace(x, dies=[dataclasses.replace(d, cx=0.0, cy=0.0) for d in x.dies])\",\n    \"die\
+    \ attach_thickness\": \"dataclasses.replace(x, dies=[dataclasses.replace(d, attach_thickness=1.0)\
+    \ for d in x.dies])\",\n    \"terminal centres\": \"dataclasses.replace(x, terminals={k: dataclasses.replace(t,\
+    \ cx=0.0, cy=0.0) for k, t in x.terminals.items()})\",\n    \"substrate outline\": \"dataclasses.replace(x,\
+    \ outline=box(0.0, 0.0, 1.0, 1.0))\",\n    \"baseplate outline\": \"dataclasses.replace(x, baseplate_outline=box(0.0,\
+    \ 0.0, 1.0, 1.0))\",\n    \"trace polygons\": \"dataclasses.replace(x, traces=[dataclasses.replace(t,\
+    \ polygon=box(0.0, 0.0, 1.0, 1.0)) for t in x.traces])\",\n    \"trace nets\": \"dataclasses.replace(x,\
+    \ traces=[dataclasses.replace(t, net='X') for t in x.traces])\",\n    \"backside_inset\": \"dataclasses.replace(x,\
+    \ backside_inset=1.0)\",\n    \"wire_sigma\": \"dataclasses.replace(x, wire_sigma=1.0)\",\n    \"\
+    stack kind\": \"dataclasses.replace(x, stack=dataclasses.replace(x.stack, kind='custom'))\",\n   \
+    \ **{f\"{n} thickness\": LAYER.format(kw=\"thickness=1.0\", name=n)\n       for n in (\"baseplate\"\
+    , \"solder\", \"backside_cu\", \"ceramic\", \"top_cu\")},\n    **{f\"{n} sigma\": LAYER.format(kw=\"\
+    sigma=1.0\", name=n) for n in (\"baseplate\", \"backside_cu\", \"top_cu\")},\n    \"ceramic k\": LAYER.format(kw=\"\
+    k=1.0\", name=\"ceramic\"),\n}\nPROG = (\"import dataclasses; from shapely.geometry import box; from\
+    \ moduleforge.geometry import Layout; \"\n        \"o = Layout.fingerprint; Layout.fingerprint = lambda\
+    \ self: o((lambda x: {expr})(self)); \"\n        \"import pytest, sys; sys.exit(pytest.main(['-q',\
+    \ '-p', 'no:cacheprovider', '--junitxml={xml}', \"\n        \"'tests/unit/geometry']))\")\nsurvivors\
+    \ = []\nwith tempfile.TemporaryDirectory() as tmp:\n    for name, expr in MUTANTS.items():\n     \
+    \   xml = Path(tmp) / \"r.xml\"\n        subprocess.run([sys.executable, \"-c\", PROG.format(expr=expr,\
+    \ xml=xml)], capture_output=True)\n        if not killed(xml):\n            survivors.append(name)\n\
+    assert not survivors, f\"no test in tests/unit/geometry fails when the fingerprint ignores: {survivors}\"\
+    \nprint(f\"tests catch a fingerprint blind to any of {len(MUTANTS)} inputs\")\nEOF"
+  exists: null
+  timeout_s: 900
+- cmd: uv run python -c "from moduleforge.generate.halfbridge import generate_layouts; from moduleforge.drc
+    import check; a=generate_layouts(60, seed=12345); b=generate_layouts(60, seed=12345); assert len(a)==60;
+    bad=[l.fingerprint() for l in a if check(l)]; assert not bad, bad; assert [l.fingerprint() for l in
+    a]==[l.fingerprint() for l in b]; assert len({l.family for l in a})>=3; assert {l.dies_per_switch
+    for l in a}=={2,3,4,5,6}; c=a[0].to_conductors(); print('ok', len(a))"
+  exists: null
+  timeout_s: 900
+experiment: null
+risk: medium
+model: null
+budget_usd: 3.0
+max_turns: 80
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: founder
+created_at: '2026-09-30T01:37:12+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

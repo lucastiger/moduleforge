@@ -1,0 +1,179 @@
+id: T0038
+objective: O001
+title: 'DRC: per-net copper connectivity, neck detection, terminal clearance, wire start margin, no KeyError
+  (T0036 review)'
+type: implement
+agent: builder
+status: todo
+depends_on:
+- T0033
+- T0034
+description: 'Follow-up to the T0036 review of T0034 (project/reviews/T0034/T0036.json). The founder session
+  confirmed the major finding (DC+ split into two copper islands passes DRC) and the KeyError by running
+  them. The rule names below are part of the contract: the definition of done refers to them.
+
+
+  (1) Copper connectivity. Emit `net_split` when a net''s copper (the union of its traces) is not one
+  connected island. Generated layouts use one island per net; a net split into islands leaves its terminal,
+  dies and landings unconnected, so the commutation loop the PEEC port measures can be open.
+
+  (2) Necks. min_trace_width must also catch a narrow neck joining two wide regions, e.g. two 5 mm blocks
+  sharing a 0.1 mm edge or overlapping in a 0.1 x 0.1 mm corner, which the opening test misses (for example:
+  flag a trace whose erosion by half the minimum width splits into more pieces than the trace itself has).
+  Keep the existing boundary behaviour: 1.000 mm passes, 0.9997 mm fails.
+
+  (3) Same-net die-to-terminal clearance. `die_on_terminal` must also fire when a die is closer than a
+  new DesignRules field die_terminal_clearance (default: die_edge_margin, 1 mm) to any terminal pad, not
+  only when it overlaps one.
+
+  (4) Wire start margin. `wire_start` must fire when a wire starts closer than a new DesignRules field
+  wire_start_margin to the edge of its source pad (placeholder value with a cited rationale, as the module
+  docstring does for the others; e.g. half the wire diameter), not only when it starts outside the pad.
+
+  (5) A die without a ''source'' pad must not crash check(): emit `die_no_source_pad` (and let the other
+  wire rules treat the die as having no pad).
+
+  (6) Tests: each of these with a bad-layout test in tests/unit/drc, and a test pinning the 0.9997 mm
+  dead band. The rule-removal check in the definition of done now counts a rule as covered only by an
+  AssertionError in some test, not by a crash, collection or fixture error.
+
+
+  If a generated layout violates a new rule, fix the generator (src/moduleforge/generate/halfbridge.py)
+  rather than relaxing the rule, and say so in your report. Do not change the Layout IR (src/moduleforge/geometry).'
+context_files: []
+deliverables:
+- src/moduleforge/drc/rules.py
+- tests/unit/drc/
+touches:
+- src/moduleforge/drc/**
+- tests/unit/drc/**
+- src/moduleforge/generate/**
+- tests/unit/generate/**
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/drc tests/unit/generate tests/unit/geometry
+  exists: null
+  timeout_s: 900
+- cmd: uv run ruff check src/moduleforge tests/unit
+  exists: null
+  timeout_s: 900
+- cmd: "uv run python - <<'EOF'\nimport dataclasses\nfrom shapely.geometry import box\nfrom moduleforge.drc\
+    \ import check\nfrom moduleforge.generate.halfbridge import generate_layouts\nfrom moduleforge.geometry\
+    \ import Trace\nfrom moduleforge.geometry.units import mm_to_m as mm\n\n\ndef rules(lay):\n    try:\n\
+    \        return {v.rule for v in check(lay)}\n    except Exception as e:  # a crash is a miss, not\
+    \ a pass\n        return {f\"CRASH {type(e).__name__}: {e}\"}\n\n\ndef split(lay, net):\n    t = next(x\
+    \ for x in lay.traces if x.net == net)\n    tm = lay.terminals[net]\n    x0, y0, x1, y1 = t.polygon.bounds\n\
+    \    cut = tm.cx - tm.w / 2 - mm(2.0)\n    left = t.polygon.intersection(box(x0, y0, cut - mm(0.5),\
+    \ y1))\n    right = t.polygon.intersection(box(cut + mm(0.5), y0, x1, y1))\n    return dataclasses.replace(lay,\
+    \ traces=[x for x in lay.traces if x is not t] + [Trace(net, left), Trace(net, right)])\n\n\ns = generate_layouts(3,\
+    \ seed=3, family=\"side_by_side\", dies_per_switch=3)[0]\ng = generate_layouts(1, seed=1, family=\"\
+    interleaved\", dies_per_switch=3)[0]\nassert check(s) == [] and check(g) == []\ncases = {}\nfor lay,\
+    \ fam in ((s, \"side_by_side\"), (g, \"interleaved\")):\n    for net in (\"DC+\", \"DC-\"):\n    \
+    \    cases[f\"{fam}: {net} split into two copper islands -> net_split\"] = \"net_split\" in rules(split(lay,\
+    \ net))\nfor name, shape in ((\"0.1 mm edge neck\", box(0, 0, mm(5), mm(5)).union(box(mm(5), mm(4.9),\
+    \ mm(10), mm(9.9)))),\n                    (\"0.1 mm corner neck\", box(0, 0, mm(5), mm(5)).union(box(mm(4.9),\
+    \ mm(4.9), mm(9.9), mm(9.9))))):\n    cases[f\"{name} between two 5 mm blocks -> min_trace_width\"\
+    ] = \"min_trace_width\" in rules(\n        dataclasses.replace(s, traces=[*s.traces, Trace(\"DC-\"\
+    , shape)]))\nt = next(t for t in s.traces if t.net == \"DC-\")\nminx, _, _, maxy = t.polygon.bounds\n\
+    \n\ndef stub(width):\n    poly = t.polygon.union(box(minx + mm(10), maxy, minx + mm(10) + width, maxy\
+    \ + mm(6)))\n    return rules(dataclasses.replace(s, traces=[Trace(\"DC-\", poly) if x is t else x\
+    \ for x in s.traces]))\n\n\ncases[\"1.0000 mm stub passes min_trace_width\"] = \"min_trace_width\"\
+    \ not in stub(mm(1.0))\ncases[\"0.9997 mm stub fails min_trace_width\"] = \"min_trace_width\" in stub(mm(0.9997))\n\
+    hs_g = next(d for d in g.dies if d.switch == \"HS\")\ntm = g.terminals[\"DC+\"]\nfor gap in (0.0,\
+    \ 0.5):\n    cx = tm.cx - (tm.w / 2 + hs_g.w / 2 + mm(gap))\n    near = dataclasses.replace(g, dies=[dataclasses.replace(hs_g,\
+    \ cx=cx, cy=tm.cy) if d is hs_g else d for d in g.dies])\n    cases[f\"HS die {gap} mm from its own\
+    \ DC+ pad -> die_on_terminal\"] = \"die_on_terminal\" in rules(near)\nhs = next(d for d in s.dies\
+    \ if d.switch == \"HS\")\nx0, y0, x1, y1 = hs.pads[\"source\"]\nw0 = next(w for w in s.wires if x0\
+    \ - 1e-9 <= w.points[0, 0] <= x1 + 1e-9 and y0 - 1e-9 <= w.points[0, 1] <= y1 + 1e-9)\np = w0.points.copy()\n\
+    p[0, 0] = x0\ncases[\"wire starting exactly on the source-pad edge -> wire_start\"] = \"wire_start\"\
+    \ in rules(\n    dataclasses.replace(s, wires=[dataclasses.replace(w0, points=p) if w is w0 else w\
+    \ for w in s.wires]))\nnopad = dataclasses.replace(s, dies=[dataclasses.replace(hs, pads={k: v for\
+    \ k, v in hs.pads.items() if k != \"source\"})\n                                     if d is hs else\
+    \ d for d in s.dies])\ncases[\"die without a source pad -> die_no_source_pad, no crash\"] = \"die_no_source_pad\"\
+    \ in rules(nopad)\nmissed = [k for k, ok in cases.items() if not ok]\nassert not missed, \"not handled:\
+    \ \" + \"; \".join(missed)\nprint(f\"all {len(cases)} T0036 cases handled\")\nEOF"
+  exists: null
+  timeout_s: 900
+- cmd: "uv run python - <<'EOF'\nimport dataclasses\nimport numpy as np\nfrom shapely.geometry import\
+    \ box\nfrom moduleforge.drc import check\nfrom moduleforge.generate.halfbridge import generate_layouts,\
+    \ loop_area_proxy\nfrom moduleforge.geometry.layout import BondWire, Terminal, Trace, arc_wire\n\n\
+    \ndef rules(lay):\n    return {v.rule for v in check(lay)}\n\n\ndef starts_on(w, d):\n    x0, y0,\
+    \ x1, y1 = d.pads[\"source\"]\n    return x0 - 1e-9 <= w.points[0, 0] <= x1 + 1e-9 and y0 - 1e-9 <=\
+    \ w.points[0, 1] <= y1 + 1e-9\n\n\ng = generate_layouts(1, seed=1, family=\"interleaved\", dies_per_switch=3)[0]\n\
+    assert check(g) == [], check(g)\nhs = next(d for d in g.dies if d.switch == \"HS\")\nls = next(d for\
+    \ d in g.dies if d.switch == \"LS\")\nhs_wires = [w for w in g.wires if starts_on(w, hs)]\nw0 = hs_wires[0]\n\
+    cases = {}\ndcm = next(t for t in g.traces if t.net == \"DC-\").polygon.representative_point()\nshorted\
+    \ = [arc_wire(w.points[0, :2], (dcm.x, dcm.y), w.points[0, 2], w.points[-1, 2], w.loop_height, w.diameter,\
+    \ \"DC-\")\n           if any(w is h for h in hs_wires) else w for w in g.wires]\ncases[\"HS die bonded\
+    \ to DC- (DC-link short) -> wire_net\"] = \"wire_net\" in rules(dataclasses.replace(g, wires=shorted))\n\
+    cases[\"empty layout -> missing_switch\"] = \"missing_switch\" in rules(dataclasses.replace(g, wires=[],\
+    \ dies=[]))\ncases[\"HS die without wires -> die_unbonded\"] = \"die_unbonded\" in rules(\n    dataclasses.replace(g,\
+    \ wires=[w for w in g.wires if not any(w is h for h in hs_wires)]))\ntm = g.terminals[\"DC+\"]\ncases[\"\
+    die on the DC+ terminal pad -> die_on_terminal\"] = \"die_on_terminal\" in rules(\n    dataclasses.replace(g,\
+    \ dies=[*g.dies, dataclasses.replace(hs, cx=tm.cx, cy=tm.cy)]))\nunder = arc_wire(w0.points[0, :2],\
+    \ (ls.cx, ls.cy), w0.points[0, 2], w0.points[-1, 2], w0.loop_height, w0.diameter,\n              \
+    \   \"PHASE\")\ncases[\"wire landing under an LS die -> wire_landing_keepout\"] = \"wire_landing_keepout\"\
+    \ in rules(\n    dataclasses.replace(g, wires=[under if w is w0 else w for w in g.wires]))\na = BondWire(w0.points,\
+    \ 0.6e-3, w0.loop_height, w0.net)\nb = BondWire(w0.points + np.array([0.6e-3, 0.0, 0.0]), 0.6e-3,\
+    \ w0.loop_height, w0.net)\ncases[\"touching 0.6 mm wires at 0.6 mm pitch -> wire_pitch\"] = \"wire_pitch\"\
+    \ in rules(dataclasses.replace(g, wires=[a, b]))\nfor dia in (0.0, -1e-3):\n    cases[f\"diameter\
+    \ {dia} m -> wire_diameter\"] = \"wire_diameter\" in rules(\n        dataclasses.replace(g, wires=[BondWire(w.points,\
+    \ dia, w.loop_height, w.net) for w in g.wires]))\ns = generate_layouts(3, seed=3, family=\"side_by_side\"\
+    , dies_per_switch=3)[0]\nt = next(t for t in s.traces if t.net == \"DC-\")\nminx, _, _, maxy = t.polygon.bounds\n\
+    \n\ndef with_stub(width):\n    poly = t.polygon.union(box(minx + 0.010, maxy, minx + 0.010 + width,\
+    \ maxy + 0.006))\n    return rules(dataclasses.replace(s, traces=[Trace(\"DC-\", poly) if x is t else\
+    \ x for x in s.traces]))\n\n\ncases[\"1.000 mm feature passes min_trace_width\"] = \"min_trace_width\"\
+    \ not in with_stub(1.0e-3)\ncases[\"0.999 mm feature fails min_trace_width\"] = \"min_trace_width\"\
+    \ in with_stub(0.999e-3)\nhsd = [dataclasses.replace(d, cx=4e-3, cy=0.0) for d in s.dies if d.switch\
+    \ == \"HS\"]\nlsd = [dataclasses.replace(d, cx=4e-3, cy=3e-3) for d in s.dies if d.switch == \"LS\"\
+    ]\nterms = {**s.terminals, \"DC+\": Terminal(\"DC+\", 0.0, 0.0, 1e-3, 1e-3), \"DC-\": Terminal(\"\
+    DC-\", 0.0, 3e-3, 1e-3, 1e-3)}\ncases[\"loop_area_proxy of a 4 x 3 mm rectangle = 12 mm^2\"] = abs(\n\
+    \    loop_area_proxy(dataclasses.replace(s, dies=hsd + lsd, terminals=terms)) - 12e-6) < 1e-15\nmissed\
+    \ = [k for k, ok in cases.items() if not ok]\nassert not missed, \"not caught: \" + \"; \".join(missed)\n\
+    print(f\"all {len(cases)} T0028 adversarial cases handled\")\nEOF"
+  exists: null
+  timeout_s: 900
+- cmd: "uv run python - <<'EOF'\nimport subprocess\nimport sys\nimport tempfile\nimport xml.etree.ElementTree\
+    \ as ET\nfrom pathlib import Path\n\ndef killed(xml):\n    \"\"\"A kill is an assertion failure in\
+    \ some test, not a crash, collection or fixture error.\"\"\"\n    return xml.exists() and any(\"AssertionError\"\
+    \ in (f.text or \"\") + (f.get(\"message\") or \"\")\n                                for f in ET.parse(xml).iter(\"\
+    failure\"))\n\n\nRULES = [\"min_trace_width\", \"min_spacing\", \"edge_margin\", \"die_off_trace\"\
+    , \"die_wrong_net\", \"die_edge_margin\",\n         \"die_spacing\", \"die_on_terminal\", \"die_unbonded\"\
+    , \"die_no_source_pad\", \"missing_switch\", \"net_split\",\n         \"wire_length\", \"wire_landing\"\
+    , \"wire_landing_keepout\", \"wire_start\", \"wire_net\", \"wire_pitch\",\n         \"wire_diameter\"\
+    , \"terminal_off_trace\"]\nPROG = (\"import moduleforge.drc as d, moduleforge.drc.rules as r; o =\
+    \ r.check; \"\n        \"d.check = r.check = lambda *a, **k: [v for v in o(*a, **k) if v.rule != {rule!r}];\
+    \ \"\n        \"import pytest, sys; sys.exit(pytest.main(['-q', '-p', 'no:cacheprovider', '--junitxml={xml}',\
+    \ \"\n        \"'tests/unit/drc']))\")\nsurvivors = []\nwith tempfile.TemporaryDirectory() as tmp:\n\
+    \    for rule in RULES:\n        xml = Path(tmp) / \"r.xml\"\n        subprocess.run([sys.executable,\
+    \ \"-c\", PROG.format(rule=rule, xml=xml)], capture_output=True)\n        if not killed(xml):\n  \
+    \          survivors.append(rule)\nassert not survivors, f\"no test in tests/unit/drc fails by assertion\
+    \ when these rules are removed: {survivors}\"\nprint(f\"all {len(RULES)} rules are covered by an assertion\
+    \ failure\")\nEOF"
+  exists: null
+  timeout_s: 900
+- cmd: uv run python -c "from moduleforge.generate.halfbridge import generate_layouts; from moduleforge.drc
+    import check; a=generate_layouts(60, seed=12345); b=generate_layouts(60, seed=12345); assert len(a)==60;
+    bad=[l.fingerprint() for l in a if check(l)]; assert not bad, bad; assert [l.fingerprint() for l in
+    a]==[l.fingerprint() for l in b]; assert len({l.family for l in a})>=3; assert {l.dies_per_switch
+    for l in a}=={2,3,4,5,6}; c=a[0].to_conductors(); print('ok', len(a))"
+  exists: null
+  timeout_s: 900
+experiment: null
+risk: medium
+model: null
+budget_usd: 6.0
+max_turns: 80
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: founder
+created_at: '2026-09-30T01:37:12+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

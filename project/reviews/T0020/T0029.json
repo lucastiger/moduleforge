@@ -1,0 +1,66 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "The stated leftover error for the wire self-inductance terms scales as O(r/l), not O((r/l)^2); B1 and C0 intervals are too narrow",
+      "detail": "The runner models a round wire's external self-inductance as a filament at distance r (the GMD of the wire's surface). The note and the runner's residual_model_error() both claim the leftover error from this is O((r/l)^2). It is not. At high frequency the current sits near the surface, and averaging the Neumann kernel over a tube leaves a term of (4/pi-1)*r*mu0/(2pi), about 8.2 pH per straight segment. That makes the relative error O(r/l)/ln(2l/r). At DC (solid wire) the equivalent term is (1-128/(45pi))*r*mu0/(2pi), about 2.8 pH per segment. Result: B1 is understated about 9x (true about 1.0e-3 at 80 MHz, about 3.2e-4 at 100 Hz, stated 1.1e-4). C0 is understated about 4x (true about 1.7e-3, stated 4.5e-4). B2, B3, B4 and C1 (true about 2-3e-3) stay inside their stated bounds. The interval for max_rel_err_vs_analytic is described as a deterministic bound, so it is not conservative for B1 and C0. A correct L2 could show a lower bound above 0 that is really the closed form's own error. Pass/fail is unaffected: A1 uses the point value against 2 %, and the true closed-form error is at most about 0.5 %.",
+      "evidence": "Tube (surface current), exact average over 2e5 angles minus the runner's formula: l=1.5 mm +1.17e-2 (7.45 pH); l=8 mm +1.36e-3 (8.05 pH); l=10 mm +1.03e-3 (8.08 pH). Solid disk at DC, B1 (l=10 mm, r=0.15 mm), Monte Carlo with 2e6 pairs: 8.31296 nH (standard error 1e-4 relative) vs runner 8.31559 nH, relative +3.2e-4. Predicted +3.4e-4. Stated residual_model_error for B1 is 1.12e-4 and for C0 is 4.50e-4 (printed from the runner).",
+      "suggested_check": "Replace 0.5*(r/l_min)^2 with a per-segment term of about 0.3*r*mu0/(2pi) summed over self terms and divided by L, then re-check the note's \u00a74 table before registration."
+    },
+    {
+      "severity": "major",
+      "title": "Registration does not freeze the design that lives in the runner",
+      "detail": "E001.yaml says the case geometry 'is frozen with the runner at registration'. The mechanism does not do this. mfos register hashes only the YAML spec (store.spec_hash(spec)). The geometry (build_cases), the case list, the hard-coded self-check tolerances (1e-10, 2e-5, 1e-6, 2e-4, \u2026) and the leftover-error model all live in experiments/runners/e001_reference.py. Policy lets the scientist role write experiments/runners/**. So after registration the case set or the error bounds could be changed after seeing L2 results while the spec hash still matches. Only the git commit in provenance would show it. The YAML config keys `cases` and `tol_independent` also do nothing: build_cases ignores cfg['cases'] and the tolerances are hard-coded.",
+      "evidence": "tools/mfos/mfos/experiments.py register() lines 24-36 and run() line 51 check only spec_hash of the YAML. .mfos/policy.toml line 26 lists scientist write scope including experiments/runners/**. In the runner, build_cases() never reads cfg['cases'] and nothing reads cfg['tol_independent'].",
+      "suggested_check": "Add the runner's sha256 to the spec config (and check it at run time), or move geometry and tolerances into the hashed config."
+    },
+    {
+      "severity": "minor",
+      "title": "--smoke skips 2 of the 7 declared geometry classes",
+      "detail": "The note quotes the brief as '--smoke runs at least one case of every geometry class at 20 MHz'. smoke_cases [A1, A3, B2, B4, C1] cover bar_self, bar_mutual, wire_chain, wire_parallel_tied and loop_over_plane. They leave out wire_mutual (B3) and loop_free (C0), even though the runner's own n_geometry_classes counts 7 classes.",
+      "evidence": "build_cases cls labels vs DEFAULT_CFG['smoke_cases'] and E001.yaml smoke_cases.",
+      "suggested_check": "Add B3 and C0 to smoke_cases, or state explicitly that B4 and C1 stand in for them."
+    },
+    {
+      "severity": "minor",
+      "title": "The analytic self-checks never test the 3-D image code, the Wheeler recession, or the tied-branch formula",
+      "detail": "The runner says every closed form is validated on every run before use. But the only checks that touch the plane/image code in analytic_z are the similarity-scaling check (which any homogeneous formula passes, even a wrong one) and the regime checks. The 2-D BEM validates a separate 2-D formula. A sign error in the image code or the tie code would pass every analytic check, and the resulting mismatch would be blamed on L2. I re-derived these by hand and found no defect: C1 matches to about 1e-6, and B4 = (L11+M12)/2 holds.",
+      "evidence": "Independent C1 = C0 - M(loop, reversed image at depth 2h+delta_Cu): 14.77518/14.38660/14.18859 nH vs runner 14.7752/14.3866/14.1886 nH (relative \u22641.5e-6 at 5/20/80 MHz).",
+      "suggested_check": "Add a check that compares analytic_z for C1 against a direct loop-minus-image sum, like the one above."
+    },
+    {
+      "severity": "minor",
+      "title": "The frequency-monotonicity theorem assumes one fixed mesh; the L2 contract allows a different mesh per frequency",
+      "detail": "Im Z/omega being non-increasing is a theorem for a single fixed RL network. The contract asks for meshes graded to delta and suggests 'one .freq per value'. If L2 meshes each frequency separately, mesh-to-mesh differences up to conv_tol (1 %) could exceed monotone_tol (0.1 %) and fail l_monotone_in_frequency without any real physics error. That would invalidate a correct run.",
+      "evidence": "research note \u00a73 refinement contract and 'frequencies \u2192 one .freq per value'; E001.yaml conv_tol 0.01 vs monotone_tol 1e-3.",
+      "suggested_check": "Require l2.solve to use one mesh for all frequencies in a call (for example graded to the highest frequency's delta)."
+    },
+    {
+      "severity": "note",
+      "title": "The license and capability audit is accurate but not complete",
+      "detail": "A first-hand build on macOS arm64 and Linux x86-64 was not done, and the note says so. The indemnity clause in the 2003 MIT license is correctly flagged for a founder decision. Facts I spot-checked hold: FastHenry2 mulGlobal.h carries the 'internal, noncommercial purposes' notice, and FreeBSD science/fasthenry packages fasthenry-3.0wr-031424 under MIT for aarch64 and amd64.",
+      "evidence": "WebFetch of raw.githubusercontent.com/ediloren/FastHenry2/master/src/fasthenry/mulGlobal.h and freshports.org/science/fasthenry.",
+      "suggested_check": "The builder task should verify the tarball's sha256 and the 2003 header text in src/fasthenry/*.h, then build on both platforms."
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran every definition-of-done command: grep for moduleforge.solvers.l2 in the note (passes), `uv run mfos exp check E001` (clean), `uv run ruff check experiments/runners/e001_reference.py` (All checks passed), `--analytic-only` (result.json status complete; all 5 analytic self-checks pass; values match the note's claims, e.g. BEM 2.4e-8, HL vs Gauss-Legendre 9.3e-15).",
+    "Printed every compared closed-form value and stated leftover error from the runner. Confirmed the note's numbers (A1 12.171, A2 5.704, A3 M 6.179, A4 M 4.670, B1/C0/C1 series), the 32 compared values, the B1 5.6 % HF/DC change, the C1/C0 23 % drop, and span \u22487.",
+    "Computed the exact thin-tube partial self-inductance numerically (2e5-point angular average of the Neumann closed form) for l = 1.5, 5, 8, 10 mm at r = 0.15 mm. The difference from the runner's filament-at-r term is 7.5-8.1 pH, matching the analytic (4/pi-1)*r*mu0/(2pi) = 8.2 pH. So the leftover error is O(r/l), not O((r/l)^2).",
+    "Computed the DC solid-cylinder partial self-inductance of B1 by Monte Carlo (2e6 pairs; checked against the exact <ln d> = ln a - 1/4 to 1e-4). Got 8.31296 nH vs runner 8.31559 nH (+3.2e-4, stated 1.1e-4). Threw out an earlier 4-D Gauss-Legendre attempt: its nodes coincide at d=0, which gave -inf for <ln d>, so it was an artifact.",
+    "Recomputed C1 independently as C0 minus the mutual inductance between the loop and its reversed image at depth 2h + delta_Cu (Wheeler recession), using my own filament formula. Agrees to \u22641.5e-6 at 5, 20 and 80 MHz, so the image sign, recession and assembly are correct.",
+    "Checked by arithmetic that B4 = (L11+M12)/2 of B3 (5.0324 nH at 5 MHz), as required for two identical coupled branches tied in parallel.",
+    "Checked Grover's DC rectangle formula for the C0 loop by hand (19.68 nH at DC, consistent with the 19.02 nH HF value after the internal term drops).",
+    "Read mfos register/run/validate_draft and .mfos/policy.toml: the spec hash covers only the YAML, and runners are writable by the scientist role.",
+    "Checked the smoke-case class coverage against the declared classes: 5 of 7.",
+    "Checked license facts on the web: the FastHenry2 mulGlobal.h noncommercial notice (confirmed) and the FreeBSD port's MIT license, distfile 3.0wr-031424 and aarch64/amd64 packages (confirmed)."
+  ],
+  "caveats": [
+    "The L2 path (default and --smoke) cannot be run: moduleforge.solvers.l2 does not exist yet. The convergence rule, reciprocity, monotonicity and scaling checks were reviewed by reading only. They look able to fail and are correctly wired to run.sanity.",
+    "I did not download the wr tarball, so its sha256 and the exact 2003 MIT license and indemnity text are taken from the note, not verified first-hand. FreeBSD independently labels it MIT.",
+    "The original T0020 brief is not in this worktree. The requirement that smoke covers every geometry class is taken from the note's own quote.",
+    "Scope of acceptance: E001 as designed can tell apart L2 errors of roughly 0.5-2 %. A correct, converged L2 should differ from the closed forms by at most about 0.5 %, well inside the 2 % A1 threshold. The deterministic-bound interval should not be read as conservative for B1 or C0 until the leftover-error model is fixed.",
+    "Rectangular bars at high frequency, inclined bond-wire legs, galvanic plane contacts and bar-wire junctions have no closed-form check. The note says so honestly, and E001 passing does not validate L2 for them."
+  ]
+}

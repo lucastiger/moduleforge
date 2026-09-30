@@ -131,3 +131,6 @@
 {"ts": "2026-09-30T01:32:53+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0010", "status": "approved", "note": "Approved: DoD verified (11 adversarial cases, 18-rule mutation coverage, 60 layouts clean). T0036 static-only review; its major finding (no per-net copper connectivity) and KeyError confirmed by founder session and go to a follow-up task."}
 {"ts": "2026-09-30T01:33:20+00:00", "event": "merged", "actor": "orchestrator", "task": "T0033"}
 {"ts": "2026-09-30T01:33:22+00:00", "event": "merged", "actor": "orchestrator", "task": "T0034"}
+{"ts": "2026-09-30T01:37:12+00:00", "event": "task_added", "actor": "founder", "task": "T0037"}
+{"ts": "2026-09-30T01:37:12+00:00", "event": "task_added", "actor": "founder", "task": "T0038"}
+{"ts": "2026-09-30T01:37:35+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0029-critic-20260929T183110-7915", "status": "completed", "cost": 1.7509468000000004, "subtype": "success", "report": "structured_output"}

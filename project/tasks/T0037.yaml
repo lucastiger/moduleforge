@@ -4,7 +4,7 @@ title: 'Fingerprint: hash LayerStack.kind, pin every hashed input with a test, f
   review)'
 type: implement
 agent: builder
-status: review
+status: todo
 depends_on:
 - T0033
 - T0034
@@ -153,3 +153,33 @@ history:
       exit_code: 0
     - cmd: uv run mfos gate --fast
       exit_code: 0
+- attempt: 1
+  outcome: review_rejected
+  summary: adversarial review rejected the work
+  failure_output: '- [blocker] Not every hashed input is pinned by a test; two unpinned inputs feed to_conductors():
+    The task says to pin every hashed input with a test. The new `_pin_variants` covers only the 23 inputs
+    that the DoD mutation script lists. I made fingerprints that ignore other hashed fields, and every
+    test in tests/unit/geometry (new and old) still passes for these: die w/h, terminal cy, family, dies_per_switch,
+    the die gate pad, terminal w/h, solder sigma, and k of the non-ceramic layers (top_cu and baseplate
+    were tested). Die w/h feed DieShort in to_conductors() and terminal cy feeds Port, so both matter
+    for the physics. If a later refactor drops them from the hash, layouts with different die footprints
+    or DC+/DC- port positions would share a fingerprint, and neither the tests nor the DoD gate would
+    catch it. That is the failure this task was supposed to prevent. The DoD passes only because its mutant
+    list leaves these fields out, so ''completely implements'' is false.
+
+    - [minor] The quantization test checks only one side of the 1 nm claim: test_fingerprint_length_quantization_is_1nm
+    only asserts that a 0.01 nm shift is ignored. The smallest length change any test requires the hash
+    to see is 1 µm (die cx in test_fingerprint_stable_and_sensitive); the new pin tests use 10 µm. So
+    a quantization coarser than 1 nm, up to about 1 µm, would pass every test, even though the docstring
+    promises 1 nm. The test name claims more than it checks.
+
+    - [minor] Docstring''s ''Not covered'' list leaves out Terminal.net: Terminals are hashed by dict
+    key, cx, cy, w and h. Terminal.net is not hashed, and the rewritten docstring''s ''Not covered'' list
+    names only BondWire.loop_height. Terminal.net is not an input of to_conductors(), so the headline
+    ''every input of to_conductors()'' still holds. But the ''Not covered'' list reads as complete, and
+    it isn''t. This matters for a task whose job was to fix this docstring.
+
+    - [note] LayerStack.kind is now hashed, and the listed DoD commands pass: The implementation change
+    is correct: `put("stack", self.stack.kind, ...)`. Changing kind now changes the fingerprint. The repo
+    stores no fingerprints (they appear only in tests), so no saved caches or results are invalidated.'
+  at: '2026-09-30T01:43:29+00:00'

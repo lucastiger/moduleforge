@@ -3,7 +3,7 @@ objective: O001
 title: Review T0037 (general)
 type: review
 agent: critic
-status: running
+status: done
 depends_on: []
 description: 8dd66802a31902d443bf1f42a9865faafe27c109
 context_files: []
@@ -29,4 +29,6 @@ target: T0037
 lens: general
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: review:reject
+  summary: 4 findings

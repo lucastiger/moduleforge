@@ -1,0 +1,47 @@
+{
+  "verdict": "reject",
+  "findings": [
+    {
+      "severity": "blocker",
+      "title": "Not every hashed input is pinned by a test; two unpinned inputs feed to_conductors()",
+      "detail": "The task says to pin every hashed input with a test. The new `_pin_variants` covers only the 23 inputs that the DoD mutation script lists. I made fingerprints that ignore other hashed fields, and every test in tests/unit/geometry (new and old) still passes for these: die w/h, terminal cy, family, dies_per_switch, the die gate pad, terminal w/h, solder sigma, and k of the non-ceramic layers (top_cu and baseplate were tested). Die w/h feed DieShort in to_conductors() and terminal cy feeds Port, so both matter for the physics. If a later refactor drops them from the hash, layouts with different die footprints or DC+/DC- port positions would share a fingerprint, and neither the tests nor the DoD gate would catch it. That is the failure this task was supposed to prevent. The DoD passes only because its mutant list leaves these fields out, so 'completely implements' is false.",
+      "evidence": "In-process mutants, each patching Layout.fingerprint = lambda self: o(f(self)) and running pytest tests/unit/geometry. Survived (0 failures): die w,h; terminal cy only; family; dies_per_switch; die gate pad; terminal w,h; solder sigma; top_cu k; baseplate k. The harness itself works: 'terminal cx only', 'die cx only', 'die thickness', 'die switch' and 'die order' were all killed. Also, with die w/h ignored: '36 passed in 0.13s'.",
+      "suggested_check": "Add pin variants for die w and h, terminal cy, family, dies_per_switch, the gate pad, terminal w/h, and each layer's k/sigma/material, and add these mutants to the DoD list."
+    },
+    {
+      "severity": "minor",
+      "title": "The quantization test checks only one side of the 1 nm claim",
+      "detail": "test_fingerprint_length_quantization_is_1nm only asserts that a 0.01 nm shift is ignored. The smallest length change any test requires the hash to see is 1 \u00b5m (die cx in test_fingerprint_stable_and_sensitive); the new pin tests use 10 \u00b5m. So a quantization coarser than 1 nm, up to about 1 \u00b5m, would pass every test, even though the docstring promises 1 nm. The test name claims more than it checks.",
+      "evidence": "By hand: d0.cx*1e9 = 23152330.699; shifts of +0.4 nm and +0.6 nm leave the hash unchanged, +1.0 nm changes it. The implementation does quantize at 1 nm; the tests just don't enforce it.",
+      "suggested_check": "Also assert that a shift of about 1 nm away from a rounding boundary changes the fingerprint."
+    },
+    {
+      "severity": "minor",
+      "title": "Docstring's 'Not covered' list leaves out Terminal.net",
+      "detail": "Terminals are hashed by dict key, cx, cy, w and h. Terminal.net is not hashed, and the rewritten docstring's 'Not covered' list names only BondWire.loop_height. Terminal.net is not an input of to_conductors(), so the headline 'every input of to_conductors()' still holds. But the 'Not covered' list reads as complete, and it isn't. This matters for a task whose job was to fix this docstring.",
+      "evidence": "Setting every terminal's net to 'ZZ' leaves the fingerprint unchanged ('terminal.net hashed: False'). loop_height is also unhashed, as documented.",
+      "suggested_check": "List Terminal.net under 'Not covered', or hash it."
+    },
+    {
+      "severity": "note",
+      "title": "LayerStack.kind is now hashed, and the listed DoD commands pass",
+      "detail": "The implementation change is correct: `put(\"stack\", self.stack.kind, ...)`. Changing kind now changes the fingerprint. The repo stores no fingerprints (they appear only in tests), so no saved caches or results are invalidated.",
+      "evidence": "DoD 1: 71 passed. DoD 2: ruff 'All checks passed!'. DoD 3: 'LayerStack.kind is hashed'. DoD 5: 'ok 60'. grep finds fingerprint only in layout.py and tests.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran DoD commands 1, 2, 3 and 5 verbatim: 71 tests passed; ruff clean; kind is hashed; 60 layouts generated, deterministic and DRC-clean ('ok 60').",
+    "Built my own in-process mutation harness: monkeypatched Layout.fingerprint to ignore one field, then ran pytest on tests/unit/geometry. Tried 15 mutants outside or overlapping the DoD list. The harness kills known-pinned fields (terminal cx, die cx, die thickness, die switch, die order); 9 mutants survived, including die w/h and terminal cy, which feed to_conductors().",
+    "Checked by hand how each of the 23 DoD mutants maps to a `_pin_variants` entry. Each variant changes only the field its mutant normalizes, so all 23 should be killed.",
+    "Read to_conductors() to see which Layout fields it actually uses: die cx/cy/w/h/switch/source pad/thickness/attach_thickness; terminal DC+/DC- cx/cy; top_cu/backside_cu/baseplate sigma and thickness; the whole stack object; wire points/diameter/net; wire_sigma; backside_inset; both outlines. Then compared that list with the docstring and with the pins.",
+    "Probed 1 nm quantization by hand: a +0.4 or +0.6 nm die cx shift leaves the hash unchanged and +1.0 nm changes it, consistent with the docstring.",
+    "Checked that Terminal.net and BondWire.loop_height are not hashed. loop_height is documented as not covered; Terminal.net is not.",
+    "Checked the hash framing for ambiguity: each put() writes a balanced repr tuple starting with a tag, so concatenating them can't make two different layouts collide.",
+    "Grepped the repo for stored fingerprints that the kind change would invalidate: none found."
+  ],
+  "caveats": [
+    "I couldn't run the DoD mutation script (command 4) verbatim: the sandbox blocked it (it launches subprocesses), and a later in-process replay of the same 23 mutants was blocked too. My conclusion that all 23 are killed comes from mapping each one to its pin variant by hand, plus a working in-process harness on overlapping mutants.",
+    "I found no task or ADR file for T0035/T0039 in the repo, so I judged 'pin every hashed input' by its literal wording. If 'every hashed input' was meant to be exactly the 23-item DoD list, the blocker drops to major. Even then, die w/h and terminal cy are to_conductors() inputs with no test pinning them."
+  ]
+}

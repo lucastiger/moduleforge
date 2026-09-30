@@ -4,7 +4,7 @@ title: 'DRC: per-net copper connectivity, neck detection, terminal clearance, wi
   (T0036 review)'
 type: implement
 agent: builder
-status: merge
+status: needs_founder
 depends_on:
 - T0033
 - T0034

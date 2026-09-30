@@ -1,0 +1,15 @@
+id: I0012
+kind: protected_change
+subject: 'T0038: merge needs founder approval'
+summary: 'DRC: per-net copper connectivity, neck detection, terminal clearance, wire start margin, no
+  KeyError (T0036 review)
+
+  Risk medium; 2 files. PR: None'
+refs:
+- T0038
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-09-30T01:46:12+00:00'
+resolved_at: null

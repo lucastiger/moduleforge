@@ -3,7 +3,7 @@ objective: O001
 title: Layout IR, layer stack, DRC and DRC-valid half-bridge generator (3 families, 2–6 dies/switch)
 type: implement
 agent: builder
-status: needs_founder
+status: merge
 depends_on: []
 description: 'Build the shared input layer that L1, L2 and the E002/E003 runners consume. Follow skill
   mf-conventions: SI float64, z = 0 at the baseplate bottom, stacks listed bottom-up, explicit seeds,
@@ -96,8 +96,8 @@ runs:
 - T0021-builder-20260929T172320-d25b
 created_by: planner:T0019
 created_at: '2026-09-29T22:56:48+00:00'
-protected_approved: false
-approval: null
+protected_approved: true
+approval: I0007
 target: null
 lens: null
 trigger: null

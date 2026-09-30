@@ -3,7 +3,7 @@ objective: O001
 title: Layout fingerprint covers every to_conductors() input; die shorts span trace top to die top
 type: implement
 agent: builder
-status: merge
+status: needs_founder
 depends_on:
 - T0021
 description: 'Follow-up to the T0028 review of T0021 (project/reviews/T0021/T0028.json, notes "Fingerprint

@@ -1,0 +1,96 @@
+id: T0047
+objective: O001
+title: 'L1 fidelity: converged bond-wire segmentation, consistent bar internal inductance, mesh within
+  3 % at <= 50 ms (T0044/T0045 reviews)'
+type: implement
+agent: builder
+status: todo
+depends_on:
+- T0023
+description: 'Follow-up to the physics (T0044) and numerics (T0045) reviews of T0023 (project/reviews/T0023/).
+  E002 is not designed or registered yet, and no L2 result exists, so this is fixing discretisation and
+  consistency defects, not tuning L1 toward a reference. Do not fit anything to L2 and do not import it.
+  Keep the O001 hypothesis as written (trace cells, skin-corrected R, Grover bond wires, image planes).
+
+
+  (1) Bond-wire segmentation. Touching/near segments of the same wire are coupled as zero-radius filaments,
+  so wire L grows as the polyline is refined: measured +1.1 .. +5.1 % from 7 to 25 points, still rising.
+  Treat the self and near-mutual terms of a wire''s own segments with its finite radius (e.g. Grover''s
+  polygon method with the GMD for adjacent segments, or the round-wire self of the whole polyline), so
+  L converges with point count.
+
+  (2) Trace-bar internal inductance. The module docstring says it is neglected (delta << t), but uniform-current
+  Hoer-Love bars include the full DC internal inductance (up to ~10 % of loop L per T0045), while wires
+  scale theirs with skin depth. Make the model consistent with the high-frequency regime it claims (e.g.
+  current confined near the faces, or remove the internal term) or, if you keep it, correct the docstring
+  and quantify the bias. Either way the docstring must describe what the code does.
+
+  (3) Mesh. The default 4 mm mesh reads +0.3 .. +12.0 % above a 1 mm mesh, growing with die count: the
+  same signature E002''s F3 diagnosis uses for missing physics. Bring the default within 3 % of the 1
+  mm mesh on the checked layouts while keeping the single-core p50 <= 50 ms (e.g. a graded mesh that is
+  fine where current crowds: die footprints, wire landings, terminals, trace necks). Record the default-mesh
+  bias you measure (and, from a refinement study, your estimate of the 1 mm mesh''s own error) in the
+  module docstring and in your report, so E002''s design can account for it. If 3 % at 50 ms is not achievable,
+  stop and report blocked with the measured trade-off: that is itself an O001 finding.
+
+  (4) Tests: tighten the mesh-convergence unit test to the bound you document (today it allows 10 %),
+  and add a wire point-count convergence test in the regime the model runs in (a/l_seg ~ 0.1-0.25, not
+  a = 10 um).
+
+  Secondary (R is not an O001 acceptance metric): the perimeter skin area counts shared internal cell
+  walls, so R falls without bound under refinement; over a ground plane the current crowds onto the bottom
+  face.
+
+
+  The definition of done keeps all of T0023''s checks (including benchmarks/l1_timing.py and the no-L2-import
+  check) and adds project/dod/l1-fidelity/convergence.py (founder-authored).'
+context_files: []
+deliverables:
+- src/moduleforge/physics/peec/
+- tests/unit/physics/peec/
+touches:
+- src/moduleforge/physics/**
+- tests/unit/physics/**
+- benchmarks/l1_timing.py
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/physics/peec
+  exists: null
+  timeout_s: 900
+- cmd: uv run ruff check src/moduleforge/physics tests/unit/physics benchmarks
+  exists: null
+  timeout_s: 120
+- cmd: uv run python -c "import sys, moduleforge.physics.peec; assert not any(m.startswith('moduleforge.solvers')
+    for m in sys.modules), 'L1 must not import L2'"
+  exists: null
+  timeout_s: 120
+- cmd: uv run python -c "import numpy as np; from moduleforge.generate.halfbridge import generate_layouts;
+    from moduleforge.physics.peec import loop_inductance; l=generate_layouts(1, seed=7, dies_per_switch=3)[0];
+    r=loop_inductance(l, freqs_hz=[5e6, 2e7, 8e7]); L=np.asarray(r.L_H); assert L.shape==(3,) and np.all(np.isfinite(L)),
+    L; assert 1e-9 < L[1] < 1e-7, L; assert L[0] >= L[1]*(1-1e-6) and L[1] >= L[2]*(1-1e-6), L; print(L)"
+  exists: null
+  timeout_s: 600
+- cmd: uv run python benchmarks/l1_timing.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python project/dod/l1-fidelity/convergence.py
+  exists: null
+  timeout_s: 1800
+experiment: null
+risk: high
+model: null
+budget_usd: 8.0
+max_turns: 80
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: founder
+created_at: '2026-09-30T18:55:56+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

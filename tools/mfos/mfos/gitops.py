@@ -7,11 +7,13 @@ merge_mode (policy.git.merge_mode):
 from __future__ import annotations
 
 import fnmatch
+import io
 import json
 import os
 import re
 import shutil
 import subprocess
+import tarfile
 from pathlib import Path
 from typing import Optional
 
@@ -60,14 +62,27 @@ class GitOps:
         return path
 
     def review_checkout(self, name: str, ref: str) -> Path:
-        """Detached checkout with the blinded paths physically removed."""
-        path = self.detached_worktree(name, ref)
+        """Blinded snapshot of ``ref`` for a critic: its tree minus the blinded paths, committed once into a new,
+        unrelated repository. None of this repository's history, branches or objects is reachable from it, so
+        `git show HEAD:<path>` or `git log -p` cannot recover a blinded file (T0028, 2026-09-30)."""
+        path = self.wt_root / name
+        if path.exists():
+            self.remove_worktree(path)
+        path.mkdir(parents=True)
+        tree = subprocess.run(["git", "archive", "--format=tar", ref], cwd=self.s.root, capture_output=True,
+                              check=True).stdout
+        with tarfile.open(fileobj=io.BytesIO(tree)) as tar:
+            tar.extractall(path, filter="data")
         for pattern in self.s.policy.get("blinding", {}).get("remove_paths", []):
             for p in path.glob(pattern):
                 if p.is_dir():
                     shutil.rmtree(p, ignore_errors=True)
                 else:
                     p.unlink(missing_ok=True)
+        self.s.git("init", "-q", "-b", "review", cwd=path)
+        self.s.git("add", "-A", cwd=path)
+        self.s.git("-c", "user.name=review", "-c", "user.email=review@invalid", "-c", "commit.gpgsign=false",
+                   "commit", "-q", "--no-verify", "-m", "review snapshot", cwd=path)
         return path
 
     def remove_worktree(self, path: Path) -> None:

@@ -211,7 +211,7 @@ L4. The system *proposes* such changes (planner `founder_requests`, scientist `a
 Every "never" rule is in the prompts (Appendix A) *and* enforced mechanically where possible: write
 scopes and protected paths by the guard hook and again by the orchestrator's scope check; integration
 commands by deny rules and the guard; unfinished work by the Stop hook; blinding by physically deleting
-files from the critic's checkout.
+files from the critic's checkout, which is a one-commit snapshot with no link to the repository's history.
 
 ### 4.3 Roles considered and folded in
 Engineering manager and research director → planner + you. Physics and numerical-methods specialists →
@@ -231,8 +231,9 @@ packets, which cost nothing when unused; separate agents would multiply prompts 
 * **Resume vs. restart.** An *interrupted* run (crash, reboot) resumes its own session once
   (`--resume <session-id>`), because its context is still valid. A *failed* attempt restarts fresh with a
   short failure summary: resuming a session that talked itself into a wrong approach invites anchoring.
-* **The critic is blinded.** It works in a detached checkout from which `project/tasks`, `inbox`,
-  `reviews`, `events.jsonl`, objective `state.yaml`, diagnoses, run records and packets have been deleted;
+* **The critic is blinded.** It works in a snapshot of the commit under review from which `project/tasks`,
+  `inbox`, `reviews`, `events.jsonl`, objective `state.yaml`, diagnoses, run records and packets have been
+  deleted, committed once into a fresh repository so that `git show`/`git log` cannot recover them;
   it receives a neutral claim ("this change correctly implements X" / "this evidence supports H within
   scope S") and the material. It sees the *artifact* — the diff or the evidence — but not the author,
   the rationale, earlier attempts, or anyone's opinion. Acceptance with zero independent checks is

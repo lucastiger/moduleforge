@@ -4,7 +4,7 @@ title: L1 fast PEEC moduleforge.physics.peec (trace cells, skin-corrected R, Gro
   planes) + single-core timing benchmark
 type: implement
 agent: builder
-status: running
+status: review
 depends_on:
 - T0021
 - T0033
@@ -105,4 +105,129 @@ lens: null
 trigger: null
 rationale: L1 is the model under test for A2–A5 and A6. The single-core timing benchmark in the definition
   of done front-loads the A6 kill shot, and the import check guards L1's independence from the reference.
-history: []
+history:
+- attempt: 1
+  outcome: agent_finished
+  summary: 'I implemented `moduleforge.physics.peec.loop_inductance(layout, freqs_hz) -> LoopResult` with
+    fields `L_H`, `R_ohm` and `meta`. It is numpy-only, quasi-static, and does not import or use L2 or
+    any fitted factor. All the DoD commands and `mfos gate --fast` exit 0, and the work is committed on
+    the task branch.
+
+
+    The benchmark reports p50 ≈ 32.6 ms and p90 ≈ 37.7 ms (36 layouts, 6 dies per switch, one thread,
+    20 MHz).
+
+
+    **What the model does**
+
+    - **Trace cells:** each trace gets its own rectilinear mesh at `hmax` = 4 mm. The grid lines contain
+    every polygon vertex and every die edge. Adjacent same-net cells are joined by current bars.
+
+    - **Bar inductances:** Hoer–Love for near pairs, filaments for far pairs, and a point-element limit
+    for very far pairs.
+
+    - **Skin-corrected R:** bars use the Wheele'
+  report:
+    status: completed
+    summary: 'I implemented `moduleforge.physics.peec.loop_inductance(layout, freqs_hz) -> LoopResult`
+      with fields `L_H`, `R_ohm` and `meta`. It is numpy-only, quasi-static, and does not import or use
+      L2 or any fitted factor. All the DoD commands and `mfos gate --fast` exit 0, and the work is committed
+      on the task branch.
+
+
+      The benchmark reports p50 ≈ 32.6 ms and p90 ≈ 37.7 ms (36 layouts, 6 dies per switch, one thread,
+      20 MHz).
+
+
+      **What the model does**
+
+      - **Trace cells:** each trace gets its own rectilinear mesh at `hmax` = 4 mm. The grid lines contain
+      every polygon vertex and every die edge. Adjacent same-net cells are joined by current bars.
+
+      - **Bar inductances:** Hoer–Love for near pairs, filaments for far pairs, and a point-element limit
+      for very far pairs.
+
+      - **Skin-corrected R:** bars use the Wheeler perimeter approximation and wires use a skin annulus.
+
+      - **Bond wires:** each wire is one branch. Segment self inductance is Grover''s round-wire formula,
+      and segment-to-segment and wire-to-bar mutuals are the Neumann integral of straight filaments. Wire
+      internal inductance is scaled with skin depth.
+
+      - **Image planes:** which plane is imaged at each frequency follows from skin depth versus plane
+      thickness, and the docstring justifies it. At 5–80 MHz only the backside Cu is imaged; the baseplate
+      is shielded (weight < 1e-4). Below about 4 MHz the baseplate begins to be imaged.
+
+      - **Solve and port:** the port is the same as `Layout.to_conductors()` (DC+ and DC− terminal centres,
+      PHASE open, dies as ideal shorts). A dense branch-impedance matrix goes into a nodal solve, and
+      `Z_port` gives L = Im(Z)/ω and R = Re(Z).
+
+
+      **Tests:** 30 tests in `tests/unit/physics/peec/` pass. They cover:
+
+      - Hoer–Love mutual against a brute-force filament sum, and self inductance against the Grover bar
+      formula.
+
+      - Round-wire self inductance against Grover, and wire over a plane against image theory.
+
+      - Far-field limit, reciprocity, symmetric positive definite L matrix, and length scaling.
+
+      - R ∝ √f, and the network solve against series and parallel circuits with mutual coupling.
+
+
+      **Commands run** (exit codes below are real):
+
+      - `uv run pytest -q tests/unit/physics/peec`: 0
+
+      - `uv run ruff check src/moduleforge/physics tests/unit/physics benchmarks`: 0
+
+      - the no-L2-import check: 0
+
+      - the DoD smoke check: 0; it prints about 10.1 nH at 5, 20 and 80 MHz, in the required 1e-9 to 1e-7
+      range.
+
+      - `uv run python benchmarks/l1_timing.py`: 0
+
+      - `uv run mfos gate --fast`: 0'
+    concerns:
+    - 'Timing margin is moderate: p50 is about 32 ms against the 50 ms limit. It was measured on this
+      machine with threads pinned to one; the orchestrator''s host may be slower.'
+    - Mesh sensitivity is not negligible. At 20 MHz, L drifts by roughly 3-6% between hmax = 4 mm and
+      1.5 mm, and by about 10% at 6 mm. I chose 4 mm to meet the timing budget. Absolute accuracy against
+      L2 is untested, because I never ran or read L2. Whether hmax needs to be tighter is a question for
+      E002.
+    - 'Approximations that are documented but unvalidated against a reference: bar internal inductance
+      is neglected; image planes are treated as infinite and the eddy-penetration shift of the image plane
+      is ignored; the plane-weight scheme (1 - T1, T1(1 - T2)) is an engineering heuristic that reduces
+      to the exact single image only for delta << t; die footprints are equipotential and bars inside
+      them carry no current.'
+    - Bar-to-wire coupling uses 3 sub-filaments across the bar width. The far tiers use a point-element
+      or single-filament limit (error about O((l/r)^2), roughly 0.5% at the tier boundaries), which I
+      checked only by comparing results across tier settings, not against a reference.
+    - Wire segments of about 1 mm are only about 5 wire radii long, so the Grover self and filament-mutual
+      segment model has O(a/l) errors. The touching-segment additivity test therefore uses a thin wire
+      (a = 10 um).
+    - The model supports exactly one top-Cu trace per net and requires every wire to start over a die
+      footprint and land on copper. Otherwise it raises ValueError; the generator satisfies this.
+    files_changed:
+    - src/moduleforge/physics/__init__.py
+    - src/moduleforge/physics/peec/__init__.py
+    - src/moduleforge/physics/peec/kernels.py
+    - src/moduleforge/physics/peec/model.py
+    - tests/unit/physics/peec/test_peec_kernels.py
+    - tests/unit/physics/peec/test_peec_model.py
+    - benchmarks/l1_timing.py
+    checks_run:
+    - cmd: uv run pytest -q tests/unit/physics/peec
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge/physics tests/unit/physics benchmarks
+      exit_code: 0
+    - cmd: uv run python -c "import sys, moduleforge.physics.peec; assert not any(m.startswith('moduleforge.solvers')
+        for m in sys.modules)"
+      exit_code: 0
+    - cmd: uv run python -c "...loop_inductance(generate_layouts(1, seed=7, dies_per_switch=3)[0], [5e6,
+        2e7, 8e7]) shape/finite/1e-9<L[1]<1e-7/monotone assert..."
+      exit_code: 0
+    - cmd: uv run python benchmarks/l1_timing.py
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0

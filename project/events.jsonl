@@ -70,3 +70,5 @@
 {"ts": "2026-09-29T22:56:48+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0006", "kind": "plan_approval", "subject": "[O001] approve initial plan (8 tasks)"}
 {"ts": "2026-09-29T22:56:48+00:00", "event": "plan_applied", "actor": "orchestrator", "objective": "O001", "created": ["T0020", "T0021", "T0022", "T0023", "T0024", "T0025", "T0026", "T0027"], "dropped": 0}
 {"ts": "2026-09-30T00:18:54+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0006", "status": "approved", "note": "Approved: re-issued plan with I0003 option (b) applied to T0022; verified field-by-field against T0011-T0018."}
+{"ts": "2026-09-30T00:23:20+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0020-scientist-20260929T172320-c0d9", "task": "T0020", "role": "scientist", "session": "db25861a-1be4-4f3b-9fac-62ace7fbbe9a"}
+{"ts": "2026-09-30T00:23:20+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0021-builder-20260929T172320-d25b", "task": "T0021", "role": "builder", "session": "222fefeb-c158-4bfd-a133-6f39c9e0babc"}

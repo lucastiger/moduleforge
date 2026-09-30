@@ -1,0 +1,66 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "'Connectivity' covers wires and net labels only; a net split into separate copper islands still passes DRC",
+      "detail": "The new connectivity rules (wire_net, die_unbonded, missing_switch) check that each die has a source wire and that the wire's label and the copper under its landing are the net expected for that switch. Nothing checks that each net's copper is one connected piece joining its terminal, its dies and its wire landings. Take the side_by_side fixture and replace the DC+ trace with two DC+ traces: box(9,1.5,62,y1) mm and box(63,1.5,68,y1) \u222a box(64,1.5,68,17) mm. Worked through by hand, every rule passes. Both islands are \u22651 mm wide; their 1.0 mm gap satisfies min_spacing, which applies to all trace pairs; HS dies (right edge \u226460 mm) keep their 1 mm die_edge_margin on the left island; the DC+ pad (64..68, 13..17 mm) sits inside the right island, so terminal_off_trace passes; the wires are unchanged. check() therefore returns [] even though the DC+ terminal no longer connects to any HS drain, so the commutation loop is open. O001/E002 depend on 'DRC-valid' layouts being well-posed for the PEEC port. A split PHASE net (HS landings on one island, LS dies on another) gets through the same way.",
+      "evidence": "rules.py: host[0] (die_wrong_net), terminal_off_trace (`any(t.net == net and t.polygon.contains(pad))`) and wire_landing (`any(t.net == w.net ...)`) each accept any trace with the right label, independently of the others. No rule counts traces per net or checks that they are connected.",
+      "suggested_check": "Add a test that splits the DC+ (or PHASE) trace into two same-net islands 1 mm apart and asserts a connectivity violation, then implement a per-net union/connected-component rule."
+    },
+    {
+      "severity": "minor",
+      "title": "min_trace_width misses narrow necks between two wide regions",
+      "detail": "The width check is an opening (a negative buffer followed by a positive buffer). If every point of a polygon lies in some sub-rectangle at least 1 mm wide, the opening returns the polygon unchanged. Two 5\u00d75 mm blocks that share only a 0.1 mm edge, e.g. union(box(0,0,5,5), box(5,4.9,10,9.9)) mm, or that overlap only at a 0.1\u00d70.1 mm corner, therefore give thin.area = 0. That 0.1 mm neck passes a 1 mm minimum-width rule. The limitation predates this change, but the change claims width hardening and adds only 1.000/0.999 mm stub tests, which cannot expose it. The generator's outputs contain no such necks; an optimizer that moves rectangles could produce them.",
+      "evidence": "rules.py lines 58-64: opened = t.polygon.buffer(-r, mitre).buffer(r, mitre); thin = t.polygon.difference(opened).",
+      "suggested_check": "Add a test with two \u22651 mm blocks joined by a 0.1 mm abutment and assert min_trace_width fires."
+    },
+    {
+      "severity": "minor",
+      "title": "Die-to-terminal keep-out has zero clearance",
+      "detail": "die_on_terminal only flags an overlap: `d.box.buffer(-TOL).intersects(pad)`. A die whose edge touches its own net's terminal pad (an HS die against the DC+ pad inside the interleaved DC+ row, or an LS die against the PHASE pad) passes. Meanwhile a wire landing must stay at least 0.3 mm from any pad. Die_edge_margin and min_spacing already keep dies away from other nets' pads, so the gap only affects the same-net terminal. The start of a wire also gets no margin on the source pad: a bond exactly on the pad edge passes wire_start, while landings need 0.3 mm from the copper edge.",
+      "evidence": "rules.py line 104 (die_on_terminal) versus line 131 (wire_landing_keepout uses wire_landing_margin); on_source uses only \u00b1TOL.",
+      "suggested_check": "Assert that a die placed 0.0\u20130.5 mm from its host terminal pad is flagged, once a clearance value is chosen."
+    },
+    {
+      "severity": "minor",
+      "title": "The rule-coverage mutation check counts any non-zero pytest exit as 'covered'",
+      "detail": "The mutation script in the definition of done marks a rule as covered whenever pytest exits non-zero. A collection error, an import error, or a fixture that breaks because the mutated check() changes what the generator accepts all count as coverage. For this change I confirmed by reading the file that each of the 18 rules has its own `assert \"<rule>\" in rules(...)` in tests/unit/drc/test_drc.py, so coverage is real here. The check itself cannot tell a real kill from a crash.",
+      "evidence": "DoD script: `survivors = [rule ... if subprocess.run(...).returncode == 0]`.",
+      "suggested_check": "Require returncode == 1 and search the output for 'AssertionError' before counting a rule as killed."
+    },
+    {
+      "severity": "minor",
+      "title": "The wire checks now raise KeyError on a die without a 'source' pad",
+      "detail": "The old wire_start code looped over d.pads.items() filtering for k == 'source', so a die without a source pad simply went unmatched. The new on_source() reads d.pads['source'] directly, so check() crashes instead of reporting wire_start or die_unbonded. to_conductors() makes the same assumption, and the generator always creates the pad, so this only affects hand-built layouts.",
+      "evidence": "rules.py line 112: `p = d.pads[\"source\"]`.",
+      "suggested_check": "Build a layout with a die whose pads={} and confirm check() returns violations rather than raising."
+    },
+    {
+      "severity": "note",
+      "title": "WIDTH_TOL loosens the effective width threshold to 0.9998 mm",
+      "detail": "With r = 0.5 mm \u2212 1e-7 m, any feature wider than about 0.9998 mm passes; before the change the cutoff was about 0.999998 mm. The stated reason, GEOS buffer precision at the exact boundary, is plausible, and a 0.2 \u00b5m band is negligible against DBC etch tolerances. This change is in product code, not a test tolerance.",
+      "evidence": "rules.py line 19 and line 59.",
+      "suggested_check": "Optionally add a test showing a 0.9997 mm stub is flagged, to pin down the dead band."
+    }
+  ],
+  "independent_checks_performed": [
+    "Tried to run the four definition-of-done commands (pytest, ruff, the two heredoc scripts) and the generator check. The sandbox denied `uv run` and `python3`, so every check below is static or worked out by hand.",
+    "Listed all 18 Violation rule names emitted by check() in rules.py and compared them with the RULES list in the mutation script: they match exactly. Confirmed each rule has an explicit `assert \"<rule>\" in rules(...)` in tests/unit/drc/test_drc.py, so removing any one rule would make a named assertion fail.",
+    "Checked that the wire_start test moves the start point to (cx+0.45s, cy+0.45s), which is outside the source pad (\u00b10.35s) and also outside the gate pad (y from \u22120.47s to \u22120.36s). The test therefore exercises wire_start and nothing else.",
+    "Derived from halfbridge._rows/_build parameter ranges that the new rules should not reject any generator output. Wire landings are \u22652 mm from die boxes and \u22655 mm from terminal pads (wire x within 11..59 mm, pads at x\u22646 or \u226564 mm). Dies lie in x\u2208[10,60] mm, clear of the pads. The largest pitch requirement, max(0.6, 2\u00d70.4) = 0.8 mm, is below the generator's 1.0 mm pitch. Diameters of 0.3 and 0.4 mm are within [0.1, 0.5] mm. Wires in different rows are several mm apart in y. Generator acceptance and fingerprints should therefore be unchanged.",
+    "Built a split-DC+ island counterexample by hand (side_by_side fixture) and went through all 18 rules: none fire, yet the DC+ terminal is disconnected from the HS dies.",
+    "Showed with the opening argument that union(box(0,0,5,5), box(5,4.9,10,9.9)) mm, a 0.1 mm neck, comes back unchanged from the buffer opening and so gives no min_trace_width violation.",
+    "Computed the WIDTH_TOL effect by hand: features wider than about 0.9998 mm now pass; 1.000 mm survives erosion as a 0.2 \u00b5m sliver; 0.999 mm erodes completely, giving a thin area of about 6e-6 m\u00b2, far above 1e-12.",
+    "Recomputed the new loop_area_proxy expected values with the shoelace formula: rectangle (0,0),(4,0),(4,3),(0,3) mm gives 12 mm\u00b2; degenerate quadrilateral (0,0),(4,0),(4,0),(0,3) mm gives 6 mm\u00b2. The new test is hand-built, unlike the one it replaces, which just repeated the implementation's formula.",
+    "Checked by grep that only generate/halfbridge.py imports drc.check, so no other product code picks up the new rules. Read the rest of test_halfbridge.py and the older test_drc.py tests: none were deleted or weakened.",
+    "Checked the min_spacing boundary test geometry: in side_by_side the smallest DC-/PHASE gap is between the DC- rect and the PHASE strip, not the DC- terminal column, so translating by (gap \u2212 sp) sets exactly the intended spacing."
+  ],
+  "caveats": [
+    "Nothing was executed: the sandbox denied uv and Python. Whether the definition-of-done commands pass, including the 1.000 mm stub under GEOS and fingerprint stability, rests on the orchestrator's deterministic run, not on this review.",
+    "'Connectivity' holds only at the level of wires and net labels: dies bonded, wires starting on source pads and landing on the right net, both switches present. Copper connectivity (one connected island per net joining its terminal, dies and landings) is not checked, so DRC-clean layouts can have an open commutation loop.",
+    "min_trace_width is a minimum-feature-size check, not a true width check: necks between two wide regions pass. The 'width boundary' part of the claim holds only for isolated stubs like the ones tested.",
+    "The keep-outs are the 0.3 mm wire-landing keep-out plus a die/terminal overlap ban with zero clearance. There is no die-to-terminal clearance, no margin for the wire start on the source pad, and no check of the wire path over dies or terminals.",
+    "I could not find the T0028 review text in this worktree. Scope was judged from the adversarial cases listed in the definition of done, all of which the implementation appears to handle as written."
+  ]
+}

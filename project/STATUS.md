@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-09-30T01:18:34+00:00 from repository state — do not edit_
+_generated 2026-09-30T01:25:25+00:00 from repository state — do not edit_
 
 ## Founder inbox (3 open)
 - **I0005** [external_action] [O001] [O001] Pin FastHenry and rebuild it with --force before the L2 adapter (n3) starts; record D0002 at E001 registration

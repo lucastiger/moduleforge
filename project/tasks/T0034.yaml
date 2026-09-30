@@ -4,7 +4,7 @@ title: 'DRC hardening from the T0028 review: connectivity, keep-outs, diameter-a
   full rule coverage'
 type: implement
 agent: builder
-status: review
+status: merge
 depends_on:
 - T0021
 description: 'Follow-up to the T0028 review of T0021 (project/reviews/T0021/T0028.json). check() must

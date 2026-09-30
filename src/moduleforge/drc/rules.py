@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from shapely.geometry import LineString, Point, box
+from shapely.ops import unary_union
 
 from moduleforge.geometry import Layout
 from moduleforge.geometry.units import mm_to_m
@@ -33,6 +34,11 @@ class DesignRules:
     wire_pitch_diameters: float = 2.0  # pitch >= this many wire diameters (module docstring: ~2)
     min_wire_diameter: float = mm_to_m(0.1)  # placeholder, heavy Al wire (see module docstring)
     max_wire_diameter: float = mm_to_m(0.5)  # placeholder, heavy Al wire (see module docstring)
+    # placeholder: same-net die-to-terminal-pad clearance, equal to the die-to-Cu-edge margin (1 mm)
+    die_terminal_clearance: float = mm_to_m(1.0)
+    # placeholder: a bond foot must sit >= half a typical 0.3 mm heavy-Al wire diameter inside the pad edge
+    # so the wedge footprint does not overhang the metallisation
+    wire_start_margin: float = mm_to_m(0.15)
 
 
 DEFAULT_RULES = DesignRules()
@@ -62,6 +68,19 @@ def check(layout: Layout, rules: DesignRules = DEFAULT_RULES) -> list[Violation]
         thin = t.polygon.difference(opened)
         if thin.area > 1e-12:
             v.append(Violation("min_trace_width", f"trace {i} ({t.net}) narrower than min width", _pt(thin)))
+            continue
+        # necks: eroding by half the min width must not split the trace into more pieces than it has
+        eroded = t.polygon.buffer(-r, **mit)
+        if len(getattr(eroded, "geoms", [eroded])) > len(getattr(t.polygon, "geoms", [t.polygon])):
+            v.append(Violation("min_trace_width", f"trace {i} ({t.net}) has a neck narrower than min width",
+                               _pt(t.polygon)))
+
+    # net_split: each net's copper must be a single connected island
+    for net in sorted({t.net for t in layout.traces}):
+        merged = unary_union([t.polygon for t in layout.traces if t.net == net])
+        if len(getattr(merged, "geoms", [merged])) > 1:
+            v.append(Violation("net_split", f"net {net} copper is split into {len(merged.geoms)} islands",
+                               _pt(merged)))
 
     # min_spacing
     for i in range(len(layout.traces)):
@@ -103,14 +122,23 @@ def check(layout: Layout, rules: DesignRules = DEFAULT_RULES) -> list[Violation]
         for net, pad in pads.items():
             if d.box.buffer(-TOL).intersects(pad):
                 v.append(Violation("die_on_terminal", f"die {i} overlaps terminal {net}", (d.cx, d.cy)))
+            elif d.box.distance(pad) < rules.die_terminal_clearance - TOL:
+                v.append(Violation("die_on_terminal", f"die {i} closer than clearance to terminal {net}",
+                                   (d.cx, d.cy)))
     for sw in ("HS", "LS"):
         if not any(d.switch == sw for d in layout.dies):
             v.append(Violation("missing_switch", f"layout has no {sw} die"))
 
     # wires
     def on_source(d, x, y):
-        p = d.pads["source"]
+        p = d.pads.get("source")
+        if p is None:
+            return False
         return p[0] - TOL <= x <= p[2] + TOL and p[1] - TOL <= y <= p[3] + TOL
+
+    for i, d in enumerate(layout.dies):
+        if "source" not in d.pads:
+            v.append(Violation("die_no_source_pad", f"die {i} ({d.switch}) has no source pad", (d.cx, d.cy)))
 
     expect = {"HS": "PHASE", "LS": "DC-"}
     bonded: set[int] = set()
@@ -137,6 +165,9 @@ def check(layout: Layout, rules: DesignRules = DEFAULT_RULES) -> list[Violation]
             v.append(Violation("wire_start", f"wire {i} does not start on a die source pad", xy))
         else:
             bonded.update(owners)
+            if not any(box(*layout.dies[k].pads["source"]).buffer(-(rules.wire_start_margin - TOL), **mit)
+                       .intersects(Point(xy)) for k in owners):
+                v.append(Violation("wire_start", f"wire {i} starts closer than margin to its source-pad edge", xy))
             want_net = expect[layout.dies[owners[0]].switch]
             under = [t.net for t in layout.traces if t.polygon.buffer(TOL).contains(end)]
             if w.net != want_net or (under and want_net not in under):

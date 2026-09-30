@@ -235,3 +235,74 @@ def test_min_spacing_boundary(good):
 
     assert "min_spacing" not in at(1.0e-3)
     assert "min_spacing" in at(0.999e-3)
+
+
+def _split(lay, net):
+    t = next(x for x in lay.traces if x.net == net)
+    tm = lay.terminals[net]
+    x0, y0, x1, y1 = t.polygon.bounds
+    cut = tm.cx - tm.w / 2 - 2e-3
+    left = t.polygon.intersection(box(x0, y0, cut - 0.5e-3, y1))
+    right = t.polygon.intersection(box(cut + 0.5e-3, y0, x1, y1))
+    return dataclasses.replace(lay, traces=[x for x in lay.traces if x is not t] + [Trace(net, left), Trace(net, right)])
+
+
+@pytest.mark.parametrize("net", ["DC+", "DC-"])
+def test_net_split(good, net):
+    assert "net_split" not in rules(good)
+    assert "net_split" in rules(_split(good, net))
+
+
+@pytest.mark.parametrize("shape", [
+    box(0, 0, 5e-3, 5e-3).union(box(5e-3, 4.9e-3, 10e-3, 9.9e-3)),  # 0.1 mm shared edge
+    box(0, 0, 5e-3, 5e-3).union(box(4.9e-3, 4.9e-3, 9.9e-3, 9.9e-3)),  # 0.1 x 0.1 mm corner overlap
+])
+def test_min_trace_width_neck(good, shape):
+    assert "min_trace_width" in rules(dataclasses.replace(good, traces=[*good.traces, Trace("DC-", shape)]))
+
+
+def test_min_trace_width_wide_joint_ok(good):
+    shape = box(0, 0, 5e-3, 5e-3).union(box(5e-3, 1e-3, 10e-3, 4e-3))  # 3 mm wide joint
+    assert "min_trace_width" not in rules(dataclasses.replace(good, traces=[*good.traces, Trace("DC-", shape)]))
+
+
+def test_min_trace_width_dead_band(good):
+    t = next(t for t in good.traces if t.net == "DC-")
+    minx, _, _, maxy = t.polygon.bounds
+
+    def stub(width):
+        poly = t.polygon.union(box(minx + 0.010, maxy, minx + 0.010 + width, maxy + 0.006))
+        return rules(dataclasses.replace(good, traces=_swap(good.traces, t, Trace("DC-", poly))))
+
+    assert "min_trace_width" not in stub(1.0e-3)
+    assert "min_trace_width" in stub(0.9997e-3)
+
+
+@pytest.mark.parametrize("gap", [0.0, 0.5e-3])
+def test_die_terminal_clearance(good, gap):
+    hs = _hs(good)
+    tm = good.terminals["DC+"]
+    moved = dataclasses.replace(hs, cx=tm.cx - (tm.w / 2 + hs.w / 2 + gap), cy=tm.cy)
+    bad = dataclasses.replace(good, dies=_swap(good.dies, hs, moved))
+    assert "die_on_terminal" in rules(bad)
+    far = dataclasses.replace(hs, cx=tm.cx - (tm.w / 2 + hs.w / 2 + 1.5e-3), cy=tm.cy)
+    assert "die_on_terminal" not in rules(dataclasses.replace(good, dies=_swap(good.dies, hs, far)))
+
+
+def test_wire_start_margin(good):
+    hs = _hs(good)
+    w = next(w for w in good.wires if _start_on(w, hs))
+    x0, y0, x1, y1 = hs.pads["source"]
+    for xy in ((x0, w.points[0, 1]), (x0 + 0.05e-3, w.points[0, 1]), (w.points[0, 0], y1)):
+        p = w.points.copy()
+        p[0, :2] = xy
+        bad = dataclasses.replace(good, wires=_swap(good.wires, w, dataclasses.replace(w, points=p)))
+        assert "wire_start" in rules(bad)
+
+
+def test_die_without_source_pad(good):
+    hs = _hs(good)
+    nopad = dataclasses.replace(hs, pads={k: v for k, v in hs.pads.items() if k != "source"})
+    r = rules(dataclasses.replace(good, dies=_swap(good.dies, hs, nopad)))  # must not raise
+    assert "die_no_source_pad" in r
+    assert "die_no_source_pad" not in rules(good)

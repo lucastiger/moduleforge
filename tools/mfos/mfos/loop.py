@@ -387,8 +387,10 @@ class Orchestrator:
         self.s.save_task(rt)
         return rt
 
-    def _reviews_for(self, target: str) -> tuple[list[m.Task], list[m.Review]]:
-        tasks = [x for x in self.s.tasks() if x.type == "review" and x.target == target]
+    def _reviews_for(self, target: str, ref: Optional[str] = None) -> tuple[list[m.Task], list[m.Review]]:
+        """Review tasks for ``target`` and their verdicts; with ``ref``, only those that reviewed that commit."""
+        tasks = [x for x in self.s.tasks() if x.type == "review" and x.target == target
+                 and (ref is None or x.description == ref)]
         revs = []
         for x in tasks:
             p = self.s.project / "reviews" / target / f"{x.id}.json"
@@ -399,7 +401,15 @@ class Orchestrator:
     # ================================================================== task advancement
     def _advance(self, t: m.Task) -> None:
         if t.status == "review":
-            rtasks, revs = self._reviews_for(t.id)
+            # A task is judged only by the reviews of the commit it would merge: a retry must not be rejected by
+            # an earlier attempt's critic, nor merged on an earlier attempt's acceptance (T0037, 2026-09-30).
+            head = self.git.head(self.git.wt_root / t.id)
+            rtasks, revs = self._reviews_for(t.id, ref=head)
+            if not rtasks:
+                for lens in self._review_lenses(t):
+                    self._create_review(t.objective, target=t.id, lens=lens, ref=head)
+                if self._review_lenses(t):
+                    return
             if any(x.status not in TERMINAL for x in rtasks):
                 return
             if any(x.status == "failed" for x in rtasks) and len(revs) < len(rtasks):
@@ -782,8 +792,10 @@ class Orchestrator:
                     n_exps += 1
                     started += 1
                 continue
-            if self.level < 2 and t.type not in ("plan", "review"):
-                continue  # level 1: the founder triggers execution (`mfos task start <task>` or /work)
+            resuming = bool(t.history) and t.history[-1].get("outcome") == "capacity_backoff"
+            if self.level < 2 and t.type not in ("plan", "review") and not resuming:
+                continue  # level 1: the founder triggers execution (`mfos task start <task>` or /work); a task the
+                # founder started resumes after a capacity pause without a second trigger
             if n_agents >= conc.get("agents", 2) or not self._budget_ok(t):
                 continue
             self._start_agent(t)

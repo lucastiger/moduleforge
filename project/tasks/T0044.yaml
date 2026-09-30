@@ -3,7 +3,7 @@ objective: O001
 title: Review T0023 (physics)
 type: review
 agent: critic
-status: todo
+status: running
 depends_on: []
 description: 59034452ef6a0b62d2768eeab4ada1a065dfc30f
 context_files: []
@@ -15,12 +15,13 @@ risk: low
 model: null
 budget_usd: 3.0
 max_turns: 60
-attempts: 0
+attempts: 1
 max_attempts: 3
 branch: null
 pr: null
 runs:
 - T0044-critic-20260930T070206-510a
+- T0044-critic-20260930T073439-7ca3
 created_by: orchestrator
 created_at: '2026-09-30T14:02:05+00:00'
 protected_approved: false

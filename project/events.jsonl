@@ -230,3 +230,6 @@
 {"ts": "2026-09-30T19:09:12+00:00", "event": "merged", "actor": "orchestrator", "task": "T0043"}
 {"ts": "2026-09-30T19:11:54+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0048-critic-20260930T120804-4a4b", "status": "completed", "cost": 1.1029698, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-09-30T19:11:56+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0016", "kind": "protected_change", "subject": "T0037: merge needs founder approval"}
+{"ts": "2026-09-30T19:12:12+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0017", "kind": "budget_increase", "subject": "daily LLM budget reached"}
+{"ts": "2026-09-30T19:12:30+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0041-scientist-20260930T115106-58f7", "status": "error", "cost": 5.2129765999999975, "subtype": "success", "report": "missing"}
+{"ts": "2026-09-30T19:12:30+00:00", "event": "capacity_backoff", "actor": "orchestrator", "task": "T0041", "minutes": 30}

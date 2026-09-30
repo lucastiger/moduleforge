@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from shapely import affinity
 from shapely.geometry import box
+from shapely.ops import unary_union
 
 from moduleforge.drc import DEFAULT_RULES, check
 from moduleforge.generate.halfbridge import generate_layouts
@@ -306,3 +307,45 @@ def test_die_without_source_pad(good):
     r = rules(dataclasses.replace(good, dies=_swap(good.dies, hs, nopad)))  # must not raise
     assert "die_no_source_pad" in r
     assert "die_no_source_pad" not in rules(good)
+
+
+def _ring(neck):
+    """20 mm square ring, 2 mm legs; the loop closes through a `neck`-wide overlap on the right side."""
+    return unary_union([box(0, 0, 20e-3, 2e-3), box(0, 0, 2e-3, 20e-3), box(0, 18e-3, 21.9e-3, 20e-3),
+                        box(18e-3, 0, 20e-3, 10e-3), box(20e-3 - neck, 10e-3, 21.9e-3, 20e-3)])
+
+
+def test_min_trace_width_loop_closing_neck(good):
+    ring = _ring(0.1e-3)
+    assert ring.geom_type == "Polygon" and len(ring.interiors) == 1
+    assert "min_trace_width" in rules(dataclasses.replace(good, traces=[*good.traces, Trace("DC-", ring)]))
+    wide = unary_union([box(0, 0, 20e-3, 2e-3), box(0, 0, 2e-3, 20e-3), box(0, 18e-3, 20e-3, 20e-3),
+                        box(18e-3, 0, 20e-3, 20e-3)])  # same ring, loop closed by a full-width leg
+    assert len(wide.interiors) == 1
+    assert "min_trace_width" not in rules(dataclasses.replace(good, traces=[*good.traces, Trace("DC-", wide)]))
+
+
+def test_die_bad_switch(good):
+    hs = _hs(good)
+    for sw in ("hs", "", "XX"):
+        bad = dataclasses.replace(good, dies=_swap(good.dies, hs, dataclasses.replace(hs, switch=sw)))
+        r = rules(bad)  # must not raise
+        assert "die_bad_switch" in r
+        assert "die_wrong_net" not in r and "wire_net" not in r  # switch-dependent rules skipped for that die
+    assert "die_bad_switch" not in rules(good)
+
+
+def test_wire_start_margin_scales_with_diameter(good):
+    hs = _hs(good)
+    w = next(w for w in good.wires if _start_on(w, hs))
+    x0, _, _, _ = hs.pads["source"]
+
+    def with_(dia, inset):
+        p = w.points.copy()
+        p[0, 0] = x0 + inset
+        return rules(dataclasses.replace(good, wires=_swap(good.wires, w, dataclasses.replace(
+            w, points=p, diameter=dia))))
+
+    assert "wire_start" in with_(0.5e-3, 0.2e-3)  # < d/2 = 0.25 mm
+    assert "wire_start" not in with_(0.5e-3, 0.3e-3)
+    assert "wire_start" not in with_(0.2e-3, 0.2e-3)  # default margin 0.15 mm governs thin wires

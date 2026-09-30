@@ -56,6 +56,12 @@ def _pt(g):
     return (float(c.x), float(c.y))
 
 
+def _topology(g) -> tuple[int, int]:
+    """(number of polygon pieces, total number of holes) of a shapely geometry."""
+    polys = [p for p in getattr(g, "geoms", [g]) if p.geom_type == "Polygon" and not p.is_empty]
+    return len(polys), sum(len(p.interiors) for p in polys)
+
+
 def check(layout: Layout, rules: DesignRules = DEFAULT_RULES) -> list[Violation]:
     """Return all rule violations (empty list = DRC clean)."""
     v: list[Violation] = []
@@ -69,9 +75,10 @@ def check(layout: Layout, rules: DesignRules = DEFAULT_RULES) -> list[Violation]
         if thin.area > 1e-12:
             v.append(Violation("min_trace_width", f"trace {i} ({t.net}) narrower than min width", _pt(thin)))
             continue
-        # necks: eroding by half the min width must not split the trace into more pieces than it has
+        # necks: eroding by half the min width must not split the trace into more pieces than it has, nor
+        # close a hole into the outside (a neck closing a copper loop turns the ring into a C: one piece, fewer holes)
         eroded = t.polygon.buffer(-r, **mit)
-        if len(getattr(eroded, "geoms", [eroded])) > len(getattr(t.polygon, "geoms", [t.polygon])):
+        if (_topology(eroded)[0] > _topology(t.polygon)[0]) or (_topology(eroded)[1] < _topology(t.polygon)[1]):
             v.append(Violation("min_trace_width", f"trace {i} ({t.net}) has a neck narrower than min width",
                                _pt(t.polygon)))
 
@@ -100,11 +107,14 @@ def check(layout: Layout, rules: DesignRules = DEFAULT_RULES) -> list[Violation]
     # die placement, net and margin
     want = {"HS": "DC+", "LS": "PHASE"}
     for i, d in enumerate(layout.dies):
+        if d.switch not in want:
+            v.append(Violation("die_bad_switch", f"die {i} has unknown switch {d.switch!r} (expected HS or LS)",
+                               (d.cx, d.cy)))
         host = [t for t in layout.traces if t.polygon.contains(Point(d.cx, d.cy))]
         if not host:
             v.append(Violation("die_off_trace", f"die {i} not on any trace", (d.cx, d.cy)))
             continue
-        if host[0].net != want[d.switch]:
+        if d.switch in want and host[0].net != want[d.switch]:
             v.append(Violation("die_wrong_net", f"die {i} ({d.switch}) on {host[0].net}", (d.cx, d.cy)))
         if not host[0].polygon.buffer(-(rules.die_edge_margin - TOL), **mit).contains(d.box):
             v.append(Violation("die_edge_margin", f"die {i} closer to trace edge than margin", (d.cx, d.cy)))
@@ -165,12 +175,13 @@ def check(layout: Layout, rules: DesignRules = DEFAULT_RULES) -> list[Violation]
             v.append(Violation("wire_start", f"wire {i} does not start on a die source pad", xy))
         else:
             bonded.update(owners)
-            if not any(box(*layout.dies[k].pads["source"]).buffer(-(rules.wire_start_margin - TOL), **mit)
+            margin = max(rules.wire_start_margin, w.diameter / 2)  # bond foot must not overhang the pad
+            if not any(box(*layout.dies[k].pads["source"]).buffer(-(margin - TOL), **mit)
                        .intersects(Point(xy)) for k in owners):
                 v.append(Violation("wire_start", f"wire {i} starts closer than margin to its source-pad edge", xy))
-            want_net = expect[layout.dies[owners[0]].switch]
+            want_net = expect.get(layout.dies[owners[0]].switch)
             under = [t.net for t in layout.traces if t.polygon.buffer(TOL).contains(end)]
-            if w.net != want_net or (under and want_net not in under):
+            if want_net is not None and (w.net != want_net or (under and want_net not in under)):
                 v.append(Violation("wire_net", f"wire {i} from a {layout.dies[owners[0]].switch} die must land "
                                    f"on {want_net}; labelled {w.net}, copper under landing {under}", (end.x, end.y)))
         lines.append(LineString(w.points[:, :2]))

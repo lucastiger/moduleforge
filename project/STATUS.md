@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-09-30T18:30:13+00:00 from repository state — do not edit_
+_generated 2026-09-30T18:44:19+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
@@ -18,7 +18,6 @@ cancelled: 14, done: 18, failed: 2, review: 1, running: 2, todo: 8
 - T0045 `running` critic/review: Review T0023 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-09-30T16:33:38+00:00 capacity_backoff {"task": "T0044", "minutes": 30}
 - 2026-09-30T16:33:38+00:00 run_finished {"run": "T0045-critic-20260930T093302-0dd3", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-09-30T16:33:38+00:00 capacity_backoff {"task": "T0045", "minutes": 30}
 - 2026-09-30T17:57:49+00:00 sleep_detected {"gap_s": 5052, "runs_extended": 0}
@@ -33,3 +32,4 @@ cancelled: 14, done: 18, failed: 2, review: 1, running: 2, todo: 8
 - 2026-09-30T18:30:11+00:00 sleep_detected {"gap_s": 337, "runs_extended": 0}
 - 2026-09-30T18:30:13+00:00 run_started {"run": "T0044-critic-20260930T113013-7ce6", "task": "T0044", "role": "critic", "session": "f1d0284f-bfcf-4c09-ba4b-124ee9f5c964"}
 - 2026-09-30T18:30:13+00:00 run_started {"run": "T0045-critic-20260930T113013-ea65", "task": "T0045", "role": "critic", "session": "01689580-b643-4eee-83a5-b827baf8d7da"}
+- 2026-09-30T18:44:17+00:00 sleep_detected {"gap_s": 529, "runs_extended": 2}

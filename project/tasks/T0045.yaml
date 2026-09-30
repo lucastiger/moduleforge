@@ -3,7 +3,7 @@ objective: O001
 title: Review T0023 (numerics)
 type: review
 agent: critic
-status: running
+status: todo
 depends_on: []
 description: 59034452ef6a0b62d2768eeab4ada1a065dfc30f
 context_files: []
@@ -15,7 +15,7 @@ risk: low
 model: null
 budget_usd: 3.0
 max_turns: 60
-attempts: 1
+attempts: 0
 max_attempts: 3
 branch: null
 pr: null
@@ -38,3 +38,6 @@ history:
 - outcome: capacity_backoff
   summary: You've hit your session limit · resets 11:30am (America/Los_Angeles)
   at: '2026-09-30T16:33:38+00:00'
+- outcome: capacity_backoff
+  summary: You've hit your session limit · resets 11:30am (America/Los_Angeles)
+  at: '2026-09-30T17:58:25+00:00'

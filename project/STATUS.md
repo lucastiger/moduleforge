@@ -1,8 +1,7 @@
 # ModuleForge status
-_generated 2026-09-30T02:01:05+00:00 from repository state — do not edit_
+_generated 2026-09-30T02:10:04+00:00 from repository state — do not edit_
 
-## Founder inbox (3 open)
-- **I0005** [external_action] [O001] [O001] Pin FastHenry and rebuild it with --force before the L2 adapter (n3) starts; record D0002 at E001 registration
+## Founder inbox (2 open)
 - **I0012** [protected_change] T0038: merge needs founder approval
 - **I0013** [experiment_registration] register E001 (pre-registration)
 
@@ -18,7 +17,6 @@ cancelled: 14, done: 16, failed: 2, needs_founder: 1, todo: 7
 - T0038 `needs_founder` builder/implement: DRC: per-net copper connectivity, neck detection, terminal clearance, wire start margin, no KeyError (T0036 review) (attempt 1)
 
 ## Recent events
-- 2026-09-30T01:39:19+00:00 run_started {"run": "T0038-builder-20260929T183919-a124", "task": "T0038", "role": "builder", "session": "04590944-3de8-4a2a-82ea-aa2bc4a148c1"}
 - 2026-09-30T01:39:25+00:00 verified {"task": "T0037"}
 - 2026-09-30T01:39:58+00:00 run_finished {"run": "T0030-critic-20260929T183110-ad7a", "status": "completed", "cost": 2.0264781999999997, "subtype": "success", "report": "structured_output"}
 - 2026-09-30T01:40:00+00:00 inbox_opened {"id": "I0011", "kind": "protected_change", "subject": "T0020: merge needs founder approval"}
@@ -33,3 +31,4 @@ cancelled: 14, done: 16, failed: 2, needs_founder: 1, todo: 7
 - 2026-09-30T02:00:56+00:00 inbox_resolved {"id": "I0011", "status": "approved", "note": "Approved (founder): merge audit note + E001 draft + runner; T0029/T0030 findings go to a scientist follow-up befo
 - 2026-09-30T02:01:05+00:00 merged {"task": "T0020"}
 - 2026-09-30T02:01:05+00:00 inbox_opened {"id": "I0013", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}
+- 2026-09-30T02:09:35+00:00 inbox_resolved {"id": "I0005", "status": "answered", "note": "Done (founder session, 2026-09-30): provision_compute.sh pinned to fasthenry-3.0wr-031424 (xictools d28932a, sha2

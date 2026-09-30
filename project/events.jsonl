@@ -157,3 +157,6 @@
 {"ts": "2026-09-30T13:38:35+00:00", "event": "merged", "actor": "orchestrator", "task": "T0038"}
 {"ts": "2026-09-30T13:42:17+00:00", "event": "task_added", "actor": "founder", "task": "T0041"}
 {"ts": "2026-09-30T13:42:22+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0041-scientist-20260930T064222-9471", "task": "T0041", "role": "scientist", "session": "3cd7c2d3-b028-4a92-9f50-8f4f732a257a"}
+{"ts": "2026-09-30T13:43:30+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0037-builder-20260930T063731-ab29", "status": "completed", "cost": 1.2335206, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-09-30T13:43:45+00:00", "event": "verified", "actor": "orchestrator", "task": "T0037"}
+{"ts": "2026-09-30T13:43:46+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0042-critic-20260930T064346-d42f", "task": "T0042", "role": "critic", "session": "e5cc6f49-1f17-42ef-9307-c742ed57d8ba"}

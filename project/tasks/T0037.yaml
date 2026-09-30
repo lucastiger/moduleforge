@@ -4,7 +4,7 @@ title: 'Fingerprint: hash LayerStack.kind, pin every hashed input with a test, f
   review)'
 type: implement
 agent: builder
-status: running
+status: review
 depends_on:
 - T0033
 - T0034
@@ -210,3 +210,76 @@ history:
   summary: 'founder session: DoD made exhaustive (45 fields), two-sided 1 nm quantum, docstring completeness,
     per review T0039'
   at: '2026-09-30T13:36:45+00:00'
+- attempt: 2
+  outcome: agent_finished
+  summary: 'T0037 is done and committed as 2c9ec15, on top of attempt 1''s 8dd6680, which already hashes
+    LayerStack.kind. All DoD commands and `mfos gate --fast` exit 0. The mutation script''s tests fail
+    by assertion when the fingerprint is blind to any of the 45 hashed fields.
+
+
+    What changed:
+
+    1. **Docstring** of `Layout.fingerprint` (`layout.py`). It now says exactly what is hashed, including
+    `LayerStack.kind` and that traces, dies and wires are hashed in list order while pads and terminals
+    are sorted by name. It states that lengths are quantized to 1 nm per field and sigma and k to 12 significant
+    digits. The ''Not covered'' list names only `BondWire.loop_height` and `Terminal.net`. The thermal-model
+    claim is removed. No change to the hashing itself.
+
+    2. **Tests** (`tests/unit/geometry/test_layout.py`). I '
+  report:
+    status: completed
+    summary: "T0037 is done and committed as 2c9ec15, on top of attempt 1's 8dd6680, which already hashes\
+      \ LayerStack.kind. All DoD commands and `mfos gate --fast` exit 0. The mutation script's tests fail\
+      \ by assertion when the fingerprint is blind to any of the 45 hashed fields.\n\nWhat changed:\n\
+      1. **Docstring** of `Layout.fingerprint` (`layout.py`). It now says exactly what is hashed, including\
+      \ `LayerStack.kind` and that traces, dies and wires are hashed in list order while pads and terminals\
+      \ are sorted by name. It states that lengths are quantized to 1 nm per field and sigma and k to\
+      \ 12 significant digits. The 'Not covered' list names only `BondWire.loop_height` and `Terminal.net`.\
+      \ The thermal-model claim is removed. No change to the hashing itself.\n2. **Tests** (`tests/unit/geometry/test_layout.py`).\
+      \ I replaced attempt 1's 23-case pin list with a table that covers everything it covered and more.\
+      \ Each entry names a path into the layout and a change to apply:\n   - Every die, wire, trace and\
+      \ terminal is changed one at a time, not just the first.\n   - All 5 layers × material, thickness,\
+      \ sigma and k are covered (the ceramic's sigma = 0 is handled).\n   - Die cx, cy, w, h, switch,\
+      \ thickness and attach_thickness; source and gate pads; pad names and terminal names.\n   - family,\
+      \ dies_per_switch, both outlines, backside_inset, wire_sigma and stack kind.\n   \n   Each case\
+      \ also asserts that its change isn't a no-op, so no pin passes vacuously. New tests added:\n   -\
+      \ A completeness test builds the field list from `dataclasses.fields` of all 7 IR classes, so a\
+      \ new field fails until it is pinned or listed as exempt.\n   - A test confirms the two exempt fields\
+      \ really are ignored.\n   - A test requires the docstring's 'Not covered' list to name exactly those\
+      \ two.\n   - A two-sided quantum test over 10 length fields: each is first snapped to the 1 nm grid,\
+      \ then 0.01 and 0.4 nm shifts must be ignored and 1 and 2 nm shifts must be seen. A second test\
+      \ repeats the DoD's unsnapped die-cx case.\n\nBeyond the DoD, I checked by hand that the tests also\
+      \ fail for a 1 µm or 2 nm quantum, a fingerprint that hashes only the first die or wire, a dropped\
+      \ PHASE terminal, an ignored PHASE terminal width, and dropped extra pad names."
+    checks_run:
+    - cmd: uv run pytest -q tests/unit/geometry tests/unit/generate tests/unit/drc
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge tests/unit
+      exit_code: 0
+    - cmd: 'uv run python - (DoD: LayerStack.kind is hashed)'
+      exit_code: 0
+    - cmd: 'uv run python - (DoD: 45-field fingerprint mutation script)'
+      exit_code: 0
+    - cmd: 'uv run python - (DoD: 0.01 nm ignored / 2 nm seen on die cx)'
+      exit_code: 0
+    - cmd: 'uv run python -c (DoD: fingerprint docstring check)'
+      exit_code: 0
+    - cmd: 'uv run python -c (DoD: generate_layouts(60, seed=12345) DRC/determinism/coverage)'
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    - cmd: ad-hoc extra mutants (1 um / 2 nm quantum, first-element-only hashing, dropped PHASE terminal,
+        PHASE terminal w, extra pad names) against tests/unit/geometry
+      exit_code: 1
+    files_changed:
+    - src/moduleforge/geometry/layout.py
+    - tests/unit/geometry/test_layout.py
+    concerns:
+    - I replaced attempt 1's `_pin_variants` / `test_fingerprint_pins_each_hashed_input` / `test_fingerprint_length_quantization_is_1nm`,
+      which this branch had added in 8dd6680. The new table checks everything they checked and more. No
+      test from the base branch was changed or removed.
+    - 'The extra-mutant check exits 1 on purpose: every probed mutant made geometry tests fail, which
+      is the desired outcome.'
+    - '`Layer.name` is hashed but has no pin of its own: `LayerStack.__post_init__` forces the names to
+      LAYER_ORDER, so no valid layout can change it. The completeness test lists it under _FIXED, and
+      the docstring still lists it as covered.'

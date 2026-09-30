@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-09-30T01:33:14+00:00 from repository state — do not edit_
+_generated 2026-09-30T01:33:22+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0005** [external_action] [O001] [O001] Pin FastHenry and rebuild it with --force before the L2 adapter (n3) starts; record D0002 at E001 registration
@@ -11,17 +11,13 @@ _generated 2026-09-30T01:33:14+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $15.01/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 9, failed: 2, merge: 2, review: 1, running: 2, todo: 6
+cancelled: 14, done: 11, failed: 2, review: 1, running: 2, todo: 6
 
 - T0020 `review` scientist/design_experiment: Select the L2 reference (license + capability audit) and pre-register E001 reference validation (attempt 1)
 - T0029 `running` critic/review: Review T0020 (physics) (attempt 1)
 - T0030 `running` critic/review: Review T0020 (numerics) (attempt 1)
-- T0033 `merge` builder/implement: Layout fingerprint covers every to_conductors() input; die shorts span trace top to die top (attempt 1)
-- T0034 `merge` builder/implement: DRC hardening from the T0028 review: connectivity, keep-outs, diameter-aware pitch, width boundary, full rule coverage (attempt 1)
 
 ## Recent events
-- 2026-09-30T01:18:34+00:00 inbox_opened {"id": "I0009", "kind": "protected_change", "subject": "T0033: merge needs founder approval"}
-- 2026-09-30T01:25:30+00:00 run_finished {"run": "T0036-critic-20260929T181619-4563", "status": "completed", "cost": 1.3998818, "subtype": "success", "report": "structured_output"}
 - 2026-09-30T01:25:32+00:00 inbox_opened {"id": "I0010", "kind": "protected_change", "subject": "T0034: merge needs founder approval"}
 - 2026-09-30T01:26:07+00:00 loop_started {"pid": 19536}
 - 2026-09-30T01:26:46+00:00 reviews_rerun {"task": "T0020", "reviews": ["T0029", "T0030"], "cancelled": ["T0031", "T0032"], "inbox": "I0008"}
@@ -35,3 +31,5 @@ cancelled: 14, done: 9, failed: 2, merge: 2, review: 1, running: 2, todo: 6
 - 2026-09-30T01:31:10+00:00 run_started {"run": "T0030-critic-20260929T183110-ad7a", "task": "T0030", "role": "critic", "session": "b5d512b1-aa69-43a4-959c-753a8968f143"}
 - 2026-09-30T01:32:53+00:00 inbox_resolved {"id": "I0009", "status": "approved", "note": "Approved: DoD verified (fingerprint covers all 7 perturbations; die shorts trace top -> die top). T0035 review wa
 - 2026-09-30T01:32:53+00:00 inbox_resolved {"id": "I0010", "status": "approved", "note": "Approved: DoD verified (11 adversarial cases, 18-rule mutation coverage, 60 layouts clean). T0036 static-only rev
+- 2026-09-30T01:33:20+00:00 merged {"task": "T0033"}
+- 2026-09-30T01:33:22+00:00 merged {"task": "T0034"}

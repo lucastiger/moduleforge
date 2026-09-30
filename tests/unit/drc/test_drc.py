@@ -7,7 +7,7 @@ from shapely.geometry import box
 
 from moduleforge.drc import DEFAULT_RULES, check
 from moduleforge.generate.halfbridge import generate_layouts
-from moduleforge.geometry import BondWire, Trace
+from moduleforge.geometry import BondWire, Terminal, Trace, arc_wire
 
 
 @pytest.fixture(scope="module")
@@ -103,3 +103,135 @@ def test_wire_landing_wrong_net_and_off_copper(good):
     off[-1, 0] = 0.0005  # lands on bare ceramic left of all Cu
     assert "wire_landing" in rules(dataclasses.replace(
         good, wires=[BondWire(off, w.diameter, w.loop_height, w.net), *good.wires[1:]]))
+
+
+def _hs(lay):
+    return next(d for d in lay.dies if d.switch == "HS")
+
+
+def _start_on(w, d):
+    x0, y0, x1, y1 = d.pads["source"]
+    return x0 <= w.points[0, 0] <= x1 and y0 <= w.points[0, 1] <= y1
+
+
+def _swap(seq, old, new):
+    return [new if x is old else x for x in seq]
+
+
+def test_good_fixture_clean(good):
+    assert check(good) == []
+
+
+def test_wire_start(good):
+    w = good.wires[0]
+    d = next(d for d in good.dies if _start_on(w, d))
+    pts = w.points.copy()
+    pts[0, :2] = (d.cx + 0.45 * d.w, d.cy + 0.45 * d.h)  # on the die but outside the source pad
+    bad = dataclasses.replace(good, wires=_swap(good.wires, w, BondWire(pts, w.diameter, w.loop_height, w.net)))
+    assert "wire_start" in rules(bad)
+
+
+def test_terminal_off_trace(good):
+    off = dict(good.terminals)
+    off["DC+"] = Terminal("DC+", 35e-3, 0.5e-3, 4e-3, 4e-3)  # bare ceramic at the bottom edge
+    assert "terminal_off_trace" in rules(dataclasses.replace(good, terminals=off))
+
+
+def test_wire_net_label_and_copper(good):
+    hs = _hs(good)
+    w = next(w for w in good.wires if _start_on(w, hs))
+    assert w.net == "PHASE"
+    # label says DC- although the copper under the landing is PHASE
+    lab = BondWire(w.points, w.diameter, w.loop_height, "DC-")
+    assert "wire_net" in rules(dataclasses.replace(good, wires=_swap(good.wires, w, lab)))
+    # HS die bonded onto DC- copper with a consistent label (DC-link short)
+    dcm = next(t for t in good.traces if t.net == "DC-").polygon.representative_point()
+    short = arc_wire(w.points[0, :2], (dcm.x, dcm.y), w.points[0, 2], w.points[-1, 2], w.loop_height, w.diameter,
+                     "DC-")
+    r = rules(dataclasses.replace(good, wires=_swap(good.wires, w, short)))
+    assert "wire_net" in r and "wire_landing" not in r
+    # LS die bonded to PHASE (would short the switch)
+    ls = next(d for d in good.dies if d.switch == "LS")
+    wl = next(w for w in good.wires if _start_on(w, ls))
+    ph = next(t for t in good.traces if t.net == "PHASE").polygon
+    tgt = ph.buffer(-2e-3).representative_point()
+    bad = arc_wire(wl.points[0, :2], (tgt.x, tgt.y), wl.points[0, 2], wl.points[-1, 2], wl.loop_height,
+                   wl.diameter, "PHASE")
+    assert "wire_net" in rules(dataclasses.replace(good, wires=_swap(good.wires, wl, bad)))
+
+
+def test_die_unbonded_and_missing_switch(good):
+    hs = _hs(good)
+    keep = [w for w in good.wires if not _start_on(w, hs)]
+    assert "die_unbonded" in rules(dataclasses.replace(good, wires=keep))
+    assert "die_unbonded" not in rules(good)
+    only_ls = [d for d in good.dies if d.switch == "LS"]
+    assert "missing_switch" in rules(dataclasses.replace(good, dies=only_ls))
+    only_hs = [d for d in good.dies if d.switch == "HS"]
+    assert "missing_switch" in rules(dataclasses.replace(good, dies=only_hs))
+    assert "missing_switch" in rules(dataclasses.replace(good, dies=[], wires=[]))
+
+
+def test_die_on_terminal(good):
+    tm = good.terminals["DC+"]
+    moved = dataclasses.replace(_hs(good), cx=tm.cx, cy=tm.cy)
+    assert "die_on_terminal" in rules(dataclasses.replace(good, dies=[*good.dies, moved]))
+
+
+def test_wire_landing_keepout_die_and_terminal(good):
+    hs = _hs(good)
+    ls = next(d for d in good.dies if d.switch == "LS")
+    w = next(w for w in good.wires if _start_on(w, hs))
+    under = arc_wire(w.points[0, :2], (ls.cx, ls.cy), w.points[0, 2], w.points[-1, 2], w.loop_height, w.diameter,
+                     "PHASE")
+    assert "wire_landing_keepout" in rules(dataclasses.replace(good, wires=_swap(good.wires, w, under)))
+    tm = good.terminals["PHASE"]  # landing 0.1 mm beyond the PHASE terminal pad, on PHASE copper
+    near = arc_wire(w.points[0, :2], (tm.cx + tm.w / 2 + 0.1e-3, tm.cy), w.points[0, 2], w.points[-1, 2],
+                    w.loop_height, w.diameter, "PHASE")
+    r = rules(dataclasses.replace(good, wires=_swap(good.wires, w, near)))
+    assert "wire_landing_keepout" in r
+
+
+def test_wire_pitch_scales_with_diameter(good):
+    w = good.wires[0]
+
+    def pair(dia, pitch):
+        a = BondWire(w.points, dia, w.loop_height, w.net)
+        b = BondWire(w.points + np.array([pitch, 0.0, 0.0]), dia, w.loop_height, w.net)
+        return dataclasses.replace(good, wires=[a, b])
+
+    assert "wire_pitch" in rules(pair(0.6e-3, 0.6e-3))  # 0.6 mm wires need >= 1.2 mm
+    assert "wire_pitch" in rules(pair(0.6e-3, 1.1e-3))
+    assert "wire_pitch" not in rules(pair(0.6e-3, 1.2e-3))  # exactly 2 diameters passes
+    assert "wire_pitch" not in rules(pair(0.3e-3, 0.6e-3))  # min_wire_pitch floor still 0.6 mm
+
+
+@pytest.mark.parametrize("dia", [0.0, -1e-3, 0.05e-3, 1.0e-3])
+def test_wire_diameter(good, dia):
+    wires = [BondWire(w.points, dia, w.loop_height, w.net) for w in good.wires]
+    assert "wire_diameter" in rules(dataclasses.replace(good, wires=wires))
+
+
+def test_min_trace_width_boundary(good):
+    t = next(t for t in good.traces if t.net == "DC-")
+    minx, _, _, maxy = t.polygon.bounds
+
+    def with_stub(width):
+        poly = t.polygon.union(box(minx + 0.010, maxy, minx + 0.010 + width, maxy + 0.006))
+        return rules(dataclasses.replace(good, traces=_swap(good.traces, t, Trace("DC-", poly))))
+
+    assert "min_trace_width" not in with_stub(1.0e-3)
+    assert "min_trace_width" in with_stub(0.999e-3)
+
+
+def test_min_spacing_boundary(good):
+    t = next(t for t in good.traces if t.net == "DC-")
+    p = next(t for t in good.traces if t.net == "PHASE")
+    gap = t.polygon.distance(p.polygon)
+
+    def at(sp):
+        sh = affinity.translate(t.polygon, yoff=-(gap - sp))
+        return rules(dataclasses.replace(good, traces=_swap(good.traces, t, Trace("DC-", sh))))
+
+    assert "min_spacing" not in at(1.0e-3)
+    assert "min_spacing" in at(0.999e-3)

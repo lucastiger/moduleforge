@@ -1,9 +1,12 @@
+import dataclasses
+
 import numpy as np
 import pytest
 
 from moduleforge.drc import check
 from moduleforge.generate import halfbridge
 from moduleforge.generate.halfbridge import FAMILIES, generate_layouts, loop_area_proxy
+from moduleforge.geometry import Terminal
 
 
 @pytest.fixture(scope="module")
@@ -73,12 +76,16 @@ def test_loop_area_proxy_spread(seed):
     assert a.std(ddof=1) / a.mean() >= 0.3  # E002 sample_diverse early check (F2)
 
 
-def test_loop_area_proxy_known_value(sixty):
-    # closed form: shoelace area of terminal/centroid quadrilateral, checked on a hand-built case
-    lay = sixty[0]
-    hs = np.mean([(d.cx, d.cy) for d in lay.dies if d.switch == "HS"], axis=0)
-    ls = np.mean([(d.cx, d.cy) for d in lay.dies if d.switch == "LS"], axis=0)
-    tp, tn = lay.terminals["DC+"], lay.terminals["DC-"]
-    pts = [(tp.cx, tp.cy), tuple(hs), tuple(ls), (tn.cx, tn.cy)]
-    area = 0.5 * abs(sum(pts[i][0] * pts[(i + 1) % 4][1] - pts[(i + 1) % 4][0] * pts[i][1] for i in range(4)))
-    assert loop_area_proxy(lay) == pytest.approx(area, rel=1e-12)
+def test_loop_area_proxy_known_value():
+    # hand-built: DC+ (0,0), DC- (0,3 mm), HS dies at (4,0) mm, LS dies at (4,3) mm -> 4 x 3 mm rectangle
+    lay = generate_layouts(1, seed=3, family="side_by_side", dies_per_switch=3)[0]
+    hs = [dataclasses.replace(d, cx=4e-3, cy=0.0) for d in lay.dies if d.switch == "HS"]
+    ls = [dataclasses.replace(d, cx=4e-3, cy=3e-3) for d in lay.dies if d.switch == "LS"]
+    terms = {**lay.terminals, "DC+": Terminal("DC+", 0.0, 0.0, 1e-3, 1e-3),
+             "DC-": Terminal("DC-", 0.0, 3e-3, 1e-3, 1e-3)}
+    rect = dataclasses.replace(lay, dies=hs + ls, terminals=terms)
+    assert loop_area_proxy(rect) == pytest.approx(12e-6, rel=1e-12)
+    # a right triangle: HS and LS centroids coincide -> DC+ (0,0), P (4,0), P, DC- (0,3): area 0.5*4*3 = 6 mm^2
+    ls_at_hs = [dataclasses.replace(d, cx=4e-3, cy=0.0) for d in ls]
+    tri = dataclasses.replace(lay, dies=hs + ls_at_hs, terminals=terms)
+    assert loop_area_proxy(tri) == pytest.approx(6e-6, rel=1e-12)

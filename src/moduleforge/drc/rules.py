@@ -2,7 +2,8 @@
 
 Default values are *typical* DBC/AMB design-guide numbers (Rogers/curamik and Heraeus/Kyocera substrate
 design guidelines for 0.3 mm Cu: min. trace width ~1 mm, min. Cu-Cu isolation spacing ~1 mm, Cu-to-ceramic-edge
-margin ~1 mm; die-to-Cu-edge margin ~1 mm; Al wire bonding pitch >= ~2 wire diameters). They are placeholders
+margin ~1 mm; die-to-Cu-edge margin ~1 mm; Al wire bonding pitch >= ~2 wire diameters; heavy Al bond wire
+diameters ~100-500 um as in Heraeus / Hesse Bondtec heavy-Al-wire product ranges). They are placeholders
 to be replaced with the customer's vendor rules; all lengths are SI (m).
 """
 from __future__ import annotations
@@ -15,6 +16,7 @@ from moduleforge.geometry import Layout
 from moduleforge.geometry.units import mm_to_m
 
 TOL = 1e-9  # geometric comparison tolerance, 1 nm
+WIDTH_TOL = 1e-7  # min_trace_width tolerance, 0.1 um: well above GEOS buffer precision (~1e-9 m at mm scale)
 
 
 @dataclass(frozen=True)
@@ -28,6 +30,9 @@ class DesignRules:
     max_wire_length: float = mm_to_m(15.0)
     min_wire_pitch: float = mm_to_m(0.6)  # 2 x 0.3 mm wire diameter
     wire_landing_margin: float = mm_to_m(0.3)
+    wire_pitch_diameters: float = 2.0  # pitch >= this many wire diameters (module docstring: ~2)
+    min_wire_diameter: float = mm_to_m(0.1)  # placeholder, heavy Al wire (see module docstring)
+    max_wire_diameter: float = mm_to_m(0.5)  # placeholder, heavy Al wire (see module docstring)
 
 
 DEFAULT_RULES = DesignRules()
@@ -51,7 +56,7 @@ def check(layout: Layout, rules: DesignRules = DEFAULT_RULES) -> list[Violation]
     mit = {"join_style": "mitre", "mitre_limit": 10.0}
 
     # min_trace_width: morphological opening with a square element of side min width
-    r = rules.min_trace_width / 2 - TOL
+    r = rules.min_trace_width / 2 - WIDTH_TOL
     for i, t in enumerate(layout.traces):
         opened = t.polygon.buffer(-r, **mit).buffer(r, **mit)
         thin = t.polygon.difference(opened)
@@ -91,12 +96,31 @@ def check(layout: Layout, rules: DesignRules = DEFAULT_RULES) -> list[Violation]
                 v.append(Violation("die_spacing", f"dies {i}/{j} spacing {dist:.3e} m",
                                    (layout.dies[i].cx, layout.dies[i].cy)))
 
+    # die / terminal keep-outs and switch presence
+    pads = {net: box(tm.cx - tm.w / 2, tm.cy - tm.h / 2, tm.cx + tm.w / 2, tm.cy + tm.h / 2)
+            for net, tm in layout.terminals.items()}
+    for i, d in enumerate(layout.dies):
+        for net, pad in pads.items():
+            if d.box.buffer(-TOL).intersects(pad):
+                v.append(Violation("die_on_terminal", f"die {i} overlaps terminal {net}", (d.cx, d.cy)))
+    for sw in ("HS", "LS"):
+        if not any(d.switch == sw for d in layout.dies):
+            v.append(Violation("missing_switch", f"layout has no {sw} die"))
+
     # wires
+    def on_source(d, x, y):
+        p = d.pads["source"]
+        return p[0] - TOL <= x <= p[2] + TOL and p[1] - TOL <= y <= p[3] + TOL
+
+    expect = {"HS": "PHASE", "LS": "DC-"}
+    bonded: set[int] = set()
     lines = []
     for i, w in enumerate(layout.wires):
         xy = (float(w.points[0, 0]), float(w.points[0, 1]))
         if not (rules.min_wire_length - TOL <= w.length <= rules.max_wire_length + TOL):
             v.append(Violation("wire_length", f"wire {i} length {w.length:.3e} m", xy))
+        if not (rules.min_wire_diameter - TOL <= w.diameter <= rules.max_wire_diameter + TOL):
+            v.append(Violation("wire_diameter", f"wire {i} diameter {w.diameter:.3e} m", xy))
         end = Point(w.points[-1, 0], w.points[-1, 1])
         ok = any(
             t.net == w.net and t.polygon.buffer(-(rules.wire_landing_margin - TOL), **mit).contains(end)
@@ -104,18 +128,31 @@ def check(layout: Layout, rules: DesignRules = DEFAULT_RULES) -> list[Violation]
         )
         if not ok:
             v.append(Violation("wire_landing", f"wire {i} does not land on {w.net} Cu", (end.x, end.y)))
-        start = Point(xy)
-        if not any(
-            (p[0] - TOL <= start.x <= p[2] + TOL and p[1] - TOL <= start.y <= p[3] + TOL)
-            for d in layout.dies for k, p in d.pads.items() if k == "source"
-        ):
+        if any(end.distance(g) < rules.wire_landing_margin - TOL
+               for g in [d.box for d in layout.dies] + list(pads.values())):
+            v.append(Violation("wire_landing_keepout", f"wire {i} lands too close to a die or terminal pad",
+                               (end.x, end.y)))
+        owners = [k for k, d in enumerate(layout.dies) if on_source(d, *xy)]
+        if not owners:
             v.append(Violation("wire_start", f"wire {i} does not start on a die source pad", xy))
+        else:
+            bonded.update(owners)
+            want_net = expect[layout.dies[owners[0]].switch]
+            under = [t.net for t in layout.traces if t.polygon.buffer(TOL).contains(end)]
+            if w.net != want_net or (under and want_net not in under):
+                v.append(Violation("wire_net", f"wire {i} from a {layout.dies[owners[0]].switch} die must land "
+                                   f"on {want_net}; labelled {w.net}, copper under landing {under}", (end.x, end.y)))
         lines.append(LineString(w.points[:, :2]))
+    for k, d in enumerate(layout.dies):
+        if k not in bonded:
+            v.append(Violation("die_unbonded", f"die {k} ({d.switch}) has no wire on its source pad", (d.cx, d.cy)))
     for i in range(len(lines)):
         for j in range(i + 1, len(lines)):
             d = lines[i].distance(lines[j])
-            if d < rules.min_wire_pitch - TOL:
-                v.append(Violation("wire_pitch", f"wires {i}/{j} pitch {d:.3e} m",
+            need = max(rules.min_wire_pitch,
+                       rules.wire_pitch_diameters * max(layout.wires[i].diameter, layout.wires[j].diameter))
+            if d < need - TOL:
+                v.append(Violation("wire_pitch", f"wires {i}/{j} pitch {d:.3e} m < {need:.3e} m",
                                    (float(layout.wires[i].points[0, 0]), float(layout.wires[i].points[0, 1]))))
 
     # terminals must sit on their net's copper

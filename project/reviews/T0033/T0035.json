@@ -1,0 +1,57 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "minor",
+      "title": "LayerStack.kind is passed into to_conductors() output but is not in the fingerprint",
+      "detail": "The claim says the fingerprint covers \"every to_conductors() input\". But to_conductors() puts the whole LayerStack, `kind` included, into ConductorModel.stack. ConductorModel and LayerStack are frozen dataclasses with the default eq, so two layouts can have the same fingerprint while their to_conductors() results compare unequal. The only difference is the label ('DBC'/'AMB'/'custom'). The docstring deliberately excludes `kind`, and no code in src/ reads `.kind` today, so no physics value is affected. Still, the literal \"every\" is not true.",
+      "evidence": "layout.py:206 `return ConductorModel(st, ...)`; stack.py `LayerStack(layers, kind='custom')` with frozen dataclass eq; layout.py:139-140 docstring \"Not covered: LayerStack.kind\"; grep for `.kind` in src/ returns nothing.",
+      "suggested_check": "Either hash `self.stack.kind` or restate the claim as 'every physical/numeric input of to_conductors()'."
+    },
+    {
+      "severity": "minor",
+      "title": "New tests do not pin several fingerprint inputs that to_conductors() reads",
+      "detail": "The new variant test checks stack sigma/k/material, top_cu thickness, backside_inset, wire_sigma, and die attach_thickness/thickness/switch. The pre-existing test checks die cx and a full DBC\u2192AMB stack swap. No test changes the wire points or diameter, the source pad rectangle, the DC+/DC- terminal centre, the baseplate outline, a trace polygon or net, or the thicknesses of the lower layers (baseplate, solder, backside_cu, ceramic), which set the plane z values and top-Cu z. Deleting the `put(\"term\", ...)` line or the baseplate outline from the fingerprint would pass every test in tests/unit. The implementation hashes all of these today; the tests just do not guard them.",
+      "evidence": "tests/unit/geometry/test_layout.py:97-114 variant list; test_fingerprint_stable_and_sensitive only perturbs dies[0].cx and swaps the whole stack.",
+      "suggested_check": "Add variants for wire diameter/points, source pad, DC+ terminal cx, baseplate_outline, and ceramic thickness to the parametrized coverage test."
+    },
+    {
+      "severity": "note",
+      "title": "Rounding lets sub-nanometre differences share a fingerprint",
+      "detail": "Lengths are rounded to 1 nm per field (this is documented), and z values in to_conductors() are cumulative sums of layer thicknesses. So several layers each changed by under 0.5 nm can move top-Cu z_top by a few nm with no fingerprint change. This has no physical effect, but it is quantized coverage rather than exact coverage.",
+      "evidence": "layout.py nm(v)=int(round(v*1e9)) applied to each layer thickness separately; stack.z_bottom sums thicknesses.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "Docstring says it covers thermal-model inputs, but no thermal model exists yet",
+      "detail": "The fingerprint docstring says it hashes \"everything to_conductors() and a thermal model read\". The repo has no physics/thermal code, and the IR has no die-attach or die thermal-conductivity fields, so that part cannot be checked and may become false once a thermal model is added.",
+      "evidence": "src/moduleforge has only canary.py, drc, generate, geometry; no physics/.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "Edit outside the listed deliverables (docstring only)",
+      "detail": "The diff also edits src/moduleforge/geometry/conductors.py, which is not in the deliverables list (layout.py, tests/unit/geometry/). The edit is a docstring update describing the new DieShort node heights. It is inside the builder write scope, not a protected path, and does not change behaviour.",
+      "evidence": "Packet diff hunk for conductors.py lines 60-67; .mfos/policy.toml builder scope src/**.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Listed every attribute to_conductors() reads (stack layer thicknesses via z_bottom/z_top, top_cu/backside_cu/baseplate sigma, trace net+polygon, wire points/net/diameter, wire_sigma, outline, backside_inset, baseplate_outline, die cx/cy/w/h/switch/thickness/attach_thickness/pads['source'], DC+/DC- terminal cx/cy) and checked each against the fields fingerprint() hashes; the only unhashed dependency is LayerStack.kind, which is passed straight through into ConductorModel.stack.",
+    "Worked out by hand that each of the 7 DoD perturbations changes the hashed token: sigma 5.8e7\u21925e7 gives '58000000'\u2192'50000000'; ceramic k 24\u219290; backside_inset 1000000\u21921500000 nm; wire_sigma '35000000'\u2192'31500000'; attach 50000\u219270000 nm.",
+    "Worked out the die-short heights by hand for the default DBC stack: top-Cu z_top = 3.0+0.1+0.3+0.38+0.3 mm = 4.08 mm; short z_bottom = z1 exactly (same variable); z_top = z1+50e-6+180e-6; span 230 um, with round-off near 1e-18, far inside the 1e-12 tolerance.",
+    "Checked that the short and wire heights agree: halfbridge.py starts wires at z_top_cu+attach+thickness, which equals DieShort.z_top; wires land at z1, which equals the new DieShort.z_bottom and the port z.",
+    "Checked the relative-rounding test: 5.8e7*(1+1e-14) formats as '58000000' at .12g (absorbed); 5.8e7*(1+1e-6) formats as '58000058' (detected).",
+    "Checked hash determinism: sha256 over repr of ints and strings only; pads and terminals are sorted; there is no Python hash() or set ordering; each put() writes a tagged, parenthesised tuple repr, so the byte stream cannot be split ambiguously.",
+    "Searched the repo for other consumers of DieShort.z_bottom/z_top and for stored fingerprints (experiments/results, tests): none, so changing the hash format breaks no stored provenance and the z change breaks no downstream solver.",
+    "Checked the ruff config (select E4/E7/E9/F/B, line-length 120): changed files have max line length 110-111 and use zip(strict=True); no F841/B905 problems found.",
+    "Mutation reasoning on the new tests: reverting z_bottom to z0 fails test_die_shorts_span_trace_top_to_die_top (0.3 mm off); removing sig(la.k), la.material, attach_thickness, backside_inset or wire_sigma from the hash fails the variant test; removing terminals, baseplate outline, wire diameter or source pad from the hash would pass every test."
+  ],
+  "caveats": [
+    "I could not execute anything: every attempt to run uv, pytest or python was blocked by the sandbox. The DoD commands, pytest and ruff were NOT run by this reviewer. All checks were static reads and hand calculations; the orchestrator's deterministic DoD run is the authoritative pass/fail.",
+    "The repo has one snapshot commit, so I could not git-diff the pre-change code; the packet diff was taken as the base and checked for consistency with the files on disk.",
+    "'Covers every to_conductors() input' holds for every physical/numeric input, quantized to 1 nm for lengths and 12 significant digits for conductivities. It does not hold for the pass-through label LayerStack.kind, which the docstring openly excludes.",
+    "Coverage of wire geometry, source pads, terminals, baseplate outline and lower-layer thicknesses is guaranteed only by the implementation, not by any test."
+  ]
+}

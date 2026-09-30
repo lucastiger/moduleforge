@@ -181,3 +181,8 @@
 {"ts": "2026-09-30T15:09:14+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 632, "runs_extended": 0}
 {"ts": "2026-09-30T15:09:16+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0044-critic-20260930T080916-1ddd", "task": "T0044", "role": "critic", "session": "8021deee-b88c-4f72-a6d7-d18f94a8dd18"}
 {"ts": "2026-09-30T15:09:16+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0045-critic-20260930T080916-d621", "task": "T0045", "role": "critic", "session": "c48a74d0-7d04-426c-95f7-a452ec021f41"}
+{"ts": "2026-09-30T15:45:28+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 2174, "runs_extended": 2}
+{"ts": "2026-09-30T15:45:30+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0044-critic-20260930T080916-1ddd", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
+{"ts": "2026-09-30T15:45:30+00:00", "event": "capacity_backoff", "actor": "orchestrator", "task": "T0044", "minutes": 30}
+{"ts": "2026-09-30T15:45:30+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0045-critic-20260930T080916-d621", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
+{"ts": "2026-09-30T15:45:30+00:00", "event": "capacity_backoff", "actor": "orchestrator", "task": "T0045", "minutes": 30}

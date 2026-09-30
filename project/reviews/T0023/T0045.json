@@ -1,0 +1,58 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "Bond-wire inductance does not converge as the wire polyline is refined",
+      "detail": "Each wire's polyline segments are coupled with the zero-radius Neumann integral, including adjacent segments that touch. At the generator's geometry (7 points, 6 segments of about 1 mm, radius a = 0.15\u20130.2 mm, so a/l \u2248 0.15\u20130.2) this overestimates the wire's self inductance. Because the filament self-integral diverges logarithmically, the error grows as segments shrink instead of settling. Grover's polygon method assumes segments much longer than the radius, and this regime is outside that. The loop L therefore depends on a generator choice (npts). The bias is positive and depends on the layout family: largest for side_by_side, where wires are a bigger share of the loop.",
+      "evidence": "Straight 6 mm wire in 6 segments versus Grover's single-segment formula: +3.55% (a = 0.15 mm), +5.07% (a = 0.2 mm). A 3 mm wire in 6 segments: +8.4% / +12.0%. Rebuilding the actual wires with arc_wire at npts = 4/7/13/25 gives a monotone rise with no plateau: going from 7 to 25 points adds +1.17% to +3.44% to loop L (6 layouts, seed 77). The author's test_segment_mutual_touching_collinear_segments_finite_and_additive uses a = 1e-5 m (a/l = 0.005), a regime where this effect cannot show up.",
+      "suggested_check": "Add a test that a straight wire with a/l = 0.2 gives the same L for 1, 6 and 24 segments (within about 0.5%), and use a radius-regularised (GMD) distance for near and touching segment pairs."
+    },
+    {
+      "severity": "major",
+      "title": "Default mesh (hmax = 4 mm) is not converged; L is biased high by up to about 9%, and the bias tracks die count",
+      "detail": "L falls steadily as the mesh is refined and only settles near 1 mm. At the default mesh, L is biased high by a few percent. That bias correlates with die count, the same signature the objective's failure-mode detector F3 uses to diagnose missing physics, so mesh error could be mistaken for a physics gap. The 50 ms timing target is met only at this unconverged mesh: 2 mm takes about 0.1 s and 1 mm about 1.5 s. The unit convergence test allows the 2 mm result to be 10% from the 1 mm result, which is loose enough to pass this bias. Rankings are much less affected.",
+      "evidence": "30 layouts (seed 4242) at 20 MHz, 4 mm vs 1 mm: mean +4.6%, min +1.1%, max +8.9%. Correlation of the relative error with dies_per_switch: r = 0.66. Spearman \u03c1(4 mm, 1 mm) = 0.992; within each family 0.988\u20131.000; top-decile membership preserved. 1 mm vs 0.7 mm: 9.298 vs 9.306 nH and 3.772 vs 3.761 nH, so 1 mm is close to converged. Non-monotone case, side_by_side n=3, h = 8/4/2/1.5/1 mm: 3.986 / 4.216 / 4.312 / 4.181 / 4.132 nH.",
+      "suggested_check": "Report the L bias at hmax = 4 mm relative to 1 mm alongside the timing, and tighten the refinement test to the measured bias rather than 10%."
+    },
+    {
+      "severity": "major",
+      "title": "Docstring says the trace-bar internal inductance is neglected; the Hoer-Love uniform-current term in fact includes the full DC value, worth up to about 10% of loop L",
+      "detail": "Bar self and mutual terms assume uniform current through the 0.3 mm copper thickness, which is the DC distribution and includes the DC internal inductance. The module docstring says this term is 'neglected (delta << t, and the external partial inductance dominates)', which is false. The skin correction is applied to bar R but not to bar L, even though wire internal inductance is skin-scaled, so the treatment is inconsistent. This is within the literal hypothesis wording (it asks only for skin-corrected R), but it is a same-sign, family-dependent bias of the same order as the 12% MAPE budget. It also means L(f) barely changes between 5 and 80 MHz.",
+      "evidence": "Upper-bound check (monkeypatched, nothing in the repository changed): putting all trace current in a 2\u03b4 layer on the bottom face (\u03b4 = 14.8 \u00b5m at 20 MHz) lowers loop L by 7.7% to 11.1% across 6 layouts (interleaved n=6: 8.550 \u2192 7.599 nH; u_shaped n=2: 13.654 \u2192 12.270 nH). The parallel-plate estimate agrees: uniform-J height g + t/3 = 0.48 mm versus about 0.39 mm at high frequency.",
+      "suggested_check": "Correct the docstring. Either apply a skin/proximity correction to the bar L terms or record this as known F3 missing physics before E002."
+    },
+    {
+      "severity": "minor",
+      "title": "Bar resistance assumes a skin layer around the whole perimeter, but over a ground plane the current crowds onto the bottom face",
+      "detail": "A_eff = wt \u2212 (w\u22122\u03b4)(t\u22122\u03b4) \u2248 2\u03b4(w+t). With the dominant return in the image plane, most current flows in about \u03b4\u00b7w on the bottom face, so Re(Z) is probably underestimated by up to about 2x. R is not an O001 acceptance metric, so this only affects resistance outputs.",
+      "evidence": "From the formula: at w = 4 mm, t = 0.3 mm, the perimeter layer gives 2.15x the bottom-face-only area.",
+      "suggested_check": "Compare R_ohm with an L2 run that resolves current across the thickness before anyone uses R."
+    },
+    {
+      "severity": "note",
+      "title": "Deliverable commands pass; kernels, conditioning and mesh slivers look sound",
+      "detail": "All five definition-of-done commands passed on this checkout. The kernel tests compare against independent references (Grover closed forms, brute-force filament sums, a midpoint double integral) and could have failed. Image sign conventions for horizontal and vertical currents are correct, and the image blocks are symmetric by reflection. The effective partial-inductance matrix is well conditioned. The three biases above are all positive, so against a converged high-frequency L2 they add up to roughly +10% to +20%.",
+      "evidence": "pytest: 30 passed. ruff: clean. L2-import check: ok. Benchmark: p50 = 31.29 ms, p90 = 36.64 ms (limit 50). Touching-segment quadrature, smoothstep Gauss-Legendre n = 6: 1.3e-3 relative error for collinear and 30\u00b0 kink cases. cond(L \u2212 L_img) = 120 (n = 388). Smallest mesh cell over 40 layouts: 200 \u00b5m (no dangerous slivers).",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran all 5 definition-of-done commands: pytest (30 passed), ruff (clean), L1-must-not-import-L2 (ok), 3-frequency smoke check (passed), benchmark (p50 31.29 ms, p90 36.64 ms)",
+    "Mesh refinement on 9 layouts at hmax = 8/4/2/1.5/1 mm, plus 0.7 mm on 2 layouts, showing L converges only near 1 mm",
+    "Rank stability on 30 layouts, 4 mm vs 1 mm: Spearman 0.992, mean bias +4.6%, max +8.9%, bias correlated with die count at r = 0.66",
+    "Straight-wire segmentation invariance against Grover's single-segment formula at the generator's a/l: +3.5% to +12% overestimate",
+    "Loop L versus bond-wire polyline point count (4/7/13/25) on 6 layouts: monotone increase, no convergence",
+    "Accuracy of the touching-segment Gauss quadrature (collinear, analytic ln2 value; 30\u00b0 kink vs n = 40): 1.3e-3 relative",
+    "Upper-bound effect of uniform-J vs bottom-face skin-layer trace current (monkeypatched discretisation): \u22127.7% to \u221211.1% on loop L",
+    "Minimum mesh cell size over 40 layouts (200 \u00b5m) and condition number of the effective inductance matrix (120)"
+  ],
+  "caveats": [
+    "Holds as an implementation of the literal O001 L1 hypothesis at the default discretisation (hmax = 4 mm, the generator's 7-point wires), not as a converged or discretisation-independent model",
+    "Absolute L at the default settings carries a positive mesh bias of about +5% (up to +9%, growing with die count) and a wire-segmentation bias of about +1% to +3% that grows as wire point count increases",
+    "Trace L uses uniform current density and so includes the DC internal inductance, contrary to the docstring; relative to a high-frequency-resolving reference this may add up to about 10% more positive bias",
+    "The 50 ms timing target (measured p50 31 ms on this machine) is met only at the unconverged 4 mm mesh; converged meshes take 0.1 to 1.5 s per evaluation",
+    "Rankings are robust to mesh refinement within L1 (\u03c1 \u2248 0.99), but agreement with L2 was not assessed: no L2 solver exists in this checkout",
+    "No E003 spec exists in experiments/specs, so the benchmark's definition of one evaluation (6 dies per switch, one frequency, one warm-up call) could not be checked against a registered spec"
+  ]
+}

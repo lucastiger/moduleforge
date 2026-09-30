@@ -134,3 +134,4 @@
 {"ts": "2026-09-30T01:37:12+00:00", "event": "task_added", "actor": "founder", "task": "T0037"}
 {"ts": "2026-09-30T01:37:12+00:00", "event": "task_added", "actor": "founder", "task": "T0038"}
 {"ts": "2026-09-30T01:37:35+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0029-critic-20260929T183110-7915", "status": "completed", "cost": 1.7509468000000004, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-09-30T01:37:41+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0037-builder-20260929T183741-757d", "task": "T0037", "role": "builder", "session": "eb48c050-6838-4272-bd78-95b0af4b2550"}

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-09-30T01:37:35+00:00 from repository state — do not edit_
+_generated 2026-09-30T01:38:08+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0005** [external_action] [O001] [O001] Pin FastHenry and rebuild it with --force before the L2 adapter (n3) starts; record D0002 at E001 registration
@@ -11,13 +11,13 @@ _generated 2026-09-30T01:37:35+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $16.76/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 12, failed: 2, review: 1, running: 1, todo: 8
+cancelled: 14, done: 12, failed: 2, review: 1, running: 2, todo: 7
 
 - T0020 `review` scientist/design_experiment: Select the L2 reference (license + capability audit) and pre-register E001 reference validation (attempt 1)
 - T0030 `running` critic/review: Review T0020 (numerics) (attempt 1)
+- T0037 `running` builder/implement: Fingerprint: hash LayerStack.kind, pin every hashed input with a test, fix the docstring (T0035 review) (attempt 1)
 
 ## Recent events
-- 2026-09-30T01:26:46+00:00 inbox_resolved {"id": "I0008", "status": "answered", "note": "Re-run both reviews: T0029/T0030 failed only on the account's session limit (capacity, now detected by d9fe0cc). 
 - 2026-09-30T01:27:14+00:00 run_started {"run": "T0029-critic-20260929T182714-e3f4", "task": "T0029", "role": "critic", "session": "065113dc-134f-44ef-86e8-8415db3bd08c"}
 - 2026-09-30T01:27:14+00:00 run_started {"run": "T0030-critic-20260929T182714-cf28", "task": "T0030", "role": "critic", "session": "f385ac85-b082-4112-9f92-d62e350b2aae"}
 - 2026-09-30T01:31:02+00:00 run_killed {"run": "T0029-critic-20260929T182714-e3f4", "task": "T0029", "reason": "untrusted review snapshot"}
@@ -32,3 +32,4 @@ cancelled: 14, done: 12, failed: 2, review: 1, running: 1, todo: 8
 - 2026-09-30T01:37:12+00:00 task_added {"task": "T0037"}
 - 2026-09-30T01:37:12+00:00 task_added {"task": "T0038"}
 - 2026-09-30T01:37:35+00:00 run_finished {"run": "T0029-critic-20260929T183110-7915", "status": "completed", "cost": 1.7509468000000004, "subtype": "success", "report": "structured_output"}
+- 2026-09-30T01:37:41+00:00 run_started {"run": "T0037-builder-20260929T183741-757d", "task": "T0037", "role": "builder", "session": "eb48c050-6838-4272-bd78-95b0af4b2550"}

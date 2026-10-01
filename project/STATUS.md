@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-09-30T19:12:30+00:00 from repository state — do not edit_
+_generated 2026-10-01T00:00:29+00:00 from repository state — do not edit_
 
 ## Founder inbox (3 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
@@ -13,12 +13,12 @@ _generated 2026-09-30T19:12:30+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $44.39/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 24, failed: 2, needs_founder: 1, todo: 8
+cancelled: 14, done: 24, failed: 2, needs_founder: 1, running: 1, todo: 7
 
 - T0037 `needs_founder` builder/implement: Fingerprint: hash LayerStack.kind, pin every hashed input with a test, fix the docstring (T0035 review) (attempt 3)
+- T0041 `running` scientist/design_experiment: Fix E001's design before registration: wire model error bounds, convergence estimate, L2 contract, coverage (T0029/T0030 reviews) (attempt 1)
 
 ## Recent events
-- 2026-09-30T18:55:56+00:00 task_added {"task": "T0047"}
 - 2026-09-30T19:01:48+00:00 run_finished {"run": "T0037-builder-20260930T115428-1e26", "status": "completed", "cost": 1.5444503999999997, "subtype": "success", "report": "structured_output"}
 - 2026-09-30T19:02:05+00:00 verified {"task": "T0037"}
 - 2026-09-30T19:02:06+00:00 run_started {"run": "T0046-critic-20260930T120206-8ae8", "task": "T0046", "role": "critic", "session": "dc5e464e-7533-4c3c-8046-600f0189ea93"}
@@ -33,3 +33,4 @@ cancelled: 14, done: 24, failed: 2, needs_founder: 1, todo: 8
 - 2026-09-30T19:12:12+00:00 inbox_opened {"id": "I0017", "kind": "budget_increase", "subject": "daily LLM budget reached"}
 - 2026-09-30T19:12:30+00:00 run_finished {"run": "T0041-scientist-20260930T115106-58f7", "status": "error", "cost": 5.2129765999999975, "subtype": "success", "report": "missing"}
 - 2026-09-30T19:12:30+00:00 capacity_backoff {"task": "T0041", "minutes": 30}
+- 2026-10-01T00:00:29+00:00 run_started {"run": "T0041-scientist-20260930T170029-cad2", "task": "T0041", "role": "scientist", "session": "fcf829f9-1014-4be6-b5ec-280c82b97ae6"}

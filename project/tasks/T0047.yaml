@@ -4,7 +4,7 @@ title: 'L1 fidelity: converged bond-wire segmentation, consistent bar internal i
   3 % at <= 50 ms (T0044/T0045 reviews)'
 type: implement
 agent: builder
-status: running
+status: todo
 depends_on:
 - T0023
 description: 'Follow-up to the physics (T0044) and numerics (T0045) reviews of T0023 (project/reviews/T0023/).
@@ -80,7 +80,7 @@ risk: high
 model: null
 budget_usd: 8.0
 max_turns: 160
-attempts: 2
+attempts: 1
 max_attempts: 3
 branch: task/T0047-l1-fidelity-converged-bond-wire-segmenta
 pr: null
@@ -105,3 +105,6 @@ history:
   summary: 'founder session: max_turns 80 -> 160 (attempt 1 stopped at error_max_turns; its WIP is committed
     on the branch). Continue from it.'
   at: '2026-10-01T02:14:40+00:00'
+- outcome: capacity_backoff
+  summary: You've hit your session limit · resets 11pm (America/Los_Angeles)
+  at: '2026-10-01T02:28:58+00:00'

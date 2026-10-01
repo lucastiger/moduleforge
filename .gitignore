@@ -21,3 +21,6 @@ __pycache__/
 .mfos/push_diverged
 project/STOP
 experiments/results/*/*/runner.log
+
+# macOS Finder metadata (the loop refuses to start on untracked non-state files)
+.DS_Store

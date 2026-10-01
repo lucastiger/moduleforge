@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-01T09:21:33+00:00 from repository state — do not edit_
+_generated 2026-10-01T09:22:06+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
@@ -11,13 +11,10 @@ _generated 2026-10-01T09:21:33+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $73.95/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 30, failed: 2, running: 1, todo: 7
+cancelled: 14, done: 30, failed: 2, todo: 8
 
-- T0041 `running` scientist/design_experiment: Fix E001's design before registration: wire model error bounds, convergence estimate, L2 contract, coverage (T0029/T0030 reviews) (attempt 2)
 
 ## Recent events
-- 2026-10-01T07:05:17+00:00 run_started {"run": "T0041-scientist-20261001T000517-c000", "task": "T0041", "role": "scientist", "session": "19ea178f-6bbd-42ec-9dcd-73151446fc43"}
-- 2026-10-01T07:05:43+00:00 inbox_resolved {"id": "I0018", "status": "approved", "note": "Approved per the founder's standing instruction: DoD verified (wire-point spread 0.04-0.14 %, mesh <= 3 % vs 1 mm
 - 2026-10-01T07:05:49+00:00 merged {"task": "T0047"}
 - 2026-10-01T07:18:30+00:00 run_finished {"run": "T0041-scientist-20261001T000517-c000", "status": "error", "cost": 3.1594598000000005, "subtype": "success", "report": "missing"}
 - 2026-10-01T07:18:30+00:00 capacity_backoff {"task": "T0041", "minutes": 30}
@@ -31,3 +28,5 @@ cancelled: 14, done: 30, failed: 2, running: 1, todo: 7
 - 2026-10-01T08:51:03+00:00 run_finished {"run": "T0041-scientist-20261001T015031-6eb0", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-01T08:51:03+00:00 capacity_backoff {"task": "T0041", "minutes": 30}
 - 2026-10-01T09:21:33+00:00 run_started {"run": "T0041-scientist-20261001T022133-6e15", "task": "T0041", "role": "scientist", "session": "728f5ac0-aa02-4aa9-b812-6930297046dd"}
+- 2026-10-01T09:22:05+00:00 run_finished {"run": "T0041-scientist-20261001T022133-6e15", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
+- 2026-10-01T09:22:05+00:00 capacity_backoff {"task": "T0041", "minutes": 30}

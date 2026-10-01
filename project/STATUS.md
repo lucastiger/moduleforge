@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-01T11:46:02+00:00 from repository state — do not edit_
+_generated 2026-10-01T11:53:28+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
@@ -8,17 +8,15 @@ _generated 2026-10-01T11:46:02+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $79.83/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $81.69/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 30, failed: 2, review: 1, running: 2, todo: 7
+cancelled: 14, done: 31, failed: 2, review: 1, running: 1, todo: 7
 
 - T0041 `review` scientist/design_experiment: Fix E001's design before registration: wire model error bounds, convergence estimate, L2 contract, coverage (T0029/T0030 reviews) (attempt 2)
-- T0055 `running` critic/review: Review T0041 (physics) (attempt 1)
 - T0056 `running` critic/review: Review T0041 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-01T09:22:05+00:00 capacity_backoff {"task": "T0041", "minutes": 30}
 - 2026-10-01T09:52:07+00:00 run_started {"run": "T0041-scientist-20261001T025207-97b2", "task": "T0041", "role": "scientist", "session": "44602862-d62b-4727-86be-be02a320288c"}
 - 2026-10-01T09:52:40+00:00 run_finished {"run": "T0041-scientist-20261001T025207-97b2", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-01T09:52:40+00:00 capacity_backoff {"task": "T0041", "minutes": 30}
@@ -33,3 +31,4 @@ cancelled: 14, done: 30, failed: 2, review: 1, running: 2, todo: 7
 - 2026-10-01T11:46:01+00:00 verified {"task": "T0041"}
 - 2026-10-01T11:46:02+00:00 run_started {"run": "T0055-critic-20261001T044602-9795", "task": "T0055", "role": "critic", "session": "b1d3e640-5763-4788-ba11-a00d140e63a3"}
 - 2026-10-01T11:46:02+00:00 run_started {"run": "T0056-critic-20261001T044602-fa9d", "task": "T0056", "role": "critic", "session": "500ba4d1-dc5a-44e0-9818-752809c00968"}
+- 2026-10-01T11:53:27+00:00 run_finished {"run": "T0055-critic-20261001T044602-9795", "status": "completed", "cost": 1.8672792000000002, "subtype": "success", "report": "structured_output"}

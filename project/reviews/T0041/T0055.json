@@ -1,0 +1,51 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "The convergence estimate applies Roache's 1.25 factor outside the asymptotic range: it misses sign reversals and speeding-up ratios",
+      "detail": "`remaining_discretization_error` works on `np.abs(np.diff(v))`, so it never sees a sign reversal of successive changes (a turning point, or non-monotone convergence). Its branch test `r_last <= r_prev + jitter` also files a falling observed ratio (pre-asymptotic acceleration toward a turning point) as 'steady' and applies the 1.25 factor. The YAML says 1.25 is used 'when the ratio is steady'. A speeding-up sequence is not steady, and the 3-grid GCI factor of Roache's paper, which the runner cites, assumes monotone convergence in the asymptotic range. I tested ordinary two-term error expansions e(h) = A h^p + B h^(p+1) with opposite-sign terms, at the contract's minimum refinement ratio of 1.25. About 10% of the sampled sequences whose true remaining error exceeds conv_tol were declared converged (estimate < 1%). The estimate was 5-20x too small, and the true remaining error reached 1.2-4.8%. The same gap would let the `l2_converged` sanity check pass and would shrink `disc_unc` inside the 0.95 interval of max_rel_err_vs_analytic. The DoD script `convergence_estimator.py` only tests noise-free, monotone sequences (pure geometric, and algebraic with p = 1 and 2), so it cannot catch this. The spec does disclaim a guaranteed bound, which is why this is major and not a blocker.",
+      "evidence": "q=1.25, p=1, A=0.05, B=-0.05, 4 levels: L = [1, 1.008, 1.01152, 1.012488], estimate 2.17e-3, true 1.23e-2 (5.7x low); 5 levels, same parameters: estimate 6.0e-4, true 1.19e-2 (19.9x low). Sweep with p in {1,2} and q in {1.25,1.5,2}: false-converged 95/891 (p=1, q=1.25), 34/715 (p=1, q=1.5), 21/626 (p=2, q=1.25), 0 for the others.",
+      "suggested_check": "Treat any sign change in the successive differences, or an observed ratio well below the one implied by meta['mesh_h'] and the formal order (observed order much higher than formal), as 'asymptotic range not established': use factor 3, or do not declare convergence, and add these sequences to the DoD estimator test."
+    },
+    {
+      "severity": "minor",
+      "title": "Additive-refinement model is not protected for slow algebraic orders (p = 0.5)",
+      "detail": "With the position-based algebraic model at p = 0.5, and with the sequence offset (k + k0)^-p, the estimate is about 3x too small and declares convergence at a true error of about 2%. The DoD only tests p = 1 and 2 with k0 = 0. In the full run, additive refinement should be fenced off by `l2_constant_refinement_ratio`, so this matters only if that check is bypassed or meta['mesh_h'] misreports.",
+      "evidence": "alg-offset family: 33/300 sequences false-converged; worst (4 levels, p=0.5, k0=1, C=0.05): estimate 6.9e-3, true 2.2e-2.",
+      "suggested_check": "Extend the DoD estimator test to p = 0.5 and to offset starts."
+    },
+    {
+      "severity": "minor",
+      "title": "Bar model-error justification cites a check whose tolerance is 10x looser than the bound",
+      "detail": "`residual_model_error` returns 1e-4 for bars, and its docstring says the LF skin deficit is 'bounded by regime_valid'. But `regime_valid` allows a skin deficit of up to 1e-3, so a passing regime_valid does not imply the 1e-4 bound. The current values (2.8e-5 at most) are below 1e-4, so nothing is wrong numerically today. The stated reasoning is simply incomplete.",
+      "evidence": "regime_valid detail: 'A1:b LF skin deficit: 2.820e-05 (tol 1e-03)'; residual_model_error: `if case['cls'].startswith('bar'): return 1e-4`.",
+      "suggested_check": "Either tighten the regime_valid skin-deficit tolerance to 1e-4 for bars, or add the computed deficit to the bar model error."
+    },
+    {
+      "severity": "note",
+      "title": "L2 contract's mesh_h reports only the largest cell",
+      "detail": "`mesh_h` is defined as the largest refined cell size divided by its reference size. An adapter could refine that cell geometrically while refining the skin-depth surface cell or the plane cells additively, and `l2_constant_refinement_ratio` would not notice. The note does require every parameter to share the ratio, but the runner can only verify this one self-reported scalar.",
+      "evidence": "note sec. 3, 'Constant refinement ratio'; runner `refinement_ratio_violation` uses a single meta['mesh_h'] per solve.",
+      "suggested_check": "Have the contract report per-parameter sizes (length, surface cell, plane cell) and check each ratio."
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran all 7 DoD commands from this worktree: `mfos exp check E001` and `ruff check` pass; `--analytic-only` exits 0; the b1_exact_limits, convergence_estimator, design_contract and b3_mutual_exact scripts all pass.",
+    "Read /tmp/e001-analytic/result.json and confirmed every analytic sanity check passes, with its margins. Examples: Wheeler vs Carson is about 0.48x its bound at every frequency; the proximity dipole vs the exact two-wire line is 1.78e-2 against a 3.1e-2 tolerance; the tie assembly matches to 1e-16.",
+    "Read the DoD scripts to see what they test. The B3 'exact' value uses uniform surface current. I checked that leaving out proximity is consistent at dipole order: the dipole terms put no correction into Z12, because a segment's own field is excluded when there are no planes.",
+    "Re-derived the limits of prox_factor by hand: -J2/J0 -> j(r/delta)^2/4 at DC, with k^2 = -j omega mu sigma; -> 1 for a perfect conductor; the sign gives positive added resistance at DC and lower inductance at HF. Also re-derived the tube-PEEC kernel decomposition, l asinh(l/d) - sqrt(l^2+d^2) + d = l(ln2l - 1) - l ln d + h(d).",
+    "Tested the test: the tube-PEEC reference is converged (n=80 vs n=240 differ by <= 4.7e-6). The runner's corrected self term matches it within the stated bound (a) at 100 Hz, 5 MHz and 80 MHz for l = 1.5 mm and 10 mm. Removing wire_self_correction gives 3.4e-4 to 8.8e-4 error at l = 10 mm, against a bound of about 5.6e-5, so the check has teeth.",
+    "Stress-tested remaining_discretization_error, with the runner's noise floor, on about 5,000 adversarial sequences: two-exponential mixtures, algebraic with offset starts, and two-term h^p + h^(p+1) expansions at q = 1.25, 1.5 and 2. This found the false convergence reported as the major finding.",
+    "Hand-checked the 4-level failure case step by step (differences, ratios, noise jitter, chosen branch, base and rho): estimate 2.17e-3 vs true 1.23e-2.",
+    "Checked that the claimed solver_tol amplification (about 2400 for B3 at 100 Hz: R = 4.1 mOhm against omega M12 = 1.7 uOhm) matches the note and the YAML.",
+    "Checked that the 7 smoke cases cover all 7 geometry classes, and that the smoke refinement_max equals the rule's 4-level minimum."
+  ],
+  "caveats": [
+    "The wire model error bounds (self-term correction, proximity dipole, cross-section remainder, Wheeler term) hold within the checks performed: B1 and B3 at both frequency limits, and the tube PEEC from 100 Hz to 80 MHz at three lengths. I found no case that breaks them.",
+    "The refinement rule's remaining-error estimate is reliable only for monotone sequences in the asymptotic range. It does not detect turning points or falling observed ratios, so `l2_converged` and the disc_unc part of the 0.95 interval can be optimistic by 5-20x on non-monotone L2 sequences at the minimum refinement ratio of 1.25.",
+    "No L2 solver exists yet, so the L2 path itself (solver tolerance, mesh_h, one mesh per solve, and the full or smoke run) could not be executed. Those checks were reviewed as code only.",
+    "The diff in the packet was truncated. I reviewed the files in the worktree, but I could not see the full note diff hunk by hunk.",
+    "Bash was restricted to `uv run` commands, so the scratch tests ran as inline `python -c` scripts and nothing was written under /tmp other than the runner's own output."
+  ]
+}

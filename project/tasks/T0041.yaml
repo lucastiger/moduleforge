@@ -4,7 +4,7 @@ title: 'Fix E001''s design before registration: wire model error bounds, converg
   coverage (T0029/T0030 reviews)'
 type: design_experiment
 agent: scientist
-status: running
+status: todo
 depends_on:
 - T0020
 description: 'Follow-up to the physics (T0029) and numerics (T0030) reviews of T0020 (project/reviews/T0020/).
@@ -84,7 +84,7 @@ risk: high
 model: null
 budget_usd: 8.0
 max_turns: 80
-attempts: 2
+attempts: 1
 max_attempts: 3
 branch: task/T0041-fix-e001-s-design-before-registration-wi
 pr: null
@@ -432,3 +432,6 @@ history:
 - outcome: capacity_backoff
   summary: You've hit your session limit · resets 4am (America/Los_Angeles)
   at: '2026-10-01T09:22:05+00:00'
+- outcome: capacity_backoff
+  summary: You've hit your session limit · resets 4am (America/Los_Angeles)
+  at: '2026-10-01T09:52:40+00:00'

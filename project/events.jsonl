@@ -345,3 +345,4 @@
 {"ts": "2026-10-01T14:07:10+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0020", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}
 {"ts": "2026-10-01T14:07:35+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0013", "status": "rejected", "note": "Superseded by I0020 (registration request for E001 as redesigned by T0041), per the founder's choice to wait (option 1)."}
 {"ts": "2026-10-01T14:07:35+00:00", "event": "task_added", "actor": "founder", "task": "T0057"}
+{"ts": "2026-10-01T16:11:18+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 4432, "runs_extended": 0}

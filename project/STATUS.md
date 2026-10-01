@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-01T14:07:45+00:00 from repository state — do not edit_
+_generated 2026-10-01T16:11:21+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0020** [experiment_registration] register E001 (pre-registration)
@@ -15,7 +15,6 @@ cancelled: 14, done: 33, failed: 2, todo: 8
 
 
 ## Recent events
-- 2026-10-01T10:54:48+00:00 capacity_backoff {"task": "T0041", "minutes": 30}
 - 2026-10-01T11:25:17+00:00 run_started {"run": "T0041-scientist-20261001T042517-4012", "task": "T0041", "role": "scientist", "session": "d47437c5-ebf8-4076-8140-9e22e7c6092e"}
 - 2026-10-01T11:45:54+00:00 run_finished {"run": "T0041-scientist-20261001T042517-4012", "status": "completed", "cost": 5.874221199999997, "subtype": "success", "report": "structured_output"}
 - 2026-10-01T11:46:01+00:00 verified {"task": "T0041"}
@@ -30,3 +29,4 @@ cancelled: 14, done: 33, failed: 2, todo: 8
 - 2026-10-01T14:07:10+00:00 inbox_opened {"id": "I0020", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}
 - 2026-10-01T14:07:35+00:00 inbox_resolved {"id": "I0013", "status": "rejected", "note": "Superseded by I0020 (registration request for E001 as redesigned by T0041), per the founder's choice to wait (opt
 - 2026-10-01T14:07:35+00:00 task_added {"task": "T0057"}
+- 2026-10-01T16:11:18+00:00 sleep_detected {"gap_s": 4432, "runs_extended": 0}

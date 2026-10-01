@@ -1,0 +1,15 @@
+id: I0019
+kind: protected_change
+subject: 'T0041: merge needs founder approval'
+summary: 'Fix E001''s design before registration: wire model error bounds, convergence estimate, L2 contract,
+  coverage (T0029/T0030 reviews)
+
+  Risk high; 4 files. PR: None'
+refs:
+- T0041
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-01T11:54:35+00:00'
+resolved_at: null

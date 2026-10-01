@@ -1,0 +1,62 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "The remaining-error estimator reports convergence falsely when two error terms of opposite sign compete, even with the contract's constant refinement ratio",
+      "detail": "remaining_discretization_error labels a ratio as 'steady' whenever r_last <= r_prev + jitter. That includes a strongly accelerating ratio, and a steady ratio gets Roache's asymptotic factor 1.25. An accelerating ratio is just as much a sign of being outside the asymptotic range as a decelerating one. Take the textbook expansion e = C1 h + C2 h^2 with C1 and C2 of opposite sign, at the contract's ratio 1.25 (rho = 0.8 and 0.64). The L sequence then looks monotone and smoothly converging, but the slow h term is still hidden. The rule estimates the remaining error below conv_tol = 1 % while the true remaining error is above 1 %. In this regime the estimate is 2-16x too small. Note sec. 4.4 says the only known failure is p < 0.5. It tested two modes only with the same sign (0.3^k + 0.7^k). So the stated limits of validity are understated: l2_converged and disc_unc, which sets the interval, can falsely pass with an actual discretization error larger than conv_tol. This is not a blocker: the spec already says the band is 'not a guaranteed bound', and acceptance reads the point value. But the claim that the convergence estimate is 'correct' holds only for sequences where one term dominates or the terms share a sign.",
+      "evidence": "python3 against the runner at this commit, L_k = 1 + A*0.8^k - B*0.64^k, noise = 2e-4|L|:\n- A=0.1, B=0.2, levels k=2..6 [0.98208, 0.99877, 1.00741, 1.01129, 1.01247]: at 4 levels the estimate is 0.00572 vs true 0.01117; at 5 levels 0.00240 vs 0.01232.\n- A=0.1, B=0.2, k=3..7: at 4 levels 0.00240 vs 0.01232; at 5 levels 0.00073 vs 0.01203.\nEach of these would be declared converged (< 0.01). By hand, the 'decelerating' branch with factor 3 would still give about 0.0058 at 5 levels, so reclassifying alone does not fix it.",
+      "suggested_check": "Add opposite-sign two-mode sequences (C1 h^p1 - C2 h^p2 at r = 1.25) to convergence_estimator.py, and either tighten the rule or list this case explicitly in note sec. 4.4 'Limits'."
+    },
+    {
+      "severity": "minor",
+      "title": "The 0.95 level of the metric interval is not supported for this estimator",
+      "detail": "The metric is recorded with level=0.95 and described as 'GCI-type, Roache's factors, nominal ~95 % coverage'. Roache's empirical ~95 % applies to a GCI that uses an observed order checked against the formal order and the refinement ratio. This rule never uses meta['mesh_h'] or any formal order in the estimate, only ratios of successive changes, and the finding above shows realistic sequences it does not cover. The note itself marks the 95 % as [I], from memory.",
+      "evidence": "run.metric(..., level=0.95) in l2_phase; note sec. 4.4: '[I] from memory of Roache's 1998 book, not re-fetched'; the counterexamples in the previous finding.",
+      "suggested_check": "Record the interval without a coverage level, or justify 0.95 with a sweep that includes opposite-sign mixed-order sequences."
+    },
+    {
+      "severity": "minor",
+      "title": "The one-mesh and constant-ratio checks trust self-reported scalars and cannot detect the violations they are named for",
+      "detail": "l2_one_mesh_per_solve only checks that meta['n_filaments'] is a positive int. A solver that re-meshes per frequency and reports one number passes. l2_constant_refinement_ratio checks a single scalar mesh_h (the largest refined cell relative to its reference). An adapter that refines that parameter geometrically but another one additively, such as cross-section filaments n = 2k+1, passes. Yet the contract requires every parameter to be refined by the same ratio, and the estimator's geometric model depends on it.",
+      "evidence": "runner lines 1164-1166 and 1128-1135; note sec. 3: 'mesh_h ... the largest refined cell size divided by its reference size'.",
+      "suggested_check": "Require per-parameter h values (segment, filament w/h, first graded cell, plane cell) and a per-frequency n_filaments list, and check all of them."
+    },
+    {
+      "severity": "note",
+      "title": "Some of the new 'independent' checks agree by construction",
+      "detail": "For a 2x2 Z, the tied_branch_independent formula (Z11Z22 - Z12Z21)/(Z11+Z22-Z12-Z21) is algebraically the same as 1/sum(Z^-1), which the tie assembly computes, so agreement to 1e-16 is guaranteed. image_plane_independent re-encodes the same image-sign convention (ref = -neumann(mirror)). Both confirm the code is wired correctly, not the physics. On the physics side, only the Wheeler/Carson check covers the image, and only the recession for a horizontal line.",
+      "evidence": "analytic result.json: tied_branch_independent errors 1e-17 to 4e-16; image_plane_independent errors 2e-16 to 4e-16.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "The tube-PEEC check cannot tell whether the self-term correction is applied at l = 1.5 mm",
+      "detail": "By hand: at l = 1.5 mm the bound (a), mu0/2pi r^2/l relative to L, is about 4-5e-3. The (<d> - r) correction it is meant to validate is also about 4.5e-3 of L, so leaving the correction out would still pass. At 5 and 10 mm the check does discriminate: at 10 mm HF the correction is about 1e-3 against a tolerance of 6e-5, and the observed error is 1.7e-6.",
+      "evidence": "result.json: l=1.5mm tol 4e-03 to 5e-03, error 2.7e-4 to 3.0e-4; l=10mm tol 6e-05, error up to 1.7e-06.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "Feasibility: bars' HF solves count toward the convergence decision, with only 4 to 5 levels allowed",
+      "detail": "The convergence keys cover every solved frequency, including the bars' 5/20/80 MHz solves that are only informational (delta = 7.4 um in 0.3 mm Cu at 80 MHz). A bar case can therefore fail l2_converged on HF solves it is never compared at. Separately, the noise floor is fixed at 2 x solver_err_budget whatever solver_tol is actually achieved, so steps below 2e-4|L| carry no ratio information. That matters only for an unrealistically slow contraction (rho > ~0.987) under the ratio >= 1.25 contract. My jitter simulation found few false 'not converged' outcomes: 6/300 at rho = 0.5, 0/300 at 0.64 and 0.8.",
+      "evidence": "l2_converged_solve keys = all fi x compare entries; build_cases sets info_freqs = hf for bars.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran all seven definition-of-done commands at this commit. mfos exp check E001, ruff, --analytic-only, b1_exact_limits, convergence_estimator, design_contract and b3_mutual_exact all pass. The B1 and B3 stated bounds hold in both limits (e.g. B3 M12 at 10 GHz: error 9.0e-6, bound 1.5e-5).",
+    "Read /tmp/e001-analytic/result.json: all 10 analytic sanity checks pass. Worst ratios: published 0.71, independent 0.57, Wheeler/Carson 0.50 (error close to 0.5 (delta/2h)^2, consistent with a second-order term).",
+    "Re-derived by hand: <d^2> = 2 s2 and <d^4> = 2 s4 + 4 s2^2, with uniform limits r^2 and 5r^4/3; the coaxial-circle mean distance (2/pi)(p+q)E(4pq/(p+q)^2) in its p=q and q=0 limits; the filament-mutual expansion coefficients -1/4, +1/32, -1/96; Lap_T g = -1/sqrt(u^2+d^2) and Lap_T^2 g = (2u^2 - rho^2)/(u^2+rho^2)^(5/2), with the termwise bound valid; the Pizzetti/Darboux remainder |R| <= s^4/64 sup|Lap^2 F|; chi(DC) = j(r/delta)^2/4 and chi -> 1; the PEC proximity term dL = -(2 pi r^2/mu0) int B_t.B_u against the leading term of the two-wire arccosh expansion.",
+    "Recomputed solver_tol_required and residual_model_error for every case: the amplifications (A 48-99, B1 718, B2 860, B3 2434) and the tolerances (A1 2.0e-6 ... B3 4.1e-8) match note sec. 3.",
+    "By hand, compared the size of the wire self-term correction with bound (a) at l = 1.5, 5 and 10 mm, to see whether the tube-PEEC check can discriminate.",
+    "Fed adversarial sequences to remaining_discretization_error: an opposite-sign two-mode expansion at ratio 1.25 gives false convergence (estimate 0.24-0.57 % vs true 1.1-1.2 %). Also checked that the DoD estimator test cases fit the _algebraic_tail model exactly (1-based k^-p), so that test favours the implementation.",
+    "Ran a Monte Carlo of geometric sequences with +/-3 % ratio jitter to measure how often the rule is too conservative (false 'not converged'): 6/300 at rho 0.5, 0 at 0.64 and 0.8."
+  ],
+  "caveats": [
+    "The L2 path (l2_phase, l2_converged_solve with real meta) was not exercised end to end: moduleforge.solvers.l2 is not implemented yet, and my sandbox blocked building a stand-in solver. The conclusions about the L2 logic come from reading the code and from calling the pure functions.",
+    "The diff in the packet was truncated. I reviewed the runner, the draft and note sec. 3 and 4.4 directly from the worktree, but did not read every changed line of the research note.",
+    "Side effect: running `uv run` created an untracked .venv in the review worktree (probably gitignored). No tracked files were changed.",
+    "Scope of validity: the remaining-discretization estimate is reliable when one error term dominates or all terms share a sign. It can underestimate several-fold when terms of opposite sign compete, so treat l2_converged and the disc_unc part of the interval as estimates, not as 95 % bounds."
+  ]
+}

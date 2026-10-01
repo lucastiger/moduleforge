@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-01T01:37:37+00:00 from repository state — do not edit_
+_generated 2026-10-01T02:14:59+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
@@ -11,12 +11,12 @@ _generated 2026-10-01T01:37:37+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $52.25/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 25, failed: 2, todo: 9
+cancelled: 14, done: 25, failed: 2, running: 2, todo: 7
 
+- T0041 `running` scientist/design_experiment: Fix E001's design before registration: wire model error bounds, convergence estimate, L2 contract, coverage (T0029/T0030 reviews) (attempt 1)
+- T0047 `running` builder/implement: L1 fidelity: converged bond-wire segmentation, consistent bar internal inductance, mesh within 3 % at <= 50 ms (T0044/T0045 reviews) (attempt 2)
 
 ## Recent events
-- 2026-09-30T19:12:30+00:00 capacity_backoff {"task": "T0041", "minutes": 30}
-- 2026-10-01T00:00:29+00:00 run_started {"run": "T0041-scientist-20260930T170029-cad2", "task": "T0041", "role": "scientist", "session": "fcf829f9-1014-4be6-b5ec-280c82b97ae6"}
 - 2026-10-01T00:10:07+00:00 run_finished {"run": "T0041-scientist-20260930T170029-cad2", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-01T00:10:07+00:00 task_failed_attempt {"task": "T0041", "signal": "agent_error", "action": "repair"}
 - 2026-10-01T01:03:31+00:00 loop_started {"pid": 44151}
@@ -30,3 +30,5 @@ cancelled: 14, done: 25, failed: 2, todo: 9
 - 2026-10-01T01:31:27+00:00 inbox_resolved {"id": "I0017", "status": "approved", "note": "Founder: daily LLM budget stays at $40 (policy daily_usd = 40.0, unchanged). Approving only clears the reached-no
 - 2026-10-01T01:37:37+00:00 run_finished {"run": "T0047-builder-20260930T180340-5126", "status": "error", "cost": 3.5007135999999988, "subtype": "error_max_turns", "report": "missing"}
 - 2026-10-01T01:37:37+00:00 task_failed_attempt {"task": "T0047", "signal": "agent_error", "action": "repair"}
+- 2026-10-01T02:14:41+00:00 run_started {"run": "T0041-scientist-20260930T191441-f691", "task": "T0041", "role": "scientist", "session": "359f7c6b-2efc-4e33-a574-d5208c328a3c"}
+- 2026-10-01T02:14:41+00:00 run_started {"run": "T0047-builder-20260930T191441-9623", "task": "T0047", "role": "builder", "session": "80812ff5-4062-4d2c-bd42-be9c349129c3"}

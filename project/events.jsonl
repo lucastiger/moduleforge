@@ -247,3 +247,5 @@
 {"ts": "2026-10-01T01:31:27+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0017", "status": "approved", "note": "Founder: daily LLM budget stays at $40 (policy daily_usd = 40.0, unchanged). Approving only clears the reached-notice so the next cap hit is reported."}
 {"ts": "2026-10-01T01:37:37+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0047-builder-20260930T180340-5126", "status": "error", "cost": 3.5007135999999988, "subtype": "error_max_turns", "report": "missing"}
 {"ts": "2026-10-01T01:37:37+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0047", "signal": "agent_error", "action": "repair"}
+{"ts": "2026-10-01T02:14:41+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0041-scientist-20260930T191441-f691", "task": "T0041", "role": "scientist", "session": "359f7c6b-2efc-4e33-a574-d5208c328a3c"}
+{"ts": "2026-10-01T02:14:41+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0047-builder-20260930T191441-9623", "task": "T0047", "role": "builder", "session": "80812ff5-4062-4d2c-bd42-be9c349129c3"}

@@ -4,7 +4,7 @@ title: 'Fix E001''s design before registration: wire model error bounds, converg
   coverage (T0029/T0030 reviews)'
 type: design_experiment
 agent: scientist
-status: todo
+status: running
 depends_on:
 - T0020
 description: 'Follow-up to the physics (T0029) and numerics (T0030) reviews of T0020 (project/reviews/T0020/).
@@ -67,13 +67,13 @@ definition_of_done:
 - cmd: uv run python experiments/runners/e001_reference.py --analytic-only
   exists: null
   timeout_s: 900
-- cmd: uv run python project/dod/e001-design/b1_exact_limits.py
+- cmd: uv run python ~/mf/main/project/dod/e001-design/b1_exact_limits.py
   exists: null
   timeout_s: 900
-- cmd: uv run python project/dod/e001-design/convergence_estimator.py
+- cmd: uv run python ~/mf/main/project/dod/e001-design/convergence_estimator.py
   exists: null
   timeout_s: 900
-- cmd: uv run python project/dod/e001-design/design_contract.py
+- cmd: uv run python ~/mf/main/project/dod/e001-design/design_contract.py
   exists: null
   timeout_s: 900
 experiment: null
@@ -90,6 +90,7 @@ runs:
 - T0041-scientist-20260930T115106-58f7
 - T0041-scientist-20260930T170029-cad2
 - T0041-scientist-20260930T180340-0118
+- T0041-scientist-20260930T191441-f691
 created_by: founder
 created_at: '2026-09-30T13:42:17+00:00'
 protected_approved: false
@@ -276,3 +277,9 @@ history:
     , line 49, in <module>\n    assert not problems, \"; \".join(problems)\n           ^^^^^^^^^^^^\n\
     AssertionError: f=1e+10: error 9.59e-05 exceeds the stated bound 5.75e-05\n"
   at: '2026-10-01T01:18:30+00:00'
+- outcome: attempt_restored
+  summary: 'founder session: the only failing check was a defect in the founder''s b1_exact_limits.py
+    (quad tolerance), fixed in b0cafdb exactly as you diagnosed; the checks now run main''s copies and
+    all six pass on your committed work. Re-run the definition of done, change nothing unless a check
+    fails, and report.'
+  at: '2026-10-01T02:14:40+00:00'

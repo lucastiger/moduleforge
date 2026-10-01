@@ -4,7 +4,7 @@ title: 'Fix E001''s design before registration: wire model error bounds, converg
   coverage (T0029/T0030 reviews)'
 type: design_experiment
 agent: scientist
-status: review
+status: todo
 depends_on:
 - T0020
 description: 'Follow-up to the physics (T0029) and numerics (T0030) reviews of T0020 (project/reviews/T0020/).
@@ -330,3 +330,41 @@ history:
     - Keep the tight quad tolerance (epsabs=0) in any future founder check whose integrals are around
       1e-8 in SI units. The default epsabs silently caps the accuracy of such checks.
     affects_acceptance_criteria: false
+- attempt: 1
+  outcome: review_rejected
+  summary: adversarial review rejected the work
+  failure_output: '- [blocker] B3 M12 stated residual model error (≤1e-6) is false by a factor of about
+    400 to 4e6: residual_model_error() and note §4.3 say B3 M12 has ''no self terms and a tiny dipole
+    cross term: ≤ 1e-6''. It returns 8.9e-11 at 100 Hz and 8.3e-7 to 1.0e-6 at 5–80 MHz. The closed form
+    puts every inter-wire mutual at fil_mutual(centre distance). That is exact only for the harmonic log
+    part of the finite-length kernel. The non-log end terms (+d − d²/4l …, with transverse Laplacian μ0/2π(1/d
+    − 1/√(l²+d²)) ≠ 0) average to M(p) + (s/4)∇²M, where s = E|u−v|² is r² for uniform current and 2r²
+    for surface current. This is the same first-order ⟨d⟩ mechanism that §4.1 fixed for self terms, but
+    the fix was not carried over to mutuals between different wires. A perfect L2 would therefore show
+    B3 M12 err ≈ 4–8e-4 against u ≈ 1e-6. The level-1.0 ''deterministic bound'' would then report a spurious
+    lower end of about 4–8e-4, attributed to L2. It does not flip the 2 % criterion. It does falsify the
+    wire model error bound that this task was meant to fix, and the bound would be frozen at registration.
+
+    - [major] Refinement rule can declare convergence falsely when error is algebraic in the level index;
+    the contract does not exclude this: remaining_discretization_error assumes the changes contract geometrically
+    from level to level (observed ρ, floor 0.5, factor 1.25). That is valid only with a constant grid-refinement
+    ratio in the asymptotic range, which is Roache''s precondition. The L2 contract (§3) requires only
+    that ''level k+1 must refine every discretization''. It sets no fixed ratio, so additive refinement
+    such as nwinc = 2k+1 or n_seg = k is allowed. In that case the error goes as k^-p and the observed
+    ratio tends to 1 while the estimator assumes ρ ≈ 0.5–0.6. The DoD convergence_estimator.py tests only
+    exact geometric sequences, so it cannot catch this.
+
+    - [minor] Interval recorded at level=1.0 includes a GCI-type estimate, not a bound: The width u_i
+    adds the remaining discretization error, a Roache-style estimate with Fs=1.25, to stated residuals,
+    several of which are labelled [I] in the note (the (a) stiffness argument and the (b) 8r/l end allowance).
+    Roache presents GCI as an error band of roughly 95 % confidence, not a guarantee. Calling the interval
+    a deterministic bound at level 1.0 therefore overstates it, as finding 1 already demonstrates for
+    B3 M12.
+
+    - [minor] solver_tol contract treats the iterative residual tolerance as Z accuracy and ignores conditioning:
+    §3 defines meta[''solver_tol''] as ''the iterative relative-residual tolerance, plus the accuracy
+    of any matrix compression'' and treats it as the relative accuracy of Z. The forward error of a GMRES
+    solution can reach κ(A) times the relative residual. PEEC systems with graded filaments (R_i ∝ 1/A_i
+    spread over orders of magnitude) can have κ ≫ 1. The l2_solver_tolerance check (B3 needs ≤ 4.1e-8,
+    which I reproduced) can therefore pass while the error in L exceeds solver_err_budget.'
+  at: '2026-10-01T06:14:05+00:00'

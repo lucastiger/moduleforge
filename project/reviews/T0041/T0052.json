@@ -1,0 +1,49 @@
+{
+  "verdict": "reject",
+  "findings": [
+    {
+      "severity": "blocker",
+      "title": "B3 M12 stated residual model error (\u22641e-6) is false by a factor of about 400 to 4e6",
+      "detail": "residual_model_error() and note \u00a74.3 say B3 M12 has 'no self terms and a tiny dipole cross term: \u2264 1e-6'. It returns 8.9e-11 at 100 Hz and 8.3e-7 to 1.0e-6 at 5\u201380 MHz. The closed form puts every inter-wire mutual at fil_mutual(centre distance). That is exact only for the harmonic log part of the finite-length kernel. The non-log end terms (+d \u2212 d\u00b2/4l \u2026, with transverse Laplacian \u03bc0/2\u03c0(1/d \u2212 1/\u221a(l\u00b2+d\u00b2)) \u2260 0) average to M(p) + (s/4)\u2207\u00b2M, where s = E|u\u2212v|\u00b2 is r\u00b2 for uniform current and 2r\u00b2 for surface current. This is the same first-order \u27e8d\u27e9 mechanism that \u00a74.1 fixed for self terms, but the fix was not carried over to mutuals between different wires. A perfect L2 would therefore show B3 M12 err \u2248 4\u20138e-4 against u \u2248 1e-6. The level-1.0 'deterministic bound' would then report a spurious lower end of about 4\u20138e-4, attributed to L2. It does not flip the 2 % criterion. It does falsify the wire model error bound that this task was meant to fix, and the bound would be frozen at registration.",
+      "evidence": "Scratch check (python -c, nothing written to the repo). The exact uniform-current mutual of the B3 staples is the average of fil_mutual over the two disks, using the disk-line-picking pdf and quad with epsabs=0, epsrel=1e-12. It gives 2.699610 nH against the runner's 2.698561 nH: relative error 3.886e-4, stated bound 8.858e-11. Per pair: legs +220.6 fH each, tops +612.6 fH. In the thin-skin limit (axisymmetric surface current, 256\u00d7256 periodic trapezoid) it gives 2.700663 nH: relative error 7.79e-4, stated bound 1.0e-6. My hand estimate (r\u00b2/4)\u03a3\u00b1\u2207\u00b2M = 3.9e-4 agrees. The same mechanism adds about 2.1e-4 to B4, which stays within its stated 8.7e-4, and an estimated ~2e-4 to C1 through the image terms, which stays within 1.4e-3 thanks to the 1e-3 truncation allowance.",
+      "suggested_check": "Add (s/4)\u2207\u00b2M (or the exact disk/annulus average) to inter-wire and image mutuals, or add a stated term; then compare B3 M12 against a disk-averaged reference in closed_forms_independent_check."
+    },
+    {
+      "severity": "major",
+      "title": "Refinement rule can declare convergence falsely when error is algebraic in the level index; the contract does not exclude this",
+      "detail": "remaining_discretization_error assumes the changes contract geometrically from level to level (observed \u03c1, floor 0.5, factor 1.25). That is valid only with a constant grid-refinement ratio in the asymptotic range, which is Roache's precondition. The L2 contract (\u00a73) requires only that 'level k+1 must refine every discretization'. It sets no fixed ratio, so additive refinement such as nwinc = 2k+1 or n_seg = k is allowed. In that case the error goes as k^-p and the observed ratio tends to 1 while the estimator assumes \u03c1 \u2248 0.5\u20130.6. The DoD convergence_estimator.py tests only exact geometric sequences, so it cannot catch this.",
+      "evidence": "Scratch run of R.remaining_discretization_error on L = 1 + 0.05 k^-p. For p=1 with 4 levels: estimate 5.21e-3, true 1.25e-2, so convergence is declared (<1e-2) while the true remaining error exceeds conv_tol. For p=1 with 5 levels: estimate 4.69e-3, true 1.00e-2, also declared. For p=2 with 5 levels: estimate 1.52e-3 against true 2.0e-3 (ratio 0.76).",
+      "suggested_check": "Require a fixed refinement ratio (e.g. h_{k+1}/h_k = 1/2 for every mesh parameter) in the \u00a73 contract and have l2 report it in meta, or switch to an observed-order GCI that uses the actual mesh sizes."
+    },
+    {
+      "severity": "minor",
+      "title": "Interval recorded at level=1.0 includes a GCI-type estimate, not a bound",
+      "detail": "The width u_i adds the remaining discretization error, a Roache-style estimate with Fs=1.25, to stated residuals, several of which are labelled [I] in the note (the (a) stiffness argument and the (b) 8r/l end allowance). Roache presents GCI as an error band of roughly 95 % confidence, not a guarantee. Calling the interval a deterministic bound at level 1.0 therefore overstates it, as finding 1 already demonstrates for B3 M12.",
+      "evidence": "Runner l2_phase: run.metric(..., ci=(lo, hi), level=1.0); unc = disc_unc + model_err; note \u00a74.3 marks the (a) and (b) arguments as [I].",
+      "suggested_check": "Describe the interval as an estimated error band, or keep level=1.0 only for terms that are proven bounds."
+    },
+    {
+      "severity": "minor",
+      "title": "solver_tol contract treats the iterative residual tolerance as Z accuracy and ignores conditioning",
+      "detail": "\u00a73 defines meta['solver_tol'] as 'the iterative relative-residual tolerance, plus the accuracy of any matrix compression' and treats it as the relative accuracy of Z. The forward error of a GMRES solution can reach \u03ba(A) times the relative residual. PEEC systems with graded filaments (R_i \u221d 1/A_i spread over orders of magnitude) can have \u03ba \u226b 1. The l2_solver_tolerance check (B3 needs \u2264 4.1e-8, which I reproduced) can therefore pass while the error in L exceeds solver_err_budget.",
+      "evidence": "Note \u00a73 'Solver accuracy'; solver_tol_required(B3) = 4.11e-08 in my scratch run; no conditioning term in solver_tol_required.",
+      "suggested_check": "Require a direct factorization at the LF bar and wire comparisons, or require solver_tol to include a \u03ba estimate or an a-posteriori Z error estimate."
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran all six definition-of-done commands. mfos exp check E001, ruff, --analytic-only, b1_exact_limits.py, convergence_estimator.py and design_contract.py all pass.",
+    "Read the three DoD scripts. They test B1 only (single wire, no mutual), exact geometric sequences only, and the presence of keys and strings. None of them tests mutual-term model error or non-geometric convergence.",
+    "B3 M12 at DC. Computed the exact uniform-current mutual of the two staples (fil_mutual averaged over two disks via the disk-line-picking pdf, Gauss angle quadrature and quad with epsabs=0) and compared it with the runner's analytic M12 and residual_model_error(B3, f, 'M12'). Result: 3.89e-4 actual against 8.9e-11 stated.",
+    "B3 M12 in the thin-skin limit. Axisymmetric surface-current average (spectral trapezoid in two angles). Result: 7.79e-4 actual against about 1e-6 stated at 5\u201380 MHz. A hand derivation of (s/4)\u2207\u00b2M gives the same size.",
+    "Propagated the same M12 gap to B4 (2.1e-4 against a stated 8.7\u20139.3e-4, so the bound holds) and estimated it for C1's image terms (~2e-4 against a stated 1.4e-3, so the bound holds).",
+    "Adversarial inputs for remaining_discretization_error: algebraic sequences k^-1 and k^-2 over 3\u20135 levels. Convergence is falsely declared for k^-1 at 4 and 5 levels, with the estimate 0.42\u20130.47 of the true error.",
+    "Searched the note's \u00a73 refinement contract for a refinement-ratio requirement. There is none; only 'refine every discretization' is required.",
+    "Reproduced solver_tol_required for B3 (4.11e-8, matching the note) and reviewed its derivation for a conditioning term. None is present."
+  ],
+  "caveats": [
+    "Bash was restricted: no ls or heredoc, and nothing could be written to /tmp. All scratch checks were run as inline `uv run python -c` against the runner at this commit, and no repository files were modified.",
+    "No L2 solver run was possible. moduleforge.solvers.l2 is a later deliverable, so the L2-path checks (l2_converged, solver tolerance, one mesh per solve) were reviewed only by reading the code and testing the estimator on synthetic sequences.",
+    "The B3 M12 defect does not change the 2 % pass/fail criterion. It is rated blocker because the claim is that the wire model error bounds are correct, and the wrong bound would be frozen at registration as part of a level-1.0 'deterministic bound'.",
+    "I did not re-verify the tube-PEEC, Carson and dipole self-checks independently beyond confirming that they pass; they were not tuned on the B3 M12 quantity."
+  ]
+}

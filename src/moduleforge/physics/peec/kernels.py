@@ -28,13 +28,12 @@ _EPS = 1e-12  # m, regularisation of the filament distance
 def _hl_f(x, y, z):
     """Sixth antiderivative of 1/R (Hoer & Love 1965 / Ruehli 1972), R = sqrt(x^2+y^2+z^2)."""
     x, y, z = np.broadcast_arrays(np.asarray(x, float), np.asarray(y, float), np.asarray(z, float))
-    r = np.sqrt(x * x + y * y + z * z)
+    x2, y2, z2 = x * x, y * y, z * z
+    r = np.sqrt(x2 + y2 + z2)
 
-    def lnp(a, b, c):  # ln(a + R) with the cancellation-free form for a < 0; 0 where R == 0
-        bc2 = b * b + c * c
-        rr = np.sqrt(a * a + bc2)
+    def lnp(a, bc2):  # ln(a + R), bc2 = b^2 + c^2, cancellation-free form for a < 0; 0 where R == 0
         with np.errstate(divide="ignore", invalid="ignore"):
-            v = np.where(a >= 0, np.log(a + rr), np.log(bc2 / (rr - a)))
+            v = np.log(np.where(a >= 0, a + r, bc2 / (r - a)))
         return np.where(np.isfinite(v), v, 0.0)  # coefficient multiplying it vanishes when v is singular
 
     def atn(num, den):
@@ -42,10 +41,9 @@ def _hl_f(x, y, z):
             v = np.arctan(num / den)
         return np.where(den == 0.0, 0.0, v)  # multiplied by a coefficient that vanishes with den
 
-    x2, y2, z2 = x * x, y * y, z * z
-    out = (y2 * z2 / 4 - y2 * y2 / 24 - z2 * z2 / 24) * x * lnp(x, y, z)
-    out += (x2 * z2 / 4 - x2 * x2 / 24 - z2 * z2 / 24) * y * lnp(y, x, z)
-    out += (x2 * y2 / 4 - x2 * x2 / 24 - y2 * y2 / 24) * z * lnp(z, x, y)
+    out = (y2 * z2 / 4 - y2 * y2 / 24 - z2 * z2 / 24) * x * lnp(x, y2 + z2)
+    out += (x2 * z2 / 4 - x2 * x2 / 24 - z2 * z2 / 24) * y * lnp(y, x2 + z2)
+    out += (x2 * y2 / 4 - x2 * x2 / 24 - y2 * y2 / 24) * z * lnp(z, x2 + y2)
     out += (x2 * x2 + y2 * y2 + z2 * z2 - 3 * x2 * y2 - 3 * y2 * z2 - 3 * x2 * z2) * r / 60
     out -= x * y * z2 * z * atn(x * y, z * r) / 6
     out -= x * y2 * y * z * atn(x * z, y * r) / 6
@@ -115,11 +113,18 @@ def _smooth_gl(n):
     return _GL_CACHE[n]
 
 
-def segment_mutual(p1, u1, l1, p2, u2, l2, n=6):
+def segment_mutual(p1, u1, l1, p2, u2, l2, n=6, core=0.0):
     """Neumann mutual partial inductance [H] of straight filaments, broadcast over leading dims.
 
     Segment k runs from ``pk`` along unit vector ``uk`` for length ``lk``. Current direction = ``uk``
     (the sign of (u1.u2) is kept). Inner integral analytic, outer Gauss-Legendre with ``n`` nodes.
+
+    ``core`` (m, broadcastable) is a finite-radius core: the kernel 1/R becomes 1/sqrt(R^2 + core^2). With
+    core = a (wire radius, surface current) every pair of segments of one round wire is coupled as thick
+    (tube) conductors: the parallel/collinear limit is exactly Grover's tube formula
+    mu0 l/(2 pi) [asinh(l/a) - sqrt(1 + (a/l)^2) + a/l] (= GMD a for a surface-current tube), and the
+    polyline inductance stays finite and converges as the polyline is refined (no zero-radius singularity
+    between touching/near segments).
     """
     t, w = _smooth_gl(n)
     p1, u1, p2, u2 = (np.asarray(v, float) for v in (p1, u1, p2, u2))
@@ -129,7 +134,7 @@ def segment_mutual(p1, u1, l1, p2, u2, l2, n=6):
     r = pa - p2[..., None, :]
     u2b = u2[..., None, :]
     m = np.sum(r * u2b, axis=-1)
-    q2 = np.maximum(np.sum(r * r, axis=-1) - m * m, 0.0) + _EPS * _EPS
+    q2 = np.maximum(np.sum(r * r, axis=-1) - m * m, 0.0) + _EPS * _EPS + np.asarray(core, float)[..., None] ** 2
     q = np.sqrt(q2)
     inner = np.arcsinh((l2[..., None] - m) / q) - np.arcsinh(-m / q)
     dot = np.sum(u1 * u2, axis=-1)

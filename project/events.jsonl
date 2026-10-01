@@ -350,3 +350,4 @@
 {"ts": "2026-10-01T17:20:09+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 2647, "runs_extended": 0}
 {"ts": "2026-10-01T17:24:58+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 27594}
 {"ts": "2026-10-01T17:25:10+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 27674}
+{"ts": "2026-10-01T17:25:18+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0057-scientist-20261001T102518-9d3d", "task": "T0057", "role": "scientist", "session": "78c9f26c-6d62-4a6e-9e71-38d54caf0aa8"}

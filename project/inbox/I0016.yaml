@@ -9,7 +9,9 @@ refs:
 - T0037
 options: []
 recommendation: ''
-status: open
-response: ''
+status: approved
+response: 'Approved per the founder''s standing instruction: DoD verified (exhaustive 48-mutant check
+  incl. label re-pairing); production fingerprint correct per T0039/T0042/T0048; T0048''s test-strength
+  findings recorded as backlog, chain closed.'
 created_at: '2026-09-30T19:11:56+00:00'
-resolved_at: null
+resolved_at: '2026-10-01T01:03:32+00:00'

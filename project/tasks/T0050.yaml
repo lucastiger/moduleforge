@@ -1,0 +1,37 @@
+id: T0050
+objective: O001
+title: 'BACKLOG (low value): pin fingerprint values within fields (review T0048)'
+type: implement
+agent: builder
+status: todo
+depends_on:
+- T0037
+description: Backlog from the T0048 review of T0037 (project/reviews/T0037/T0048.json). The production
+  fingerprint is correct (all critics agree); these concern test strength only. (1) Pins change whole
+  fields, so a fingerprint hashing only polygon bounding boxes, only (x0, y0) of pad rectangles, only
+  3 of 7 wire points, or sigma/k to 2-3 significant digits passes every test. (2) The docstring's exchange
+  guarantee fails for values closer than the 1 nm quantum. (3) A test comment misquotes the docstring.
+  Not on O001's path.
+context_files: []
+deliverables: []
+touches: []
+definition_of_done: []
+experiment: null
+risk: low
+model: null
+budget_usd: 3.0
+max_turns: 80
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: founder
+created_at: '2026-10-01T01:03:32+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

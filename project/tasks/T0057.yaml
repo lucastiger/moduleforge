@@ -1,0 +1,96 @@
+id: T0057
+objective: O001
+title: 'E001 before registration: conservative refinement rule, honest interval level, verifiable mesh
+  contract (T0055/T0056 reviews)'
+type: design_experiment
+agent: scientist
+status: todo
+depends_on:
+- T0041
+description: 'Follow-up to reviews T0055 (physics) and T0056 (numerics) of T0041 (project/reviews/T0041/).
+  E001 is still an unregistered draft (registration request I0020 is on hold until this lands); registration
+  freezes the spec and the runner, so fix the refinement rule first. Do not change O001''s acceptance
+  criteria.
+
+
+  (1) Refinement rule (both reviews, major). remaining_discretization_error works on |diff|, so it misses
+  sign reversals, and it treats an accelerating observed ratio as ''steady'' and applies Roache''s asymptotic
+  factor 1.25. For a two-term expansion e(h) = A h^p + B h^(p+1) with A, B of opposite sign at ratio >=
+  1.25 the sequence looks smooth while the slow term is hidden, and the rule declares convergence 5-20x
+  optimistically (project/dod/e001-design/estimator_adversarial.py reproduces 86 false convergences in
+  3000 sampled sequences). Make the rule conservative outside the asymptotic range: e.g. require the observed
+  order to be consistent with the formal order and the contract''s ratio over >= 3 changes, treat sign
+  reversals and non-steady ratios as not converged (inf) or use a larger safety factor, and keep the clean
+  geometric cases bounded within 3x (convergence_estimator.py).
+
+  (2) Interval level. The 0.95 level is not supported for this estimator (T0056). Use a level the method
+  supports, or document exactly what the interval means; do not claim more than the method gives.
+
+  (3) Verifiable contract. l2_one_mesh_per_solve and l2_constant_refinement_ratio trust single self-reported
+  scalars. Require meta[''mesh_params''] (every refined discretization parameter per level, so the runner
+  checks they all share the ratio) and meta[''mesh_hash''] (mesh identity per frequency within a solve),
+  and check both in the runner.
+
+  (4) Physics-independent self-checks. tied_branch_independent and image_plane_independent agree with
+  the code by construction (T0056); give each an independent physical reference. The tube-PEEC check cannot
+  discriminate the self-term correction at l = 1.5 mm; make it discriminating (or justify it).
+
+  (5) Minor: regime_valid''s 1e-3 tolerance does not imply the bars'' stated 1e-4 bound (T0055); bars''
+  HF informational solves should not gate the convergence decision; fix the related note text.
+
+
+  The definition of done runs all of T0041''s checks plus project/dod/e001-design/estimator_adversarial.py
+  (founder-authored, run from the main checkout).'
+context_files: []
+deliverables:
+- experiments/drafts/E001.yaml
+- experiments/runners/e001_reference.py
+- research/notes/o001-l2-reference.md
+touches:
+- experiments/drafts/E001.yaml
+- experiments/runners/e001_reference.py
+- research/notes/o001-l2-reference.md
+definition_of_done:
+- cmd: uv run mfos exp check E001
+  exists: null
+  timeout_s: 900
+- cmd: uv run ruff check experiments/runners/e001_reference.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python experiments/runners/e001_reference.py --analytic-only
+  exists: null
+  timeout_s: 900
+- cmd: uv run python ~/mf/main/project/dod/e001-design/b1_exact_limits.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python ~/mf/main/project/dod/e001-design/convergence_estimator.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python ~/mf/main/project/dod/e001-design/design_contract.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python ~/mf/main/project/dod/e001-design/b3_mutual_exact.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python ~/mf/main/project/dod/e001-design/estimator_adversarial.py
+  exists: null
+  timeout_s: 900
+experiment: null
+risk: high
+model: null
+budget_usd: 8.0
+max_turns: 120
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: founder
+created_at: '2026-10-01T14:07:35+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

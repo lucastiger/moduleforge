@@ -1,8 +1,7 @@
 # ModuleForge status
-_generated 2026-10-01T14:07:11+00:00 from repository state — do not edit_
+_generated 2026-10-01T14:07:45+00:00 from repository state — do not edit_
 
-## Founder inbox (2 open)
-- **I0013** [experiment_registration] register E001 (pre-registration)
+## Founder inbox (1 open)
 - **I0020** [experiment_registration] register E001 (pre-registration)
 
 ## Objectives
@@ -12,12 +11,10 @@ _generated 2026-10-01T14:07:11+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $84.06/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 33, failed: 2, todo: 7
+cancelled: 14, done: 33, failed: 2, todo: 8
 
 
 ## Recent events
-- 2026-10-01T10:54:15+00:00 run_started {"run": "T0041-scientist-20261001T035415-ff14", "task": "T0041", "role": "scientist", "session": "5239edf3-0b82-476d-a482-64def6d49371"}
-- 2026-10-01T10:54:48+00:00 run_finished {"run": "T0041-scientist-20261001T035415-ff14", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-01T10:54:48+00:00 capacity_backoff {"task": "T0041", "minutes": 30}
 - 2026-10-01T11:25:17+00:00 run_started {"run": "T0041-scientist-20261001T042517-4012", "task": "T0041", "role": "scientist", "session": "d47437c5-ebf8-4076-8140-9e22e7c6092e"}
 - 2026-10-01T11:45:54+00:00 run_finished {"run": "T0041-scientist-20261001T042517-4012", "status": "completed", "cost": 5.874221199999997, "subtype": "success", "report": "structured_output"}
@@ -31,3 +28,5 @@ cancelled: 14, done: 33, failed: 2, todo: 7
 - 2026-10-01T14:06:55+00:00 inbox_resolved {"id": "I0019", "status": "approved", "note": "Approved per the founder's standing instruction (draft only, nothing frozen): DoD verified; T0055/T0056 accept_wi
 - 2026-10-01T14:07:10+00:00 merged {"task": "T0041"}
 - 2026-10-01T14:07:10+00:00 inbox_opened {"id": "I0020", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}
+- 2026-10-01T14:07:35+00:00 inbox_resolved {"id": "I0013", "status": "rejected", "note": "Superseded by I0020 (registration request for E001 as redesigned by T0041), per the founder's choice to wait (opt
+- 2026-10-01T14:07:35+00:00 task_added {"task": "T0057"}

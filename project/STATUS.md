@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-01T18:03:45+00:00 from repository state — do not edit_
+_generated 2026-10-01T18:35:04+00:00 from repository state — do not edit_
 
 ## Founder inbox (2 open)
 - **I0020** [experiment_registration] register E001 (pre-registration)
@@ -17,7 +17,6 @@ cancelled: 14, done: 35, failed: 2, needs_founder: 1, todo: 7
 - T0057 `needs_founder` scientist/design_experiment: E001 before registration: conservative refinement rule, honest interval level, verifiable mesh contract (T0055/T0056 reviews) (attempt 1)
 
 ## Recent events
-- 2026-10-01T14:07:35+00:00 inbox_resolved {"id": "I0013", "status": "rejected", "note": "Superseded by I0020 (registration request for E001 as redesigned by T0041), per the founder's choice to wait (opt
 - 2026-10-01T14:07:35+00:00 task_added {"task": "T0057"}
 - 2026-10-01T16:11:18+00:00 sleep_detected {"gap_s": 4432, "runs_extended": 0}
 - 2026-10-01T16:31:06+00:00 sleep_detected {"gap_s": 1152, "runs_extended": 0}
@@ -32,3 +31,4 @@ cancelled: 14, done: 35, failed: 2, needs_founder: 1, todo: 7
 - 2026-10-01T17:55:19+00:00 run_finished {"run": "T0058-critic-20261001T104855-e24c", "status": "completed", "cost": 1.5152026, "subtype": "success", "report": "structured_output"}
 - 2026-10-01T18:03:39+00:00 run_finished {"run": "T0059-critic-20261001T104855-646f", "status": "completed", "cost": 2.515596000000001, "subtype": "success", "report": "structured_output"}
 - 2026-10-01T18:03:45+00:00 inbox_opened {"id": "I0021", "kind": "protected_change", "subject": "T0057: merge needs founder approval"}
+- 2026-10-01T18:34:14+00:00 sleep_detected {"gap_s": 761, "runs_extended": 0}

@@ -244,3 +244,4 @@
 {"ts": "2026-10-01T01:04:08+00:00", "event": "merged", "actor": "orchestrator", "task": "T0037"}
 {"ts": "2026-10-01T01:18:23+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0041-scientist-20260930T180340-0118", "status": "completed", "cost": 4.367834600000001, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-10-01T01:18:30+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0041", "signal": "dod_failed", "action": "repair"}
+{"ts": "2026-10-01T01:31:27+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0017", "status": "approved", "note": "Founder: daily LLM budget stays at $40 (policy daily_usd = 40.0, unchanged). Approving only clears the reached-notice so the next cap hit is reported."}

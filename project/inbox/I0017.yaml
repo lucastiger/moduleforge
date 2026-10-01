@@ -5,7 +5,8 @@ summary: Spent $36.14 today. Work resumes tomorrow unless the cap is raised.
 refs: []
 options: []
 recommendation: ''
-status: open
-response: ''
+status: approved
+response: 'Founder: daily LLM budget stays at $40 (policy daily_usd = 40.0, unchanged). Approving only
+  clears the reached-notice so the next cap hit is reported.'
 created_at: '2026-09-30T19:12:12+00:00'
-resolved_at: null
+resolved_at: '2026-10-01T01:31:27+00:00'

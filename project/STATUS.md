@@ -1,9 +1,8 @@
 # ModuleForge status
-_generated 2026-10-01T01:18:30+00:00 from repository state — do not edit_
+_generated 2026-10-01T01:31:45+00:00 from repository state — do not edit_
 
-## Founder inbox (2 open)
+## Founder inbox (1 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
-- **I0017** [budget_increase] daily LLM budget reached
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -17,7 +16,6 @@ cancelled: 14, done: 25, failed: 2, running: 1, todo: 8
 - T0047 `running` builder/implement: L1 fidelity: converged bond-wire segmentation, consistent bar internal inductance, mesh within 3 % at <= 50 ms (T0044/T0045 reviews) (attempt 1)
 
 ## Recent events
-- 2026-09-30T19:11:56+00:00 inbox_opened {"id": "I0016", "kind": "protected_change", "subject": "T0037: merge needs founder approval"}
 - 2026-09-30T19:12:12+00:00 inbox_opened {"id": "I0017", "kind": "budget_increase", "subject": "daily LLM budget reached"}
 - 2026-09-30T19:12:30+00:00 run_finished {"run": "T0041-scientist-20260930T115106-58f7", "status": "error", "cost": 5.2129765999999975, "subtype": "success", "report": "missing"}
 - 2026-09-30T19:12:30+00:00 capacity_backoff {"task": "T0041", "minutes": 30}
@@ -32,3 +30,4 @@ cancelled: 14, done: 25, failed: 2, running: 1, todo: 8
 - 2026-10-01T01:04:08+00:00 merged {"task": "T0037"}
 - 2026-10-01T01:18:23+00:00 run_finished {"run": "T0041-scientist-20260930T180340-0118", "status": "completed", "cost": 4.367834600000001, "subtype": "success", "report": "structured_output"}
 - 2026-10-01T01:18:30+00:00 task_failed_attempt {"task": "T0041", "signal": "dod_failed", "action": "repair"}
+- 2026-10-01T01:31:27+00:00 inbox_resolved {"id": "I0017", "status": "approved", "note": "Founder: daily LLM budget stays at $40 (policy daily_usd = 40.0, unchanged). Approving only clears the reached-no

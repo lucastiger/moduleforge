@@ -9,7 +9,7 @@ pending_evaluation: null
 replans: 2
 max_replans: 3
 needs_replan: false
-spent_usd: 67.4736
+spent_usd: 69.626
 budget_override_usd: null
 log:
 - 'founder answered I0003: (b): use the provisioned binary (MF_FASTHENRY_BIN, then PATH); no auto-build.

@@ -1,0 +1,65 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "minor",
+      "title": "\"Mesh within 3 %\" holds only against the 1 mm mesh, not against the mesh-converged L1",
+      "detail": "The DoD and the claim measure the default 4 mm mesh against the 1 mm mesh. The 1 mm mesh is itself 1.4\u20133.0 % above the extrapolated converged value. So the default mesh's real discretisation error reaches about 5 % on 6-die u_shaped layouts. The module docstring says this openly (+2.3..+5.4 %), but anyone reading 'mesh within 3 %' as a 3 % discretisation error would be misled. The bias is positive and grows with die count (+1.2 % at 2 dies to +2.0 % at 6 dies on fresh seeds), so a weak form of the F3 signature remains.",
+      "evidence": "seed 11 u_shaped dps=6, 20 MHz: L = 8.7321 / 8.6802 / 8.5624 / 8.4772 / 8.4373 nH at h = 4/2/1/0.7/0.5 mm. Richardson on 1\u21920.5 mm: default mesh +4.0 % (p=2) to +5.05 % (p=1) above L_inf; 1 mm mesh +2.0..+3.0 %. seed 123 side_by_side dps=3: default +1.8..+2.5 %.",
+      "suggested_check": "State the scope as 'default mesh within 3 % of the 1 mm mesh'. Carry the ~+2..+5 % absolute mesh bias into the E002 MAPE budget."
+    },
+    {
+      "severity": "minor",
+      "title": "Coarser distance tiers add an undocumented kernel error of \u22120.2..\u22120.9 % that grows with mesh refinement",
+      "detail": "This change lowered _MID from 3 to 2, _FAR from 6 to 4 and _FAR_SEG from 3.5 to 2. The point, 1-filament and 3-filament tiers are chosen separately for the direct and the image source, so their errors do not cancel in the small difference L \u2212 M_image. The resulting error in L is larger at 1 mm cells than at 4 mm cells. About 30 % of the documented 4 mm \u2192 1 mm drift is this kernel truncation, not discretisation. With converged tiers the 4 mm vs 1 mm bias on seed 11 u_shaped 6 is +1.40 % instead of +1.98 %. The 3 % criterion is therefore met conservatively, but the docstring's 'error of the 1 mm mesh itself' and Richardson numbers describe a model whose kernel error changes with h.",
+      "evidence": "Monkeypatched tiers (_NEAR=_NEAR_IMG=2, _MID=8, _FAR=20, _FAR_SEG=10, _NEARSEG=3, _NQ=8, _NS=7). Self-check against an even finer configuration agrees within 3e-4. Default tiers versus this reference: h=4 mm \u22120.20..\u22120.47 %, h=1 mm \u22120.44..\u22120.88 % on 3 layouts at 5/20/80 MHz. Old tiers: \u22120.20..\u22120.40 % and \u22120.33..\u22120.60 %.",
+      "suggested_check": "Document the tier-truncation error, or redo the refinement and Richardson study with converged tiers."
+    },
+    {
+      "severity": "minor",
+      "title": "Bar internal inductance is about 2/3 of the surface-impedance value; the plane's equal-size term is still omitted",
+      "detail": "Bars carry uniform current in a layer of thickness \u03b4. That gives R = 1/(\u03c3\u03b4) per square, matching the surface impedance, but an internal inductance of \u03bc0\u03b4/3 per square instead of \u03bc0\u03b4/2 (\u03c9L_int = R_s). Wires use the exact R_int/\u03c9 form, so bars and wires are treated differently. The docstring documents the bar shortfall at about 0.6 %; I measured about 0.5 % at 20 MHz. The image plane's own surface-impedance inductance (\u03bc0\u03b4/2 per square) is still neglected, as the docstring states, and its effect is about three times larger. As a result the model's L(f) drop from 5 to 80 MHz is underestimated by more than half.",
+      "evidence": "seed 7 dps=3 layout, image plane moved down by \u03b4/2: L +2.85 % / +1.48 % / +0.73 % at 5/20/80 MHz. Moved down by 2\u03b4/3 (adds the bar shortfall): +3.79 % / +1.96 % / +0.97 %.",
+      "suggested_check": "Add the Wheeler surface-impedance increment (\u03bc0\u03b4/2 per surface) or document the resulting ~\u22122 % bias at 20 MHz next to the mesh bias."
+    },
+    {
+      "severity": "note",
+      "title": "The \u226450 ms budget holds per single frequency; cost grows linearly with frequency count",
+      "detail": "_discretize and assemble now run inside the frequency loop, because the bar layer thickness depends on \u03b4(f). The benchmark and the O001 objective use one 20 MHz evaluation, so A6 is met. A 3-frequency call costs about 3.4 times as much.",
+      "evidence": "Single thread, 12 layouts with 6 dies per switch, seed 20240611: 1 frequency p50 25.8 ms; 3 frequencies p50 88.2 ms (p90 159 ms). benchmarks/l1_timing.py: p50 24.31 ms, p90 28.17 ms.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "Resistance is not mesh-converged; the new R test uses loose bounds on coarse meshes only",
+      "detail": "R(20 MHz) keeps rising under refinement: +4.9 % (seed 11 u_shaped 6) and +11.6 % (seed 123 side_by_side 3) from 4 mm to 0.5 mm. test_resistance_does_not_fall_without_bound only checks 8/4/2 mm with 10\u201315 % tolerance. This is outside the L-focused claim.",
+      "evidence": "R = 27.16 \u2192 28.49 m\u03a9 and 11.57 \u2192 12.91 m\u03a9 over h = 4 \u2192 0.5 mm.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "Docstring contradicts itself on the edge_lanes cost",
+      "detail": "The loop_inductance docstring says edge_lanes 'costs ~60 % more time per evaluation than the 50 ms budget allows'. The module docstring gives p50 ~43 ms, which is within budget. The option is off by default, so this does not affect the claim.",
+      "evidence": "model.py loop_inductance docstring compared with the module docstring 'Mesh bias' section.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran every DoD command at d4ae02c and all passed: pytest tests/unit/physics/peec (48 passed), ruff (clean), L1-does-not-import-L2 check, 3-frequency sanity check (L = 8.695/8.612/8.572 nH, monotone), benchmarks/l1_timing.py (p50 24.31 ms), project/dod/l1-fidelity/convergence.py (wire-point spread 0.04\u20130.14 %, mesh bias +0.85..+2.32 %).",
+    "Mesh bias on layouts not used in development: seeds 11/123, 3 families, 2/4/6 dies per switch, at 5/20/80 MHz: default vs 1 mm is +0.35..+1.99 %. Pooled over 45 layouts (seeds 11/123/999, 2\u20136 dies): +0.38..+2.37 %, Spearman rho(4 mm, 1 mm) = 0.99987, identical top-3.",
+    "Refinement series 4/2/1/0.7/0.5 mm on 2 fresh layouts with Richardson extrapolation (p = 1, 2): default mesh +1.8..+5.1 % above L_inf, 1 mm mesh +1.4..+3.0 %.",
+    "Wire segmentation beyond the DoD range: loop L at 3/4/5/7/13/25/49/97 points on 3 fresh layouts converges monotonically from below. 7 points is within 0.11\u20130.36 % of 97 points; increments shrink geometrically.",
+    "Checked the Hoer-Love kernel on the new thin skin-layer bars against a semi-analytic reference (length integral analytic, transverse integral by adaptive quadrature at rtol 1e-12). Self terms of 4x4 mm and 1x1 mm bars with t = 300/29/14.6/7.4 um, and edge-lane bars of 0.095 mm x 7.4 um, agree within 2e-9 relative. Image and side mutuals agree within 2e-6.",
+    "Measured the kernel-tier truncation error by monkeypatching tier constants up to a self-converged configuration: \u22120.2..\u22120.9 % in L, growing with refinement.",
+    "Swept L(f) and R(f) from 1 kHz to 316 MHz on one layout: L is monotone non-increasing and R monotone non-decreasing, with no kink where \u03b4 crosses the copper thickness.",
+    "Measured the neglected plane surface-impedance inductance by moving the image plane down by \u03b4/2 and 2\u03b4/3: +1.5 % / +2.0 % at 20 MHz.",
+    "Single-thread timing of 1-frequency vs 3-frequency calls (25.8 ms vs 88.2 ms p50)."
+  ],
+  "caveats": [
+    "'Mesh within 3 %' means the default 4 mm mesh is within 3 % of the 1 mm mesh. Against the mesh-converged L1 the default mesh reads about +2 % to +5 % high, largest for 6-die interleaved and u_shaped layouts.",
+    "The \u226450 ms timing applies to one 20 MHz frequency per call. Cost is roughly linear in the number of frequencies (about 88 ms for 3).",
+    "'Consistent bar internal inductance' holds only approximately. The bar's HF internal inductance is \u03bc0\u03b4/3 per square, against \u03bc0\u03b4/2 from the surface impedance (about 0.5 % at 20 MHz). The image plane's internal inductance (about 1.5 % of L at 20 MHz, 2.9 % at 5 MHz) is still omitted.",
+    "Wire-segmentation convergence was checked for arc_wire polylines of 3\u201397 points with a/l_seg from about 0.05 to 2.9. It was not checked for other wire shapes.",
+    "Bash permission rules blocked some scratch commands (heredoc file writes, env-var prefixes, an ephemeral mpmath install). All checks were therefore run as inline python -c with numpy/scipy, so the Hoer-Love reference is scipy quadrature rather than arbitrary-precision arithmetic."
+  ]
+}

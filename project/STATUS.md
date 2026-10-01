@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-01T10:54:48+00:00 from repository state — do not edit_
+_generated 2026-10-01T11:25:17+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
@@ -11,11 +11,11 @@ _generated 2026-10-01T10:54:48+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $73.95/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 30, failed: 2, todo: 8
+cancelled: 14, done: 30, failed: 2, running: 1, todo: 7
 
+- T0041 `running` scientist/design_experiment: Fix E001's design before registration: wire model error bounds, convergence estimate, L2 contract, coverage (T0029/T0030 reviews) (attempt 2)
 
 ## Recent events
-- 2026-10-01T08:50:31+00:00 run_started {"run": "T0041-scientist-20261001T015031-6eb0", "task": "T0041", "role": "scientist", "session": "7903c1e3-7e9c-43cd-92ae-80e74c0bf2d0"}
 - 2026-10-01T08:51:03+00:00 run_finished {"run": "T0041-scientist-20261001T015031-6eb0", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-01T08:51:03+00:00 capacity_backoff {"task": "T0041", "minutes": 30}
 - 2026-10-01T09:21:33+00:00 run_started {"run": "T0041-scientist-20261001T022133-6e15", "task": "T0041", "role": "scientist", "session": "728f5ac0-aa02-4aa9-b812-6930297046dd"}
@@ -30,3 +30,4 @@ cancelled: 14, done: 30, failed: 2, todo: 8
 - 2026-10-01T10:54:15+00:00 run_started {"run": "T0041-scientist-20261001T035415-ff14", "task": "T0041", "role": "scientist", "session": "5239edf3-0b82-476d-a482-64def6d49371"}
 - 2026-10-01T10:54:48+00:00 run_finished {"run": "T0041-scientist-20261001T035415-ff14", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-01T10:54:48+00:00 capacity_backoff {"task": "T0041", "minutes": 30}
+- 2026-10-01T11:25:17+00:00 run_started {"run": "T0041-scientist-20261001T042517-4012", "task": "T0041", "role": "scientist", "session": "d47437c5-ebf8-4076-8140-9e22e7c6092e"}

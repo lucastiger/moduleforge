@@ -1,9 +1,10 @@
-"""E001 design DoD: smoke coverage, live config keys, independent self-checks, deterministic interval, contract.
+"""E001 design DoD: smoke coverage, live config keys, independent self-checks, L2 contract.
 
 Findings of reviews T0029/T0030 of T0020: --smoke skipped 2 of 7 geometry classes; `tol_independent` and `cases`
-did nothing; no self-check exercised the 3-D image code, the Wheeler recession or the tied-branch formula; the
-deterministic bound was recorded at level 0.95; the L2 contract allowed a different mesh per frequency and never
-reported the solver tolerance; the license table dated FastHenry2's notice to 1996 (the header says 1992).
+did nothing; no self-check exercised the 3-D image code, the Wheeler recession or the tied-branch formula;
+the L2 contract allowed a different mesh per frequency and never reported the solver tolerance; the license
+table dated FastHenry2's notice to 1996 (the header says 1992). Review T0052 of T0041: the contract must also fix a
+constant refinement ratio, or the remaining-error estimate does not hold.
 """
 import json
 import re
@@ -30,9 +31,6 @@ if keys != set(R.DEFAULT_CFG):
 dead = sorted(k for k in keys if not re.search(r"""cfg\[\s*["']%s["']\s*\]|cfg\.get\(\s*["']%s["']""" % (k, k), src))
 if dead:
     problems.append(f"config keys the runner never reads: {dead}")
-m = re.search(r"""run\.metric\(\s*["']max_rel_err_vs_analytic["'](.{0,400}?)\)\s*\n""", src, re.S)
-if not m or not re.search(r"level\s*=\s*1(\.0*)?\b", m.group(1)):
-    problems.append("max_rel_err_vs_analytic is not recorded as a deterministic bound (level=1.0)")
 if "solver_tol" not in src:
     problems.append("the runner never checks the solver tolerance L2 reports (meta['solver_tol'])")
 
@@ -51,6 +49,8 @@ note = open("research/notes/o001-l2-reference.md").read()
 contract = note.split("## 3.", 1)[-1].split("## 4.", 1)[0]
 if not re.search(r"\b(same|one|single) mesh\b", contract, re.I):
     problems.append("the L2 contract (note section 3) does not fix one mesh per refinement level for all frequencies")
+if not re.search(r"refinement ratio|constant ratio|fixed ratio", contract, re.I):
+    problems.append("the L2 contract does not fix a constant refinement ratio between levels (review T0052)")
 if "solver_tol" not in contract:
     problems.append("the L2 contract does not require meta['solver_tol']")
 if "1992" not in note:

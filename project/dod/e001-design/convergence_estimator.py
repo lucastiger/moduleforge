@@ -3,7 +3,7 @@
 Review T0030 of T0020: for geometric convergence with ratio rho the remaining error is change * rho / (1 - rho),
 4x the last change at rho = 0.8 and 9x at rho = 0.9. The runner must expose
 `remaining_discretization_error(values)` (L at successive refinement levels, finest last) and use it for both
-the l2_converged decision and disc_unc.
+the l2_converged decision and disc_unc. It must not underestimate when the error decays algebraically (T0052).
 """
 import sys
 
@@ -19,6 +19,15 @@ for rho in (0.5, 0.8, 0.9):
     print(f"rho={rho}: estimate {est:.3e}, true remaining error {true:.3e}")
     if not 0.999 * true <= est <= 3 * true:
         problems.append(f"rho={rho}: estimate {est:.3e} not within [true, 3 x true] = [{true:.3e}, {3 * true:.3e}]")
+# Algebraic convergence (error ~ k^-p, e.g. additive refinement; review T0052): the observed ratio tends to 1, so a
+# geometric extrapolation underestimates. The estimate must still bound the remaining error, or be inf (not converged).
+for p_ in (1.0, 2.0):
+    seq = [1.0 + 0.05 * (k + 1) ** -p_ for k in range(4)]
+    true = abs(seq[-1] - 1.0)
+    est = float(R.remaining_discretization_error(seq))
+    print(f"algebraic p={p_}: estimate {est:.3e}, true remaining error {true:.3e}")
+    if not (est == float("inf") or est >= 0.999 * true):
+        problems.append(f"algebraic p={p_}: estimate {est:.3e} below the true remaining error {true:.3e}")
 flat = float(R.remaining_discretization_error([1.0, 1.0, 1.0]))
 if flat > 1e-12:
     problems.append(f"a converged sequence gives {flat:.3e}, expected ~0")

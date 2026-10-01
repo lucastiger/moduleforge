@@ -1,0 +1,15 @@
+id: I0021
+kind: protected_change
+subject: 'T0057: merge needs founder approval'
+summary: 'E001 before registration: conservative refinement rule, honest interval level, verifiable mesh
+  contract (T0055/T0056 reviews)
+
+  Risk high; 4 files. PR: None'
+refs:
+- T0057
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-01T18:03:45+00:00'
+resolved_at: null

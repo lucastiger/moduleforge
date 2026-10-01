@@ -1,24 +1,22 @@
 # ModuleForge status
-_generated 2026-10-01T18:03:36+00:00 from repository state — do not edit_
+_generated 2026-10-01T18:03:45+00:00 from repository state — do not edit_
 
-## Founder inbox (1 open)
+## Founder inbox (2 open)
 - **I0020** [experiment_registration] register E001 (pre-registration)
+- **I0021** [protected_change] T0057: merge needs founder approval
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $92.16/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $94.68/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 34, failed: 2, review: 1, running: 1, todo: 7
+cancelled: 14, done: 35, failed: 2, needs_founder: 1, todo: 7
 
-- T0057 `review` scientist/design_experiment: E001 before registration: conservative refinement rule, honest interval level, verifiable mesh contract (T0055/T0056 reviews) (attempt 1)
-- T0059 `running` critic/review: Review T0057 (numerics) (attempt 1)
+- T0057 `needs_founder` scientist/design_experiment: E001 before registration: conservative refinement rule, honest interval level, verifiable mesh contract (T0055/T0056 reviews) (attempt 1)
 
 ## Recent events
-- 2026-10-01T14:07:10+00:00 merged {"task": "T0041"}
-- 2026-10-01T14:07:10+00:00 inbox_opened {"id": "I0020", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}
 - 2026-10-01T14:07:35+00:00 inbox_resolved {"id": "I0013", "status": "rejected", "note": "Superseded by I0020 (registration request for E001 as redesigned by T0041), per the founder's choice to wait (opt
 - 2026-10-01T14:07:35+00:00 task_added {"task": "T0057"}
 - 2026-10-01T16:11:18+00:00 sleep_detected {"gap_s": 4432, "runs_extended": 0}
@@ -32,3 +30,5 @@ cancelled: 14, done: 34, failed: 2, review: 1, running: 1, todo: 7
 - 2026-10-01T17:48:55+00:00 run_started {"run": "T0058-critic-20261001T104855-e24c", "task": "T0058", "role": "critic", "session": "67c400f8-c110-49b7-b540-09db8946ce43"}
 - 2026-10-01T17:48:55+00:00 run_started {"run": "T0059-critic-20261001T104855-646f", "task": "T0059", "role": "critic", "session": "bb95b0cc-7db7-45a4-a1a3-d704fb152233"}
 - 2026-10-01T17:55:19+00:00 run_finished {"run": "T0058-critic-20261001T104855-e24c", "status": "completed", "cost": 1.5152026, "subtype": "success", "report": "structured_output"}
+- 2026-10-01T18:03:39+00:00 run_finished {"run": "T0059-critic-20261001T104855-646f", "status": "completed", "cost": 2.515596000000001, "subtype": "success", "report": "structured_output"}
+- 2026-10-01T18:03:45+00:00 inbox_opened {"id": "I0021", "kind": "protected_change", "subject": "T0057: merge needs founder approval"}

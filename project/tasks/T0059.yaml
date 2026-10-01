@@ -1,0 +1,32 @@
+id: T0059
+objective: O001
+title: Review T0057 (numerics)
+type: review
+agent: critic
+status: running
+depends_on: []
+description: 16101419359c7f570469c26c71de237195aea857
+context_files: []
+deliverables: []
+touches: []
+definition_of_done: []
+experiment: null
+risk: low
+model: null
+budget_usd: 3.0
+max_turns: 60
+attempts: 1
+max_attempts: 3
+branch: null
+pr: null
+runs:
+- T0059-critic-20261001T104855-646f
+created_by: orchestrator
+created_at: '2026-10-01T17:48:54+00:00'
+protected_approved: false
+approval: null
+target: T0057
+lens: numerics
+trigger: null
+rationale: ''
+history: []

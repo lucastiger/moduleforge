@@ -4,7 +4,7 @@ title: 'E001 before registration: conservative refinement rule, honest interval 
   contract (T0055/T0056 reviews)'
 type: design_experiment
 agent: scientist
-status: running
+status: review
 depends_on:
 - T0041
 description: 'Follow-up to reviews T0055 (physics) and T0056 (numerics) of T0041 (project/reviews/T0041/).
@@ -94,4 +94,173 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- attempt: 1
+  outcome: agent_finished
+  summary: 'I fixed E001''s draft before registration and committed it as 1610141. The fixes cover all
+    five review items, and acceptance criteria are unchanged. All 8 definition-of-done commands and `mfos
+    gate --fast` exit 0 when run from this worktree: `mfos exp check E001`, `ruff`, `--analytic-only`,
+    and the five DoD scripts `b1_exact_limits`, `convergence_estimator`, `design_contract`, `b3_mutual_exact`
+    and `estimator_adversarial`.
+
+
+    (1) **Refinement rule.** `remaining_discretization_error` now gives a finite estimate only when all
+    three conditions hold over the last three changes. Otherwise it returns inf (not converged).
+
+    - No sign reversal above the solver noise floor.
+
+    - Both observed orders, solved on the realized mesh sizes, are at most `order_max` = 2 (the formal
+    order). A faster apparent order '
+  report:
+    summary: 'I fixed E001''s draft before registration and committed it as 1610141. The fixes cover all
+      five review items, and acceptance criteria are unchanged. All 8 definition-of-done commands and
+      `mfos gate --fast` exit 0 when run from this worktree: `mfos exp check E001`, `ruff`, `--analytic-only`,
+      and the five DoD scripts `b1_exact_limits`, `convergence_estimator`, `design_contract`, `b3_mutual_exact`
+      and `estimator_adversarial`.
+
+
+      (1) **Refinement rule.** `remaining_discretization_error` now gives a finite estimate only when
+      all three conditions hold over the last three changes. Otherwise it returns inf (not converged).
+
+      - No sign reversal above the solver noise floor.
+
+      - Both observed orders, solved on the realized mesh sizes, are at most `order_max` = 2 (the formal
+      order). A faster apparent order means pre-asymptotic cancellation.
+
+      - The two orders are steady: the contraction ratios agree within a factor of 1.1.
+
+
+      When the checks pass, the estimate is the Richardson tail × 1.25, or × 3 if the observed order is
+      below `order_min` = 1. On the founder''s adversarial test it gives 0 false convergences out of 1395
+      (previously 86). Clean geometric cases come out at 1.25× the true error. In my own sweep (seed 99,
+      ratio jitter, solver noise) it gave 0 false convergences in 10,852 declared-converged sequences
+      inside the stated assumption, with coverage ≥ 0.9989.
+
+
+      (2) **Interval level.** The unsupported 0.95 is withdrawn. A new physics-independent sanity check,
+      `refinement_rule_validated`, runs a frozen synthetic sweep of 4200 sequences in every mode. It fails
+      on any false convergence, on coverage below 0.95, or if clean geometric cases fall outside 1–3×
+      the true error. The coverage it measures (0.98 at design time) is recorded as `level`, and the YAML
+      and the note say exactly what that number means and does not mean. The old rule fails this check.
+
+
+      (3) **Verifiable contract.** The adapter must now report `meta[''mesh_params'']`: the size in metres
+      of every refined parameter. The ratio check runs per parameter and per step, and `length_scaling`
+      checks these sizes against geometry (exactly doubled, same filament count). It must also report
+      `meta[''mesh_hash'']` once per frequency: equal within a solve, new at each level, with `n_filaments`
+      increasing.
+
+
+      (4) **Independent self-checks.**
+
+      - Ties: a bar split into 0.7 + 2.3 mm strips and tied at both ends, compared with the unsplit bar''s
+      closed form. Error 2.9e-12, tolerance 4e-8.
+
+      - Image plane: compared per unit length with a 2-D BEM that solves the plane''s surface current
+      without using images. Error 2.0e-5, tolerance 3.6e-4.
+
+      - Tube-PEEC: now discriminating at every length, including 1.5 mm. The corrected error must be at
+      most r/l times the uncorrected error; the margin is ≥ 1.7×.
+
+
+      (5) **Minor items.** The bars'' `regime_valid` tolerance now equals their stated 1e-4 bound. The
+      bars'' informational HF solves no longer gate convergence, the noise floor comes from the solver
+      tolerance the adapter reports, and the solver budget is now part of the interval.
+
+
+      A scratch stand-in L2 found one real bug: the constant-ratio check failed at 1.0000000000000002
+      on float rounding. It is fixed. The stand-in also confirmed that the order-2 case passes all 16
+      checks, that a 3 % bias makes A1 fail as it should, and that additive refinement, per-frequency
+      remeshing and superconvergence are all caught.'
+    failure_class: none
+    confidence: 0.78
+    experiment_drafts:
+    - experiments/drafts/E001.yaml
+    files_written:
+    - experiments/drafts/E001.yaml
+    - experiments/runners/e001_reference.py
+    - research/notes/o001-l2-reference.md
+    - research/scripts/e001_refinement_rule_sweep.py
+    evidence:
+    - '[F] Commands run in this worktree at commit 1610141, all exit 0: `uv run mfos exp check E001`;
+      `uv run ruff check experiments/runners/e001_reference.py`; `uv run python experiments/runners/e001_reference.py
+      --analytic-only`; `uv run python ~/mf/main/project/dod/e001-design/{b1_exact_limits,convergence_estimator,design_contract,b3_mutual_exact,estimator_adversarial}.py`;
+      `uv run mfos gate --fast` (''all gates passed'').'
+    - '[F] Before the change, at the T0041 commit: design_contract failed (no mesh_params/mesh_hash) and
+      estimator_adversarial failed (''false convergence in 86 sequences'').'
+    - '[F] After: estimator_adversarial reports 0 false convergences out of 1395 sequences above conv_tol.
+      convergence_estimator: geometric rho = 0.5/0.8/0.9 give exactly 1.25x the true error; algebraic
+      p = 1 and 2 give inf (allowed); a constant sequence gives 0.'
+    - '[F] research/scripts/e001_refinement_rule_sweep.py (seed 99, 7 families x 2000 sequences, q in
+      {1.25, 1.5, 2} with up to 10 % jitter per level), runner mode with leading order in [1, 2]: 0 false
+      convergences out of 5408 declared converged (no noise, coverage 1.0000) and 0 out of 5444 (+/-1e-4
+      noise, coverage 0.9989). Leading order 0.5 (outside the assumption): 8/3021 and 12/1958, worst underestimate
+      6.9x. Values-only fallback with jitter: 5/804.'
+    - '[F] refinement_rule_validated at design time: 0 false convergences, minimum coverage 0.9891, clean
+      geometric est/true = 1.250. The attempt-3 rule plugged into the same check gives 8 false convergences
+      and coverage 0.926, so the check can fail.'
+    - '[F] Analytic checks: split-bar tie vs unsplit Hoer-Love 2.9e-12 (tolerance 4e-8); dropping the
+      branch mutual changes L by 29 %. Image term per unit length vs PEC strip BEM: 2.0e-5 (tolerance
+      3.6e-4), converging as (b/a)^2 (3.2e-4, 8.0e-5, 2.0e-5). Tube PEEC at l = 1.5 mm: the uncorrected
+      error 4.05e-3 was inside the old bound of 4.29e-3 at 100 Hz; the new criterion (corrected error
+      <= (r/l) x uncorrected error) passes with a worst ratio of 0.058 against 0.1. Bar skin deficits:
+      2.8e-5 or less against the new 1e-4 tolerance.'
+    - '[F] Scratch stand-in L2, --smoke, 16 checks:
+
+      - p = 2, bias 0: all checks pass; interval [0, 0.0192].
+
+      - p = 2, bias 3 %: interval [0.0279, 0.0492], point 0.0379, so A1 fails as intended.
+
+      - p = 1: l2_converged fails (estimate 1.89 % vs true 1.54 %).
+
+      - p = 3: l2_converged fails (superconvergence flagged).
+
+      - One parameter refined additively: l2_constant_refinement_ratio fails (1.45).
+
+      - A different hash per frequency: l2_one_mesh_per_solve fails (8).'
+    - '[F] Eça & Hoekstra 2014 abstract (MARIN page): the safety factor depends on the observed order
+      and the fit''s standard deviation, and the method reduces to the GCI for well-behaved data. Cited
+      from memory [I]: Celik et al. 2008 (observed order with non-constant ratios), Roy 2003 (mixed-order
+      error expansions); the Roy PDF returned 404.'
+    alternative_explanations:
+    - explanation: The rule's validity rests on the assumption that the leading error order is at least
+        1. If a real L2 quantity converges more slowly (a strong singularity, or erratic staircase round-wire
+        meshes), the rule can still underestimate. In the sweep, a hidden order-0.5 term gave up to 2.6x
+        without noise and 6.9x with noise.
+      how_to_discriminate: When the L2 builder (T0022) runs, look at its observed-order sequences on B1-C1
+        at 5-7 levels before E001 is run. Observed orders below 1 that stay steady across levels would
+        refute the assumption, and E001 would then need a new experiment id with order_min lowered and
+        refinement_max raised.
+    - explanation: The conservative rule may refuse to certify a correct L2 within refinement_max = 5.
+        This happens if L2 is pre-asymptotic at levels 1-5, superconverges above order 2, or converges
+        at order 1 from a large initial error (the order-1 stand-in shows this). The outcome would be
+        an INVALID run rather than a false PASS, but it costs a redesign.
+      how_to_discriminate: Run the stand-in-style check on the real adapter's first 5 levels for every
+        case and see whether `l2_converged` passes. If the observed orders are steady at 2 or above, or
+        at 1 with large changes, the feasibility risk is real.
+    discriminating_tests:
+    - 'uv run python research/scripts/e001_refinement_rule_sweep.py: reproduces the validation table.
+      Expect 0 false convergences in runner mode for leading orders 1-2, with and without noise.'
+    - 'Plug the T0041 version of remaining_discretization_error into refinement_rule_selfcheck: expect
+      8 false convergences, so the sanity check fails.'
+    - 'Remove the wire_self_correction term in the tube-PEEC entries: the new ''(r/l) x uncorrected''
+      entries fail at every length, including 1.5 mm.'
+    - 'Run a stand-in L2 that refines one mesh_params entry additively, or reports a different mesh_hash
+      per frequency: l2_constant_refinement_ratio or l2_one_mesh_per_solve fails.'
+    - 'Run a stand-in L2 whose mesh_params do not double under the 2x similarity: length_scaling fails
+      (value inf).'
+    recommended_actions:
+    - 'Founder: review the T0057 commit and release the registration hold I0020. Registration freezes
+      order_min = 1, order_max = 2, steady_tol = 0.1 and the self-check generator and seed in the runner.'
+    - T0022 (L2 builder) must report meta['solver_tol'], meta['mesh_params'] (size in metres of every
+      refined parameter, same keys at every level) and per-frequency meta['mesh_hash'] computed from the
+      deck it actually wrote. It must use a constant ratio of at least 1.25 with base counts large enough
+      (about 10 or more) for the 1.1 spread.
+    - Before running E001, the builder should inspect its own convergence sequences (observed order per
+      level) for B1-C1 at refinement levels 1-5. If the orders are steady but below 1 or above 2, or not
+      yet asymptotic by level 5, redesign E001 under a new id before spending the run.
+    - The values-only fallback of remaining_discretization_error is only safe for exactly constant ratios
+      (5/804 false convergences with jitter). Anyone reusing it outside E001 should pass the mesh-size
+      sequence h.
+    - 'Optional follow-up for the founder: extend estimator_adversarial.py to cover ratio jitter and same-sign
+      terms. As written it exercises only the values-only path, which the runner does not use.'

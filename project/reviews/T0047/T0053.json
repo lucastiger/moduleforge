@@ -1,0 +1,58 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "'Mesh within 3 %' only holds against a 1 mm mesh that is itself not converged",
+      "detail": "The DoD and the tests measure the default 4 mm mesh against the 1 mm mesh only. Refining further shows the 1 mm reference still moving by about as much as the coarse steps, so it is not a converged reference. Measured against the finest meshes I could run, the default mesh is 4\u20135 % high on the worst layout, and the 0.5 mm value was still falling. The docstring's Richardson estimate (default +2.3..+5.4 % above the converged result) assumes order p = 1..2. The halving sequence 4/2/1/0.5 mm shows an observed order near 0, so that estimate is unreliable and probably too low. The bias is still largest for 6 dies per switch with interleaved/u_shaped families, so the die-count-dependent (F3) bias is smaller than before but has not been eliminated.",
+      "evidence": "u_shaped, seed 99, 6 dies per switch, 20 MHz. L by hmax: 4 mm 7.5495, 2 mm 7.4619, 1 mm 7.3601, 0.7 mm 7.2876, 0.5 mm 7.2449 nH. Halving differences grow: 0.088, 0.102, 0.115 nH. Default vs 0.5 mm: +4.20 %. With edge_lanes=True: 1 mm 7.2528, 0.5 mm 7.1807 nH, so default vs 0.5 mm + lanes is +5.14 %. side_by_side, seed 5, 2 dies: 8/4/2/1/0.5 mm give 4.3703/4.3692/4.3820/4.3324/4.2865 nH, which is non-monotone with equal halving differences (\u22120.050, \u22120.046).",
+      "suggested_check": "Define the 3 % target against an extrapolated or edge-resolved reference (e.g. 0.5 mm + edge lanes, or an L2 FastHenry run) instead of the 1 mm mesh, and report the observed convergence order."
+    },
+    {
+      "severity": "minor",
+      "title": "Documented 60-layout bias range is exceeded on unseen seeds; margin to 3 % is thin",
+      "detail": "The docstring says the default mesh reads +0.47..+2.41 % above the 1 mm mesh, and the unit test bounds it at 2.5 %. On 18 new layouts (6 dies per switch; seeds 1, 2, 3, 11, 99, 1234) the maximum is +2.57 % (u_shaped, seed 99). That is still under the 3 % DoD limit but above both the documented range and the unit-test bound. Fixed seeds keep the test passing, but the stated range is sample-specific, not a bound.",
+      "evidence": "Sorted default/1 mm \u2212 1 over 18 layouts: 0.98 % up to 2.57 %. Above 2.4 %: u_shaped/1234 at 2.53 % and u_shaped/99 at 2.57 %.",
+      "suggested_check": "Report the range as an empirical sample statistic, or widen the seed set used for the documented range."
+    },
+    {
+      "severity": "minor",
+      "title": "Mesh-refinement test name overclaims",
+      "detail": "test_loop_inductance_converges_with_mesh_refinement only asserts l1 < l2, l1 < l4, and that l4/l1 \u2212 1 is between 0 and 2.5 %. It would pass for a sequence that never converges, which is what the 2/1/0.5 mm data above suggest.",
+      "evidence": "tests/unit/physics/peec/test_peec_model.py, assertions `l1 < l2 and l1 < l4` and `0.0 < l4 / l1 - 1 < 0.025`.",
+      "suggested_check": "Rename the test, or add a check on the ratio of successive refinement differences."
+    },
+    {
+      "severity": "note",
+      "title": "Bond-wire segmentation fix is real and verified against independent references",
+      "detail": "The finite-radius same-wire kernel makes the polyline inductance converge. The collinear case reduces exactly to Grover's tube (GMD a) formula. The ring test compares against the independent Rosa/Grover closed form. Brute-force quadrature agrees with the kernel for angled segments. The assembled matrix stays symmetric and positive definite.",
+      "evidence": "u_shaped, seed 99, 6 dies per switch: L at 3/5/7/13/25/49/97 wire points = 7.4964/7.5415/7.5495/7.5537/7.5553/7.5556/7.5559 nH (7\u219297: +0.08 %). Brute-force 400\u00d7400 Gauss\u2013Legendre on 4 random angled segment pairs with core a: relative error 1e-6..9e-5. Minimum eigenvalue of L_eff is +1.75e-11 (4 mm) and +6.5e-13 H (1 mm) at 3/7/49 points; asymmetry \u2264 2e-25.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "Bar internal inductance and loosened distance tiers check out",
+      "detail": "The \u03b4-thick plane-facing layer gives R_s = 1/(\u03c3\u03b4). Its internal inductance is \u03bc0\u00b7\u03b4/3 per square, against the surface-impedance value \u03bc0\u00b7\u03b4/2; the docstring states this difference. The wire internal term \u03bc0\u00b7l/(8\u03c0)\u00b7min(1, 2\u03b4/a) reduces to \u03bc0\u00b7\u03b4/(4\u03c0a) per metre, which is correct. The looser distance thresholds (_MID 3\u21922, _FAR 6\u21924, _FAR_SEG 3.5\u21922) change L by at most 0.03 % compared with the old or tighter thresholds, so the timing gain is not bought with accuracy.",
+      "evidence": "new/old \u2212 1 = +0.0002 %, \u22120.024 %, \u22120.002 %; new/tight(6/12/8) \u2212 1 \u2264 0.031 % on 3 layouts with 6 dies per switch.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran every DoD command: 48 PEEC unit tests pass; ruff clean; the L1-must-not-import-L2 check passes; smoke L(f) = [8.695, 8.612, 8.572] nH, monotone and finite; l1_timing p50 = 24.4 and 26.3 ms on two runs (limit 50 ms); convergence.py passes (wire-point spread \u2264 0.14 %, default vs 1 mm \u2264 +2.32 %).",
+    "Default vs 1 mm mesh on 18 unseen layouts (seeds 1, 2, 3, 11, 99, 1234 \u00d7 3 families, 6 dies per switch): +0.98..+2.57 %.",
+    "Mesh refinement 4/2/1/0.7/0.5 mm on u_shaped seed 99 (6 dies) and 8/4/2/1/0.5 mm on side_by_side seed 5 (2 dies): halving differences do not decay, so no asymptotic convergence is visible.",
+    "edge_lanes=True at 4/1/0.5 mm on u_shaped seed 99: default mesh is +5.14 % above the 0.5 mm + lanes value.",
+    "Wire point count 3..97 on u_shaped seed 99: converges to 0.08 %.",
+    "Brute-force double Gauss\u2013Legendre integration of the 1/sqrt(R\u00b2+a\u00b2) kernel against segment_mutual(core=a) for random angled segment pairs.",
+    "Symmetry and minimum eigenvalue of the effective (image-subtracted) branch inductance matrix at 4 mm and 1 mm mesh with 3, 7 and 49 wire points.",
+    "Sensitivity of L to the loosened tier thresholds (old 3/6/3.5 and tight 6/12/8) on 3 layouts.",
+    "Hand check of the internal-inductance formulas: slab \u03bc0\u00b7t/3 per square, skin-effect \u03bc0\u00b7\u03b4/2, round wire \u03bc0\u00b7\u03b4/(4\u03c0a) per metre."
+  ],
+  "caveats": [
+    "The claim holds as the DoD operationalises it (default mesh within 3 % of the 1 mm mesh, wire segmentation spread \u2264 0.5 %, p50 \u2264 50 ms). It does not establish that the default mesh is within 3 % of the mesh-converged L1: on the worst layout tested the default is about 4\u20135 % high against the finest meshes run, and the value was still falling.",
+    "The remaining mesh bias is positive and grows with die count and in the interleaved/u_shaped families. Comparisons with L2 across die counts or families still carry this partly die-count-dependent offset of a few percent.",
+    "The 50 ms timing covers one frequency. loop_inductance now re-discretises and re-assembles per frequency, so a 3-frequency call costs about 3\u00d7.",
+    "I could not finish a 0.35 mm mesh run: at 0.5 mm the model already has 12,348 bars and dense assembly, so finer runs were out of reach. That background job may still be running.",
+    "I could not compare against an L2 (FastHenry-class) reference."
+  ]
+}

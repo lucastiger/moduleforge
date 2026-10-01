@@ -130,14 +130,31 @@ class Layout:
     wire_sigma: float = SIGMA_AL_WIRE
 
     def fingerprint(self) -> str:
-        """Stable SHA-256 hash of everything ``to_conductors()`` and a thermal model read.
+        """Stable SHA-256 hex digest of the layout IR: every IR field but the two listed last.
 
-        Covers: family and ``dies_per_switch``; every LayerStack layer (name, material, thickness, sigma, k);
-        substrate and baseplate outlines; every trace (net, canonical rings); every Die field (position, size,
-        switch, thickness, attach_thickness, pads); every wire (net, 3D points, diameter); terminals;
-        ``backside_inset`` and ``wire_sigma``. Lengths are rounded to 1 nm; conductivities (sigma, k) are
-        rounded to 12 significant digits (relative rounding). Not covered: ``LayerStack.kind`` and
-        ``BondWire.loop_height`` (a label and a redundant generator parameter; the wire points are hashed).
+        That includes every input of ``to_conductors()``, which returns the whole ``LayerStack`` (``kind``
+        label included).
+
+        Covered: ``family`` and ``dies_per_switch``; the whole ``LayerStack`` (its ``kind`` label and, for
+        every layer, name, material, thickness, sigma and k); ``backside_inset`` and ``wire_sigma``; the
+        substrate ``outline`` and ``baseplate_outline`` (shapely-normalized rings); every ``Trace`` (net,
+        polygon rings); every ``Die`` (switch, cx, cy, w, h, thickness, attach_thickness, and each pad's name
+        and rectangle); every ``BondWire`` (net, 3D points, diameter); every ``Terminal`` (dict key, cx, cy,
+        w, h). Each value is hashed in place, together with its field and its element, so exchanging two different
+        values between two elements or two fields changes the digest. Traces, dies and wires are hashed in list
+        order; pads and terminals sorted by name (dict insertion order does not matter).
+
+        Quantization: lengths are quantized to 1 nm per field: each coordinate, size and thickness is rounded
+        on its own to the nearest integer number of nanometres (polygon rings after ``shapely.normalize``),
+        so changing one of them by more than 1 nm changes the digest. Conductivities (sigma, k) are rounded
+        to 12 significant digits. The rounding makes the digest insensitive to most float round-off, but it
+        does not guarantee that a smaller change is absorbed: a change of any size that carries a value across a
+        rounding boundary (half a nanometre, or half a unit in the 12th digit) changes the digest, and so can
+        moving a polygon vertex by less than 1 nm if that changes the vertex ``shapely.normalize`` starts the
+        ring at.
+
+        Not covered (exactly these two IR fields): ``BondWire.loop_height`` (a generator parameter that is
+        redundant with the hashed wire points) and ``Terminal.net`` (redundant with the hashed dict key).
         """
         h = hashlib.sha256()
 
@@ -151,7 +168,7 @@ class Layout:
             return f"{float(v):.12g}"
 
         put("family", self.family, self.dies_per_switch)
-        put("stack", [(la.name, la.material, nm(la.thickness), sig(la.sigma), sig(la.k))
+        put("stack", self.stack.kind, [(la.name, la.material, nm(la.thickness), sig(la.sigma), sig(la.k))
                       for la in self.stack.layers])
         put("backside_inset", nm(self.backside_inset), "wire_sigma", sig(self.wire_sigma))
         put("outline", _ring_ints(self.outline), _ring_ints(self.baseplate_outline))

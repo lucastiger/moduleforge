@@ -4,7 +4,7 @@ title: 'Fix E001''s design before registration: wire model error bounds, converg
   coverage (T0029/T0030 reviews)'
 type: design_experiment
 agent: scientist
-status: running
+status: review
 depends_on:
 - T0020
 description: 'Follow-up to the physics (T0029) and numerics (T0030) reviews of T0020 (project/reviews/T0020/).
@@ -283,3 +283,50 @@ history:
     all six pass on your committed work. Re-run the definition of done, change nothing unless a check
     fails, and report.'
   at: '2026-10-01T02:14:40+00:00'
+- attempt: 1
+  outcome: agent_finished
+  summary: 'I re-ran the full definition of done against the work already committed in this worktree (10c5966)
+    and changed nothing. All seven commands exit 0. The founder had fixed the one failure from attempt
+    1 in main at b0cafdb: the B1 reference integrals now use epsabs=0 and epsrel=1e-12 instead of scipy''s
+    default absolute tolerance of 1.49e-8. With that fix, main''s b1_exact_limits.py passes on the unchanged
+    runner, and B1''s stated bound holds in both limits with margin. I did not register E001.'
+  report:
+    summary: 'I re-ran the full definition of done against the work already committed in this worktree
+      (10c5966) and changed nothing. All seven commands exit 0. The founder had fixed the one failure
+      from attempt 1 in main at b0cafdb: the B1 reference integrals now use epsabs=0 and epsrel=1e-12
+      instead of scipy''s default absolute tolerance of 1.49e-8. With that fix, main''s b1_exact_limits.py
+      passes on the unchanged runner, and B1''s stated bound holds in both limits with margin. I did not
+      register E001.'
+    failure_class: none
+    confidence: 0.95
+    evidence:
+    - Commands were run from /Users/lukeskywalker/mf/wt/T0041 with their exit codes captured directly.
+      The only stderr was uv's VIRTUAL_ENV mismatch warning, which is harmless.
+    - '`uv run mfos exp check E001` -> exit 0'
+    - '`uv run ruff check experiments/runners/e001_reference.py` -> exit 0 (''All checks passed!'')'
+    - '`uv run python experiments/runners/e001_reference.py --analytic-only` -> exit 0. The run recorded
+      in /tmp/e001-analytic/result.json has all 8 sanity checks passed=True: closed_forms_published_values,
+      closed_forms_independent_check, image_plane_independent, wheeler_recession_independent, tied_branch_independent,
+      analytic_length_scaling, regime_valid, plane_truncation_bound.'
+    - '`uv run python ~/mf/main/project/dod/e001-design/b1_exact_limits.py` -> exit 0. At 100 Hz the runner
+      gives 8.31275 nH against an exact 8.31275 nH: error 1.12e-09, stated bound 5.41e-05. At 1e10 Hz
+      the runner gives 7.82904 nH against an exact 7.82914 nH: error 1.32e-05, stated bound 5.75e-05.'
+    - '`uv run python ~/mf/main/project/dod/e001-design/convergence_estimator.py` -> exit 0. The estimate
+      bounds the true remaining error at every ratio tested: rho=0.5 gives 3.125e-03 vs 2.500e-03, rho=0.8
+      gives 1.280e-02 vs 1.024e-02, rho=0.9 gives 1.823e-02 vs 1.458e-02.'
+    - '`uv run python ~/mf/main/project/dod/e001-design/design_contract.py` -> exit 0 (''E001 design contract
+      checks pass'')'
+    - '`uv run mfos gate --fast` -> exit 0 (''all gates passed'')'
+    - The only change in main's commit b0cafdb is to b1_exact_limits.py, adding epsabs=0 and epsrel=1e-12
+      to both quad calls. The thin-skin reference moved from 7.82829 to 7.82914 nH, which matches the
+      value attempt 1 found with three independent methods. The runner's bound was not inflated.
+    - '`git status --short` is clean. The deliverables are unchanged since commit 10c5966.'
+    files_written: []
+    experiment_drafts:
+    - experiments/drafts/E001.yaml
+    recommended_actions:
+    - 'Accept T0041 on the orchestrator''s own run of the definition of done. Only then register E001:
+      registration freezes the design.'
+    - Keep the tight quad tolerance (epsabs=0) in any future founder check whose integrals are around
+      1e-8 in SI units. The default epsabs silently caps the accuracy of such checks.
+    affects_acceptance_criteria: false

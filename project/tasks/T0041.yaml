@@ -4,7 +4,7 @@ title: 'Fix E001''s design before registration: wire model error bounds, converg
   coverage (T0029/T0030 reviews)'
 type: design_experiment
 agent: scientist
-status: running
+status: todo
 depends_on:
 - T0020
 description: 'Follow-up to the physics (T0029) and numerics (T0030) reviews of T0020 (project/reviews/T0020/).
@@ -114,3 +114,165 @@ history:
   summary: 'founder session: the failed attempt was a network outage (ENOTFOUND after sleep), not the
     agent; network errors now back off (see the fix commit)'
   at: '2026-10-01T01:03:32+00:00'
+- attempt: 1
+  outcome: agent_finished
+  summary: 'E001''s design is fixed, but one definition-of-done command still fails: `b1_exact_limits.py`
+    exits 1. The defect is in that founder-owned check, not the runner, and the fix is two arguments.
+    I left the runner''s bound alone rather than inflating it to pass.
+
+
+    **Why the B1 check fails.** Both of its `integrate.quad` calls use scipy''s default absolute tolerance,
+    epsabs = 1.49e-8. In SI units the thin-skin integral is only about 2.5e-8, so quad stops after 63
+    evaluations and returns a value 1.09e-4 too low (7.822823 nH; the correct value is 7.823677 nH). Three
+    methods agree on the correct value: tight quadrature, subtracting the log singularity analytically,
+    and the moment series. A copy of the script with only `epsabs=0, epsrel=1e-12` added passes: the runner''s
+    error is 1.1e-9 at 100 Hz and 1.'
+  report:
+    summary: 'E001''s design is fixed, but one definition-of-done command still fails: `b1_exact_limits.py`
+      exits 1. The defect is in that founder-owned check, not the runner, and the fix is two arguments.
+      I left the runner''s bound alone rather than inflating it to pass.
+
+
+      **Why the B1 check fails.** Both of its `integrate.quad` calls use scipy''s default absolute tolerance,
+      epsabs = 1.49e-8. In SI units the thin-skin integral is only about 2.5e-8, so quad stops after 63
+      evaluations and returns a value 1.09e-4 too low (7.822823 nH; the correct value is 7.823677 nH).
+      Three methods agree on the correct value: tight quadrature, subtracting the log singularity analytically,
+      and the moment series. A copy of the script with only `epsabs=0, epsrel=1e-12` added passes: the
+      runner''s error is 1.1e-9 at 100 Hz and 1.3e-5 at 10 GHz, against bounds of 5.4e-5 and 5.75e-5.
+      The 1.3e-5 is the expected finite-skin-depth term (-0.104 pH predicted, -0.103 pH observed). Passing
+      the unmodified script would need a B1 bound of at least 9.6e-5, which no derived term supports.
+      Registration would freeze that bound into E001.
+
+
+      **Defect neither review caught.** mfos loads specs with PyYAML (YAML 1.1), which reads `5.0e6`,
+      `2.0e7`, `8.0e7`, `5.8e7` and `3.77e7` as strings. With a stand-in L2 solver, the registered full
+      run crashed with status `error`, and `mfos register` would have frozen the strings into the spec.
+      The draft now writes `5.0e+6` etc. The runner''s new `checked_config` rejects any config value whose
+      type differs from `DEFAULT_CFG`.
+
+
+      **The five packet items:**
+
+      - **Wire model error (1):** handled. The round-wire self term now averages over the exact Bessel
+      current profile, covering the whole uniform-to-surface transition. A proximity dipole correction
+      is added. Every wire class has a derived bound: B1 5.4–5.7e-5, B2 ≤ 9.1e-4, B3 ≤ 1.28e-3, B4 ≤ 9.3e-4,
+      C0 ≤ 1.55e-4, C1 ≤ 1.55e-3, all within the 2e-3 target. The note (§4.3) gives each derivation and
+      a term-by-term table.
+
+      - **Convergence (2):** handled. `remaining_discretization_error` uses the observed ratio from at
+      least 3 levels with Roache''s 1.25 factor, and states the 2-level fallback. I added a guard: a level
+      that happens not to change a value (1.00, 1.02, 1.02) now gives 1.25 % instead of 0, so it can''t
+      be declared converged.
+
+      - **L2 contract (3):** handled. One mesh per refinement level for all frequencies of a call, and
+      `meta[''solver_tol'']` is required and checked. I kept f_lf = 100 Hz and tightened the tolerance
+      requirement instead; raising f_lf would break the bars'' DC closed forms.
+
+      - **Coverage (4):** handled. `--smoke` covers all 7 classes. The three new self-checks are in place,
+      and each fails under at least one source mutation (8 mutations in all; table in §4.5).
+
+      - **Hygiene (5):** handled. Draft keys and values equal `DEFAULT_CFG`, every key is read, the metric
+      interval is recorded at level 1.0, and the 1992 date was confirmed first-hand.
+
+
+      I also tightened the Bessel/reaction self-check. Its old 7.5e-5 result against a 1e-4 tolerance
+      was a quadrature artifact. In exact 1-D form it agrees to 5e-12, with tolerance 1e-6.
+
+
+      All other definition-of-done commands exit 0: exp check, ruff, `--analytic-only`, `convergence_estimator.py`,
+      `design_contract.py`, `mfos gate --fast`. Work is committed as 10c5966; the tree is clean.'
+    failure_class: none
+    root_cause: The one failing definition-of-done command, project/dod/e001-design/b1_exact_limits.py,
+      fails because of its own numerics. Both `integrate.quad` calls keep the default epsabs = 1.49e-8,
+      which is larger than the SI-unit integrals (about 2.5e-8 H), so QUADPACK accepts a rough estimate
+      of a log-singular integrand. Its thin-skin reference comes out 1.09e-4 low. The runner's closed
+      form is correct to 1.3e-5 or better against accurate references.
+    confidence: 0.9
+    evidence:
+    - 'Commands and exit codes (this session, after the final edits): `uv run mfos exp check E001` 0;
+      `uv run ruff check experiments/runners/e001_reference.py` 0; `uv run python experiments/runners/e001_reference.py
+      --analytic-only` 0 (status complete, 8/8 analytic checks pass); `uv run python project/dod/e001-design/b1_exact_limits.py`
+      1 ("f=1e+10: error 9.59e-05 exceeds the stated bound 5.75e-05"); `uv run python project/dod/e001-design/convergence_estimator.py`
+      0 (estimate = 1.25x true at rho 0.5/0.8/0.9); `uv run python project/dod/e001-design/design_contract.py`
+      0; `uv run mfos gate --fast` 0 (all gates passed).'
+    - '[F] The DoD''s thin-skin quad with defaults: 7.822823250 nH, 63 evaluations, error estimate 2.2e-9
+      accepted. With epsabs=0, epsrel=1e-12: 7.823676722 nH, 231 evaluations. Singularity-subtracted quad
+      and the moment series mu0/2pi[l ln(2l/r) - l + 4r/pi - 2r^2/(4l) + 6r^4/(32l^3)] give the same value.
+      So the reference is 1.09e-4 low.'
+    - '[F] Scratch copy of b1_exact_limits.py with only epsabs=0, epsrel=1e-12 added to its two quad calls
+      exits 0: runner error 1.12e-09 at 100 Hz (bound 5.41e-5) and 1.32e-05 at 10 GHz (bound 5.75e-5).'
+    - '[F] The 10 GHz residual is the finite-delta vs delta->0 difference: predicted Re(Delta<d>) * mu0/2pi
+      = -(2/pi) delta * mu0/2pi = -0.104 pH, observed -0.103 pH. At 100 GHz it shrinks in proportion to
+      delta, as predicted.'
+    - '[F] PyYAML parses the old draft''s freqs_hf_hz as [''5.0e6'',''2.0e7'',''8.0e7''] (str) and sigma_cu/sigma_al
+      as str. A full-mode run through a stand-in L2 with that config ended with status ''error'' (TypeError
+      at w = 2*pi*f). After the fix, the parsed draft config equals DEFAULT_CFG in keys, values and types,
+      and the same full-mode run completes: 32 compared values, 7 classes, all 14 sanity checks reported.'
+    - '[F] Mutation record: each source mutation makes the intended check fail, and the baseline passes
+      all checks. Image sign -> image_plane_independent + wheeler_recession_independent; recess delta
+      instead of delta/2 -> same two; no recession -> same two; tie without branch mutual -> tied_branch_independent;
+      T0020 filament-at-r -> closed_forms_independent_check; uniform-only moments -> published + independent;
+      conjugated reaction weights -> independent; proximity sign flipped -> independent.'
+    - '[F] Stand-in L2 runs (smoke): bias 0 gives l2_converged 8.05e-3 against a true remaining error
+      of 6.48e-3, and the interval [0, 0.016] is recorded at level 1.0. Bias 3% gives the interval [0.028,
+      0.046], which excludes 2%. solver_tol=1e-3 makes l2_solver_tolerance fail (ratio 987); a missing
+      solver_tol makes it fail too.'
+    - '[F] Bessel Z_int vs reaction integral, now in exact 1-D form: 4.7e-12 (5 MHz) and 1.0e-12 (80 MHz).
+      The old 2-D form gave 7.5e-5 against a 1e-4 tolerance.'
+    - '[F] Per-class bound breakdown printed from the runner. (a) self term: B1 5.4-5.7e-5; B2/B3 8.6-9.2e-4;
+      B4 6.5-6.7e-4; C0 1.4-1.5e-4; C1 1.8-1.9e-4. (b) proximity: up to 3.7e-4 (B3). (c) plane: C1 1.01-1.22e-3.
+      All stated totals are <= 1.55e-3.'
+    - '[F] Inferred, but with a wide margin: the proximity accuracy factor is the weakest link, and the
+      2e-3 conclusion survives a dipole correction wrong by up to 67% (B3) or 66% (C1).'
+    - '[F] FastHenry2 mulGlobal.h header re-fetched 2026-09-30: ''Copyright (c) 1992 Massachusetts Institute
+      of Technology, Cambridge, MA.'''
+    alternative_explanations:
+    - explanation: The runner's B1 closed form, not the DoD reference, is wrong by about 1e-4 at thin
+        skin.
+      how_to_discriminate: 'Evaluate the surface-chord average in three independent ways: quad with epsabs=0,
+        analytic subtraction of the log singularity (<ln d> = ln r), and the closed-form moment series.
+        All three give 7.823676722 nH, against the DoD''s 7.822823 nH. The runner''s finite-delta value
+        tracks the predicted -(2/pi) delta correction to 1%. Done; this explanation is rejected.'
+    - explanation: The DoD's thin-skin reference (delta -> 0 limit) and the runner (finite delta/r = 5.5e-3)
+        differ by physics large enough to need a larger bound.
+      how_to_discriminate: Predict the finite-delta difference analytically, -(2/pi) delta * mu0/2pi =
+        -0.104 pH = 1.3e-5 relative, and compare with the corrected script's error (1.32e-5). Done; the
+        physics difference is within the stated 5.75e-5 bound.
+    discriminating_tests:
+    - 'Run b1_exact_limits.py with epsabs=0, epsrel=1e-12 on both quad calls (scratch copy): exits 0 with
+      error 1.1e-9 / 1.3e-5 against bounds 5.4e-5 / 5.75e-5.'
+    - Load the draft through mfos's loader (yaml.safe_load -> ExperimentSpec -> model_dump_json) and check
+      the config value types; then run full mode through a stand-in L2 with MFOS_SPEC_JSON set.
+    - Source-mutation suite against analytic_checks (8 mutations, each caught).
+    recommended_actions:
+    - 'Founder: add `epsabs=0, epsrel=1e-12` to both integrate.quad calls in project/dod/e001-design/b1_exact_limits.py,
+      then re-run the definition of done. No runner change is needed; the corrected script passes as committed
+      (10c5966).'
+    - 'Founder/planner: do not accept a later attempt that passes the unmodified b1 script by widening
+      B1''s residual_model_error. The true error is <= 1.3e-5 and the bound would be frozen at registration.'
+    - Register E001 only after the DoD fix. The registered spec must keep the sign-explicit exponents
+      (5.0e+6 etc.); checked_config makes a regression fail loudly.
+    - 'Tooling (protected, founder): consider a config type check in `mfos exp check` (YAML 1.1 floats)
+      and hashing the runner at registration (T0029 finding 2). Until then, geometry, tolerances and bounds
+      in the runner are not frozen by registration.'
+    - 'T0022 (L2 adapter): report meta[''solver_tol''] (B3 needs <= 4.1e-8 at 100 Hz) and meta[''n_filaments'']
+      as one integer per call, with one mesh graded to max(freqs_hz).'
+    experiment_drafts:
+    - experiments/drafts/E001.yaml
+    files_written:
+    - experiments/drafts/E001.yaml
+    - experiments/runners/e001_reference.py
+    - research/notes/o001-l2-reference.md
+    - project/memory/lessons.md
+    affects_acceptance_criteria: false
+- attempt: 1
+  outcome: dod_failed
+  summary: definition of done not met
+  failure_output: "FAIL uv run python project/dod/e001-design/b1_exact_limits.py\nB1 f=1e+02 Hz: runner\
+    \ 8.31275 nH, exact 8.31276 nH, error 6.78e-07, bound 5.41e-05\nB1 f=1e+10 Hz: runner 7.82904 nH,\
+    \ exact 7.82829 nH, error 9.59e-05, bound 5.75e-05\n\nwarning: `VIRTUAL_ENV=/Users/lukeskywalker/mf/main/.venv`\
+    \ does not match the project environment path `.venv` and will be ignored; use `--active` to target\
+    \ the active environment instead\nTraceback (most recent call last):\n  File \"/Users/lukeskywalker/mf/wt/T0041/project/dod/e001-design/b1_exact_limits.py\"\
+    , line 49, in <module>\n    assert not problems, \"; \".join(problems)\n           ^^^^^^^^^^^^\n\
+    AssertionError: f=1e+10: error 9.59e-05 exceeds the stated bound 5.75e-05\n"
+  at: '2026-10-01T01:18:30+00:00'

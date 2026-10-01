@@ -242,3 +242,5 @@
 {"ts": "2026-10-01T01:03:40+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0041-scientist-20260930T180340-0118", "task": "T0041", "role": "scientist", "session": "a699809b-307e-4107-839b-22f712a76e8f"}
 {"ts": "2026-10-01T01:03:40+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0047-builder-20260930T180340-5126", "task": "T0047", "role": "builder", "session": "c8112dc9-c47a-4d05-b879-9e3a39f2464c"}
 {"ts": "2026-10-01T01:04:08+00:00", "event": "merged", "actor": "orchestrator", "task": "T0037"}
+{"ts": "2026-10-01T01:18:23+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0041-scientist-20260930T180340-0118", "status": "completed", "cost": 4.367834600000001, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-10-01T01:18:30+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0041", "signal": "dod_failed", "action": "repair"}

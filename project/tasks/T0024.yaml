@@ -60,7 +60,17 @@ description: 'Draft experiments/drafts/E002.yaml, experiments/drafts/E003.yaml, 
   Both runners use mfos.evidence.ExperimentRun and support `--smoke` (≤ 6 layouts, an unsealed dev seed,
   run_dir /tmp/e002-smoke and /tmp/e003-smoke). Record the smoke outputs in the note as a pipeline check
   only. Do not change design parameters (n, strata, metrics, thresholds) because of L1-vs-L2 agreement
-  seen in smoke. Do not write under src/.'
+  seen in smoke. Do not write under src/.
+
+
+  Founder context (2026-10-01, reviews T0053/T0054 of T0047; project/reviews/T0047/): after T0047, L1''s
+  default mesh reads ~+2..+5 % above the mesh-converged L1 (worst on 6-die interleaved/u_shaped layouts;
+  +1.2 % at 2 dies to +2.0 % at 6 dies against the 1 mm mesh on fresh seeds), and the Richardson estimate
+  behind that range is itself uncertain (observed order near 0 on 4/2/1/0.5 mm). The bar internal inductance
+  is ~0.5 % low and the plane''s own surface-impedance inductance is neglected (both documented in the
+  module docstring); cost is ~50 ms per frequency. Design E002 so this known, die-count-correlated discretisation
+  bias cannot be mistaken for missing physics by the F3 diagnosis (e.g. measure default-vs-converged L1
+  on the sealed sample, or pre-register an allowance), without fitting L1 to L2.'
 context_files:
 - project/objectives/O001/objective.yaml
 - research/notes/o001-l2-reference.md

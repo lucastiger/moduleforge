@@ -4,7 +4,7 @@ title: 'Fix E001''s design before registration: wire model error bounds, converg
   coverage (T0029/T0030 reviews)'
 type: design_experiment
 agent: scientist
-status: todo
+status: running
 depends_on:
 - T0020
 description: 'Follow-up to the physics (T0029) and numerics (T0030) reviews of T0020 (project/reviews/T0020/).
@@ -76,12 +76,15 @@ definition_of_done:
 - cmd: uv run python ~/mf/main/project/dod/e001-design/design_contract.py
   exists: null
   timeout_s: 900
+- cmd: uv run python ~/mf/main/project/dod/e001-design/b3_mutual_exact.py
+  exists: null
+  timeout_s: 900
 experiment: null
 risk: high
 model: null
 budget_usd: 8.0
 max_turns: 80
-attempts: 1
+attempts: 2
 max_attempts: 3
 branch: task/T0041-fix-e001-s-design-before-registration-wi
 pr: null
@@ -91,6 +94,7 @@ runs:
 - T0041-scientist-20260930T170029-cad2
 - T0041-scientist-20260930T180340-0118
 - T0041-scientist-20260930T191441-f691
+- T0041-scientist-20261001T000517-c000
 created_by: founder
 created_at: '2026-09-30T13:42:17+00:00'
 protected_approved: false
@@ -368,3 +372,43 @@ history:
     spread over orders of magnitude) can have κ ≫ 1. The l2_solver_tolerance check (B3 needs ≤ 4.1e-8,
     which I reproduced) can therefore pass while the error in L exceeds solver_err_budget.'
   at: '2026-10-01T06:14:05+00:00'
+- attempt: 1
+  outcome: review_findings
+  summary: 'The physics review (T0051) accepted with caveats; its findings (below) complement the numerics
+    rejection above. Founder session also added checks: project/dod/e001-design/b3_mutual_exact.py (B3
+    M12 against the cross-section-averaged exact mutual; apply the <d>/AMD shift to every inter-wire and
+    wire-image mutual), algebraic sequences in convergence_estimator.py, and a constant refinement ratio
+    in the L2 contract. The level=1.0 requirement was dropped: label the interval honestly (it mixes bounds
+    and GCI-type estimates). Also fix the stale note text about the founder''s b1 check (fixed in b0cafdb)
+    and B3''s resistance (4.13 mOhm).'
+  failure_output: '- [major] Mutual terms between parallel round-wire segments (and wire-image pairs)
+    ignore the finite-cross-section (AMD) shift, so the stated B3 M12 bound is wrong by about 400–800×:
+    The fix adds the mean-distance correction (<d> instead of r) to wire SELF terms because M(l,d) is
+    not harmonic in the transverse plane: its ''+d'' end term has ∇_T²M = μ0/2π(1/d − 1/√(l²+d²)). The
+    same effect applies to every MUTUAL term between finite parallel round segments with axisymmetric
+    current, and to each segment''s own image. ⟨M⟩ − M(D) ≈ (⟨ρa²⟩+⟨ρb²⟩)/4 · μ0/2π (1/D − 1/√(l²+D²)).
+    This is Grover''s arithmetic-mean-distance (AMD) rule for the linear term. `_pair_mutual` still uses
+    fil_mutual at the centre distance for wire–wire pairs and for images. `residual_model_error` gives
+    term (a) zero weight for M12 (ui[k]·uj[k] = 0), and term (b) only covers the dipole (n=1) mode. So
+    nothing ac
+
+    - [minor] The note still says the founder''s DoD b1_exact_limits.py fails, but the DoD on main has
+    since been fixed: Note §4.3 (''it fails, and the defect is in its reference'') and open item 5 say
+    the script keeps scipy''s default epsabs. The current ~/mf/main/project/dod/e001-design/b1_exact_limits.py
+    already passes TIGHT = {epsabs: 0, epsrel: 1e-12} to both quad calls. The note is therefore stale
+    and asks for a fix that has already been made. By hand, the runner should now pass the script: the
+    10 GHz difference is −(2/π)δ·μ0/2π ≈ 0.104 pH, i.e. 1.3e-5 against a bound of 5.75e-5. The DC error
+    is ~1e-9 against 5.4e-5.
+
+    - [minor] The note gives the wrong resistance for B3 in the solver-tolerance rationale: The note says
+    B3 has ''R = 3.8 mΩ''. The staple is 11 mm of Al wire, Ø0.3 mm: R = 0.011/(3.77e7·π·(1.5e-4)²) = 4.13
+    mΩ. This value is consistent with the amplification the note itself quotes (~2400) and with the required
+    solver_tol of 4.1e-8. The code''s `solver_tol_required` is unaffected; only the prose is wrong.
+
+    - [note] Self-term bound (a) and proximity bound (b) are partly inferred ([I]) rather than derived:
+    Two factors are heuristic: the r²/l ''stiffness ≥ l/4'' argument and the ''8r/l, factor 2'' end-region
+    allowance. The tube PEEC (self term, 15–120× margin) and the two-wire line (dipole, 1.8e-2 against
+    a 3.1e-2 tolerance) back them empirically, but only for isolated or infinite configurations, not for
+    corners or short adjacent legs. This is acceptable given the margins to 2e-3, but these bounds are
+    evidence-backed estimates, not proofs.'
+  at: '2026-10-01T07:05:17+00:00'

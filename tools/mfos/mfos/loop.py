@@ -31,10 +31,12 @@ from .store import Store, now
 
 TERMINAL = {"done", "cancelled", "failed", "needs_founder"}
 OBJ_IDLE = {"draft", "passed", "failed", "abandoned", "superseded", "needs_founder"}
-# The account, not the agent, ran out of capacity: back off without using an attempt. "session limit", "weekly
-# limit" and "limit reached" are the Claude Code CLI's plan-limit messages (O001 critics, 2026-09-30).
+# The account or the network, not the agent, failed: back off without using an attempt. "session limit", "weekly
+# limit" and "limit reached" are the Claude Code CLI's plan-limit messages (O001 critics, 2026-09-30); "can't
+# reach the api server" / ENOTFOUND is its message when the machine has no network, e.g. waking from sleep (T0041,
+# 2026-10-01).
 CAPACITY_SIGNS = ("rate limit", "usage limit", "session limit", "weekly limit", "limit reached", "overloaded",
-                  "429", "529", "quota")
+                  "429", "529", "quota", "can't reach the api server", "enotfound", "econnrefused", "etimedout")
 
 
 def acquire_loop_lock(store: Store) -> Optional[Any]:

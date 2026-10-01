@@ -167,7 +167,8 @@ def test_a_plan_limit_backs_off_instead_of_burning_attempts(sandbox):
         return s.task("T9001")
 
     for text in ("You've hit your session limit · resets 6pm (America/Los_Angeles)",
-                 "You've hit your weekly limit · resets Oct 3, 9am", "5-hour limit reached ∙ resets 3pm"):
+                 "You've hit your weekly limit · resets Oct 3, 9am", "5-hour limit reached ∙ resets 3pm",
+                 "API Error: Can't reach the API server — check your internet or DNS (ENOTFOUND)"):
         t = finish(text)
         assert (t.status, t.attempts, t.history[-1]["outcome"]) == ("todo", 0, "capacity_backoff"), text
     assert o._backoff_active()

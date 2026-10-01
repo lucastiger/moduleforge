@@ -349,3 +349,4 @@
 {"ts": "2026-10-01T16:31:06+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 1152, "runs_extended": 0}
 {"ts": "2026-10-01T17:20:09+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 2647, "runs_extended": 0}
 {"ts": "2026-10-01T17:24:58+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 27594}
+{"ts": "2026-10-01T17:25:10+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 27674}

@@ -1,0 +1,53 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "Mutual terms between parallel round-wire segments (and wire-image pairs) ignore the finite-cross-section (AMD) shift, so the stated B3 M12 bound is wrong by about 400\u2013800\u00d7",
+      "detail": "The fix adds the mean-distance correction (<d> instead of r) to wire SELF terms because M(l,d) is not harmonic in the transverse plane: its '+d' end term has \u2207_T\u00b2M = \u03bc0/2\u03c0(1/d \u2212 1/\u221a(l\u00b2+d\u00b2)). The same effect applies to every MUTUAL term between finite parallel round segments with axisymmetric current, and to each segment's own image. \u27e8M\u27e9 \u2212 M(D) \u2248 (\u27e8\u03c1a\u00b2\u27e9+\u27e8\u03c1b\u00b2\u27e9)/4 \u00b7 \u03bc0/2\u03c0 (1/D \u2212 1/\u221a(l\u00b2+D\u00b2)). This is Grover's arithmetic-mean-distance (AMD) rule for the linear term. `_pair_mutual` still uses fil_mutual at the centre distance for wire\u2013wire pairs and for images. `residual_model_error` gives term (a) zero weight for M12 (ui[k]\u00b7uj[k] = 0), and term (b) only covers the dipole (n=1) mode. So nothing accounts for this n=0 size effect. An L2 that resolves the round cross-section (filament bundles with exact filament mutuals) converges to the value that includes the shift. Hand computation for B3: M12 = 2.698 nH (matches the note's 2.70). The AMD shift is 1.05e-5 m \u00d7 \u03bc0/2\u03c0 \u2248 2.1e-12 H at HF (\u27e8\u03c1\u00b2\u27e9\u2192r\u00b2), i.e. 7.8e-4 relative, and \u2248 3.9e-4 at 100 Hz (uniform current). The stated M12 residual is \u2264 1e-6. Other cases: C1's self-image pairs (D \u2248 2.03 mm) give \u2248 3.2e-12 H \u2248 2.2e-4, which none of the derived terms (a), (b), (c) cover. It is absorbed only by the unused part of the 1e-3 truncation allowance. B4 is \u2248 2.2e-4 and C0 \u2248 3e-5. The 2 % pass/fail decision and the 'all residuals < 2e-3' conclusion survive. However, the level-1.0 'deterministic bound' interval is false for B3 M12: with a perfect L2, max_i(err_i \u2212 u_i)+ would claim the L2 has an error of at least ~7.8e-4. None of the self-checks can catch this. The tube PEEC tests one isolated segment, and the two-wire check uses a 1 m line where the effect hides inside the 4p/l slack.",
+      "evidence": "runner L414-439 (`_pair_mutual`: fil_mutual at the centre distance, also used for zmirror images); L852-858 (`residual_model_error`: (a) weighted by ui[k]*uj[k], which is 0 for M12; (b) dipole only); note \u00a74.3 table 'B3 M12 | 0 | \u2264 1e-6' and the 'Why B3 M12 is so small' paragraph (dipole argument only). Hand numbers: top pair 1.125e-8\u00b7(666.7\u2212122.9) = 6.12e-6 m; legs 2 \u00d7 1.125e-8\u00b7(666.7\u2212471.4) = 4.39e-6 m; total \u00d7 2e-7 H/m = 2.10e-12 H; divided by 2.698e-9 H = 7.8e-4.",
+      "suggested_check": "Compute B3's M12 at 100 Hz by brute-force averaging fil_mutual over two uniform disks (e.g. 2-D Gauss over each cross-section). Expect \u2248 3.9e-4 above the closed form. Then either add the \u27e8\u03c1\u00b2\u27e9/4\u00b7\u2207\u00b2M (AMD) correction to wire\u2013wire and wire\u2013image mutuals or add it as a residual term."
+    },
+    {
+      "severity": "minor",
+      "title": "The note still says the founder's DoD b1_exact_limits.py fails, but the DoD on main has since been fixed",
+      "detail": "Note \u00a74.3 ('it fails, and the defect is in its reference') and open item 5 say the script keeps scipy's default epsabs. The current ~/mf/main/project/dod/e001-design/b1_exact_limits.py already passes TIGHT = {epsabs: 0, epsrel: 1e-12} to both quad calls. The note is therefore stale and asks for a fix that has already been made. By hand, the runner should now pass the script: the 10 GHz difference is \u2212(2/\u03c0)\u03b4\u00b7\u03bc0/2\u03c0 \u2248 0.104 pH, i.e. 1.3e-5 against a bound of 5.75e-5. The DC error is ~1e-9 against 5.4e-5.",
+      "evidence": "main DoD lines 19-21, 39-41 (TIGHT) vs note lines 354-376 and 521-522",
+      "suggested_check": "Rerun b1_exact_limits.py from main and update \u00a74.3 and open item 5 of the note."
+    },
+    {
+      "severity": "minor",
+      "title": "The note gives the wrong resistance for B3 in the solver-tolerance rationale",
+      "detail": "The note says B3 has 'R = 3.8 m\u03a9'. The staple is 11 mm of Al wire, \u00d80.3 mm: R = 0.011/(3.77e7\u00b7\u03c0\u00b7(1.5e-4)\u00b2) = 4.13 m\u03a9. This value is consistent with the amplification the note itself quotes (~2400) and with the required solver_tol of 4.1e-8. The code's `solver_tol_required` is unaffected; only the prose is wrong.",
+      "evidence": "note line 178 vs hand computation: 4.128e-3/(2\u03c0\u00b7100\u00b72.70e-9) = 2435, and 1e-4/2435 = 4.1e-8",
+      "suggested_check": "Change the note to R \u2248 4.1 m\u03a9."
+    },
+    {
+      "severity": "note",
+      "title": "Self-term bound (a) and proximity bound (b) are partly inferred ([I]) rather than derived",
+      "detail": "Two factors are heuristic: the r\u00b2/l 'stiffness \u2265 l/4' argument and the '8r/l, factor 2' end-region allowance. The tube PEEC (self term, 15\u2013120\u00d7 margin) and the two-wire line (dipole, 1.8e-2 against a 3.1e-2 tolerance) back them empirically, but only for isolated or infinite configurations, not for corners or short adjacent legs. This is acceptable given the margins to 2e-3, but these bounds are evidence-backed estimates, not proofs.",
+      "evidence": "runner docstring L832-840; note \u00a74.3 (a), (b)",
+      "suggested_check": "Optional: compare against a filament-bundle PEEC of the B3 staple pair."
+    }
+  ],
+  "independent_checks_performed": [
+    "Re-derived the series expansion of the Grover filament mutual M(l,d) = \u03bc0/2\u03c0[l asinh(l/d) \u2212 \u221a(l\u00b2+d\u00b2) + d] \u2192 l ln(2l/d) \u2212 l + d \u2212 d\u00b2/(4l) + d\u2074/(32l\u00b3): the coefficients match the runner and the note.",
+    "Re-derived the line-dipole response from continuity of A_z and \u2202A_z/\u2202\u03c1 for the n=1 mode: D/(Ga\u00b2) = J2(ka)/J0(ka), so \u03c7 = \u2212J2/J0. Confirmed the DC limit j(a/\u03b4)\u00b2/4 (k = (1\u2212j)/\u03b4) and the PEC limit \u2192 1.",
+    "Checked the proximity matrix formula \u0394Z_tu = \u2212j\u03c9\u03c7(2\u03c0r\u00b2/\u03bc0)\u222bg_t\u00b7g_u against the exact two-wire line: arccosh(p/2r) \u2212 ln(p/r) = \u2212(r/p)\u00b2 \u2212 1.5(r/p)\u00b2\u00b7(r/p)\u00b2\u2026; at p/r = 10 this gives \u22120.010151 vs a leading \u22120.01, consistent with the stated next-multipole term of 1.5(r/p)\u00b2.",
+    "Checked the distance-moment identities \u27e8d\u00b2\u27e9 = 2\u27e8\u03c1\u00b2\u27e9 and \u27e8d\u2074\u27e9 = 2\u27e8\u03c1\u2074\u27e9 + 4\u27e8\u03c1\u00b2\u27e9\u00b2, their uniform limits (r\u00b2, 5r\u2074/3) and surface limits (2r\u00b2, 6r\u2074), and the coaxial-circle mean distance (2/\u03c0)(a+b)E(4ab/(a+b)\u00b2) in the a=b and a\u21920 limits.",
+    "Checked that the Bessel Z_int equals the unconjugated reaction (1/\u03c3)\u222bJ\u00b2 + j\u03c9\u03bc0/2\u03c0(ln r \u2212 \u27e8ln d\u27e9), using E_z + j\u03c9A_z = const in the cross-section.",
+    "Expanded Carson's half-space integral against the Wheeler recession: both agree at first order (\u03b4/2h); at second order Carson's real part is 0 and Wheeler's is \u2212\u00bd(\u03b4/2h)\u00b2. This reproduces the note's observed ratio of 0.50 and shows the (\u03b4/2h)\u00b2 tolerance has a 2\u00d7 margin.",
+    "Computed B3's M12 by hand (2.698 nH, matching the note's 2.70) and the missing AMD shift: 2.1e-12 H, i.e. 7.8e-4 at HF and 3.9e-4 at DC, against a stated bound of \u2264 1e-6. Also estimated the C1 self-image AMD shift (~2.2e-4), B4 (~2.2e-4) and C0 (~3e-5).",
+    "Recomputed the B3 solver-tolerance amplification: R = 4.13 m\u03a9, \u03c9M12 = 1.70 \u00b5\u03a9, amp \u2248 2435, required tolerance 4.1e-8. The code is consistent; the note's '3.8 m\u03a9' is not.",
+    "Traced convergence_estimator.py by hand against `remaining_discretization_error`: for geometric sequences with \u03c1 \u2208 {0.5, 0.8, 0.9} the estimate is exactly 1.25\u00d7 the true remaining error; a flat sequence gives 0 (ratio(0,0) = 0, base 0). It passes.",
+    "Read design_contract.py and the runner: every draft config key is read as cfg[\"key\"], the 7 smoke classes are all covered, the metric is recorded with level=1.0, 'solver_tol' and 'one mesh' are in contract \u00a73, and '1992' is in the note. It should pass, assuming --analytic-only exits 0.",
+    "Read the current b1_exact_limits.py on main (it now uses epsabs=0) and checked by hand the predicted 10 GHz residual of 1.3e-5 (Re \u0394\u27e8d\u27e9 = \u2212(2/\u03c0)\u03b4) against the 5.75e-5 bound. It should pass, which makes the note's 'it fails' statement stale."
+  ],
+  "caveats": [
+    "Bash was denied in this session, so I could not execute any definition-of-done command: mfos exp check, ruff, --analytic-only, or the three DoD scripts. Pass/fail of those commands was assessed only by reading code and by hand arithmetic; the orchestrator's deterministic checks are authoritative.",
+    "The packet's diff was truncated partway through the note's \u00a73. I reviewed the full note and the runner from the worktree instead.",
+    "Bounds hold as stated for B1, B2, B3 L11 and C0. For B4 and C1 the stated totals probably still bound the true closed-form error, but only through slack: the conservative self-term (a) and the largely unused 1e-3 truncation allowance. They do not hold term by term.",
+    "The B3 M12 stated residual (\u2264 1e-6) is invalid. The level-1.0 'deterministic bound' interval of max_rel_err_vs_analytic is therefore not a valid bound if a well-resolved L2 is run. The 2 % decision is unaffected (~8e-4 \u226a 2e-2).",
+    "The open item on registration hashing only the YAML (runner geometry and bounds not frozen) is acknowledged in the note and is outside this change."
+  ]
+}

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-01T02:16:20+00:00 from repository state — do not edit_
+_generated 2026-10-01T02:24:39+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
@@ -8,18 +8,16 @@ _generated 2026-10-01T02:16:20+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $52.50/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $54.45/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 25, failed: 2, review: 1, running: 2, todo: 8
+cancelled: 14, done: 26, failed: 2, review: 1, running: 2, todo: 7
 
 - T0041 `review` scientist/design_experiment: Fix E001's design before registration: wire model error bounds, convergence estimate, L2 contract, coverage (T0029/T0030 reviews) (attempt 1)
 - T0047 `running` builder/implement: L1 fidelity: converged bond-wire segmentation, consistent bar internal inductance, mesh within 3 % at <= 50 ms (T0044/T0045 reviews) (attempt 2)
-- T0051 `running` critic/review: Review T0041 (physics) (attempt 1)
+- T0052 `running` critic/review: Review T0041 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-01T01:03:32+00:00 task_added {"task": "T0050"}
-- 2026-10-01T01:03:32+00:00 inbox_resolved {"id": "I0016", "status": "approved", "note": "Approved per the founder's standing instruction: DoD verified (exhaustive 48-mutant check incl. label re-pairing)
 - 2026-10-01T01:03:40+00:00 run_started {"run": "T0041-scientist-20260930T180340-0118", "task": "T0041", "role": "scientist", "session": "a699809b-307e-4107-839b-22f712a76e8f"}
 - 2026-10-01T01:03:40+00:00 run_started {"run": "T0047-builder-20260930T180340-5126", "task": "T0047", "role": "builder", "session": "c8112dc9-c47a-4d05-b879-9e3a39f2464c"}
 - 2026-10-01T01:04:08+00:00 merged {"task": "T0037"}
@@ -33,3 +31,5 @@ cancelled: 14, done: 25, failed: 2, review: 1, running: 2, todo: 8
 - 2026-10-01T02:16:08+00:00 run_finished {"run": "T0041-scientist-20260930T191441-f691", "status": "completed", "cost": 0.24926800000000002, "subtype": "success", "report": "structured_output"}
 - 2026-10-01T02:16:19+00:00 verified {"task": "T0041"}
 - 2026-10-01T02:16:20+00:00 run_started {"run": "T0051-critic-20260930T191620-e452", "task": "T0051", "role": "critic", "session": "4e1bf6c7-70bc-458e-8843-876376f183ae"}
+- 2026-10-01T02:24:38+00:00 run_finished {"run": "T0051-critic-20260930T191620-e452", "status": "completed", "cost": 1.9472038, "subtype": "success", "report": "structured_output"}
+- 2026-10-01T02:24:39+00:00 run_started {"run": "T0052-critic-20260930T192439-5135", "task": "T0052", "role": "critic", "session": "db95bfe3-9cd4-492b-a0a9-0edfb0ed2069"}

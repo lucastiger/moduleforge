@@ -9,7 +9,10 @@ refs:
 - T0041
 options: []
 recommendation: ''
-status: open
-response: ''
+status: approved
+response: 'Approved per the founder''s standing instruction (draft only, nothing frozen): DoD verified;
+  T0055/T0056 accept_with_caveats. Wire-mutual blocker fixed (B3 M12 9.8e-7/9.0e-6 vs bounds 2.0e-6/1.5e-5).
+  Their shared major (refinement rule falsely declares convergence on pre-asymptotic sequences) and contract
+  verifiability go to a follow-up before E001 registration.'
 created_at: '2026-10-01T11:54:35+00:00'
-resolved_at: null
+resolved_at: '2026-10-01T14:06:55+00:00'

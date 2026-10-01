@@ -1,9 +1,8 @@
 # ModuleForge status
-_generated 2026-10-01T14:04:26+00:00 from repository state — do not edit_
+_generated 2026-10-01T14:07:00+00:00 from repository state — do not edit_
 
-## Founder inbox (2 open)
+## Founder inbox (1 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
-- **I0019** [protected_change] T0041: merge needs founder approval
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -12,12 +11,11 @@ _generated 2026-10-01T14:04:26+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $84.06/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 32, failed: 2, needs_founder: 1, todo: 7
+cancelled: 14, done: 32, failed: 2, merge: 1, todo: 7
 
-- T0041 `needs_founder` scientist/design_experiment: Fix E001's design before registration: wire model error bounds, convergence estimate, L2 contract, coverage (T0029/T0030 reviews) (attempt 2)
+- T0041 `merge` scientist/design_experiment: Fix E001's design before registration: wire model error bounds, convergence estimate, L2 contract, coverage (T0029/T0030 reviews) (attempt 2)
 
 ## Recent events
-- 2026-10-01T10:23:12+00:00 run_started {"run": "T0041-scientist-20261001T032312-efff", "task": "T0041", "role": "scientist", "session": "d09da79b-112e-4270-a970-c28f299775f2"}
 - 2026-10-01T10:23:47+00:00 run_finished {"run": "T0041-scientist-20261001T032312-efff", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-01T10:23:47+00:00 capacity_backoff {"task": "T0041", "minutes": 30}
 - 2026-10-01T10:54:15+00:00 run_started {"run": "T0041-scientist-20261001T035415-ff14", "task": "T0041", "role": "scientist", "session": "5239edf3-0b82-476d-a482-64def6d49371"}
@@ -32,3 +30,4 @@ cancelled: 14, done: 32, failed: 2, needs_founder: 1, todo: 7
 - 2026-10-01T11:54:33+00:00 run_finished {"run": "T0056-critic-20261001T044602-fa9d", "status": "completed", "cost": 2.3688698, "subtype": "success", "report": "structured_output"}
 - 2026-10-01T11:54:35+00:00 inbox_opened {"id": "I0019", "kind": "protected_change", "subject": "T0041: merge needs founder approval"}
 - 2026-10-01T14:00:57+00:00 sleep_detected {"gap_s": 469, "runs_extended": 0}
+- 2026-10-01T14:06:55+00:00 inbox_resolved {"id": "I0019", "status": "approved", "note": "Approved per the founder's standing instruction (draft only, nothing frozen): DoD verified; T0055/T0056 accept_wi

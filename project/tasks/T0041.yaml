@@ -4,7 +4,7 @@ title: 'Fix E001''s design before registration: wire model error bounds, converg
   coverage (T0029/T0030 reviews)'
 type: design_experiment
 agent: scientist
-status: merge
+status: done
 depends_on:
 - T0020
 description: 'Follow-up to the physics (T0029) and numerics (T0030) reviews of T0020 (project/reviews/T0020/).

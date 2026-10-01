@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-01T02:28:58+00:00 from repository state — do not edit_
+_generated 2026-10-01T02:29:32+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
@@ -8,17 +8,14 @@ _generated 2026-10-01T02:28:58+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $57.54/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $58.82/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 26, failed: 2, review: 1, running: 1, todo: 8
+cancelled: 14, done: 26, failed: 2, review: 1, todo: 9
 
 - T0041 `review` scientist/design_experiment: Fix E001's design before registration: wire model error bounds, convergence estimate, L2 contract, coverage (T0029/T0030 reviews) (attempt 1)
-- T0052 `running` critic/review: Review T0041 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-01T01:04:08+00:00 merged {"task": "T0037"}
-- 2026-10-01T01:18:23+00:00 run_finished {"run": "T0041-scientist-20260930T180340-0118", "status": "completed", "cost": 4.367834600000001, "subtype": "success", "report": "structured_output"}
 - 2026-10-01T01:18:30+00:00 task_failed_attempt {"task": "T0041", "signal": "dod_failed", "action": "repair"}
 - 2026-10-01T01:31:27+00:00 inbox_resolved {"id": "I0017", "status": "approved", "note": "Founder: daily LLM budget stays at $40 (policy daily_usd = 40.0, unchanged). Approving only clears the reached-no
 - 2026-10-01T01:37:37+00:00 run_finished {"run": "T0047-builder-20260930T180340-5126", "status": "error", "cost": 3.5007135999999988, "subtype": "error_max_turns", "report": "missing"}
@@ -32,3 +29,5 @@ cancelled: 14, done: 26, failed: 2, review: 1, running: 1, todo: 8
 - 2026-10-01T02:24:39+00:00 run_started {"run": "T0052-critic-20260930T192439-5135", "task": "T0052", "role": "critic", "session": "db95bfe3-9cd4-492b-a0a9-0edfb0ed2069"}
 - 2026-10-01T02:28:58+00:00 run_finished {"run": "T0047-builder-20260930T191441-9623", "status": "error", "cost": 3.0839909999999993, "subtype": "success", "report": "missing"}
 - 2026-10-01T02:28:58+00:00 capacity_backoff {"task": "T0047", "minutes": 30}
+- 2026-10-01T02:29:31+00:00 run_finished {"run": "T0052-critic-20260930T192439-5135", "status": "error", "cost": 1.2817064, "subtype": "success", "report": "missing"}
+- 2026-10-01T02:29:31+00:00 capacity_backoff {"task": "T0052", "minutes": 30}

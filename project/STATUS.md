@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-01T03:00:37+00:00 from repository state — do not edit_
+_generated 2026-10-01T03:30:59+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
@@ -11,13 +11,13 @@ _generated 2026-10-01T03:00:37+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $58.82/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 26, failed: 2, review: 1, todo: 9
+cancelled: 14, done: 26, failed: 2, review: 1, running: 2, todo: 7
 
 - T0041 `review` scientist/design_experiment: Fix E001's design before registration: wire model error bounds, convergence estimate, L2 contract, coverage (T0029/T0030 reviews) (attempt 1)
+- T0047 `running` builder/implement: L1 fidelity: converged bond-wire segmentation, consistent bar internal inductance, mesh within 3 % at <= 50 ms (T0044/T0045 reviews) (attempt 2)
+- T0052 `running` critic/review: Review T0041 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-01T02:16:08+00:00 run_finished {"run": "T0041-scientist-20260930T191441-f691", "status": "completed", "cost": 0.24926800000000002, "subtype": "success", "report": "structured_output"}
-- 2026-10-01T02:16:19+00:00 verified {"task": "T0041"}
 - 2026-10-01T02:16:20+00:00 run_started {"run": "T0051-critic-20260930T191620-e452", "task": "T0051", "role": "critic", "session": "4e1bf6c7-70bc-458e-8843-876376f183ae"}
 - 2026-10-01T02:24:38+00:00 run_finished {"run": "T0051-critic-20260930T191620-e452", "status": "completed", "cost": 1.9472038, "subtype": "success", "report": "structured_output"}
 - 2026-10-01T02:24:39+00:00 run_started {"run": "T0052-critic-20260930T192439-5135", "task": "T0052", "role": "critic", "session": "db95bfe3-9cd4-492b-a0a9-0edfb0ed2069"}
@@ -31,3 +31,5 @@ cancelled: 14, done: 26, failed: 2, review: 1, todo: 9
 - 2026-10-01T03:00:36+00:00 capacity_backoff {"task": "T0052", "minutes": 30}
 - 2026-10-01T03:00:36+00:00 run_finished {"run": "T0047-builder-20260930T200004-b169", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-01T03:00:36+00:00 capacity_backoff {"task": "T0047", "minutes": 30}
+- 2026-10-01T03:30:59+00:00 run_started {"run": "T0052-critic-20260930T203059-8902", "task": "T0052", "role": "critic", "session": "b39fd533-fec2-4657-9071-00d33534d9e2"}
+- 2026-10-01T03:30:59+00:00 run_started {"run": "T0047-builder-20260930T203059-ed27", "task": "T0047", "role": "builder", "session": "f51291f3-f1f3-4fce-9924-180fefd6bd5b"}

@@ -16,6 +16,9 @@ sys.path.insert(0, "experiments/runners")
 import e001_reference as R  # noqa: E402
 
 MU0 = 4e-7 * math.pi
+# The integrals are ~1e-8 H: scipy's default epsabs (1.49e-8) would stop quad almost at once and leave the
+# thin-skin reference 1.1e-4 low (found by the T0041 scientist; confirmed with a 2e6-point midpoint rule).
+TIGHT = {"epsabs": 0.0, "epsrel": 1e-12}
 cfg = dict(R.DEFAULT_CFG)
 sig = {R.CU: float(cfg["sigma_cu"]), R.AL: float(cfg["sigma_al"])}
 case = next(c for c in R.build_cases(cfg) if c["id"] == "B1")
@@ -33,9 +36,9 @@ def disk_pdf(d):
     return 4 * d / (math.pi * a * a) * (math.acos(u) - u * math.sqrt(1 - u * u))
 
 
-L_dc = integrate.quad(lambda d: M(d) * disk_pdf(d), 0, 2 * a, limit=400, points=[1e-9 * a])[0]
+L_dc = integrate.quad(lambda d: M(d) * disk_pdf(d), 0, 2 * a, limit=400, points=[1e-9 * a], **TIGHT)[0]
 f_hi = 1e10
-L_hi = (integrate.quad(lambda th: M(2 * a * math.sin(th / 2)), 0, math.pi, limit=400)[0] / math.pi
+L_hi = (integrate.quad(lambda th: M(2 * a * math.sin(th / 2)), 0, math.pi, limit=400, **TIGHT)[0] / math.pi
         + length * math.sqrt(MU0 / (2 * s * 2 * math.pi * f_hi)) / (2 * math.pi * a))
 problems = []
 for f, ref in ((100.0, L_dc), (f_hi, L_hi)):

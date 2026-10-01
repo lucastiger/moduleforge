@@ -1,0 +1,15 @@
+id: I0018
+kind: protected_change
+subject: 'T0047: merge needs founder approval'
+summary: 'L1 fidelity: converged bond-wire segmentation, consistent bar internal inductance, mesh within
+  3 % at <= 50 ms (T0044/T0045 reviews)
+
+  Risk high; 3 files. PR: None'
+refs:
+- T0047
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-01T07:02:34+00:00'
+resolved_at: null

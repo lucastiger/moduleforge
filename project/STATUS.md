@@ -1,9 +1,8 @@
 # ModuleForge status
-_generated 2026-10-01T07:05:43+00:00 from repository state — do not edit_
+_generated 2026-10-01T07:05:49+00:00 from repository state — do not edit_
 
-## Founder inbox (2 open)
+## Founder inbox (1 open)
 - **I0013** [experiment_registration] register E001 (pre-registration)
-- **I0018** [protected_change] T0047: merge needs founder approval
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -12,14 +11,11 @@ _generated 2026-10-01T07:05:43+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $70.79/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 29, failed: 2, needs_founder: 1, running: 1, todo: 7
+cancelled: 14, done: 30, failed: 2, running: 1, todo: 7
 
 - T0041 `running` scientist/design_experiment: Fix E001's design before registration: wire model error bounds, convergence estimate, L2 contract, coverage (T0029/T0030 reviews) (attempt 2)
-- T0047 `needs_founder` builder/implement: L1 fidelity: converged bond-wire segmentation, consistent bar internal inductance, mesh within 3 % at <= 50 ms (T0044/T0045 reviews) (attempt 2)
 
 ## Recent events
-- 2026-10-01T05:38:14+00:00 capacity_backoff {"task": "T0047", "minutes": 30}
-- 2026-10-01T05:38:14+00:00 run_finished {"run": "T0052-critic-20260930T223428-3847", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-01T05:38:14+00:00 capacity_backoff {"task": "T0052", "minutes": 30}
 - 2026-10-01T06:08:15+00:00 run_started {"run": "T0052-critic-20260930T230815-e597", "task": "T0052", "role": "critic", "session": "edc25cec-b3c2-4bde-b907-d0efc6e24eb4"}
 - 2026-10-01T06:08:15+00:00 run_started {"run": "T0047-builder-20260930T230815-8744", "task": "T0047", "role": "builder", "session": "4b2bebb3-085d-47f3-981f-6d9768884c41"}
@@ -33,3 +29,5 @@ cancelled: 14, done: 29, failed: 2, needs_founder: 1, running: 1, todo: 7
 - 2026-10-01T07:02:31+00:00 run_finished {"run": "T0053-critic-20260930T234636-3418", "status": "completed", "cost": 1.1677622, "subtype": "success", "report": "structured_output"}
 - 2026-10-01T07:02:34+00:00 inbox_opened {"id": "I0018", "kind": "protected_change", "subject": "T0047: merge needs founder approval"}
 - 2026-10-01T07:05:17+00:00 run_started {"run": "T0041-scientist-20261001T000517-c000", "task": "T0041", "role": "scientist", "session": "19ea178f-6bbd-42ec-9dcd-73151446fc43"}
+- 2026-10-01T07:05:43+00:00 inbox_resolved {"id": "I0018", "status": "approved", "note": "Approved per the founder's standing instruction: DoD verified (wire-point spread 0.04-0.14 %, mesh <= 3 % vs 1 mm
+- 2026-10-01T07:05:49+00:00 merged {"task": "T0047"}

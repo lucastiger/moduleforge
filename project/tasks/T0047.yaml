@@ -4,7 +4,7 @@ title: 'L1 fidelity: converged bond-wire segmentation, consistent bar internal i
   3 % at <= 50 ms (T0044/T0045 reviews)'
 type: implement
 agent: builder
-status: merge
+status: done
 depends_on:
 - T0023
 description: 'Follow-up to the physics (T0044) and numerics (T0045) reviews of T0023 (project/reviews/T0023/).

@@ -307,3 +307,4 @@
 {"ts": "2026-10-01T07:02:34+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0018", "kind": "protected_change", "subject": "T0047: merge needs founder approval"}
 {"ts": "2026-10-01T07:05:17+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0041-scientist-20261001T000517-c000", "task": "T0041", "role": "scientist", "session": "19ea178f-6bbd-42ec-9dcd-73151446fc43"}
 {"ts": "2026-10-01T07:05:43+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0018", "status": "approved", "note": "Approved per the founder's standing instruction: DoD verified (wire-point spread 0.04-0.14 %, mesh <= 3 % vs 1 mm, p50 <= 50 ms, no L2 import); T0053/T0054 accept_with_caveats. Residual default-mesh bias vs converged L1 ~2-5 % (die-count-correlated) is documented and handed to T0024's E002 design as a known quantity."}
+{"ts": "2026-10-01T07:05:49+00:00", "event": "merged", "actor": "orchestrator", "task": "T0047"}

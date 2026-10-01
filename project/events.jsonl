@@ -234,3 +234,5 @@
 {"ts": "2026-09-30T19:12:30+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0041-scientist-20260930T115106-58f7", "status": "error", "cost": 5.2129765999999975, "subtype": "success", "report": "missing"}
 {"ts": "2026-09-30T19:12:30+00:00", "event": "capacity_backoff", "actor": "orchestrator", "task": "T0041", "minutes": 30}
 {"ts": "2026-10-01T00:00:29+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0041-scientist-20260930T170029-cad2", "task": "T0041", "role": "scientist", "session": "fcf829f9-1014-4be6-b5ec-280c82b97ae6"}
+{"ts": "2026-10-01T00:10:07+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0041-scientist-20260930T170029-cad2", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
+{"ts": "2026-10-01T00:10:07+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0041", "signal": "agent_error", "action": "repair"}

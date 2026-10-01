@@ -4,7 +4,7 @@ title: 'Fix E001''s design before registration: wire model error bounds, converg
   coverage (T0029/T0030 reviews)'
 type: design_experiment
 agent: scientist
-status: running
+status: todo
 depends_on:
 - T0020
 description: 'Follow-up to the physics (T0029) and numerics (T0030) reviews of T0020 (project/reviews/T0020/).
@@ -104,3 +104,8 @@ history:
 - outcome: capacity_backoff
   summary: You've hit your session limit · resets 4:30pm (America/Los_Angeles)
   at: '2026-09-30T19:12:30+00:00'
+- attempt: 1
+  outcome: agent_error
+  summary: agent ended with success
+  failure_output: 'API Error: Can''t reach the API server — check your internet or DNS (ENOTFOUND)'
+  at: '2026-10-01T00:10:07+00:00'

@@ -4,7 +4,7 @@ title: 'Fix E001''s design before registration: wire model error bounds, converg
   coverage (T0029/T0030 reviews)'
 type: design_experiment
 agent: scientist
-status: running
+status: review
 depends_on:
 - T0020
 description: 'Follow-up to the physics (T0029) and numerics (T0030) reviews of T0020 (project/reviews/T0020/).
@@ -444,3 +444,118 @@ history:
 - outcome: capacity_backoff
   summary: You've hit your session limit · resets 4am (America/Los_Angeles)
   at: '2026-10-01T10:54:48+00:00'
+- attempt: 2
+  outcome: agent_finished
+  summary: 'E001''s design is fixed for the findings of reviews T0051/T0052 of attempt 2, and every definition-of-done
+    command now exits 0. Commit fd1af57 is in the T0041 worktree; it is not registered and not pushed.
+
+
+    (1) Wire mutuals. Every wire-wire and wire-image mutual now includes the finite cross-section (AMD)
+    term: the filament value plus a first-order correction from the average of the kernel over both cross-sections.
+    A new residual term (d) bounds what is left, using a Taylor remainder with no tuned constants. B3''s
+    M12 against exact references is now 9.8e-7 at DC and 9.0e-6 at 10 GHz, against stated bounds of 2.0e-6
+    and 1.5e-5. Before the fix it was 3.9e-4 and 7.8e-4 against bounds of 8.9e-11 and 1.05e-6. All stated
+    residuals are at most 1.6e-3 (worst case C1). A new self-check compares the a'
+  report:
+    summary: 'E001''s design is fixed for the findings of reviews T0051/T0052 of attempt 2, and every
+      definition-of-done command now exits 0. Commit fd1af57 is in the T0041 worktree; it is not registered
+      and not pushed.
+
+
+      (1) Wire mutuals. Every wire-wire and wire-image mutual now includes the finite cross-section (AMD)
+      term: the filament value plus a first-order correction from the average of the kernel over both
+      cross-sections. A new residual term (d) bounds what is left, using a Taylor remainder with no tuned
+      constants. B3''s M12 against exact references is now 9.8e-7 at DC and 9.0e-6 at 10 GHz, against
+      stated bounds of 2.0e-6 and 1.5e-5. Before the fix it was 3.9e-4 and 7.8e-4 against bounds of 8.9e-11
+      and 1.05e-6. All stated residuals are at most 1.6e-3 (worst case C1). A new self-check compares
+      the assembled values with a brute-force average over both cross-sections. It catches all 5 mutations
+      tried.
+
+
+      (2) Convergence. `remaining_discretization_error` now checks whether the observed contraction ratio
+      is steady or growing over at least 4 levels. Steady gives the geometric tail with Roache''s factor
+      1.25. Growing gives the larger of the geometric tail and a fitted algebraic tail (error ~ k^-p),
+      with factor 3. Changes at or below the solver noise floor are ignored. The rule now needs at least
+      4 levels before it can declare convergence.
+
+
+      (3) L2 contract. It now requires a constant refinement ratio between levels; the adapter reports
+      `meta[''mesh_h'']` and a new sanity check, `l2_constant_refinement_ratio`, verifies it. `solver_tol`
+      must now be a forward-error bound that includes the condition number.
+
+
+      (4) Interval and note. `max_rel_err_vs_analytic`''s interval is now recorded at level 0.95 as an
+      estimated error band, not a guaranteed bound. The note no longer says the B1 check fails, and B3''s
+      resistance is corrected to 4.13 mΩ.'
+    failure_class: none
+    confidence: 0.85
+    evidence:
+    - '[F] Commands run after the final commit fd1af57, all exit 0: `uv run mfos exp check E001`; `uv
+      run ruff check experiments/runners/e001_reference.py`; `uv run python experiments/runners/e001_reference.py
+      --analytic-only`; `uv run python ~/mf/main/project/dod/e001-design/b1_exact_limits.py`; `convergence_estimator.py`;
+      `design_contract.py`; `b3_mutual_exact.py`; `uv run mfos gate --fast` (''all gates passed'').'
+    - '[F] Before the changes, run against HEAD 10c5966: `convergence_estimator.py` exit 1 (algebraic
+      p=1 estimate 5.2e-3 against true 1.25e-2); `design_contract.py` exit 1 (no constant refinement ratio
+      in the contract); `b3_mutual_exact.py` exit 1 (error 3.89e-4 / 7.80e-4 against bounds 8.9e-11 /
+      1.05e-6).'
+    - '[F] B3 M12 after the fix: 2699.6073 pH vs exact 2699.6099 pH at 100 Hz (error 9.78e-7, bound 2.04e-6);
+      2700.6389 pH vs 2700.6634 pH at 10 GHz (error 9.04e-6, bound 1.54e-5).'
+    - '[F] At 10 GHz the founder''s reference is the δ→0 limit without proximity. Of the 9.0e-6 difference,
+      1.3e-6 is the proximity dipole the runner includes (computed), 4.3e-6 is the finite skin-depth effect
+      (by subtraction; predicted (δ/r)·shift = 4.2e-6), and 3.5e-6 is the second-order term. This is disclosed
+      in note §4.2a and open item 9.'
+    - '[F] Brute-force cross-section check, through the assembly: B3 M12 at 100 Hz 2.6e-15 H vs bound
+      5.5e-15 H; at 80 MHz 8.4e-15 vs 3.0e-14; C1 image term at 20 MHz 3.7e-15 vs 1.0e-14. Mutations caught:
+      no cross-section term, sign flipped, one wire''s moment only, uniform-current moment at every frequency,
+      image pairs without the term.'
+    - '[F] Estimator results. Founder check: geometric ρ = 0.5/0.8/0.9 gives 1.25× the true remaining
+      error; algebraic p = 1 gives 3.0× and p = 2 gives 3.3×. Wider sweep (p 0.5–3, offsets −0.5 to 2,
+      4–5 levels): lowest estimate/true 2.06. 2000 noisy geometric sequences: none falsely held unconverged.'
+    - '[F] Stand-in L2 (scratch, not evidence), full mode, 32 compared values, 15 sanity checks, status
+      complete. Bias 0: interval [0, 0.0103]. Bias 3 %: interval [0.029, 0.040], so A1 fails as it should.
+      solver_tol 1e-3 or missing: `l2_solver_tolerance` fails. mesh_h = 1/k (additive refinement): `l2_constant_refinement_ratio`
+      fails (value 1.36).'
+    - '[F] Stated residual totals: B1 5.4–5.7e-5; B2 8.6–9.1e-4; B3 L11 up to 1.3e-3; B3 M12 2.0e-6 to
+      1.2e-5; B4 8.7–9.4e-4; C0 1.5e-4; C1 1.4–1.6e-3. All are at most 2e-3.'
+    alternative_explanations:
+    - explanation: B3 M12 passes the 10 GHz founder check with a 1.7× margin partly because term (d) is
+        rigorous and therefore conservative. The 4.3e-6 finite-skin-depth part of the error is physics
+        the reference leaves out, not a model error. A tighter second-order closed form (bound about 3e-7)
+        would fail that check without being wrong.
+      how_to_discriminate: Rerun `b3_mutual_exact.py` with a reference that uses the finite skin-depth
+        Bessel profile and includes the proximity dipole. The runner's error should then drop to about
+        3.5e-6, which is the second-order term.
+    - explanation: The deceleration safeguard is not a guarantee. No finite-sample rule can bound arbitrarily
+        slow convergence, so for orders p < 0.5 with an unlucky offset it could still underestimate. The
+        constant-ratio contract and its check are the primary defence.
+      how_to_discriminate: After T0022 exists, look at the realized `meta['mesh_h']` ratios and the per-level
+        L sequences in e001_rows.json. Ratios that are steady and contracting confirm the geometric model
+        applies.
+    discriminating_tests:
+    - Brute-force cross-section average vs closed form (built into `closed_forms_independent_check`).
+      Dropping the cross-section term makes the B3 error about 190× its bound.
+    - 'Founder checks `b3_mutual_exact.py` and `convergence_estimator.py`: they failed before the change
+      and pass after it.'
+    - 'Stand-in L2 runs: bias 3 %, loose or missing solver_tol, and additive refinement each make the
+      expected check fail.'
+    recommended_actions:
+    - 'Founder: review and register E001 from commit fd1af57. Registration hashes only the YAML, so the
+      runner''s geometry and bounds are not frozen (open item 6).'
+    - 'T0022: report `meta[''mesh_h'']`, use one constant refinement ratio of at least 1.25 for every
+      mesh parameter, and report `solver_tol` as a forward-error bound including the condition number.
+      At 100 Hz that most likely means direct LU without multipole; confirm the FastHenry -s/-m options
+      first-hand.'
+    - 'Optional (founder-owned check): to get a tighter M12 bound, give `b3_mutual_exact.py` a 10 GHz
+      reference with the finite skin-depth profile and the proximity dipole; then a second-order closed
+      form could be used.'
+    - A smoke run before this fix wrote one gitignored scratch artifact to .mfos/artifacts/e7/e76ec8b1….
+      The hook blocked me from deleting it (protected path); the founder may remove it. Later runs used
+      MFOS_ARTIFACT_STORE=/tmp.
+    files_written:
+    - experiments/drafts/E001.yaml
+    - experiments/runners/e001_reference.py
+    - research/notes/o001-l2-reference.md
+    - project/memory/lessons.md
+    experiment_drafts:
+    - experiments/drafts/E001.yaml
+    affects_acceptance_criteria: false

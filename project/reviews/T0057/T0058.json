@@ -1,0 +1,48 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "Capping the observed order at order_max rejects ordinary same-sign corrections at the formal order, so E001 may never pass l2_converged with an accurate solver",
+      "detail": "remaining_discretization_error returns inf whenever either observed order's lower bound exceeds order_max = 2. The docstring and YAML justify this as 'an order above p_hi is pre-asymptotic cancellation, not superconvergence'. That is false when the terms have the same sign. For e = A h^p + B h^(p+dp) with A\u00b7B > 0, the change ratio is (X+Y)/(q^p X + q^(p+dp) Y) < q^-p, so the observed order is always above p and no cancellation is involved. The registered formal order is p = 2 = order_max, so any compared L whose next error term has the same sign as the leading one is declared not converged, however small its error. The only exception is when the solver noise floor (2\u00b7solver_tol\u00b7amp, self-reported) widens the order band enough to include 2. A more accurate solver therefore makes convergence harder, and an adapter that reports a looser solver_tol makes it easier. refinement_rule_selfcheck counts only false convergences and coverage among sequences it declared converged. It never measures how often truly converged sequences are declared converged (power), so this failure mode cannot appear in its result. Once the spec is registered and immutable, l2_converged could fail for a correct L2 solver and leave the run invalid.",
+      "evidence": "Hand computation with the registered path (h given, order_range = (1, 2), q = 1.25, noise = 0): e = 0.004 h^2 + 0.002 h^3 on h = 1, 0.8, 0.64, 0.512, 0.4096. The changes are 2.416e-3, 1.421e-3, 8.457e-4 and 5.085e-4, giving observed orders 2.378, 2.327 and 2.280, all above 2(1+1e-9), so the rule returns inf at every level up to refinement_max. The true remaining error at level 5 is 8.1e-4, 12\u00d7 below conv_tol. Repeating the same sequence with the noise floor at its cap (2e-4) gives pa_lo = 0 and est = 1.25\u00b7(5.08e-4 + 2e-4)/0.25 = 3.5e-3 < 0.01, which is declared converged. The decision therefore depends on the reported solver_tol rather than on the error.",
+      "suggested_check": "Before registration, add a same-sign family with p = order_max to refinement_rule_selfcheck and require a minimum declared-converged fraction when the true error is well below conv_tol; also consider allowing orders up to order_max plus the smallest assumed correction exponent."
+    },
+    {
+      "severity": "minor",
+      "title": "The founder DoD estimator tests exercise only the values-only path, not the registered configuration",
+      "detail": "convergence_estimator.py and estimator_adversarial.py call remaining_discretization_error(seq) without h. That branch assumes h = 2^-k with order_range (0, 1). In the L2 phase the runner always passes h (from mesh_params), order_range = (1, 2) and steady_tol = 0.1, which uses different thresholds and order checks. The DoD 'no false convergence' result therefore does not transfer to the registered path. That path is validated only by the author's own frozen generator inside the runner. My hand checks of opposite-sign two-term sequences on the registered path found no underestimate (see checks), but the deterministic gate does not test it.",
+      "evidence": "estimator_adversarial.py line 26: R.remaining_discretization_error(seq). Runner line 1131: h is None -> hh = 2^-k, (p_lo, p_hi) = (0, 1). Runner line 1299: the L2 phase passes h=hseq and order_range=(order_min, order_max).",
+      "suggested_check": "Run estimator_adversarial's sequences through the registered path (h = ratio^-k, order_range = (1, 2), steady_tol = 0.1) and assert zero false convergences."
+    },
+    {
+      "severity": "minor",
+      "title": "The recorded interval `level` is a constant of the author's synthetic generator, not something measured on the run",
+      "detail": "level = floor(100 \u00d7 min-family coverage) is computed with a frozen seed and a fixed generator. The generator uses log-uniform coefficients from 1e-3 to 3, k0 from 0 to 4, ratios of 1.25, 1.5 or 2, and 4\u20135 levels. The result is the same number (0.98) on every run, and it depends on these arbitrary distribution choices as well as on the order assumption. Describing it as 'measured on this run' overstates its connection to E001. It also sits in a field that ExperimentRun consumers may read as a confidence level. In addition, a family with zero declared-converged sequences contributes a vacuous coverage of 1.0.",
+      "evidence": "refinement_rule_selfcheck: rng = default_rng(20261002), 'c = cov / conv if conv else 1.0'; main(): level = math.floor(100 * rc['coverage']) / 100.",
+      "suggested_check": "Describe the level as 'synthetic-generator coverage (frozen)' and report how sensitive it is to the coefficient and k0 ranges."
+    },
+    {
+      "severity": "note",
+      "title": "The mesh contract is consistency-checked, not verified",
+      "detail": "mesh_hash, mesh_params and n_filaments are all self-reported by the adapter. length_scaling checks that the reported params double under similarity, and l2_one_mesh_per_solve checks that the hashes are internally consistent. Neither confirms that the reported mesh is the one actually solved. The note acknowledges this ('[I] still self-reported'), so 'verifiable' should be read as 'cross-checked for consistency'. The noise floor also uses the worst-case amplification over all compared frequencies of a case (up to about 2400 at 100 Hz) for the HF values. This widens their order bands and the estimate; it is conservative, but it is part of what masks the major finding.",
+      "evidence": "Note \u00a73: 'This is still self-reported'. l2_converged_solve: amp = budget / solver_tol_required(case), the maximum over cmp_freqs.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Derived _pair_ratio, _order_of and the Richardson tail by hand for e = C h^p on the realized h. The tail d/((h_{n-1}/h_n)^p - 1) and the p -> 0 limit ln(h_{k-1}/h_k)/ln(h_{k-2}/h_{k-1}) are correct, and the index mapping a[k-1]/a[k-2] matches the pair ratio.",
+    "Proved for two terms of the same sign that the observed order is always above the leading order. Worked a numerical 5-level example (0.004 h^2 + 0.002 h^3, q = 1.25): orders 2.38/2.33/2.28 give inf, while the true error is 8.1e-4 < conv_tol. With the noise floor at its cap the same sequence is declared converged, so the decision depends on the reported solver_tol.",
+    "Adversarial hand checks of the registered path on opposite-sign expansions with the slow term hidden: e = A h - B h^1.5 (q = 1.25) at t = 0.83 and 0.5 gives est/true of 2.65 and 1.48, and e = A h^0.5 - B h^1.5 (outside the order assumption) gives est/true of 3.1. I found no false convergence; cases with p + dp >= 2 are flagged inf by the order cap.",
+    "Checked the DoD convergence_estimator.py cases by hand on the values-only path: rho = 0.8 gives est/true = 1.25 exactly, and algebraic p = 1 gives order 1.585 > 1, hence inf. They pass, but on a code path the L2 phase does not use.",
+    "Checked that the split-bar tie reference is physically sound: with uniform density, Hoer\u2013Love additivity over adjacent rectangles gives the unsplit L exactly. The leading correction to Im Z_par is O(omega^3), so relative deviation is O((omega L/R)^2) \u2248 3e-8 at 1 Hz, consistent with the stated tolerance.",
+    "Checked the per-length plane-term reference: the difference between a = 400 and 800 mm removes the a-independent end terms. The remaining finite-length correction is about d^2/(2 a1 a2), which is O((b/a)^2) and consistent with the 2e-4 + (b/a)^2 tolerance. The BEM and the runner use the same recessed height h + delta/2.",
+    "Confirmed that the committed runner (lines 1104-1306) matches the diff, including that l2_phase uses per-case freqs for the mesh_hash length check and that the bars' HF solves are excluded from the convergence gate."
+  ],
+  "caveats": [
+    "Bash was denied in this session, so I could not run any definition-of-done command: mfos exp check, ruff, --analytic-only, or the five DoD scripts. Whether they pass, and the actual selfcheck output (coverage 0.98, false_conv 0, geo est/true), are unverified by me.",
+    "Within the registered assumption that the leading order lies in [1, 2], I found no false-convergence route. The rule is conservative but may refuse convergence for correct, accurate L2 solvers (major finding), which is a pre-registration fitness risk.",
+    "The interval `level` reflects the coverage of a frozen synthetic generator, conditional on the order assumption and on the generator's coefficient and mesh distributions. It is not a confidence level, and the joint coverage of the maximum is not established, as the spec itself states.",
+    "The 'verifiable mesh contract' rests on cross-checking self-reported fields for consistency (mesh_hash, mesh_params, n_filaments), not on independently verifying the mesh that was solved."
+  ]
+}

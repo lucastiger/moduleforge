@@ -53,7 +53,7 @@ experiments = 1                  # simultaneous experiment processes (each may u
 local_cpu_hours_max = 6.0
 
 [budgets]                        # USD, from Claude Code's client-side cost estimates
-daily_usd = 40.0
+daily_usd = 60.0
 weekly_usd = 200.0
 max_task_usd = 8.0
 plan_usd = 4.0

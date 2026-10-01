@@ -239,3 +239,5 @@
 {"ts": "2026-10-01T01:03:31+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 44151}
 {"ts": "2026-10-01T01:03:32+00:00", "event": "task_added", "actor": "founder", "task": "T0050"}
 {"ts": "2026-10-01T01:03:32+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0016", "status": "approved", "note": "Approved per the founder's standing instruction: DoD verified (exhaustive 48-mutant check incl. label re-pairing); production fingerprint correct per T0039/T0042/T0048; T0048's test-strength findings recorded as backlog, chain closed."}
+{"ts": "2026-10-01T01:03:40+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0041-scientist-20260930T180340-0118", "task": "T0041", "role": "scientist", "session": "a699809b-307e-4107-839b-22f712a76e8f"}
+{"ts": "2026-10-01T01:03:40+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0047-builder-20260930T180340-5126", "task": "T0047", "role": "builder", "session": "c8112dc9-c47a-4d05-b879-9e3a39f2464c"}

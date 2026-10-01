@@ -1,2 +1,6 @@
 # Lessons (curated; each line cites its source)
 <!-- Format: - YYYY-MM-DD <lesson> (source: <task/evaluation/review id>) -->
+- 2026-09-30 PyYAML (used by mfos to load specs) follows YAML 1.1: an unsigned exponent such as `5.0e6` parses as the string '5.0e6'. Write `5.0e+6` in spec configs and type-check config values in the runner (E001 `checked_config`). (source: T0041)
+- 2026-09-30 scipy `integrate.quad` defaults to epsabs=1.49e-8, which exceeds SI inductance integrals (~1e-8 H). Always pass `epsabs=0` with an explicit epsrel; with the default, a log-singular integrand came out 1.1e-4 low (b1_exact_limits.py). (source: T0041)
+- 2026-10-01 A correction derived for one term of a kernel applies to every term that uses that kernel: the round-wire mean-distance (AMD) shift was fixed for self terms but not for wire-wire and wire-image mutuals (B3 M12 3.9-7.8e-4 off against a stated 1e-6). When correcting a closed form, grep every call site of the kernel. (source: T0041, reviews T0051/T0052)
+- 2026-10-01 A geometric (constant-ratio) refinement-error estimate underestimates when the observed contraction ratio grows (additive refinement, emerging slow mode); require a constant refinement ratio and test the ratio trend over >= 4 levels before using Roache's 1.25. (source: T0041, review T0052)

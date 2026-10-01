@@ -1,0 +1,53 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "minor",
+      "title": "\"Zero false convergences\" belongs to the self-check's generator families, not to the rule under its stated assumption",
+      "detail": "The claim restated: the change makes the refinement rule conservative, so it declares convergence only when the true remaining error is below conv_tol, given a leading error order in [order_min, order_max] = [1, 2] and a contract-compliant constant ratio >= 1.25. A differential-evolution search over three-term expansions A h^p + B h^(p+dp1) + C h^(p+dp2) (p in [1, 2]) still finds false convergences and underestimates. The steady-order test can be fooled when two pre-asymptotic terms combine into an apparently steady order of about 1.9 while an order-1 term dominates at the finest level. The size of the miss is modest: about 0.85x at the false convergence, and 0.65-0.7x at worst for ratio <= 2.2. That is far better than the 5-20x of the previous rule, and it needs optimized coefficients. Still, the 'level' 0.98 and the 0 false convergences describe the frozen synthetic families, not the rule under the stated assumption. Separately, the contract has no upper limit on the refinement ratio, while the self-check only exercises q in {1.25, 1.5, 2} x up to 1.1. On the author's own families at q = 3-4 the rule still passed (0 false convergences, coverage >= 0.98).",
+      "evidence": "Search in /tmp-free inline scripts, registered mode (h known, order_range=(1,2), steady_tol=0.1), noise-free:\n(a) 5 levels, q=1.538, coarsest error 13%: est 0.00901 vs true 0.01056, i.e. declared converged with true > conv_tol.\n(b) 4 levels, q=1.608: est 0.00926 vs true 0.00998.\n(c) Worst est/true with q <= 2.2: 0.70 (4 levels) and 0.645 (5 levels).\n(d) q ~= 3.8 (allowed by refinement_ratio_min, no max): est/true 0.35; with q = 2.7 and a 139% coarse error, est 0.0061 vs true 0.0103.",
+      "suggested_check": "Cap the refinement ratio in the contract at the validated range (e.g. <= 2.2), and state in sec. 4.4 that the zero-false-convergence result is specific to the self-check's generator families."
+    },
+    {
+      "severity": "minor",
+      "title": "The metric 'level' 0.98 is a code constant written into a field whose schema meaning is a CI confidence level",
+      "detail": "MetricValue.level (tools/mfos/mfos/models.py, default 0.95; stats.py derives alpha = (1 - level)/2 from it) is the confidence level of `ci`. The band is explicitly not a CI, yet 0.98 is written into that field. The spec text documents this, but any downstream consumer reading `level` sees a 98% CI. The number is not 'measured on this run': refinement_rule_selfcheck uses a frozen generator and a hard-coded seed and ignores the L2 data, so it returns 0.98 in every run. It is also a noisy point estimate, not a lower bound: the minimum over 14 per-family coverages, each from about 40-270 converged sequences. Changing only the seed moves it between 0.97 and 1.00. It is also per-value, while the band is the max over about 32 values, and it leaves out the model-error and solver-budget parts of u_i. 'Honest' is only partly met: the documentation is honest, but the field value overstates what is known.",
+      "evidence": "refinement_rule_selfcheck(cfg, seed=s) for s = 1..8 gives coverage 0.991, 0.9884, 0.992, 1.0, 0.9861, 0.9764, 1.0, 1.0, i.e. floor-to-0.01 level values from 0.97 to 1.00. The design seed 20261002 gives 0.9891 -> 0.98, driven by 1 uncovered sequence out of 92 (opp+1+noise).",
+      "suggested_check": "Record the coverage in the sanity detail and either leave `level` unset or record a binomial lower confidence bound labelled as generator-conditional."
+    },
+    {
+      "severity": "note",
+      "title": "The founder DoD estimator scripts exercise the values-only fallback, which the runner never uses",
+      "detail": "estimator_adversarial.py and convergence_estimator.py call remaining_discretization_error(seq) without h, which selects h = 2^-k and order_range (0, 1). The runner always passes realized h and order_range=(1, 2). The note itself (sec. 4.4 table) reports the fallback as unsafe under 10% ratio jitter (5 false convergences out of 804 declared converged). So these DoDs passing says little about the registered path. I reran the DoD generator in registered mode: 0 false convergences and 0 underestimates over 2 x 20,000 sequences, so the registered path is fine on that generator.",
+      "evidence": "DoD output: '1395 of 3000 ... called 0 of them converged'. Registered-mode rerun: seed 20261001 gives 475 converged, 0 false, 0 under; seed 7 gives 492, 0, 0.",
+      "suggested_check": "Have the DoD call the estimator with h and order_range as l2_converged_solve does, or make the fallback return inf when h is absent."
+    },
+    {
+      "severity": "note",
+      "title": "The mesh contract is more checkable, but the completeness of mesh_params keys and the truth of mesh_hash remain self-reported",
+      "detail": "The runner checks per-parameter ratios, equal per-frequency hashes, new hashes per level, increasing n_filaments, and exact doubling in length_scaling. It cannot check that mesh_params lists every refined parameter. An adapter that omits a parameter it holds fixed (e.g. plane thickness layers) passes l2_constant_refinement_ratio. The note acknowledges self-reporting for mesh_hash, but not this key-completeness gap. Separately, refinement_ratio_min = 1.25 combined with rounded-up integer counts makes small counts fail. For example, nominal 1.25 starting from 10 gives 10 -> 13 -> 16, and 16/13 = 1.23 < 1.25. Counts of about 8 or more with chosen integer sequences are needed. The note warns about this in general terms.",
+      "evidence": "Code review of mesh_sequence, refinement_ratio_violation and one_mesh_violations. A stand-in solver test confirmed the checks are wired: all L2 sanity checks pass for a compliant stand-in, and l2_constant_refinement_ratio / l2_converged correctly go to inf when mesh_params are degenerate (zero size).",
+      "suggested_check": "Require at least one mesh_params key per conductor and plane name of the case, and check that key set in the runner."
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran all 8 definition-of-done (DoD) commands from the worktree. `mfos exp check E001` exits 0. ruff is clean. `--analytic-only` writes /tmp/e001-analytic/result.json with all 9 sanity checks passed, including refinement_rule_validated (0 false convergences, coverage 0.9891, geometric est/true 1.250). The scripts b1_exact_limits, convergence_estimator, design_contract, b3_mutual_exact and estimator_adversarial all pass.",
+    "Re-ran refinement_rule_selfcheck with seeds 1-8. There were 0 false convergences in every run. Coverage ranged 0.976-1.0, so the recorded level depends on the seed.",
+    "Re-ran the founder's adversarial generator (A h^p + B h^(p+1), opposite signs) in the runner's registered mode with realized h and order_range (1, 2), 2 x 20,000 sequences: 0 false convergences, 0 underestimates.",
+    "Added families the self-check does not cover: an opposite-sign second term with small dp (0.05-0.5), h^p ln h terms, dp up to 3, three terms with random dp, q up to 4, and random start. Over 80,000 noise-free sequences: 0 false convergences, worst est/true 0.92.",
+    "Tried noise models beyond iid uniform (monotone drift, last-level step) and leading orders below the assumption (0.3-1.0). There were 0 false convergences; underestimates appeared only where the true error was well below conv_tol.",
+    "Two mesh parameters refined at ratios differing by the full allowed 1.1 spread, with h taken as the geometric mean from mesh_sequence: 0 false convergences in 25,185 converged sequences, worst est/true 0.99.",
+    "Ran the self-check families at q = 3, 4 and a {2.5, 3, 4} mix, outside the validated range but allowed by the contract: 0 false convergences, coverage >= 0.98.",
+    "Differential-evolution search over three-term expansions within the stated assumption found false convergences: est 0.0090 vs true 0.01056 at 5 levels with q = 1.54, and underestimates down to est/true 0.35 at q ~ 3.8.",
+    "Plumbing test: stubbed moduleforge.solvers.l2 with closed form x (1 + 0.02 h^1.5) and compliant mesh_params, mesh_hash and solver_tol, driven through main('smoke'). l2_converged, l2_solver_tolerance, l2_one_mesh_per_solve, l2_constant_refinement_ratio and length_scaling all pass. The band [0, 0.0114] contains the true error 0.0044, and level 0.98 is recorded. Degenerate mesh_params correctly give inf (check fails).",
+    "Verified by hand the round-wire LF skin deficit (r/delta)^4/96 = 2.8e-5 for the bar half-diagonal at 100 Hz, matching regime_valid. Checked that the tube-PEEC correction-fraction tolerance and the split-bar (omega L/R)^2 tolerance are discriminating: an uncorrected self term or an omitted branch mutual would fail them. Also checked that the plane-term BEM reference would detect an unrecessed image (an O(delta/2h) shift of 0.4-1.5%, against a tolerance of 3.6e-4)."
+  ],
+  "caveats": [
+    "The rule is conservative only empirically, over the generator families tested. An optimized three-term expansion within the stated order assumption still gets a modest false convergence (about 0.85x).",
+    "The recorded level 0.98 is a generator- and seed-specific per-value coverage, conditional on a leading order in [1, 2]. It is not a confidence level of the band and does not cover the max over values.",
+    "The validated range of refinement ratios is q <= 2.2, while the contract allows any q >= 1.25.",
+    "mesh_params key completeness and mesh_hash truth are still self-reported by the adapter.",
+    "No real L2 solver exists at this commit, so the whole L2 path was checked only with a stand-in solver.",
+    "Bash restrictions prevented reading git history, so I reviewed the worktree as given and did not confirm the diff against the base commit."
+  ]
+}

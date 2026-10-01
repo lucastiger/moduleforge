@@ -298,3 +298,7 @@
 {"ts": "2026-10-01T06:08:15+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0047-builder-20260930T230815-8744", "task": "T0047", "role": "builder", "session": "4b2bebb3-085d-47f3-981f-6d9768884c41"}
 {"ts": "2026-10-01T06:14:05+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0052-critic-20260930T230815-e597", "status": "completed", "cost": 1.8439848000000003, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-10-01T06:14:05+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0041", "signal": "review_rejected", "action": "repair"}
+{"ts": "2026-10-01T06:46:19+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0047-builder-20260930T230815-8744", "status": "completed", "cost": 6.812736800000001, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-10-01T06:46:35+00:00", "event": "verified", "actor": "orchestrator", "task": "T0047"}
+{"ts": "2026-10-01T06:46:36+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0053-critic-20260930T234636-3418", "task": "T0053", "role": "critic", "session": "d9605861-9559-437c-8050-1e3866f64a8b"}
+{"ts": "2026-10-01T06:46:36+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0054-critic-20260930T234636-f3db", "task": "T0054", "role": "critic", "session": "ec2774f7-86d8-4a41-8d0d-dac62571613c"}

@@ -4,7 +4,7 @@ title: 'L1 fidelity: converged bond-wire segmentation, consistent bar internal i
   3 % at <= 50 ms (T0044/T0045 reviews)'
 type: implement
 agent: builder
-status: running
+status: review
 depends_on:
 - T0023
 description: 'Follow-up to the physics (T0044) and numerics (T0045) reviews of T0023 (project/reviews/T0023/).
@@ -133,3 +133,115 @@ history:
 - outcome: capacity_backoff
   summary: You've hit your session limit · resets 11pm (America/Los_Angeles)
   at: '2026-10-01T05:38:14+00:00'
+- attempt: 2
+  outcome: agent_finished
+  summary: 'T0047 is done, committed as fb6f2d6 on top of the earlier attempts'' commits 6da1b38 and 8cd3974.
+    Every DoD command and `mfos gate --fast` exits 0. All work is in src/moduleforge/physics/peec/model.py
+    and tests/unit/physics/peec/test_peec_model.py; kernels.py was changed in the earlier commits. The
+    O001 hypothesis is unchanged and nothing is fitted to L2 or imported from it.
+
+
+    **(1) Bond-wire segmentation.** Segments of the same wire are now coupled with a finite-radius kernel
+    1/sqrt(R² + a²), the thin-wire reduced kernel. For collinear segments this is exactly Grover''s whole-wire
+    formula, so splitting a wire no longer adds inductance. Loop L now varies by 0.04–0.14 % across 7/13/25
+    wire points (DoD limit 0.5 %; it was +1.1 to +5.1 % and rising). A polygonal ring converges to the
+    closed form'
+  report:
+    status: completed
+    summary: 'T0047 is done, committed as fb6f2d6 on top of the earlier attempts'' commits 6da1b38 and
+      8cd3974. Every DoD command and `mfos gate --fast` exits 0. All work is in src/moduleforge/physics/peec/model.py
+      and tests/unit/physics/peec/test_peec_model.py; kernels.py was changed in the earlier commits. The
+      O001 hypothesis is unchanged and nothing is fitted to L2 or imported from it.
+
+
+      **(1) Bond-wire segmentation.** Segments of the same wire are now coupled with a finite-radius kernel
+      1/sqrt(R² + a²), the thin-wire reduced kernel. For collinear segments this is exactly Grover''s
+      whole-wire formula, so splitting a wire no longer adds inductance. Loop L now varies by 0.04–0.14
+      % across 7/13/25 wire points (DoD limit 0.5 %; it was +1.1 to +5.1 % and rising). A polygonal ring
+      converges to the closed form μ₀R(ln(8R/a) − 2).
+
+
+      **(2) Trace-bar internal inductance.** Trace current now flows in a layer one skin depth (δ) thick
+      on the face towards the backside-Cu plane, so the bars no longer carry the DC internal inductance.
+      Resistance becomes R = l/(σ w δ), which no longer counts shared cell walls and so stops falling
+      under refinement. The docstring now says what the code does. On 18 layouts the old full-thickness
+      model reads higher by +4.7 to +8.1 % (side_by_side), +12.0 to +12.7 % (interleaved) and +10.2 to
+      +11.4 % (u_shaped). It remains available as `uniform_bars=True`.
+
+
+      **(3) Mesh.** The cause of the coarse-mesh error was the earlier attempt''s trick of moving a cell''s
+      node to its wire foot. The cell''s other bars still met at the cell centre, so the node acted as
+      a zero-impedance short of up to about 2.4 mm. That made 4 mm read up to 3 % low on some side_by_side
+      layouts.
+
+      - **Fix:** mesh cells are now centred on each wire foot and on each port point, with feet closer
+      than one cell sharing a cell centred on the group. Nodes stay at cell centres.
+
+      - **Default vs 1 mm, 60 layouts:** +0.47 to +2.41 % (mean +1.44 %, sd 0.45 %), always positive.
+      Rank correlation between the two meshes is 1.000 in every family. A small die-count trend remains:
+      +1.16 % at 2 dies, +1.78 % at 6.
+
+      - **DoD layouts:** +0.85 to +2.32 %.
+
+      - **Error of the 1 mm mesh itself:** below 2 mm, L falls steadily. 1 mm reads +0.95 to +1.48 % above
+      0.5 mm. Extrapolating (order 1 to 2) puts the 1 mm mesh about +1.3 to +3.0 % above the mesh-converged
+      L1, and the default about +2.3 to +5.4 % above it.
+
+      - **Cause of the remaining error:** high-frequency current crowds within about 0.4 mm of each trace
+      edge, which 1–4 mm cells can''t resolve. A straight-strip test confirms the size of the effect.
+
+      - **Optional `edge_lanes=True`:** adds thin edge bars that recover 0.8–1.9 % of it, but at about
+      1.7× the time (p50 about 43 ms), so it is off by default.
+
+      - **Timing:** p50 24.8 ms, p90 29.2 ms. Restructuring the assembly and the solve gave identical
+      values (block solve matches nodal analysis to 2e-12).
+
+
+      All these numbers are in the module docstring.
+
+
+      **(4) Tests.** The mesh-convergence bound is tightened from 10 % to the documented 0 to +2.5 % (default
+      vs 1 mm). The wire point-count test runs at a/l_seg ≈ 0.15. New tests cover the ring closed form,
+      the edge-lane strip check, mesh solve against nodal analysis, and that wire feet and ports sit at
+      cell centres.'
+    checks_run:
+    - cmd: uv run pytest -q tests/unit/physics/peec
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge/physics tests/unit/physics benchmarks
+      exit_code: 0
+    - cmd: uv run python -c "import sys, moduleforge.physics.peec; assert not any(m.startswith('moduleforge.solvers')
+        for m in sys.modules), 'L1 must not import L2'"
+      exit_code: 0
+    - cmd: uv run python -c "import numpy as np; from moduleforge.generate.halfbridge import generate_layouts;
+        from moduleforge.physics.peec import loop_inductance; l=generate_layouts(1, seed=7, dies_per_switch=3)[0];
+        r=loop_inductance(l, freqs_hz=[5e6, 2e7, 8e7]); L=np.asarray(r.L_H); assert L.shape==(3,) and
+        np.all(np.isfinite(L)), L; assert 1e-9 < L[1] < 1e-7, L; assert L[0] >= L[1]*(1-1e-6) and L[1]
+        >= L[2]*(1-1e-6), L; print(L)"
+      exit_code: 0
+    - cmd: uv run python benchmarks/l1_timing.py
+      exit_code: 0
+    - cmd: uv run python project/dod/l1-fidelity/convergence.py
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    files_changed:
+    - src/moduleforge/physics/peec/model.py
+    - tests/unit/physics/peec/test_peec_model.py
+    concerns:
+    - 'Absolute bias remains for E002: the default mesh is still about +2.3 to +5.4 % above the mesh-converged
+      L1, and the 1 mm mesh about +1.3 to +3.0 %, both positive and largest at 6 dies (interleaved / u_shaped).
+      The cause is unresolved high-frequency edge current crowding. edge_lanes=True removes 0.8–1.9 %
+      of it but takes p50 to about 43 ms, so it is off by default. E002''s MAPE analysis should allow
+      for this.'
+    - A small die-count dependence remains in the default-vs-1 mm bias (+1.16 % at 2 dies to +1.78 % at
+      6, r = 0.49). That is the same signature E002's F3 diagnosis uses for missing physics, though roughly
+      ten times smaller than before.
+    - The ports are points at the terminal centres, as Layout.to_conductors() defines them, so the converged
+      answer still depends weakly on the mesh around each port. Grading the mesh around the ports changed
+      L by only +0.05 to +0.5 % at 0.5 mm, so I left it out.
+    - Timing p50 is 24.8 ms on this machine (Apple Accelerate, one thread), up from about 22 ms before
+      this commit. The benchmark covers 6 dies per switch at 20 MHz only.
+    - The refinement study used six DoD layouts down to 0.5 mm. Richardson extrapolation with an order
+      between 1 and 2 is an estimate, not a proven bound.
+    - The earlier attempts' uncommitted scratch work is not included. Commits 6da1b38 (WIP) and 8cd3974
+      remain on the branch below fb6f2d6, which builds on them.

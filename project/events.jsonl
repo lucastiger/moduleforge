@@ -383,3 +383,4 @@
 {"ts": "2026-10-02T17:44:06+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 929, "runs_extended": 0}
 {"ts": "2026-10-02T18:04:11+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 1064, "runs_extended": 0}
 {"ts": "2026-10-02T19:12:58+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 3249, "runs_extended": 0}
+{"ts": "2026-10-02T19:29:47+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 541, "runs_extended": 0}

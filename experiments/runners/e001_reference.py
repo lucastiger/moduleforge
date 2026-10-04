@@ -59,6 +59,10 @@ from mfos.evidence import ExperimentRun
 
 MU0 = 1.25663706212e-6  # H/m, CODATA 2018
 BAR_MODEL_ERR = 1e-4  # stated residual of the DC Hoer-Love closed forms at f_lf (note sec. 4.3); regime_valid enforces it
+# MetricValue.level for metrics without a CI (T0063, review T0062): the schema field is a required float whose default
+# 0.95 would claim a 95 % confidence level; 0.0 claims none. (NaN is not usable: pydantic writes it as null, which the
+# float field then refuses when the result is read back.)
+NO_CONFIDENCE_LEVEL = 0.0
 
 
 def mm_to_m(x):
@@ -1223,7 +1227,15 @@ def _synthetic_sequence(rng, p: float, extra, a_exp=(-3.0, -0.5), c_exp=(-3.0, 0
     return hh / hh[0], 1.0 + e
 
 
-def refinement_rule_selfcheck(cfg: dict, n_per_family: int = 200, n_power: int = 100, seed: int = 20261004) -> dict:
+def _budget_power_trial(rng, exact, hh, mode: str, budget: float, kw: dict) -> float:
+    """Rule estimate for one accurate sequence at the noise floor 2 x budget |L| (T0063): mode "noisy" perturbs each
+    value by U(+-budget) relative (worst-case compliant solver error), "floor" keeps the exact values."""
+    vals = exact * (1.0 + rng.uniform(-budget, budget, exact.size)) if mode == "noisy" else exact
+    return remaining_discretization_error(vals, noise=2 * budget * abs(vals[-1]), h=hh, **kw)
+
+
+def refinement_rule_selfcheck(cfg: dict, n_per_family: int = 200, n_power: int = 100, n_power_budget: int = 400,
+                              seed: int = 20261004) -> dict:
     """Physics-independent check of remaining_discretization_error on synthetic refinement sequences that satisfy the
     contract and the registered assumption (leading order in [order_min, order_max]); generator and seed are frozen
     here (note sec. 4.4; seed set before the T0060 rule was run on it). Measures both failure directions:
@@ -1235,9 +1247,23 @@ def refinement_rule_selfcheck(cfg: dict, n_per_family: int = 200, n_power: int =
     - power (review T0058 of T0057): per leading order p in {order_min, mid, order_max}, n_power noise-free same-sign
       two-term sequences whose true remaining error is < conv_tol / 10, second exponent p + dp with dp ~ U[0.25,
       order_max + 1 - p] (within path B's cap); fraction declared converged.
+    - power at the solver budget (T0063; reviews T0061/T0062 of T0060): the runner's noise floor is 2 x min(budget,
+      solver_tol x amplification), so a compliant adapter may run at the floor 2 x solver_err_budget |L|. Rule called
+      with that floor on accurate (true < conv_tol / 10) same-sign sequences, values (a) "noisy": perturbed by
+      U(+-solver_err_budget) relative, the worst-case compliant solver error, or (b) "floor": exact (an accurate
+      solver that reports solver_tol at its limit); n_power_budget per p and mode, from two generators:
+      "dod" = the founder DoD distribution of estimator_adversarial.py (A h^p + B h^(p+1), A B > 0, |A| in
+      [0.005, 0.2], |B| in [0.005, 0.4], constant ratio in {1.25, 1.5, 2}, 4 or 5 levels from h = 1), which gates
+      (>= 0.9 per p and mode, as that DoD does); "broad" = this generator with A down to 1e-4, B up to 10^1.5, random
+      start and ratio jitter, reported only: at the budget floor its power is well below 0.9 for p >= 1.5 because
+      correction-dominated sequences show observed orders above order_max whose fall the floor hides; it reaches
+      ~1 only for floors <= ~2e-9 (an adapter reporting a direct-LU solver_tol; note sec. 3, sec. 4.4). Drawn after
+      everything above, so the earlier draws are unchanged.
     Returns counts, the minimum per-family coverage over families with >= 1 declared-converged sequence, the pooled
     coverage with its one-sided 95 % Clopper-Pearson lower bound (both conditional on this generator), the minimum
-    power over p, and est/true of the noise-free geometric family. None of these is a confidence level of the metric."""
+    noise-free power over p, the minimum at-budget power of the "dod" generator over p and mode, the (accepted, total)
+    counts of both at-budget generators, and est/true of the noise-free geometric family. None of these is a
+    confidence level of the metric."""
     rng = np.random.default_rng(seed)
     p_lo, p_hi, tol = cfg["order_min"], cfg["order_max"], cfg["conv_tol"]
     budget, spread = cfg["solver_err_budget"], cfg["refinement_ratio_spread"]
@@ -1245,7 +1271,7 @@ def refinement_rule_selfcheck(cfg: dict, n_per_family: int = 200, n_power: int =
     fams = {"opp+0.5": [(0.5, -1)], "opp+1": [(1.0, -1)], "opp+2": [(2.0, -1)], "same+0.5": [(0.5, 1)],
             "same+1": [(1.0, 1)], "three": [(1.0, 0), (2.0, 0)], "geometric": []}
     out = {"false_conv": 0, "coverage": 1.0, "n_conv": 0, "n_cov": 0, "geo_lo": math.inf, "geo_hi": 0.0,
-           "per_family": {}, "power": {}}
+           "per_family": {}, "power": {}, "power_budget": {}, "power_budget_broad": {}}
     for name, extra in fams.items():
         for nz in (0.0, budget):
             conv = cov = fc = 0
@@ -1278,9 +1304,36 @@ def refinement_rule_selfcheck(cfg: dict, n_per_family: int = 200, n_power: int =
                 tot += 1
                 acc += remaining_discretization_error(exact, h=hh, **kw) < tol
         out["power"][p] = acc / tot
+    # power at the solver budget (T0063): floor 2 x budget |L|; "noisy" = values x (1 + U(+-budget)), "floor" = exact
+    # values. (i) "dod": the founder DoD distribution of estimator_adversarial.py (gating); (ii) "broad": this
+    # self-check's own generator (reported only; note sec. 4.4). Sample size fixed before either was run.
+    for mode in ("noisy", "floor"):
+        for p in (p_lo, 0.5 * (p_lo + p_hi), p_hi):
+            acc = tot = 0
+            while tot < n_power_budget:
+                q, nlev = float(rng.choice([1.25, 1.5, 2.0])), int(rng.choice([4, 5]))
+                a = rng.uniform(0.005, 0.2) * rng.choice([-1.0, 1.0])
+                hh = q ** -np.arange(nlev, dtype=np.float64)
+                exact = 1.0 + a * hh**p + np.sign(a) * rng.uniform(0.005, 0.4) * hh ** (p + 1)
+                if abs(exact[-1] - 1.0) < tol / 10:
+                    tot += 1
+                    acc += _budget_power_trial(rng, exact, hh, mode, budget, kw) < tol
+            out["power_budget"][f"{mode} p={p:g}"] = (acc, tot)
+    for mode in ("noisy", "floor"):
+        for p in (p_lo, 0.5 * (p_lo + p_hi), p_hi):
+            acc = tot = 0
+            while tot < n_power_budget:
+                dp = rng.uniform(0.25, p_hi + 1.0 - p)
+                hh, exact = _synthetic_sequence(rng, p, [(dp, 1)], a_exp=(-4.0, -1.0), c_exp=(-3.0, 1.5),
+                                                spread=spread)
+                if abs(exact[-1] - 1.0) < tol / 10:
+                    tot += 1
+                    acc += _budget_power_trial(rng, exact, hh, mode, budget, kw) < tol
+            out["power_budget_broad"][f"{mode} p={p:g}"] = (acc, tot)
     out["coverage_pooled"] = out["n_cov"] / max(out["n_conv"], 1)
     out["coverage_lcb95"] = _clopper_pearson_lower(out["n_cov"], out["n_conv"])
     out["power_min"] = min(out["power"].values())
+    out["power_budget_min"] = min(a_ / t_ for a_, t_ in out["power_budget"].values())
     return out
 
 
@@ -1473,16 +1526,21 @@ def l2_phase(run: ExperimentRun, cases: list[dict], sig: dict, cfg: dict) -> Non
     # guaranteed bound (the discretization part rests on the order assumption, note sec. 4.4) and has no confidence
     # level, so it is NOT written into MetricValue.ci/.level (whose schema meaning is a CI at a confidence level;
     # reviews T0058/T0059 of T0057). It is reported as two metrics of its own; A1 reads the point value.
-    run.metric("max_rel_err_vs_analytic", float(errs.max()), n=len(rows))
-    run.metric("max_rel_err_band_lo", lo, n=len(rows))
-    run.metric("max_rel_err_band_hi", hi, n=len(rows))
+    # No metric of E001 has a CI, so each is written with level = NO_CONFIDENCE_LEVEL (0.0) instead of the schema
+    # default 0.95, which would claim a 95 % level (T0063, review T0062 of T0060).
+    def metric(name: str, value: float, n: int) -> None:
+        run.metric(name, value, n=n, level=NO_CONFIDENCE_LEVEL)
+
+    metric("max_rel_err_vs_analytic", float(errs.max()), n=len(rows))
+    metric("max_rel_err_band_lo", lo, n=len(rows))
+    metric("max_rel_err_band_hi", hi, n=len(rows))
     hf = [r["rel_err"] for r in rows if r["f_hz"] >= 1e6]
     lf = [r["rel_err"] for r in rows if r["f_hz"] < 1e6]
-    run.metric("max_rel_err_hf", max(hf) if hf else float("nan"), n=len(hf))
-    run.metric("max_rel_err_lf", max(lf) if lf else float("nan"), n=len(lf))
+    metric("max_rel_err_hf", max(hf) if hf else float("nan"), n=len(hf))
+    metric("max_rel_err_lf", max(lf) if lf else float("nan"), n=len(lf))
     ana = np.array([abs(r["analytic"]) for r in rows])
-    run.metric("analytic_value_span", float(ana.max() / ana.min()), n=len(rows))  # diversity statistic
-    run.metric("n_geometry_classes", float(len({r["cls"] for r in rows})), n=len(rows))
+    metric("analytic_value_span", float(ana.max() / ana.min()), n=len(rows))  # diversity statistic
+    metric("n_geometry_classes", float(len({r["cls"] for r in rows})), n=len(rows))
     out = Path(run.run_dir) / "e001_rows.json"
     out.write_text(json.dumps(rows, indent=1))
     run.artifact("e001_rows.json", out)
@@ -1495,7 +1553,7 @@ DEFAULT_CFG = {
     "refinement_ratio_min": 1.25, "refinement_ratio_max": 2.2, "refinement_ratio_spread": 1.1, "order_min": 1.0,
     "order_max": 2.0,
     "steady_tol": 0.1, "conv_tol": 0.01,
-    "solver_err_budget": 1.0e-4, "recip_tol": 1.0e-3, "monotone_tol": 1.0e-3, "scaling_tol": 0.01,
+    "solver_err_budget": 1.0e-5, "recip_tol": 1.0e-3, "monotone_tol": 1.0e-3, "scaling_tol": 0.01,
     "scaling_cases": ["A1", "B2", "C1"], "tol_published": 1.0e-9, "tol_independent": 1.0e-6,
     "tol_truncation": 1.0e-3, "smoke_cases": ["A1", "A3", "B2", "B3", "B4", "C0", "C1"], "cases": list(ALL_CASES),
 }
@@ -1535,13 +1593,24 @@ def main(mode: str) -> int:
         ok = analytic_checks(run, cases, sig, cfg)
         rc = refinement_rule_selfcheck(cfg)
         geo_ok = 1.0 <= rc["geo_lo"] and rc["geo_hi"] <= 3.0
-        rule_ok = rc["false_conv"] == 0 and rc["coverage"] >= 0.95 and rc["power_min"] >= 0.9 and geo_ok
+        rule_ok = (rc["false_conv"] == 0 and rc["coverage"] >= 0.95 and rc["power_min"] >= 0.9
+                   and rc["power_budget_min"] >= 0.9 and geo_ok)
         ok &= rule_ok
+
+        def counts(d: dict) -> str:  # accepted/total with the one-sided 95 % Clopper-Pearson lower bound
+            return json.dumps({k: f"{a_}/{t_} ({a_ / t_:.3f}, lcb95 {_clopper_pearson_lower(a_, t_):.3f})"
+                               for k, (a_, t_) in d.items()})
+
         run.sanity("refinement_rule_validated", passed=rule_ok, value=float(rc["false_conv"]), threshold=0.0,
                    detail=f"frozen synthetic generator (not the L2 data; note sec. 4.4): false convergences "
                    f"{rc['false_conv']} (must be 0); power = accurate (true < conv_tol/10) same-sign sequences declared "
-                   f"converged, min over p {rc['power_min']:.3f} (>= 0.9), per p "
+                   f"converged, noise-free min over p {rc['power_min']:.3f} (>= 0.9), per p "
                    + json.dumps({f"{k:g}": round(v, 3) for k, v in rc["power"].items()})
+                   + f"; at the noise floor 2 x solver_err_budget ({2 * cfg['solver_err_budget']:.0e}) with values "
+                   "perturbed by +-solver_err_budget (noisy) or exact (floor), founder DoD distribution (gates, min "
+                   f"{rc['power_budget_min']:.3f} >= 0.9): " + counts(rc["power_budget"])
+                   + "; same at-budget test on this self-check's broad generator (reported only, does not gate; "
+                   "note sec. 4.4): " + counts(rc["power_budget_broad"])
                    + f"; per-value coverage min over families {rc['coverage']:.4f} (>= 0.95), pooled "
                    f"{rc['coverage_pooled']:.4f} of {rc['n_conv']}, one-sided 95 % Clopper-Pearson lower bound "
                    f"{rc['coverage_lcb95']:.4f} (generator-conditional; not a confidence level of any metric); clean "

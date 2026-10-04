@@ -42,10 +42,17 @@ config:
   steady_tol: 0.1
   conv_tol: 0.01
   # L error allowed from the linear solve; the runner requires meta['solver_tol'] (forward-error bound of Z,
-  # conditioning included) <= budget / amplification, amplification = |Z|max / (omega |L|min) of the closed form
-  # (48-99 for the 100 Hz bars, up to ~2400 for the 100 Hz wire cases). Noise floor of the refinement rule: 2 x the
-  # reported meta['solver_tol'] x amplification x |L|, capped at 2 x budget x |L|; the budget is part of the interval
-  solver_err_budget: 1.0e-4
+  # conditioning and output rounding included) <= budget / amplification, amplification = |Z|max / (omega |L|min) of
+  # the closed form (48-99 for the 100 Hz bars, 719-2434 for the 100 Hz wire cases): required solver_tol 2.0e-7 (A1)
+  # down to 4.1e-9 (B3), 1.0e-5 for the HF-only cases (note sec. 3). Noise floor of the refinement rule: 2 x the
+  # reported meta['solver_tol'] x amplification x |L|, capped at 2 x budget x |L|; the budget is the solver part of
+  # the error band. 1.0e-5 (T0063, founder decision 2026-10-04; reviews T0061/T0062 of T0060; rule unchanged): at
+  # 1e-4 the 2e-4 floor left the rule accepting only 18-37 % of accurate p = 1.5-2 sequences of the founder DoD
+  # distribution under worst-case compliant noise; at 1e-5, 91-100 % (p = 2: 0.91-0.95). On the runner's broader
+  # self-check generator it is 29-77 % at the 2e-5 floor and >= 96 % only at floors <= 2e-9 (note sec. 4.4, open item
+  # 12). Met by a direct LU of the uncompressed system with a LAPACK forward-error bound, Z written at full float64
+  # precision, and the tightest honest solver_tol reported (contract sec. 3)
+  solver_err_budget: 1.0e-5
   recip_tol: 1.0e-3
   monotone_tol: 1.0e-3
   scaling_tol: 0.01
@@ -65,17 +72,21 @@ metrics:
     description: >-
       max over cases, compared quantities (L11, M12, L22) and frequencies of |L2 - closed form| / |closed form|,
       L2 at the finest level reached by the pre-registered refinement rule. Deterministic (no sampling); acceptance A1
-      reads the point value. Recorded without `ci`: its uncertainty is the error band below, which has no confidence
-      level and so is not written into MetricValue.ci/.level (reviews T0058/T0059 of T0057; note sec. 4.4).
+      reads the point value. Recorded without `ci` and with MetricValue.level = 0.0, meaning "no confidence level"
+      (the schema default 0.95 would claim one; T0063, review T0062): its uncertainty is the error band below, which
+      has no confidence level (reviews T0058/T0059 of T0057; note sec. 4.4). Every E001 metric is written with
+      level = 0.0; none has a ci.
     unit: ''
   - name: max_rel_err_band_lo
     description: >-
       lower end of the estimated error band of max_rel_err_vs_analytic, max_i (err_i - u_i)+ with u_i = refinement-rule
       estimate of the remaining discretization error + solver_err_budget + stated residual model error of the closed
       form (note sec. 4.3). Not a confidence bound and not a guaranteed bound: the discretization part is a bound only
-      under the order assumption of note sec. 4.4 (rigorous for expansions whose terms share one sign; validated
-      empirically for two terms of either sign; optimized mixed-sign three-term expansions can make it low by up to
-      ~2.5x).
+      under the order assumption of note sec. 4.4, leading order in [order_min, order_max] (rigorous for same-sign
+      expansions accepted on path B; validated empirically, noise-free, for two terms of either sign; optimized
+      mixed-sign three-term expansions can make it low by up to ~2.5x, and with solver noise at the budget rare
+      two-term opposite-sign sequences are covered low, up to ~1.5x at 1e-5; a leading order below
+      order_min is out of scope and can make it low by up to ~7x).
     unit: ''
   - name: max_rel_err_band_hi
     description: upper end of the same band, max_i (err_i + u_i); same caveats as max_rel_err_band_lo
@@ -136,8 +147,13 @@ sanity_checks:
       [order_min, order_max], terms of opposite and equal sign, ratios 1.25/1.5/2 jittered within
       refinement_ratio_spread, 4-5 levels, with and without solver noise -> zero false convergences, per-value coverage
       >= 0.95 in every family, clean geometric est/true in [1, 3]; and power (review T0058): per leading order 1, 1.5, 2,
-      >= 90 % of 100 same-sign sequences with true error < conv_tol / 10 declared converged. Detail records the pooled
-      coverage with its Clopper-Pearson lower bound, labelled generator-conditional (not a level of any metric)
+      >= 90 % of 100 same-sign sequences with true error < conv_tol / 10 declared converged; and power at the solver
+      budget (T0063; reviews T0061/T0062 of T0060): noise floor 2 x solver_err_budget, values perturbed by
+      +-solver_err_budget or exact, >= 90 % of 400 accurate same-sign sequences per leading order and mode from the
+      founder DoD distribution of estimator_adversarial.py declared converged. The same at-budget test on the broad
+      self-check generator is recorded in the detail but does not gate (note sec. 4.4). Detail records the pooled
+      coverage and every power count with its Clopper-Pearson lower bound, labelled generator-conditional (not a
+      level of any metric)
   - name: l2_converged
     description: >-
       estimated remaining discretization error (remaining_discretization_error over >= refinement_min_levels

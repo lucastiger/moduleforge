@@ -465,3 +465,6 @@
 {"ts": "2026-10-04T21:59:10+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0028", "kind": "budget_increase", "subject": "[O001] stage 1 of the approved increase: cap +$30 for the L2 feasibility spike"}
 {"ts": "2026-10-04T21:59:14+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0028", "status": "approved", "note": "usd=56.51"}
 {"ts": "2026-10-04T22:00:32+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0067-scientist-20261004T150032-01ba", "task": "T0067", "role": "scientist", "session": "7bf99934-9660-46d7-baaf-8c2045505570"}
+{"ts": "2026-10-04T23:25:25+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0067-scientist-20261004T150032-01ba", "status": "completed", "cost": 6.7698348, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-10-04T23:25:31+00:00", "event": "verified", "actor": "orchestrator", "task": "T0067"}
+{"ts": "2026-10-04T23:25:32+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0068-critic-20261004T162532-83c9", "task": "T0068", "role": "critic", "session": "b375b044-2b89-41de-b9b3-eee6f75e64e0"}

@@ -1,0 +1,32 @@
+id: T0062
+objective: O001
+title: Review T0060 (numerics)
+type: review
+agent: critic
+status: running
+depends_on: []
+description: 915bbafbee02cfc661b3b357aead6bdd070bc8dc
+context_files: []
+deliverables: []
+touches: []
+definition_of_done: []
+experiment: null
+risk: low
+model: null
+budget_usd: 3.0
+max_turns: 60
+attempts: 1
+max_attempts: 3
+branch: null
+pr: null
+runs:
+- T0062-critic-20261003T200210-1c1c
+created_by: orchestrator
+created_at: '2026-10-04T03:02:08+00:00'
+protected_approved: false
+approval: null
+target: T0060
+lens: numerics
+trigger: null
+rationale: ''
+history: []

@@ -4,7 +4,7 @@ title: 'E001 before registration: refinement rule must accept accurate solvers; 
   (T0058/T0059 reviews)'
 type: design_experiment
 agent: scientist
-status: running
+status: review
 depends_on:
 - T0057
 description: 'Follow-up to reviews T0058 (physics) and T0059 (numerics) of T0057 (project/reviews/T0057/).
@@ -91,4 +91,203 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- attempt: 1
+  outcome: agent_finished
+  summary: 'E001 is still an unregistered draft. This task revised it to answer reviews T0058 and T0059,
+    and every definition-of-done command now exits 0. The O001 acceptance criteria are unchanged. Commits
+    are c6cbc54 and 915bbaf on branch task/T0060.
+
+
+    (1) Refinement rule. Path A, T0057''s steady-order path, is unchanged. A new path B is the only place
+    the rule''s verdict moves from "not converged" to "converged". Path B applies when:
+
+    - every change has one sign;
+
+    - the observed order falls at every step by more than the noise;
+
+    - the last order is at least order_min;
+
+    - no order exceeds order_max + 1 = 3.
+
+
+    Path B''s estimate is the Richardson tail at order_min × 1.25, and never less than path A''s estimate.
+    Two derivations, both in note §4.4, support it:
+
+    - (a) Classification: for A h^p + B h^(p+dp) at a co'
+  report:
+    summary: 'E001 is still an unregistered draft. This task revised it to answer reviews T0058 and T0059,
+      and every definition-of-done command now exits 0. The O001 acceptance criteria are unchanged. Commits
+      are c6cbc54 and 915bbaf on branch task/T0060.
+
+
+      (1) Refinement rule. Path A, T0057''s steady-order path, is unchanged. A new path B is the only
+      place the rule''s verdict moves from "not converged" to "converged". Path B applies when:
+
+      - every change has one sign;
+
+      - the observed order falls at every step by more than the noise;
+
+      - the last order is at least order_min;
+
+      - no order exceeds order_max + 1 = 3.
+
+
+      Path B''s estimate is the Richardson tail at order_min × 1.25, and never less than path A''s estimate.
+      Two derivations, both in note §4.4, support it:
+
+      - (a) Classification: for A h^p + B h^(p+dp) at a constant ratio, the observed order falls monotonically
+      toward p if A·B > 0 and rises if A·B < 0.
+
+      - (b) Lemma: for any number of same-sign terms with exponents ≥ order_min and any realized ratio,
+      |d_last|/(ρ^order_min − 1) is an upper bound on the remaining error.
+
+
+      Results on the registered path:
+
+      - **Founder DoD:** power at p = 1 / 1.5 / 2 goes from 61 % / 12 % / 0 % to 100 % / 100 % / 100 %,
+      with 0 false convergences among 1,542 opposite-sign sequences.
+
+      - **Five other DoD seeds:** 0 false convergences among 7,488 opposite-sign sequences, and power
+      100 % throughout.
+
+      - **Two-term adversarial search** (any sign, ratio jitter): worst true/est is 0.80, i.e. the estimate
+      was never below 1.25× the true error.
+
+
+      The order cap is needed. Without it, an adversarial search found three-term cases on path B with
+      true/est of 26–30.
+
+
+      (2) Interval level. The band is no longer written into ci with a generator coverage in `level`.
+      max_rel_err_vs_analytic is now recorded without a ci (A1 reads the point value). The band is reported
+      as two metrics of its own, max_rel_err_band_lo and max_rel_err_band_hi, documented as a deterministic
+      band with no confidence level. The self-check''s pooled coverage and its one-sided 95 % Clopper–Pearson
+      lower bound go into the sanity detail, labelled generator-conditional: 1195/1195, lower bound 0.9975.
+
+
+      (3) Scope and contract.
+
+      - **Three-term expansions:** optimized mixed-sign cases still beat the rule, and the note states
+      this. Worst true/est is about 2.5 with T0060 versus about 1.9 with T0057, and both rules admit false
+      convergences there. Random three-term sampling gives 0 false convergences and coverage ≥ 0.998.
+
+      - **Ratio cap:** the contract now caps realized refinement ratios at 2.2 (new config key refinement_ratio_max),
+      the range the rule is validated on.
+
+      - **Mesh keys:** the contract names required mesh_params keys (seg/fil_w/fil_h/surf per conductor;
+      plane_x/plane_y/plane_layer per plane). The runner checks them.
+
+      - **Integer counts:** the contract gives a composable rule for choosing them, with a table. Nominal
+      1.25 with rounding never works; q = 1.3 needs a base count n0 ≥ 9, q = 1.5 needs n0 ≥ 10, q = 2
+      works from 1.
+
+
+      A stand-in L2 driven through --smoke confirmed the wiring:
+
+      - the same-sign order > 2 case that T0057 refused now passes;
+
+      - a missing mesh key fails l2_constant_refinement_ratio and l2_converged;
+
+      - counts 10 → 13 → 16 fail the ratio check (1.0156).
+
+
+      Commands run and their exit codes:
+
+      - `uv run mfos exp check E001`: 0
+
+      - `uv run ruff check experiments/runners/e001_reference.py`: 0
+
+      - `--analytic-only`: 0
+
+      - b1_exact_limits: 0
+
+      - convergence_estimator: 0
+
+      - design_contract: 0
+
+      - b3_mutual_exact: 0
+
+      - estimator_adversarial: 0, and 1 at the T0057 baseline
+
+      - `uv run mfos gate --fast`: 0'
+    failure_class: none
+    root_cause: 'Design task, so no failure. The T0058 finding, confirmed first-hand, came from T0057''s
+      rule: it treated every observed order above order_max as cancellation. Same-sign corrections always
+      push the observed order above p without any cancellation, so accurate sequences at the formal order
+      p = 2 were always refused (0/10,898).'
+    evidence:
+    - '[F] Baseline at T0057: estimator_adversarial.py exited 1. Power was 61/100 at p=1, 277/2304 at
+      p=1.5 and 0/10898 at p=2; safety was 0/1542.'
+    - '[F] After T0060 the same DoD exits 0: safety 0/1542 false convergences, and power 100/100, 2304/2304
+      and 10898/10898.'
+    - '[F] research/scripts/e001_rule_t0060_validation.py on DoD seeds 1-5: 0 false convergences in 7488
+      opposite-sign sequences with true error > conv_tol. Power: 500/500 at p=1, 10773/10773 at p=1.5,
+      49942/49942 at p=2.'
+    - '[F] Random continuous families (3000 each; p ~ U[1,2], dp ~ U[0.05,3], ratio 1.25-2.2 with jitter,
+      with and without noise): 0 false convergences for both rules in every family. Path B accepted 0
+      opposite-sign two-term sequences. Noise-free same-sign power rose from 0.501 to 0.837 (two terms)
+      and from 0.240 to 0.728 (four terms).'
+    - '[F] Adversarial search (differential evolution, 4 seeds x 200 generations): worst two-term true/est
+      is 0.800 for T0060 versus 1.006 for T0057, where false convergences were found. Worst three-term
+      true/est is 2.49 / 2.41 / 2.25 / 1.55 for T0060 versus 1.87 / 1.65 / 1.54 / 1.42 for T0057; both
+      rules have three-term false convergences.'
+    - '[F] Path B without the order cap: three-term cases with true/est 26-30 (orders 4.8 -> 4.4). With
+      cap 3: about 2.5. With cap 4: 4.6, but power for p=2 with an h^4 correction is 150/150 instead of
+      132/150.'
+    - '[F] The frozen self-check (seed 20261004) at design time: 0 false convergences; power 1.0/1.0/1.0;
+      coverage 1.0 in every family, pooled 1195/1195, Clopper-Pearson 95 % lower bound 0.9975; geometric
+      est/true 1.250; runtime 0.55 s.'
+    - '[F] Review T0058''s hand example (0.004 h^2 + 0.002 h^3, q=1.25, 5 levels, true error 8.1e-4):
+      T0057 returns inf, T0060 returns 2.5e-3 (converged).'
+    - '[F] Stand-in L2 through main(''smoke''), all 16 sanity checks: pass for p=2 and for the same-sign
+      h^2+h^3 case. Missing plane_layer key: l2_converged and l2_constant_refinement_ratio fail. Counts
+      rounded up 10->13->16: ratio check fails with 1.0156. max_rel_err_vs_analytic is written with ci=None
+      and the band appears as separate metrics.'
+    - '[F] mfos MetricValue.level is a required float, default 0.95; evaluate.py never reads level and
+      uses ci only for criteria with use=''ci''. O001''s A1 uses ''point''.'
+    - '[F] All nine definition-of-done commands exit 0 at commit 915bbaf.'
+    alternative_explanations:
+    - explanation: 'Design alternative for the interval: keep the band in ci with level = 1.0, read as
+        ''enclosure under the stated assumptions'' (consistent with alpha = 0 in stats.py).'
+      how_to_discriminate: Not chosen, because the noisy and three-term self-check families measure coverage
+        below 1 (0.998-0.999), so 1.0 would overstate. This is a founder choice, recorded as open item
+        11 in note section 7.
+    - explanation: 'Design alternative for the cap: set it at order_max + 2 = 4 instead of 3. That keeps
+        100 % power when p = 2 has a strong same-sign h^4 correction.'
+      how_to_discriminate: 'Measured: the cap of 4 lets the three-term adversarial worst case reach 4.6,
+        against about 2.5 at the cap of 3. Power at p=2 with dp=2 is 88 % at cap 3 and 100 % at cap 4.
+        A real L2 sequence showing observed orders between 3 and 4 that fall at every level would argue
+        for cap 4, as a new experiment id.'
+    discriminating_tests:
+    - 'Reviewer: rerun `uv run python research/scripts/e001_rule_t0060_validation.py` (about 8 min) and
+      add a three-term family to an independent adversarial search. Check that the worst three-term true/est
+      stays near 2.5 and that path B never accepts a two-term opposite-sign sequence.'
+    - 'Check the classification claim directly: for A h^p + B h^(p+dp) with A·B < 0 at constant ratio,
+      the observed order is monotone increasing. Derivation in note section 4.4: f''(y) = c''(q^-dp -
+      1)/(1 + c''y)^2.'
+    - When the L2 adapter exists, inspect its actual convergence sequences before E001 runs. Orders above
+      3 that fall at every level, or a noise floor near 2e-4, would predict l2_converged failing for a
+      correct solver.
+    recommended_actions:
+    - 'Founder: review the choice to report the error band as two metrics without a ci, versus ci with
+      level 1.0 (note section 7, item 11). Then decide registration request I0022.'
+    - 'Founder or reviewer: accept or reject the measured trade-off. The power gain on same-sign sequences
+      costs a larger worst case on optimized mixed-sign three-term expansions (about 2.5x versus 1.9x
+      for T0057). If rejected, the only lever with 4-5 levels is a stricter order cap, which costs power
+      when the correction is h^4.'
+    - 'L2 builder (T0022): report every required mesh_params key; choose integer counts from the note
+      section 3 table, for example q=1.3 with n0 >= 9 or q=1.5 with n0 >= 10; keep realized ratios <=
+      2.2. Use a direct LU so that solver_tol x amplification is much smaller than 1e-4, because at the
+      full noise budget the rule''s power drops to about 0.4-0.5.'
+    - 'Optional DoD addition for the founder: a noisy-power check and a three-term adversarial bound,
+      so the stated scope is enforced rather than documented.'
+    confidence: 0.82
+    files_written:
+    - experiments/drafts/E001.yaml
+    - experiments/runners/e001_reference.py
+    - research/notes/o001-l2-reference.md
+    - research/scripts/e001_rule_t0060_validation.py
+    experiment_drafts:
+    - experiments/drafts/E001.yaml
+    affects_acceptance_criteria: false

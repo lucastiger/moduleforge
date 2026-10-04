@@ -411,3 +411,7 @@
 {"ts": "2026-10-04T02:24:40+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0020", "status": "rejected", "note": "Superseded by I0022 (registration request for E001 as redesigned by T0057); registration still waits for the refinement-rule power fix."}
 {"ts": "2026-10-04T02:24:40+00:00", "event": "task_added", "actor": "founder", "task": "T0060"}
 {"ts": "2026-10-04T02:24:45+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0060-scientist-20261003T192445-c7d2", "task": "T0060", "role": "scientist", "session": "888f0806-61ca-49c8-9604-8d63d9cda8dd"}
+{"ts": "2026-10-04T03:01:15+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0060-scientist-20261003T192445-c7d2", "status": "completed", "cost": 5.943126599999999, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-10-04T03:02:08+00:00", "event": "verified", "actor": "orchestrator", "task": "T0060"}
+{"ts": "2026-10-04T03:02:10+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0061-critic-20261003T200210-6b07", "task": "T0061", "role": "critic", "session": "2d4aeeda-6a44-40a9-bd63-bfa56c561767"}
+{"ts": "2026-10-04T03:02:10+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0062-critic-20261003T200210-1c1c", "task": "T0062", "role": "critic", "session": "b262579c-bd49-4539-ba97-8f8c89c290ff"}

@@ -1,0 +1,65 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "E002 throughput estimate leaves out the prototype's dense wire\u2013plane coupling, which dominates cost",
+      "detail": "Q4 extrapolates E002 cost from the C1 GMRES rate ('close to linear in n'). It claims 10\u201320 GB per process, 10\u201325 min per layout and 30\u2013100 layouts/h on a 256 GB VM, and says 6 dies/switch costs about 1.2\u00d7 2 dies/switch. But l2proto stores wire\u2013plane coupling as a dense array (n_seg\u00b7Q) \u00d7 (all plane cells \u00d7 layers) per edge: K = zeros((n, Q, nl, n1, n2)). Its cost therefore scales as n_wire \u00d7 n_plane, not linearly. The diagnosis itself says this kernel dominates C1 and grows about q\u2074 per level. Applying the diagnosis's own E002 numbers (wires about 30k unknowns at m \u2264 2, giving about 7\u201310k proxy-segment rows; plane about 490k unknowns; inclined wires couple to both x and y branches) gives K \u2248 3\u20135e9 float64 entries, or 26\u201339 GB per layout for 2 dies/switch and about 3\u00d7 that for 6 dies/switch. At the measured C1 level-3 rate (1.3e9 fil_F evaluations in 97 s, about 1.3e7/s, with 12 quadrature points per entry), building K takes about 50\u201375 single-core minutes per layout. The 6-die/2-die ratio is about 3\u00d7 for this block, not 1.2\u00d7. A fast wire\u2013plane coupling (for example precorrected FFT) is not listed among the 'not yet built' items. So the E002 GO and the 30\u2013100 layouts/h figure rest on an architecture that, as written, does not reach that rate. My estimate is 10\u00d7 or more too high on concurrency and memory, which exceeds the stated '\u00d73' uncertainty.",
+      "evidence": "l2proto.py _build_plane: K = np.zeros((e['n'], tp.shape[0], nl, n1, n2)), dense over every plane cell. C1 level 3: 4 edges \u00d7 16 seg \u00d7 52 proxies \u00d7 8 layers \u00d7 4032 cells \u00d7 12 quad \u2248 1.29e9 evaluations in 97 s (diagnosis table). E002 inventory and unknown counts are from diagnosis Q4.",
+      "suggested_check": "Add the wire\u2013plane block (memory n_proxy_rows \u00d7 n_plane \u00d7 8 B, plus build time) to the Q4 estimate, or name a compressed or FFT wire\u2013plane coupling as a required unbuilt item, before T0024 uses any throughput number."
+    },
+    {
+      "severity": "major",
+      "title": "Headline 'Go for E001 as registered' depends on C1 level 4, which is unmeasured and marked PENDING",
+      "detail": "Q5 says 'Go for E001 as registered', and the addendum says 'the rest of the verdict does not depend on' C1 level 4. But the E001 run cannot pass without C1 converging under the frozen rule, and the rule needs at least 4 levels. C1 level 4 did not finish locally (stopped after 21.5 min under memory pressure). Six of ten frozen cases (A1\u2013A4, B3, B4) were not prototyped. The prototype also cannot run them: incidence() sources and grounds only wires[0], so multi-port Z12 (A3, A4, B3) and ties (B4) are unimplemented. The measured GO therefore covers only B1, B2, C0 and C1 levels 1\u20133. The E001 GO should read as a conditional GO.",
+      "evidence": "Diagnosis go/no-go table: C1 convergence row 'PENDING'. l2proto.Problem.incidence: ground = [wires[0] port end] (+ plane node), d set only at wires[0] port start. No ties or second port anywhere in l2proto.",
+      "suggested_check": "Run vm_bench full mode on the VM and confirm C1 converged_at = 4; prototype one two-port case (B3 at 100 Hz) before calling E001 a firm GO."
+    },
+    {
+      "severity": "minor",
+      "title": "Kernel-error check covers only wire kernels; C1's plane and wire\u2013plane quadrature error is about 10\u2074 times larger than the 6e-13 cited",
+      "detail": "kernel_checks.py varies only coax_tables quadrature and P, on B1, B2 and C0, none of which has a plane. The go/no-go row 'kernel \u2264 6e-13 measured [F]' is then applied to all cases. I doubled only the plane-table and wire\u2013plane Gauss orders (nw, nt, gq(6), gq(2)) on C1 level 1. L changed by \u22122.7e-9, \u22124.6e-9 and \u22121.7e-9 (5, 20, 80 MHz). That is still far below C1's 1e-5 requirement and the 2 % criterion, so it does not change the GO. It does refute 'kernel \u2264 6e-13' as a general statement, and the error is comparable to B3's 4.1e-9 solver requirement if kernel bounds are later folded into solver_tol as recommended.",
+      "evidence": "My run: base C1 k=1 L = [1.47930816e-08, 1.44099509e-08, 1.42160263e-08] H. With plane quadrature \u00d72: rel change [-2.67e-09, -4.62e-09, -1.71e-09].",
+      "suggested_check": "Extend kernel_checks.py to the plane table and wire\u2013plane quadrature, and to P on C1."
+    },
+    {
+      "severity": "minor",
+      "title": "Plane layer grading is not a consistent refinement: there is an error floor and non-monotone jumps the rule cannot see",
+      "detail": "The doc discloses that the graded layers (top \u03b4/2\u00b79/c, growth \u00d72) do not refine at fixed depth. I built a 1D model of the same grading: a 0.3 mm Cu slab, piecewise-constant layer currents, compared with the exact surface impedance k\u00b7coth(kT)/\u03c3. The plane's internal-inductance error does not vanish as t1 \u2192 0 (about +1.1 % at 5, 20 and 80 MHz). It is also non-monotone across levels 1\u20135 (5 MHz: +1.33e-2, +1.62e-2, +1.33e-2, +1.11e-2, +1.43e-2) because the layer count jumps 7\u21928. Scaled by the plane's internal-L share of C1 (about 5.7e-3 at 5 MHz, image estimate), this gives a floor of about 6e-5 of L and level-to-level perturbations of about \u00b11.5e-5. That is immaterial against 2 %, but about 3\u20134 % of C1's observed changes (4\u20135.5e-4). It could shift the observed order by about 0.2, against the rule's 0.35 steadiness tolerance. The claim 'every rigor element held' should exclude plane-depth convergence.",
+      "evidence": "1D Galerkin model, 7\u201320 layers, growth 2, \u03c3 = 5.8e7. Table of Im Z rel. errors computed in my scratch run (above).",
+      "suggested_check": "Use a fixed number of layers per skin depth at the lowest compared frequency, refined with c, or add plane depth to the mesh_params that the ratio check sees."
+    },
+    {
+      "severity": "minor",
+      "title": "Mac E001 time projection undercounts the C1 scaling solves; vm_bench may not settle the PENDING item",
+      "detail": "The runner's scaling check (l2_phase) makes two fresh C1 solves at the final level, original and \u00d72-scaled, each with a full level-4 kernel build. By the diagnosis's own per-level figures that is roughly 2 \u00d7 10\u201315 min, while all scaling solves are budgeted at 10\u201315 min in total. Separately, PLAN_FULL stops C1 at level 4. If the rule does not accept at level 4, the VM run cannot show whether level 5 (refinement_max = 5) converges.",
+      "evidence": "e001_reference.py lines 1503\u20131509 (two l2_solve calls at c['_k']). vm_bench.PLAN_FULL['C1'] = [1, 2, 3, 4].",
+      "suggested_check": "Add C1 level 5 to PLAN_FULL, and time the scaling solves in vm_bench."
+    },
+    {
+      "severity": "note",
+      "title": "vm_bench.verdict re-implements the rule loop with a slightly different noise floor",
+      "detail": "It uses max solver_tol over all levels, including levels after the stop level, where l2_converged_solve uses the levels computed so far. The effect is immaterial: noise is 1e-9 or less against changes of 1e-5 or more. It is also not literally 'the runner's own' convergence driver.",
+      "evidence": "vm_bench.py verdict(): noise_rel = 2*min(budget, max(r['solver_tol'] for r in recs)*amp).",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "DoD: research/diagnoses/T0067.md exists and contains 'go/no-go'; `uv run ruff check research/scripts/spike_l2` \u2192 All checks passed; `vm_bench.py --help` \u2192 exit 0.",
+    "Reproduced B1 levels 1\u20135 with vm_bench (fresh /tmp/rev68_b1): converged_at = 4, max_err_at_stop 9.03e-6, solver_tol 1.6e-14\u20261.5e-13. Matches the diagnosis.",
+    "Reproduced C1 level 1: L(5 MHz) = 14.79308 nH, errors +1.274e-3/+1.274e-3/+1.364e-3, solver_tol 8.67e-12. Matches the diagnosis.",
+    "Tested the a-posteriori solve bound against a dense LU reference on C0 level 1 (GMRES at tol 1e-2, 1e-4, 1e-6, three frequencies): true relative Z error \u2264 bound in all 9 cases (e.g. 1.75e-11 \u2264 3.39e-9). Re-derived by hand: \u03b4Z = e\u1d40Me = e\u1d40\u00b7P(Mx) because C\u1d40e = 0 and Mx* \u2208 range(C), and \u2016e\u2016 \u2264 \u2016\u03c1\u2016/r_min because Re(v\u1d34Mv) = v\u1d34Rv. The bound is sound.",
+    "Doubled only the plane-table and wire\u2013plane quadrature orders on C1 level 1: L changes by 1.7\u20134.6e-9 relative, about 10\u2074 times the 'kernel \u2264 6e-13' cited, but \u226a 1e-5.",
+    "1D Galerkin model of the \u00d72 graded plane layers against the exact slab surface impedance: non-vanishing internal-L error of about 1.1 % and non-monotone level-to-level behaviour when the layer count jumps.",
+    "Read the frozen runner (required_mesh_keys, mesh_sequence, refinement_ratio_violation, l2_converged_solve, solver_tol_required, scaling phase) and compared it with vm_bench.verdict.",
+    "Hand-computed the E002 wire\u2013plane dense-kernel memory and build time from l2proto's data layout and the diagnosis's own C1 level-3 timing."
+  ],
+  "caveats": [
+    "Within the measured scope the claim holds. B1, B2 and C0 converge under the frozen rule at level 4 with accuracy \u2264 1.04e-4 against the closed form. The rigorous solve bound is mathematically sound and empirically holds. I reproduced B1 and C1 level 1 exactly.",
+    "The E001 GO is conditional. C1 level 4 is unmeasured. A1\u2013A4, B3 and B4 (multi-port, ties, bars) are unprototyped, and the prototype cannot run them.",
+    "The E002 GO and its 30\u2013100 layouts/h throughput are not supported as stated. Under the prototype's dense wire\u2013plane coupling, per-layout memory is about 26\u2013118 GB and kernel build is about 1 h or more single-core. T0024 must not size its sample from this number.",
+    "The 'kernel \u2264 6e-13' statement applies only to wire-only cases. Plane kernels show about 5e-9.",
+    "Raw measurement JSON lives in /tmp and is not committed. I could only spot-check the wire and C1 level-1 numbers, not B2/C0 levels 3\u20134 or C1 levels 2\u20133 timings.",
+    "Bash permission denials prevented a heredoc scratch script. Checks ran as inline `python -c` instead. Nothing in the repository was modified."
+  ]
+}

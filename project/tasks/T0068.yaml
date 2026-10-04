@@ -3,7 +3,7 @@ objective: O001
 title: Review T0067 (general)
 type: review
 agent: critic
-status: running
+status: done
 depends_on: []
 description: 15d4c94fcc57c5532efef68ddb477367ef1a926e
 context_files: []
@@ -29,4 +29,6 @@ target: T0067
 lens: general
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: review:accept_with_caveats
+  summary: 6 findings

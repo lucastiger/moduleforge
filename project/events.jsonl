@@ -468,3 +468,4 @@
 {"ts": "2026-10-04T23:25:25+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0067-scientist-20261004T150032-01ba", "status": "completed", "cost": 6.7698348, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-10-04T23:25:31+00:00", "event": "verified", "actor": "orchestrator", "task": "T0067"}
 {"ts": "2026-10-04T23:25:32+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0068-critic-20261004T162532-83c9", "task": "T0068", "role": "critic", "session": "b375b044-2b89-41de-b9b3-eee6f75e64e0"}
+{"ts": "2026-10-04T23:32:30+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0068-critic-20261004T162532-83c9", "status": "completed", "cost": 1.8384040000000006, "subtype": "success", "report": "structured_output"}

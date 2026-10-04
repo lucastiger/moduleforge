@@ -405,3 +405,4 @@
 {"ts": "2026-10-03T23:11:00+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 406, "runs_extended": 0}
 {"ts": "2026-10-04T01:27:52+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 597, "runs_extended": 0}
 {"ts": "2026-10-04T01:36:15+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 503, "runs_extended": 0}
+{"ts": "2026-10-04T02:23:58+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0021", "status": "approved", "note": "Approved per the founder's standing instruction (draft only, nothing frozen): DoD verified; T0058/T0059 accept_with_caveats. Founder session confirmed T0058's major on the registered path (accurate same-sign solvers accepted 0/10898 at p=2) -> follow-up before E001 registration, with corrected DoD on the registered path."}

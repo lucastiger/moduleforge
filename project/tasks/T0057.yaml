@@ -4,7 +4,7 @@ title: 'E001 before registration: conservative refinement rule, honest interval 
   contract (T0055/T0056 reviews)'
 type: design_experiment
 agent: scientist
-status: needs_founder
+status: merge
 depends_on:
 - T0041
 description: 'Follow-up to reviews T0055 (physics) and T0056 (numerics) of T0041 (project/reviews/T0041/).
@@ -88,8 +88,8 @@ runs:
 - T0057-scientist-20261001T102518-9d3d
 created_by: founder
 created_at: '2026-10-01T14:07:35+00:00'
-protected_approved: false
-approval: null
+protected_approved: true
+approval: I0021
 target: null
 lens: null
 trigger: null

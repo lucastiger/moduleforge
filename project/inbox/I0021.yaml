@@ -9,7 +9,10 @@ refs:
 - T0057
 options: []
 recommendation: ''
-status: open
-response: ''
+status: approved
+response: 'Approved per the founder''s standing instruction (draft only, nothing frozen): DoD verified;
+  T0058/T0059 accept_with_caveats. Founder session confirmed T0058''s major on the registered path (accurate
+  same-sign solvers accepted 0/10898 at p=2) -> follow-up before E001 registration, with corrected DoD
+  on the registered path.'
 created_at: '2026-10-01T18:03:45+00:00'
-resolved_at: null
+resolved_at: '2026-10-04T02:23:58+00:00'

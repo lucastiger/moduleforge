@@ -1,8 +1,9 @@
 # ModuleForge status
-_generated 2026-10-04T03:17:13+00:00 from repository state — do not edit_
+_generated 2026-10-04T03:33:04+00:00 from repository state — do not edit_
 
-## Founder inbox (1 open)
+## Founder inbox (2 open)
 - **I0024** [experiment_registration] register E001 (pre-registration)
+- **I0025** [budget_increase] [O001] raise the objective budget by $60 (founder decision)
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -15,7 +16,6 @@ cancelled: 14, done: 39, failed: 2, todo: 7
 
 
 ## Recent events
-- 2026-10-04T02:24:15+00:00 inbox_opened {"id": "I0022", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}
 - 2026-10-04T02:24:40+00:00 inbox_resolved {"id": "I0020", "status": "rejected", "note": "Superseded by I0022 (registration request for E001 as redesigned by T0057); registration still waits for the refi
 - 2026-10-04T02:24:40+00:00 task_added {"task": "T0060"}
 - 2026-10-04T02:24:45+00:00 run_started {"run": "T0060-scientist-20261003T192445-c7d2", "task": "T0060", "role": "scientist", "session": "888f0806-61ca-49c8-9604-8d63d9cda8dd"}
@@ -30,3 +30,4 @@ cancelled: 14, done: 39, failed: 2, todo: 7
 - 2026-10-04T03:16:37+00:00 merged {"task": "T0060"}
 - 2026-10-04T03:16:37+00:00 inbox_opened {"id": "I0024", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}
 - 2026-10-04T03:16:47+00:00 inbox_resolved {"id": "I0022", "status": "rejected", "note": "Superseded by I0024 (registration request for E001 as redesigned by T0060)."}
+- 2026-10-04T03:33:00+00:00 inbox_opened {"id": "I0025", "kind": "budget_increase", "subject": "[O001] raise the objective budget by $60 (founder decision)"}

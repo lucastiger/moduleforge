@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E002: L1 vs L2 loop-inductance ranking on sealed generated layouts'
 type: experiment
 agent: none
-status: todo
+status: cancelled
 depends_on:
 - T0024
 - T0022
@@ -34,4 +34,7 @@ target: null
 lens: null
 trigger: null
 rationale: 'Required experiment E002: the core test of the hypothesis.'
-history: []
+history:
+- outcome: cancelled
+  summary: 'Blocked for good: it depends on T0024 and failed T0022. Re-issued as n6, which depends on
+    n5, the E001 run (n3) and the layout-cost gate (n4b).'

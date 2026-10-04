@@ -3,7 +3,7 @@ objective: O001
 title: 'L2 layout loop_inductance: fast exact-kernel solve of generated half-bridges (for E002)'
 type: implement
 agent: builder
-status: todo
+status: cancelled
 depends_on:
 - T0022
 description: 'Split from T0022 (founder session, 2026-10-04). Implement `moduleforge.solvers.l2.loop_inductance(layout,
@@ -58,4 +58,9 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: cancelled
+  summary: 'Blocked for good: it depends on failed T0022. Its scope is re-issued as n4a and n4b on the
+    new core. They add the compressed wire-to-plane coupling that review T0068 (finding 1) showed is required,
+    plus a measured cost and convergence gate. They also drop the FastHenry binary assertions; founder
+    confirmation is requested.'

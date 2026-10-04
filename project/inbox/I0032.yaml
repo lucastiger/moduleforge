@@ -1,0 +1,34 @@
+id: I0032
+kind: plan_approval
+subject: '[O001] approve initial plan (3 tasks)'
+summary: 'O001 has used 0 of 3 evaluations, and the L2 reference is still the blocker. T0022 failed after
+  4 attempts, which left T0024, T0025, T0026, T0027 and T0066 permanently blocked. The founder-approved
+  spike T0067 classed the failure as implementation (confidence 0.75). Its review, T0068, accepted it
+  with caveats. The spike measured that the exact-kernel design converges for B1, B2 and C0 under the
+  frozen E001 rule at level 4, within 1.04e-4 of the closed forms. It also ran C1 levels 1–3 in minutes,
+  and its GMRES a-posteriori bound was independently confirmed as sound. Three caveats remain. First,
+  C1 at level 4 was never measured. Second, the two-port cases and ties (A3, A4, B3, B4) were not prototyped,
+  so the E001 "go" is conditional. Third, the E002 throughput figure leaves out the dense wire-to-plane
+  coupling, which would need 26–118 GB and about an hour per layout. The hypothesis itself can only be
+  killed by E002. So the cheapest path to a verdict is: a validated reference, then a layout path whose
+  feasibility is gated by measurements, then a power-sized E002. n1 ports the spike core into src/ and
+  puts the riskiest item first: C1 must converge through levels 1–4 under the runner''s own rule. After
+  n1, n2 (bars, two-port cases, ties, frozen E001 smoke run within 40 minutes) and n4a (layout path with
+  compressed wire-to-plane coupling) run in parallel. n4b then gates E002 on measured CPU time and memory
+  per layout and on a change of less than 1 % between refinement levels, before n5 sizes E002 from that
+  data. The $47.90 left does not cover this plan once automatic reviews and retries are counted, and replans
+  are exhausted (3/3). I''m therefore asking the founder for a budget increase and to confirm two amendments
+  to D0003.'
+refs:
+- O001
+- T0070
+- T0071
+- T0072
+options:
+- approve
+- reject (with note for the planner)
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-04T23:42:44+00:00'
+resolved_at: null

@@ -1,0 +1,109 @@
+id: T0071
+objective: O001
+title: 'Complete moduleforge.solvers.l2 for E001: exact bars, two-port Z, ties; frozen E001 smoke passes
+  within 40 min'
+type: implement
+agent: builder
+status: proposed
+depends_on:
+- T0070
+description: 'Completes moduleforge.solvers.l2 for E001 on n1''s core. This is the rest of failed T0022''s
+  scope.
+
+
+  Implement:
+
+  - Bar via the exact Hoer & Love (1965) kernel (D0003), with distinct-offset (Toeplitz) reuse, and cross-section
+  cells graded to skin depth/2 at the finest levels under the constant ratio (contract section 3 of research/notes/o001-l2-reference.md).
+
+  - Multi-port Z with every port column and the contract''s sign convention (A3, A4, B3).
+
+  - Tie as an ideal zero-impedance connection (B4).
+
+  Keep the contract API exactly. Do not edit experiments/runners/e001_reference.py, experiments/specs/
+  or the note. FastHenry is optional under D0003: no binary is required. If you use it as a cross-check,
+  record meta[''fh_zc_rel_diff''].
+
+
+  Speed: the frozen E001 smoke run must finish within its 40-minute DoD limit. Then measure and report
+  a projection for the full registered run on this Mac against the frozen timeout_min = 240. The full
+  run covers 10 cases, levels up to 5 where the rule needs them, 100 Hz plus 5/20/80 MHz, and scaling
+  solves for A1, B2 and C1. That includes two C1 solves at its final level (T0068 finding 5). If the projection
+  exceeds 200 min, stop and report blocked with the numbers: moving E001 to a burst host means re-registering
+  cpu_hours_est, which is a founder decision.
+
+
+  Tests in tests/unit/solvers/test_l2_e001_*.py:
+
+  - Bar self and mutual inductance vs Hoer-Love and an independent quadrature;
+
+  - Im Z12 > 0 for parallel ports pointing the same way;
+
+  - tie assembly vs the explicit parallel formula (Z11 Z22 - Z12^2)/(Z11 + Z22 - 2 Z12);
+
+  - reciprocity;
+
+  - exact length scaling;
+
+  - solver_tol vs a dense LU.
+
+  Cite closed forms. Never weaken a test or tolerance. Do not change files under src/moduleforge/solvers/l2_layout.py
+  (n4a works there in parallel).'
+context_files:
+- research/notes/o001-l2-reference.md
+- experiments/runners/e001_reference.py
+- project/decisions/D0003-l2-exact-inhouse-kernel.md
+- research/diagnoses/T0067.md
+- project/reviews/T0067/T0068.json
+- project/tasks/T0022.yaml
+- src/moduleforge/solvers/l2.py
+- src/moduleforge/solvers/l2_core.py
+- .claude/skills/mf-conventions/SKILL.md
+deliverables:
+- src/moduleforge/solvers/l2.py
+- src/moduleforge/solvers/l2_core.py
+- tests/unit/solvers/test_l2_e001_bars.py
+- tests/unit/solvers/test_l2_e001_ports.py
+touches:
+- src/moduleforge/solvers/l2.py
+- src/moduleforge/solvers/l2_core.py
+- src/moduleforge/solvers/l2_bars.py
+- src/moduleforge/solvers/__init__.py
+- tests/unit/solvers/test_l2_core.py
+- tests/unit/solvers/test_l2_e001*.py
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/solvers
+  exists: null
+  timeout_s: 1800
+- cmd: uv run ruff check src/moduleforge/solvers tests/unit/solvers
+  exists: null
+  timeout_s: 300
+- cmd: rm -rf /tmp/e001-smoke && uv run python experiments/runners/e001_reference.py --smoke && uv run
+    python -c "import json; r=json.load(open('/tmp/e001-smoke/result.json')); assert r['status']=='complete',
+    r['status']; assert r['sanity'] and all(s['passed'] for s in r['sanity']), r['sanity']; v=r['metrics']['max_rel_err_vs_analytic']['value'];
+    assert v <= 0.02, v; print('E001 smoke max_rel_err', v)"
+  exists: null
+  timeout_s: 2400
+- cmd: grep -rnE 'git clone|urlopen|urlretrieve|wget' src/moduleforge/solvers; test $? -eq 1
+  exists: null
+  timeout_s: 30
+experiment: null
+risk: high
+model: null
+budget_usd: 7.0
+max_turns: 120
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: planner:T0069
+created_at: '2026-10-04T23:42:44+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: 'A1: E001 must produce an admissible result. The gate is the same frozen smoke check that T0022
+  could not pass, so passing it is checked by the frozen runner, not by the builder''s report.'
+history: []

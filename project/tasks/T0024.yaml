@@ -3,7 +3,7 @@ objective: O001
 title: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timing) + runners
 type: design_experiment
 agent: scientist
-status: todo
+status: cancelled
 depends_on:
 - T0021
 - T0022
@@ -156,4 +156,8 @@ trigger: null
 rationale: E002 produces the metrics for A2–A5 and K1–K3, with sanity checks for F1/F2 and secondary diagnostics
   for F3/F4. E003 produces A6. The power analysis is there to avoid an INCONCLUSIVE verdict wasting one
   of the 3 evaluations, and sealed seeds address F5.
-history: []
+history:
+- outcome: cancelled
+  summary: 'Blocked for good: it depends on failed T0022 and on T0066, which is cancelled here. Re-issued
+    as n5 with dependencies on the new layout path and its measured cost. Review T0068 found the spike''s
+    E002 throughput figure unsupported, so E002 must be sized from measured data.'

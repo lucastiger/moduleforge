@@ -1,0 +1,24 @@
+id: I0030
+kind: budget_increase
+subject: '[O001] O001: +$50 to finish L2 (E001 and layout path) and to design and run E002/E003'
+summary: 'O001 has spent $147.05 of its $194.95 override, so $47.90 remains. This plan''s 8 tasks are
+  budgeted at $37.50. That excludes the orchestrator''s automatic reviews: physics and numerics reviews
+  on 4 high-risk builder tasks plus experiment-design reviews, about $25–30. It also excludes any retry;
+  T0022 alone needed 4 attempts. The expected need is about $65–80. Replans are exhausted (3/3), so any
+  further failure comes to you directly. 16 of the 21 wall-days remain.'
+refs:
+- O001
+- T0069
+options:
+- '(a) +$50 (override to about $245): run the whole plan, with n2 and n4a in parallel after n1'
+- '(b) +$15: approve only n1–n3 (E001) now, and decide on the layout path (n4a/n4b) and E002 after E001''s
+  result'
+- '(c) No increase: stop after E001 and re-plan O001 around multi-fidelity search (the decision_if_fail
+  path)'
+recommendation: (a). The E001 work is reusable whatever happens next. n4b's cost gate is itself the E002-feasibility
+  kill shot, and it is worth reaching before the wall-days run out. (b) is the cautious alternative if
+  you want to see E001 first; it adds about a week of wall time.
+status: open
+response: ''
+created_at: '2026-10-04T23:42:44+00:00'
+resolved_at: null

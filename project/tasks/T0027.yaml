@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E003: L1 median single-core evaluation time'
 type: experiment
 agent: none
-status: todo
+status: cancelled
 depends_on:
 - T0024
 - T0023
@@ -31,4 +31,7 @@ target: null
 lens: null
 trigger: null
 rationale: Required experiment E003 (cost half of the hypothesis).
-history: []
+history:
+- outcome: cancelled
+  summary: 'Blocked for good: it depends on T0024, which is cancelled here. Re-issued as n7, which depends
+    on n5.'

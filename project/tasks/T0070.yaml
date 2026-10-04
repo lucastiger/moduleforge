@@ -1,0 +1,142 @@
+id: T0070
+objective: O001
+title: 'L2 core in src: exact-kernel round wires, FFT plane, bounded GMRES; E001''s C1 and B2 converge
+  under the frozen rule'
+type: implement
+agent: builder
+status: proposed
+depends_on: []
+description: 'Replaces failed T0022 (4 attempts). It uses the design measured by the founder-approved
+  spike T0067 (research/diagnoses/T0067.md) and reviewed in T0068 (project/reviews/T0067/T0068.json).
+  Turn research/scripts/spike_l2/l2proto.py into production code under src/moduleforge/solvers/. Put the
+  public API in l2.py, exactly as specified in the contract in research/notes/o001-l2-reference.md section
+  3 (Bar, RoundWire, Plane, Terminal, Port, Tie, solve, Result, MAX_REFINEMENT >= 5). Put the internals
+  in l2_core.py. SCOPE: RoundWire and Plane with any number of ports. Bar and Tie may raise NotImplementedError;
+  n2 adds them. Do not edit experiments/, research/notes/ or the spike scripts.
+
+
+  Required:
+
+  (1) Wires: graded annuli with azimuthal harmonics m <= P, exact coaxial Toeplitz tables, and moment-matched
+  proxy filaments for other edges and the plane, as in the spike. Choose counts so every realized ratio
+  is inside the contract band.
+
+  (2) Plane: compute the kernel once per distinct (offset, layer pair) and apply it by FFT. Plane thickness
+  layers must refine consistently with the constant ratio (e.g. a fixed number of layers per skin depth,
+  refined with the level counts) and must appear in mesh_params. The spike''s x2-graded layers had a ~1
+  % internal-L floor and non-monotone jumps (T0068 finding 4). If C1 is not steady by level 4, suspect
+  the uncovered plane-rim half-cells (an O(a) term, T0067) and fix the discretization. Never touch the
+  rule.
+
+  (3) Wire-to-plane coupling: chunked (bounded memory) and parallel over cores. C1 level 4 must fit in
+  <= 12 GB on this 17 GB Mac and leave room for the 40-minute E001 smoke run.
+
+  (4) Solve: dense LU for small systems, otherwise GMRES with the block preconditioner. meta[''solver_tol'']
+  = the rigorous a-posteriori bound ||P(Mx)||^2/r_min, plus rounding, plus STATED BOUNDS (not measured
+  changes) for: kernel quadrature, proxy truncation ~(r/D)^(P+1), and the plane-table and wire-to-plane
+  quadrature. T0068 finding 3: plane kernels showed ~5e-9, not 6e-13.
+
+  (5) meta per the contract: solver_tol; n_filaments (increasing per level); mesh_params with every required
+  key; mesh_hash computed from the mesh actually built, with one equal entry per frequency of the call;
+  tool name and version; wall_s. One mesh per call. Meshes defined relative to geometry and skin depth,
+  so length scaling is exact.
+
+  (6) Design the core for reuse. The layout path (n4a, in parallel with n2) imports l2_core without editing
+  it, so expose as functions: the kernel tables, multi-plane FFT operators on a shared lateral grid, the
+  GMRES driver and the bound.
+
+
+  Tests in tests/unit/solvers/test_l2_core.py:
+
+  - kernel entries vs an independent high-precision quadrature (<= 1e-9);
+
+  - convergence in quadrature order and in P, including the plane and wire-to-plane kernels;
+
+  - the a-posteriori bound >= the true Z error, against a dense LU on a small plane case;
+
+  - reciprocity on a two-port wire case;
+
+  - mesh_params exactly doubled when lengths are doubled and f is divided by 4;
+
+  - L non-increasing with frequency;
+
+  - B1 against its closed form.
+
+  Cite every closed form (skill mf-conventions). Report C1''s level sequence and its time and memory per
+  level.'
+context_files:
+- research/diagnoses/T0067.md
+- project/reviews/T0067/T0068.json
+- research/scripts/spike_l2/l2proto.py
+- research/scripts/spike_l2/kernel_checks.py
+- research/scripts/spike_l2/vm_bench.py
+- research/notes/o001-l2-reference.md
+- experiments/runners/e001_reference.py
+- project/decisions/D0003-l2-exact-inhouse-kernel.md
+- project/tasks/T0022.yaml
+- .claude/skills/mf-conventions/SKILL.md
+deliverables:
+- src/moduleforge/solvers/__init__.py
+- src/moduleforge/solvers/l2.py
+- src/moduleforge/solvers/l2_core.py
+- tests/unit/solvers/test_l2_core.py
+touches:
+- src/moduleforge/solvers/**
+- tests/unit/solvers/**
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/solvers
+  exists: null
+  timeout_s: 1800
+- cmd: uv run ruff check src/moduleforge/solvers tests/unit/solvers
+  exists: null
+  timeout_s: 300
+- cmd: 'uv run python -c "import importlib.util as iu, math, sys, numpy as np; s=iu.spec_from_file_location(''e001r'',
+    ''experiments/runners/e001_reference.py''); e=iu.module_from_spec(s); sys.modules[''e001r'']=e; s.loader.exec_module(e);
+    from moduleforge.solvers import l2; cfg=e.checked_config({}); cfg[''refinement_max'']=cfg[''refinement_start'']+cfg[''refinement_min_levels'']-1;
+    sig={e.CU: float(cfg[''sigma_cu'']), e.AL: float(cfg[''sigma_al''])}; c=e.build_cases(cfg, ids=[''C1''])[0];
+    f=2.0e7; c[''cmp_freqs'']=[f]; c[''info_freqs'']=[]; z,rem,k,ms=e.l2_converged_solve(l2, c, [f], sig,
+    cfg); lab,i,j=c[''compare''][0]; a=e.analytic_values(c, [f], sig)[(lab, f)]; v=float(np.imag(z[0,i,j])/(2*math.pi*f));
+    err=abs(v-a)/abs(a); r=max(rem.values()); t=max(float(m[''solver_tol'']) for m in ms)/e.solver_tol_required(c,
+    sig, cfg); h=e.refinement_ratio_violation(ms, cfg, e.required_mesh_keys(c)); mb=e.one_mesh_violations(ms,
+    1); print(''C1 level'', k, ''L'', v, ''err'', err, ''rule'', r, ''tol_ratio'', t, ''ratio'', h, ''mesh'',
+    mb); assert r < cfg[''conv_tol''] and err <= 0.02 and t <= 1.0 and h <= 1.0 + 1e-9 and mb == 0, (k,
+    err, r, t, h, mb)"'
+  exists: null
+  timeout_s: 1500
+- cmd: 'uv run python -c "import importlib.util as iu, math, sys, numpy as np; s=iu.spec_from_file_location(''e001r'',
+    ''experiments/runners/e001_reference.py''); e=iu.module_from_spec(s); sys.modules[''e001r'']=e; s.loader.exec_module(e);
+    from moduleforge.solvers import l2; cfg=e.checked_config({}); cfg[''refinement_max'']=cfg[''refinement_start'']+cfg[''refinement_min_levels'']-1;
+    sig={e.CU: float(cfg[''sigma_cu'']), e.AL: float(cfg[''sigma_al''])}; c=e.build_cases(cfg, ids=[''B2''])[0];
+    f=2.0e7; c[''cmp_freqs'']=[f]; c[''info_freqs'']=[]; z,rem,k,ms=e.l2_converged_solve(l2, c, [f], sig,
+    cfg); lab,i,j=c[''compare''][0]; a=e.analytic_values(c, [f], sig)[(lab, f)]; v=float(np.imag(z[0,i,j])/(2*math.pi*f));
+    err=abs(v-a)/abs(a); r=max(rem.values()); t=max(float(m[''solver_tol'']) for m in ms)/e.solver_tol_required(c,
+    sig, cfg); h=e.refinement_ratio_violation(ms, cfg, e.required_mesh_keys(c)); mb=e.one_mesh_violations(ms,
+    1); print(''B2 level'', k, ''L'', v, ''err'', err, ''rule'', r, ''tol_ratio'', t, ''ratio'', h, ''mesh'',
+    mb); assert r < cfg[''conv_tol''] and err <= 0.02 and t <= 1.0 and h <= 1.0 + 1e-9 and mb == 0, (k,
+    err, r, t, h, mb)"'
+  exists: null
+  timeout_s: 1200
+- cmd: grep -rnE 'git clone|urlopen|urlretrieve|wget' src/moduleforge/solvers; test $? -eq 1
+  exists: null
+  timeout_s: 30
+experiment: null
+risk: high
+model: null
+budget_usd: 8.0
+max_turns: 150
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: planner:T0069
+created_at: '2026-10-04T23:42:44+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: 'A1 (E001) and F1: the reference must be validated before any comparison. The DoD runs the
+  frozen runner''s own convergence rule on C1. That case is the open kill risk (T0068 finding 2: C1 level
+  4 is unmeasured), so it is checked before the rest of the build is paid for.'
+history: []

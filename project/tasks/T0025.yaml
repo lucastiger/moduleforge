@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E001: L2 reference vs closed-form partial inductances'
 type: experiment
 agent: none
-status: todo
+status: cancelled
 depends_on:
 - T0020
 - T0022
@@ -35,4 +35,7 @@ target: null
 lens: null
 trigger: null
 rationale: Required experiment E001. Validates the reference before any comparison uses it.
-history: []
+history:
+- outcome: cancelled
+  summary: 'Blocked for good: it depends on failed T0022. Re-issued as n3, which depends on n2 (the in-house
+    L2 that completes E001).'

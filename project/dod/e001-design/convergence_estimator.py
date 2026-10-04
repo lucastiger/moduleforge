@@ -1,35 +1,33 @@
-"""E001 design DoD: the refinement rule must estimate the remaining discretization error, not the last step.
+"""E001 design DoD: on the registered path the remaining-error estimate must bound single-term convergence tightly.
 
-Review T0030 of T0020: for geometric convergence with ratio rho the remaining error is change * rho / (1 - rho),
-4x the last change at rho = 0.8 and 9x at rho = 0.9. The runner must expose
-`remaining_discretization_error(values)` (L at successive refinement levels, finest last) and use it for both
-the l2_converged decision and disc_unc. It must not underestimate when the error decays algebraically (T0052).
+Registered path (as the runner calls it): remaining_discretization_error(values, h=<relative mesh sizes>,
+order_range=(order_min, order_max), steady_tol=steady_tol). For an exact single-term error e(h) = A h^p with p in
+[order_min, order_max] and a constant ratio q >= 1.25 (the L2 contract) the estimate must lie in [true, 3 x true];
+exactly constant values must give ~0. (Earlier versions of this check called the values-only fallback, which the
+runner never uses: reviews T0058/T0059 of T0057.) Two-term and adversarial sequences: estimator_adversarial.py.
 """
 import sys
 
 sys.path.insert(0, "experiments/runners")
 import e001_reference as R  # noqa: E402
 
-assert hasattr(R, "remaining_discretization_error"), "runner does not expose remaining_discretization_error(values)"
+cfg = R.DEFAULT_CFG
+order_range = (float(cfg["order_min"]), float(cfg["order_max"]))
+steady_tol = float(cfg["steady_tol"])
+assert hasattr(R, "remaining_discretization_error"), "runner does not expose remaining_discretization_error"
 problems = []
-for rho in (0.5, 0.8, 0.9):
-    seq = [1.0 + 0.02 * rho ** k for k in range(4)]
-    true = abs(seq[-1] - 1.0)
-    est = float(R.remaining_discretization_error(seq))
-    print(f"rho={rho}: estimate {est:.3e}, true remaining error {true:.3e}")
-    if not 0.999 * true <= est <= 3 * true:
-        problems.append(f"rho={rho}: estimate {est:.3e} not within [true, 3 x true] = [{true:.3e}, {3 * true:.3e}]")
-# Algebraic convergence (error ~ k^-p, e.g. additive refinement; review T0052): the observed ratio tends to 1, so a
-# geometric extrapolation underestimates. The estimate must still bound the remaining error, or be inf (not converged).
-for p_ in (1.0, 2.0):
-    seq = [1.0 + 0.05 * (k + 1) ** -p_ for k in range(4)]
-    true = abs(seq[-1] - 1.0)
-    est = float(R.remaining_discretization_error(seq))
-    print(f"algebraic p={p_}: estimate {est:.3e}, true remaining error {true:.3e}")
-    if not (est == float("inf") or est >= 0.999 * true):
-        problems.append(f"algebraic p={p_}: estimate {est:.3e} below the true remaining error {true:.3e}")
-flat = float(R.remaining_discretization_error([1.0, 1.0, 1.0]))
+for p in (1.0, 1.5, 2.0):
+    for q in (1.25, 1.5, 2.0):
+        h = [q ** -k for k in range(5)]
+        v = [1.0 + 0.05 * x ** p for x in h]
+        true = abs(v[-1] - 1.0)
+        est = float(R.remaining_discretization_error(v, h=h, order_range=order_range, steady_tol=steady_tol))
+        print(f"p={p} q={q}: estimate {est:.3e}, true remaining error {true:.3e}")
+        if not 0.999 * true <= est <= 3 * true:
+            problems.append(f"p={p} q={q}: estimate {est:.3e} not within [true, 3 x true] = [{true:.3e}, {3 * true:.3e}]")
+flat = float(R.remaining_discretization_error([1.0] * 5, h=[2.0 ** -k for k in range(5)], order_range=order_range,
+                                              steady_tol=steady_tol))
 if flat > 1e-12:
     problems.append(f"a converged sequence gives {flat:.3e}, expected ~0")
 assert not problems, "; ".join(problems)
-print("remaining-error estimator bounds geometric convergence")
+print("remaining-error estimator bounds single-term convergence on the registered path")

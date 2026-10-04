@@ -1,9 +1,13 @@
-"""E001 design DoD: the refinement rule must never declare convergence while the true remaining error exceeds conv_tol.
+"""E001 design DoD: the refinement rule, on the registered path, must neither converge falsely nor refuse accurate solvers.
 
-Reviews T0055/T0056 of T0041: with a two-term error expansion e(h) = A h^p + B h^(p+1), A and B of opposite sign,
-refined by a constant ratio >= 1.25 (the L2 contract), the sequence looks smooth and monotone while the slow term is
-still hidden; the rule called ~10 % of such sequences converged with a true remaining error above conv_tol (5-20x
-underestimate). A robust rule may be conservative (report inf / not converged), but must not be optimistic.
+Registered path: remaining_discretization_error(values, h=<relative mesh sizes>, order_range=(order_min, order_max),
+steady_tol=steady_tol), as the runner calls it (reviews T0058/T0059 of T0057: the earlier check exercised only the
+values-only fallback, which the runner never uses). Error model e(h) = A h^p + B h^(p+1), constant ratio q >= 1.25.
+  1. Safety (reviews T0055/T0056 of T0041): with A, B of opposite sign the slow term can hide; the rule must never
+     report an estimate below conv_tol while the true remaining error is above conv_tol.
+  2. Power (review T0058 of T0057): with A, B of the same sign there is no cancellation, but the observed order exceeds
+     p; capping it at order_max rejected 265 of 265 accurate sequences at p = 2. Sequences whose true remaining error is
+     below conv_tol / 10 must be declared converged in >= 90 % of cases for each leading order p in {1, 1.5, 2}.
 """
 import random
 import sys
@@ -11,26 +15,42 @@ import sys
 sys.path.insert(0, "experiments/runners")
 import e001_reference as R  # noqa: E402
 
-conv_tol = float(R.DEFAULT_CFG["conv_tol"])
-rng = random.Random(20261001)
-trials, false_conv, hidden = 3000, 0, 0
-examples = []
-for _ in range(trials):
-    p = rng.choice([1.0, 1.5, 2.0])
-    ratio = rng.choice([1.25, 1.5, 2.0])
-    nlev = rng.choice([3, 4, 5])
+cfg = R.DEFAULT_CFG
+conv_tol = float(cfg["conv_tol"])
+order_range = (float(cfg["order_min"]), float(cfg["order_max"]))
+steady_tol = float(cfg["steady_tol"])
+rng = random.Random(20261003)
+
+
+def sample(sign):
+    p, q, n = rng.choice([1.0, 1.5, 2.0]), rng.choice([1.25, 1.5, 2.0]), rng.choice([4, 5])
     a = rng.uniform(0.005, 0.2) * rng.choice([-1.0, 1.0])
-    b = -abs(rng.uniform(0.005, 0.4)) * (1.0 if a > 0 else -1.0)  # opposite sign to a
-    seq = [1.0 + a * h ** p + b * h ** (p + 1) for h in (ratio ** -k for k in range(nlev))]
-    true = abs(seq[-1] - 1.0)
-    est = float(R.remaining_discretization_error(seq))
+    b = abs(rng.uniform(0.005, 0.4)) * (1.0 if a > 0 else -1.0) * sign
+    h = [q ** -k for k in range(n)]
+    v = [1.0 + a * x ** p + b * x ** (p + 1) for x in h]
+    est = float(R.remaining_discretization_error(v, h=h, order_range=order_range, steady_tol=steady_tol))
+    return p, abs(v[-1] - 1.0), est
+
+
+problems = []
+false_conv = hidden = 0
+for _ in range(4000):
+    _, true, est = sample(-1.0)
     if true > conv_tol:
         hidden += 1
-        if est < conv_tol:
-            false_conv += 1
-            if len(examples) < 3:
-                examples.append(f"p={p} ratio={ratio} levels={nlev} est={est:.2e} true={true:.2e}")
-print(f"{hidden} of {trials} sequences have a true remaining error above conv_tol={conv_tol}; "
-      f"the rule called {false_conv} of them converged")
-assert false_conv == 0, f"false convergence in {false_conv} sequences, e.g. " + "; ".join(examples)
-print("no false convergence on opposite-sign two-term expansions")
+        false_conv += est < conv_tol
+print(f"safety: {false_conv} false convergences among {hidden} opposite-sign sequences with true error > conv_tol")
+if false_conv:
+    problems.append(f"{false_conv} false convergences on opposite-sign sequences")
+accepted = {}
+while min((t for _, t in accepted.values()), default=0) < 100 or len(accepted) < 3:
+    p, true, est = sample(+1.0)
+    if true < conv_tol / 10:
+        a, t = accepted.get(p, (0, 0))
+        accepted[p] = (a + (est < conv_tol), t + 1)
+for p, (a, t) in sorted(accepted.items()):
+    print(f"power: p={p}: {a}/{t} accurate same-sign sequences declared converged ({a / t:.0%})")
+    if a < 0.9 * t:
+        problems.append(f"p={p}: only {a}/{t} accurate sequences declared converged (need >= 90 %)")
+assert not problems, "; ".join(problems)
+print("refinement rule: no false convergence and >= 90 % acceptance of accurate solvers on the registered path")

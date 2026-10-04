@@ -3,7 +3,7 @@ objective: O001
 title: 'E001 final: solver error budget 1e-5 (rule power under solver noise), review minors (T0061/T0062)'
 type: design_experiment
 agent: scientist
-status: running
+status: todo
 depends_on:
 - T0060
 description: 'Final change before E001 is registered (founder decision, 2026-10-04): tighten the solver
@@ -69,7 +69,7 @@ risk: high
 model: null
 budget_usd: 6.0
 max_turns: 100
-attempts: 1
+attempts: 0
 max_attempts: 3
 branch: task/T0063-e001-final-solver-error-budget-1e-5-rule
 pr: null
@@ -83,4 +83,7 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: capacity_backoff
+  summary: You've hit your session limit · resets 9:30pm (America/Los_Angeles)
+  at: '2026-10-04T03:41:02+00:00'

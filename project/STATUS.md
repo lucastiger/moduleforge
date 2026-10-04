@@ -1,9 +1,8 @@
 # ModuleForge status
-_generated 2026-10-04T05:14:39+00:00 from repository state — do not edit_
+_generated 2026-10-04T05:16:13+00:00 from repository state — do not edit_
 
-## Founder inbox (2 open)
+## Founder inbox (1 open)
 - **I0024** [experiment_registration] register E001 (pre-registration)
-- **I0026** [protected_change] T0063: merge needs founder approval
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -12,12 +11,11 @@ _generated 2026-10-04T05:14:39+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $115.09/$165 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 41, failed: 2, needs_founder: 1, todo: 7
+cancelled: 14, done: 41, failed: 2, merge: 1, todo: 7
 
-- T0063 `needs_founder` scientist/design_experiment: E001 final: solver error budget 1e-5 (rule power under solver noise), review minors (T0061/T0062) (attempt 1)
+- T0063 `merge` scientist/design_experiment: E001 final: solver error budget 1e-5 (rule power under solver noise), review minors (T0061/T0062) (attempt 1)
 
 ## Recent events
-- 2026-10-04T03:34:22+00:00 task_added {"task": "T0063"}
 - 2026-10-04T03:34:22+00:00 run_started {"run": "T0063-scientist-20261003T203422-9eb4", "task": "T0063", "role": "scientist", "session": "2284cda1-8dc7-4d45-912b-c134db94a89b"}
 - 2026-10-04T03:41:02+00:00 run_finished {"run": "T0063-scientist-20261003T203422-9eb4", "status": "error", "cost": 2.317722, "subtype": "success", "report": "missing"}
 - 2026-10-04T03:41:02+00:00 capacity_backoff {"task": "T0063", "minutes": 30}
@@ -32,3 +30,4 @@ cancelled: 14, done: 41, failed: 2, needs_founder: 1, todo: 7
 - 2026-10-04T05:10:20+00:00 run_finished {"run": "T0064-critic-20261003T215957-9049", "status": "completed", "cost": 2.1492234, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T05:14:37+00:00 run_finished {"run": "T0065-critic-20261003T215957-b549", "status": "completed", "cost": 2.1218578000000003, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T05:14:38+00:00 inbox_opened {"id": "I0026", "kind": "protected_change", "subject": "T0063: merge needs founder approval"}
+- 2026-10-04T05:15:50+00:00 inbox_resolved {"id": "I0026", "status": "approved", "note": "Approved per the founder's standing instruction (draft only, nothing frozen): DoD verified; T0064/T0065 accept_wi

@@ -1,0 +1,15 @@
+id: I0029
+kind: protected_change
+subject: 'T0067: merge needs founder approval'
+summary: 'L2 feasibility spike: rigorous exact-kernel L2 for frozen E001 and E002 scale (go/no-go with
+  measurements)
+
+  Risk medium; 4 files. PR: None'
+refs:
+- T0067
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-04T23:32:32+00:00'
+resolved_at: null

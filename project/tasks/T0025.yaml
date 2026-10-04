@@ -10,6 +10,7 @@ depends_on:
 - T0041
 - T0057
 - T0060
+- T0063
 description: The orchestrator runs the registered E001 spec on merged main after the L2 adapter (n3) merges.
   It feeds A1 (max_rel_err_vs_analytic ≤ 0.02, point) and the F1 detection.
 context_files: []

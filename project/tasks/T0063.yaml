@@ -1,0 +1,86 @@
+id: T0063
+objective: O001
+title: 'E001 final: solver error budget 1e-5 (rule power under solver noise), review minors (T0061/T0062)'
+type: design_experiment
+agent: scientist
+status: running
+depends_on:
+- T0060
+description: 'Final change before E001 is registered (founder decision, 2026-10-04): tighten the solver
+  error budget. Follow-up to reviews T0061 (physics) and T0062 (numerics) of T0060 (project/reviews/T0060/).
+  Registration request I0024 waits for this task. Do not change O001''s acceptance criteria.
+
+
+  (1) solver_err_budget 1.0e-4 -> 1.0e-5. Reviews T0061/T0062 and the founder session showed the rule''s
+  power depends on the solver noise floor (2 x min(solver_err_budget, solver_tol x amp)): with worst-case
+  compliant noise (+-budget per value) it accepts 17-32 % of accurate p = 1.5-2 sequences at 1e-4 and
+  93-100 % at 1e-5, with 0 false convergences at both. Carry the change through consistently: the config
+  and DEFAULT_CFG, l2_solver_tolerance (the per-case solver_tol it now requires, e.g. ~4e-9 for B3 at
+  100 Hz) and the solver part of the error band, the L2 contract (note sec. 3: say how an adapter meets
+  it, e.g. a direct LU solve of the uncompressed system for E001''s sizes) and sec. 4.4. Do not otherwise
+  change the rule; project/dod/e001-design/estimator_adversarial.py now also tests worst-case noise at
+  the configured budget.
+
+  (2) Minor review items: path B also raises some finite estimates T0057 accepted (state it accurately,
+  T0061); path B''s dropped steadiness guard admits leading orders below order_min (out of the registered
+  scope; state the scope and its consequence, T0061); the serialized metric still carries level = 0.95
+  although the spec says the band is not a CI (T0062): make the result file not claim a confidence level
+  it does not have; fix the open-issues numbering in the note.
+
+
+  The definition of done runs all of T0060''s checks.'
+context_files: []
+deliverables:
+- experiments/drafts/E001.yaml
+- experiments/runners/e001_reference.py
+- research/notes/o001-l2-reference.md
+touches:
+- experiments/drafts/E001.yaml
+- experiments/runners/e001_reference.py
+- research/notes/o001-l2-reference.md
+- research/scripts/**
+definition_of_done:
+- cmd: uv run mfos exp check E001
+  exists: null
+  timeout_s: 900
+- cmd: uv run ruff check experiments/runners/e001_reference.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python experiments/runners/e001_reference.py --analytic-only
+  exists: null
+  timeout_s: 900
+- cmd: uv run python ~/mf/main/project/dod/e001-design/b1_exact_limits.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python ~/mf/main/project/dod/e001-design/convergence_estimator.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python ~/mf/main/project/dod/e001-design/design_contract.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python ~/mf/main/project/dod/e001-design/b3_mutual_exact.py
+  exists: null
+  timeout_s: 900
+- cmd: uv run python ~/mf/main/project/dod/e001-design/estimator_adversarial.py
+  exists: null
+  timeout_s: 900
+experiment: null
+risk: high
+model: null
+budget_usd: 6.0
+max_turns: 100
+attempts: 1
+max_attempts: 3
+branch: task/T0063-e001-final-solver-error-budget-1e-5-rule
+pr: null
+runs:
+- T0063-scientist-20261003T203422-9eb4
+created_by: founder
+created_at: '2026-10-04T03:34:22+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

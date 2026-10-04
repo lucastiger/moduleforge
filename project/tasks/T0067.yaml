@@ -1,0 +1,52 @@
+id: T0067
+objective: O001
+title: Diagnose failure of T0022
+type: investigate
+agent: scientist
+status: todo
+depends_on: []
+description: 'Task T0022 (''L2 reference adapter moduleforge.solvers.l2 (provisioned FastHenry binary
+  only, SI-meter decks, meshed planes, refinement, memoization)'') failed with preliminary class `implementation`:
+  definition of done not met.
+
+  Failure output (tail):
+
+  ```
+
+  FAIL rm -rf /tmp/e001-smoke && uv run python experiments/runners/e001_reference.py --smoke && uv run
+  python -c "import json; r=json.load(open(''/tmp/e001-smoke/result.json'')); assert r[''status'']==''complete'',
+  r[''status'']; assert r[''sanity''] and all(s[''passed''] for s in r[''sanity'']), r[''sanity'']; v=r[''metrics''][''max_rel_err_vs_analytic''][''value''];
+  assert v <= 0.02, v; print(''E001 smoke max_rel_err'', v)"
+
+  TIMEOUT after 2400s
+
+  ```
+
+  Determine the true failure class and root cause. Follow skill mf-diagnosis: list at least two alternative
+  explanations, design a discriminating test, run it if cheap, and write your notes to research/diagnoses/T0067.md.'
+context_files:
+- project/tasks/T0022.yaml
+deliverables:
+- research/diagnoses/T0067.md
+touches:
+- research/diagnoses/T0067.md
+definition_of_done: []
+experiment: null
+risk: medium
+model: null
+budget_usd: 5.0
+max_turns: 80
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: orchestrator
+created_at: '2026-10-04T21:14:18+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

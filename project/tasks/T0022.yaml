@@ -4,7 +4,7 @@ title: L2 reference adapter moduleforge.solvers.l2 (provisioned FastHenry binary
   meshed planes, refinement, memoization)
 type: implement
 agent: builder
-status: running
+status: todo
 depends_on:
 - T0020
 - T0021
@@ -184,4 +184,143 @@ rationale: L2 is the reference for E001 (A1) and E002 (A2–A5, K1–K3). Its me
   I0003 option (b), it uses only the provisioned binary and records the binary's path and sha256, so every
   reference number traces back to the pinned build. Decks are written in meters because `.units mm` inflates
   inductance 1000x in this build, an F1 trap; checks in the definition of done guard against it.
-history: []
+history:
+- attempt: 1
+  outcome: agent_finished
+  summary: 'I built `moduleforge.solvers.l2` and committed it (6e9c451). The E001 smoke DoD still fails,
+    so this is partial. It has the whole primitive contract and `loop_inductance`. Bars and wires match
+    the closed forms to 2e-4 or better at level 4, but the plane case C1 is 8.9% off, and the refinement
+    rule refuses every case.
+
+
+    **How it works.** FastHenry (the provisioned 3.0wr binary) only meshes the geometry and writes R,
+    the dense L and the mesh matrix M as full-precision `-k matlab` dumps. FastHenry''s own text outputs
+    carry 6 digits, which can''t meet the solver budget. So I solve the port impedances here, with a direct
+    LU of the uncompressed mesh system. I polish the solution with refinement whose residual is computed
+    in double-double arithmetic. FastHenry''s own `Zc.mat` is only a cross-check (`'
+  report:
+    status: partial
+    summary: "I built `moduleforge.solvers.l2` and committed it (6e9c451). The E001 smoke DoD still fails,\
+      \ so this is partial. It has the whole primitive contract and `loop_inductance`. Bars and wires\
+      \ match the closed forms to 2e-4 or better at level 4, but the plane case C1 is 8.9% off, and the\
+      \ refinement rule refuses every case.\n\n**How it works.** FastHenry (the provisioned 3.0wr binary)\
+      \ only meshes the geometry and writes R, the dense L and the mesh matrix M as full-precision `-k\
+      \ matlab` dumps. FastHenry's own text outputs carry 6 digits, which can't meet the solver budget.\
+      \ So I solve the port impedances here, with a direct LU of the uncompressed mesh system. I polish\
+      \ the solution with refinement whose residual is computed in double-double arithmetic. FastHenry's\
+      \ own `Zc.mat` is only a cross-check (`meta['fh_zc_rel_diff']`). Decks are always `.units m`.\n\n\
+      **What works.**\n- `resolve_fasthenry` raises `FastHenryNotFoundError` naming both `MF_FASTHENRY_BIN`\
+      \ and `scripts/provision_compute.sh`. A bad `MF_FASTHENRY_BIN` does not fall through to PATH.\n\
+      - Every result's `meta` carries the absolute `binary_path`, `binary_sha256` and `tool_version`.\n\
+      - Solves are memoized on disk, keyed by deck, frequencies, refinement, tool version and binary hash.\n\
+      - `meta['solver_tol']` is about 1.6e-15, derived from the exact residual (it is not LAPACK's ferr).\
+      \ The smoke `l2_solver_tolerance` sanity value is 1.95e-8, well under the required 1e-4.\n- Smoke\
+      \ closed-form errors at level 4:\n\n  | Case | Error |\n  |---|---|\n  | A1, A3 | 0 |\n  | B2, B3,\
+      \ B4 | ≤ 2.4e-4 |\n  | C0 | 3.3e-4 |\n  | B3 M12 | 2e-5 |\n\n- Reciprocity, `length_scaling`, `l_monotone_in_frequency`,\
+      \ `l2_one_mesh_per_solve` and `l2_constant_refinement_ratio` (0.909) all pass in the smoke run.\n\
+      - The 2-die half-bridge at refinement 0 gives L = 38.44 / 38.44 / 38.44 nH at 5 / 20 / 80 MHz, within\
+      \ 1–100 nH and non-increasing.\n\n**What fails.**\n1. **Smoke DoD fails.** `max_rel_err_vs_analytic`\
+      \ is 0.0893 against the 0.02 limit, and the `l2_converged` sanity check fails (the rule returns\
+      \ infinity for every case).\n2. **C1 is 8.9% off.** The floating plane needs lateral cells much\
+      \ smaller than the loop's ~1 mm height above it, and dense LU can't afford that on this 16 GB machine.\
+      \ I measured C1 at 8/8, 16/8 and 32/4 plane layers/lateral cells: the error stays about 9% when\
+      \ layers double but gets much worse (26%) at 4 lateral cells.\n3. **`l2_converged` is infinite even\
+      \ for A1.** A1's levels 1 to 4 are 12.17076662, 12.17076559, 12.17076512, 12.17077584 nH, so the\
+      \ last change flips sign. I read this as FastHenry's own kernel roundoff, about 1e-7, for thin filaments\
+      \ (19 µm × 188 µm). That is far above the noise floor my `solver_tol` implies, and it is not part\
+      \ of `solver_tol`. I did not isolate the cause, so it is a hypothesis.\n\n**Suggested next steps\
+      \ for the founder.**\n- Allow the in-house Hoer–Love kernel fallback (note §2) for the L matrix.\n\
+      - Or restrict filament aspect ratios.\n- Either way, `solver_tol` must then include the kernel error,\
+      \ and C1 needs a plane mesh much finer than I could afford.\n\n**Deviations from the packet.**\n\
+      - The mesh is uniform with every size exactly halving per level. The packet asks for grading to\
+      \ δ/2, but grading breaks the constant-ratio contract at 1–16 cells, so only `loop_inductance` grades.\n\
+      - Planes start one level coarser (2^(k-1) cells and layers), to keep memory bounded.\n- FastHenry's\
+      \ `.freq` honours only one card, so the deck carries the highest frequency. Every requested frequency\
+      \ is solved from the dumps.\n- For more than 3000 filaments FastHenry's own cross-check uses GMRES\
+      \ instead of its slow LU. Reported impedances never come from FastHenry's solve.\n- Trace cells\
+      \ are modelled as bars (no 2-D current spreading), which limits the layout path's fidelity.\n\n\
+      **Other points.** The cache directory is under the system temp dir. A full smoke run takes about\
+      \ 15 minutes cold. I had no budget left for `docs/`."
+    concerns:
+    - 'E001 smoke DoD NOT met: max_rel_err_vs_analytic = 0.0893 (> 0.02), driven by C1 (loop over floating
+      plane); all other cases <= 3.3e-4 at level 4.'
+    - 'l2_converged fails (inf) for every case. Evidence: A1 at 100 Hz, levels 1-4 = 12.17076662, 12.17076559,
+      12.17076512, 12.17077584 nH, so the last change reverses sign. Likely FastHenry kernel roundoff
+      ~1e-7 for thin filaments, not part of the reported solver_tol (about 1.6e-15, linear algebra only).
+      This is an inference, not isolated.'
+    - 'C1 plane needs lateral cells much smaller than the ~1 mm loop height; dense LU on a 16 GB machine
+      cannot afford it. Measured: 8/8 and 16/8 (layers/lateral) both ~9% error, 32/4 gives 26%.'
+    - Mesh is uniform (exact halving per level), not skin-depth graded, on the primitive path, because
+      grading is incompatible with the contract's constant-ratio rule at these counts. Only loop_inductance
+      grades.
+    - Planes use 2^(k-1) lateral cells and thickness layers (level 0 = level 1) to keep memory bounded;
+      still exactly a factor of 2 per level for k >= 1.
+    - 'FastHenry honours only one .freq card: the deck carries the highest frequency; every requested
+      frequency is solved from the dumped matrices by the adapter.'
+    - 'FastHenry''s own solve is only a cross-check: LU up to 3000 filaments, GMRES beyond. FastHenry''s
+      `-d a` (incidence dump) segfaults when a plane is present, so port rows are identified from the
+      deck topology instead.'
+    - 'Layout path: trace cells are 1-D bars (no 2-D current spreading across wide traces); loop_inductance
+      fidelity versus real layouts is limited.'
+    - Dense LU memory at ~10k filaments is a few GB; ~18k filaments (an earlier C1 level-4 plane setting)
+      would not fit in 16 GB.
+    - 'No mpmath in the environment: the exactness test uses rational arithmetic (fractions) on a small
+      system.'
+    - Full smoke run takes ~15 min cold (about 2.5 min with a warm cache).
+    files_changed:
+    - src/moduleforge/solvers/__init__.py
+    - src/moduleforge/solvers/l2.py
+    - tests/unit/solvers/test_l2_deck.py
+    - tests/unit/solvers/test_l2_binary.py
+    - tests/unit/solvers/test_l2_parse_solve.py
+    - tests/unit/solvers/test_l2_physics.py
+    checks_run:
+    - cmd: uv run pytest -q tests/unit/solvers
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge/solvers tests/unit/solvers
+      exit_code: 0
+    - cmd: rm -rf /tmp/e001-smoke && uv run python experiments/runners/e001_reference.py --smoke (status
+        complete; max_rel_err_vs_analytic 0.0893 > 0.02; l2_converged sanity failed)
+      exit_code: 0
+    - cmd: 'e001 smoke DoD assertion (all sanity passed and max_rel_err_vs_analytic <= 0.02) evaluated
+        on /tmp/e001-smoke/result.json by inspection: l2_converged failed and 0.0893 > 0.02, so it would
+        exit nonzero'
+      exit_code: 1
+    - cmd: uv run python -c 'resolver fails clearly without a provisioned binary (PATH=/nonexistent)'
+      exit_code: 0
+    - cmd: uv run python -c 'fasthenry_deck units check (.units m only)'
+      exit_code: 0
+    - cmd: grep -rnE 'git clone|urlopen|urlretrieve|wget' src/moduleforge/solvers; test $? -eq 1
+      exit_code: 0
+    - cmd: uv run python -c 'loop_inductance half-bridge 1-100 nH, monotone, provenance checks' (L = 3.84397e-8,
+        3.84396e-8, 3.84396e-8)
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+- attempt: 1
+  outcome: dod_failed
+  summary: definition of done not met
+  failure_output: 'FAIL rm -rf /tmp/e001-smoke && uv run python experiments/runners/e001_reference.py
+    --smoke && uv run python -c "import json; r=json.load(open(''/tmp/e001-smoke/result.json'')); assert
+    r[''status'']==''complete'', r[''status'']; assert r[''sanity''] and all(s[''passed''] for s in r[''sanity'']),
+    r[''sanity'']; v=r[''metrics''][''max_rel_err_vs_analytic''][''value'']; assert v <= 0.02, v; print(''E001
+    smoke max_rel_err'', v)"
+
+    62263562e-08, ''threshold'': 1.0, ''detail'': ''meta[\''solver_tol\''] / required (solver_err_budget
+    / amplification): {"A1": 7.78990599558166e-09, "A3": 1.9543903162263562e-08, "B2": 1.5545919232805476e-10,
+    "B3": 4.552885120034253e-10, "B4": 1.5544654115732422e-10, "C0": 1.5546406231126623e-10, "C1": 1.554874681701777e-10}''},
+    {''name'': ''l2_one_mesh_per_solve'', ''passed'': True, ''value'': 0.0, ''threshold'': 0.0, ''detail'':
+    ''violations of meta[\''mesh_hash\''] (one equal hash per frequency, new per level) and meta[\''n_filaments\'']
+    (positive int, increasing): {"A1": 0, "A3": 0, "B2": 0, "B3": 0, "B4": 0, "C0": 0, "C1": 0}''}, {''name'':
+    ''l2_constant_refinement_ratio'', ''passed'': True, ''value'': 0.9090909090909091, ''threshold'':
+    1.0, ''detail'': ''worst of min ratio shortfall and ratio spread over refinement_ratio_spread, over
+    every meta[\''mesh_params\''] entry and step (<= 1 passes): {"A1": 0.9090909090909091, "A3": 0.9090909090909091,
+    "B2": 0.9090909090909091, "B3": 0.9090909090909091, "B4": 0.9090909090909091, "C0": 0.9090909090909091,
+    "C1": 0.9090909090909091}''}, {''name'': ''reciprocity'', ''passed'': True, ''value'': 2.1817299538486335e-16,
+    ''threshold'': 0.001, ''detail'': ''{"A3": 2.1817299538486335e-16, "B3": 2.5560616424596068e-18}''},
+    {''name'': ''l_monotone_in_frequency'', ''passed'': True, ''value'': -0.05085328457078735, ''threshold'':
+    0.001, ''detail'': ''{"A1": -0.05085328457078735, "A3": -0.08351293598039695}''}, {''name'': ''length_scaling'',
+    ''passed'': True, ''value'': 0.0, ''threshold'': 0.01, ''detail'': ''{"B2": 0.0}''}]
+
+    '
+  at: '2026-10-04T06:26:27+00:00'

@@ -81,17 +81,35 @@ git clone -q ~/mf.bundle ~/mf && cd ~/mf && git checkout -q '"$REF"'
 scripts/provision_compute.sh
 uv sync -q --all-groups
 echo "host: $(hostname), $(nproc) vCPU, $(free -g | awk "/Mem:/ {print \$2}") GB"'
+gcloud compute ssh "$NAME" --zone "$ZONE" --quiet --command "$REMOTE"
+# The job runs detached on the VM, so a dropped connection (network blip, the Mac sleeping) does not kill it; this
+# script polls for its exit code and copies the results back whether or not it succeeded. A VM-side shutdown after
+# MF_GCP_MAX_HOURS stops a VM this script can no longer delete.
 if [ "$MODE" = exp ]; then
-  gcloud compute ssh "$NAME" --zone "$ZONE" --quiet --command "$REMOTE
-uv run mfos exp run $EID --force"
-  gcloud compute scp --zone "$ZONE" --quiet --recurse "$NAME:mf/experiments/results/$EID" "$WORK/" > /dev/null
-  mkdir -p "experiments/results/$EID"
-  cp -R "$WORK/$EID/." "experiments/results/$EID/"
-  echo "results copied to experiments/results/$EID/; the orchestrator picks them up on its next tick"
+  JOB="uv run mfos exp run $EID --force"; FETCH="experiments/results/$EID"
 else
-  gcloud compute ssh "$NAME" --zone "$ZONE" --quiet --command "$REMOTE
-$CMD"
-  mkdir -p "$(dirname "$FETCH")"
-  gcloud compute scp --zone "$ZONE" --quiet --recurse "$NAME:mf/$FETCH" "$(dirname "$FETCH")/" > /dev/null
-  echo "copied $FETCH back"
+  JOB="$CMD"
 fi
+printf 'set -uo pipefail\nexport PATH="$HOME/.local/bin:$PATH"\ncd ~/mf\n%s\n' "$JOB" > "$WORK/job.sh"
+gcloud compute scp --zone "$ZONE" --quiet "$WORK/job.sh" "$NAME:job.sh" > /dev/null
+MAXH="${MF_GCP_MAX_HOURS:-6}"
+gcloud compute ssh "$NAME" --zone "$ZONE" --quiet --command "sudo shutdown -h +$((MAXH * 60)) > /dev/null 2>&1; nohup bash -c 'bash ~/job.sh > ~/job.log 2>&1; echo \$? > ~/job.rc' > /dev/null 2>&1 < /dev/null &"
+echo "job started on $NAME: $JOB"
+RC=""
+DEADLINE=$((SECONDS + MAXH * 3600))
+while [ -z "$RC" ] && [ $SECONDS -lt $DEADLINE ]; do
+  sleep 30
+  RC="$(gcloud compute ssh "$NAME" --zone "$ZONE" --quiet --command 'cat ~/job.rc 2> /dev/null' 2> /dev/null | tr -d '[:space:]' || true)"
+done
+[ -n "$RC" ] || { echo "job did not finish within ${MAXH} h" >&2; RC=124; }
+gcloud compute scp --zone "$ZONE" --quiet "$NAME:job.log" "$WORK/job.log" > /dev/null 2>&1 || true
+echo "--- job exit $RC; last lines of its log:"; tail -15 "$WORK/job.log" 2> /dev/null || true
+mkdir -p "$(dirname "$FETCH")"
+if gcloud compute scp --zone "$ZONE" --quiet --recurse "$NAME:mf/$FETCH" "$WORK/fetched" > /dev/null 2>&1; then
+  mkdir -p "$FETCH"; cp -R "$WORK/fetched/." "$FETCH/"
+  echo "copied $FETCH back"
+  [ "$MODE" = exp ] && echo "the orchestrator picks the results up on its next tick"
+else
+  echo "nothing to copy back at $FETCH" >&2
+fi
+exit "$RC"

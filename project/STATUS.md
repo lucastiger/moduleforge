@@ -1,8 +1,9 @@
 # ModuleForge status
-_generated 2026-10-04T03:16:30+00:00 from repository state — do not edit_
+_generated 2026-10-04T03:16:38+00:00 from repository state — do not edit_
 
-## Founder inbox (1 open)
+## Founder inbox (2 open)
 - **I0022** [experiment_registration] register E001 (pre-registration)
+- **I0024** [experiment_registration] register E001 (pre-registration)
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -11,13 +12,10 @@ _generated 2026-10-04T03:16:30+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $104.95/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 38, failed: 2, merge: 1, todo: 7
+cancelled: 14, done: 39, failed: 2, todo: 7
 
-- T0060 `merge` scientist/design_experiment: E001 before registration: refinement rule must accept accurate solvers; honest interval level (T0058/T0059 reviews) (attempt 1)
 
 ## Recent events
-- 2026-10-04T01:36:15+00:00 sleep_detected {"gap_s": 503, "runs_extended": 0}
-- 2026-10-04T02:23:58+00:00 inbox_resolved {"id": "I0021", "status": "approved", "note": "Approved per the founder's standing instruction (draft only, nothing frozen): DoD verified; T0058/T0059 accept_wi
 - 2026-10-04T02:24:15+00:00 merged {"task": "T0057"}
 - 2026-10-04T02:24:15+00:00 inbox_opened {"id": "I0022", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}
 - 2026-10-04T02:24:40+00:00 inbox_resolved {"id": "I0020", "status": "rejected", "note": "Superseded by I0022 (registration request for E001 as redesigned by T0057); registration still waits for the refi
@@ -31,3 +29,5 @@ cancelled: 14, done: 38, failed: 2, merge: 1, todo: 7
 - 2026-10-04T03:14:26+00:00 run_finished {"run": "T0062-critic-20261003T200210-1c1c", "status": "completed", "cost": 2.0688690000000003, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T03:14:28+00:00 inbox_opened {"id": "I0023", "kind": "protected_change", "subject": "T0060: merge needs founder approval"}
 - 2026-10-04T03:16:26+00:00 inbox_resolved {"id": "I0023", "status": "approved", "note": "Approved per the founder's standing instruction (draft only, nothing frozen): DoD verified (noise-free power 100 
+- 2026-10-04T03:16:37+00:00 merged {"task": "T0060"}
+- 2026-10-04T03:16:37+00:00 inbox_opened {"id": "I0024", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}

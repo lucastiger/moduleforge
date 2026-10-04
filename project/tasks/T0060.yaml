@@ -4,7 +4,7 @@ title: 'E001 before registration: refinement rule must accept accurate solvers; 
   (T0058/T0059 reviews)'
 type: design_experiment
 agent: scientist
-status: merge
+status: done
 depends_on:
 - T0057
 description: 'Follow-up to reviews T0058 (physics) and T0059 (numerics) of T0057 (project/reviews/T0057/).

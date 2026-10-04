@@ -432,3 +432,7 @@
 {"ts": "2026-10-04T04:11:57+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0063-scientist-20261003T211125-c722", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 {"ts": "2026-10-04T04:11:57+00:00", "event": "capacity_backoff", "actor": "orchestrator", "task": "T0063", "minutes": 30}
 {"ts": "2026-10-04T04:42:21+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0063-scientist-20261003T214221-33c6", "task": "T0063", "role": "scientist", "session": "e07ea640-4d02-4520-b964-a138924756ca"}
+{"ts": "2026-10-04T04:58:45+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0063-scientist-20261003T214221-33c6", "status": "completed", "cost": 3.5479912000000002, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-10-04T04:59:56+00:00", "event": "verified", "actor": "orchestrator", "task": "T0063"}
+{"ts": "2026-10-04T04:59:57+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0064-critic-20261003T215957-9049", "task": "T0064", "role": "critic", "session": "62d6a5ba-c371-486c-a7c5-2638d78565ab"}
+{"ts": "2026-10-04T04:59:57+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0065-critic-20261003T215957-b549", "task": "T0065", "role": "critic", "session": "7416b4f0-751c-4777-9c65-3f2b86596be0"}

@@ -14,18 +14,26 @@ config:
   sigma_al: 3.77e+7
   # C1 floating plane extends this far beyond the 10 x 5 mm loop footprint on every side
   plane_margin_mm: 15.0
-  # pre-registered refinement rule (T0057, reviews T0055/T0056; note sec. 4.4): levels start, start+1, ... (at least
-  # refinement_min_levels); stop when the estimated remaining discretization error of every compared L is below conv_tol,
-  # or at refinement_max. remaining_discretization_error is finite only if the last three changes have no sign reversal,
-  # both observed orders (on the realized mesh sizes from meta['mesh_params']) are <= order_max (the formal order) and
-  # agree within steady_tol (in ln of the contraction ratio); then Richardson tail x 1.25 (x 3 if the order is below
-  # order_min); otherwise inf (not converged)
+  # pre-registered refinement rule (T0057, T0060; reviews T0055/T0056, T0058/T0059; note sec. 4.4): levels start,
+  # start+1, ... (at least refinement_min_levels); stop when the estimated remaining discretization error of every
+  # compared L is below conv_tol, or at refinement_max. remaining_discretization_error (observed orders solved on the
+  # realized mesh sizes from meta['mesh_params']) is finite on two paths only, otherwise inf (not converged):
+  #  A (steady): last three changes without sign reversal, both observed orders <= order_max (formal order) and agreeing
+  #    within steady_tol (in ln of the contraction ratio) -> Richardson tail x 1.25 at the observed order (x 3 below
+  #    order_min);
+  #  B (same-sign, T0060): every change of one sign, the observed order falling at every step beyond the noise, the
+  #    last order >= order_min and every order <= order_max + 1 -> Richardson tail x 1.25 at order_min (a rigorous bound
+  #    for any expansion whose terms share one sign and have exponents >= order_min), never below path A's estimate.
+  # Rising orders above order_max (cancellation before a turning point) and sign reversals stay not converged.
   refinement_start: 1
   refinement_max: 5
   refinement_min_levels: 4
   # L2 contract sec. 3: constant refinement ratio; realized ratios of every meta['mesh_params'] entry at every step
-  # >= refinement_ratio_min and max/min over all of them <= refinement_ratio_spread
+  # within [refinement_ratio_min, refinement_ratio_max] and max/min over all of them <= refinement_ratio_spread.
+  # refinement_ratio_max (T0060, review T0059) = the validated range of the rule (nominal 1.25-2 x 1.1 jitter); the
+  # contract names the required mesh_params keys per conductor and plane (note sec. 3, runner required_mesh_keys)
   refinement_ratio_min: 1.25
+  refinement_ratio_max: 2.2
   refinement_ratio_spread: 1.1
   # admissible order of the leading discretization-error term (note sec. 4.4): 2 = formal order of the Galerkin
   # (piecewise-constant current) energy functional; 1 = the slowest the E001 compared quantities are assumed to show
@@ -56,15 +64,21 @@ metrics:
   - name: max_rel_err_vs_analytic
     description: >-
       max over cases, compared quantities (L11, M12, L22) and frequencies of |L2 - closed form| / |closed form|,
-      L2 at the finest level reached by the pre-registered refinement rule. Interval = estimated error band
-      [max_i (err_i - u_i)+, max_i (err_i + u_i)], u_i = refinement-rule estimate of the remaining discretization
-      error + solver_err_budget + stated residual model error of the closed form (note sec. 4.3). Not a sampling CI
-      (the cases are deterministic), not a guaranteed bound, and not a confidence interval. Its recorded `level` is the
-      per-value coverage of the discretization estimate measured on this run by refinement_rule_validated (fraction of
-      declared-converged synthetic sequences whose estimate + solver budget covers the true error; minimum over
-      families, rounded down to 0.01; 0.98 at design time), conditional on the leading error order lying in
-      [order_min, order_max]; the joint coverage of the max over all values is not established (note sec. 4.4).
-      Acceptance A1 reads the point value.
+      L2 at the finest level reached by the pre-registered refinement rule. Deterministic (no sampling); acceptance A1
+      reads the point value. Recorded without `ci`: its uncertainty is the error band below, which has no confidence
+      level and so is not written into MetricValue.ci/.level (reviews T0058/T0059 of T0057; note sec. 4.4).
+    unit: ''
+  - name: max_rel_err_band_lo
+    description: >-
+      lower end of the estimated error band of max_rel_err_vs_analytic, max_i (err_i - u_i)+ with u_i = refinement-rule
+      estimate of the remaining discretization error + solver_err_budget + stated residual model error of the closed
+      form (note sec. 4.3). Not a confidence bound and not a guaranteed bound: the discretization part is a bound only
+      under the order assumption of note sec. 4.4 (rigorous for expansions whose terms share one sign; validated
+      empirically for two terms of either sign; optimized mixed-sign three-term expansions can make it low by up to
+      ~2.5x).
+    unit: ''
+  - name: max_rel_err_band_hi
+    description: upper end of the same band, max_i (err_i + u_i); same caveats as max_rel_err_band_lo
     unit: ''
   - {name: max_rel_err_hf, description: same maximum restricted to 5/20/80 MHz comparisons, unit: ''}
   - {name: max_rel_err_lf, description: same maximum restricted to the LF (100 Hz) comparisons, unit: ''}
@@ -117,10 +131,13 @@ sanity_checks:
     description: 2-D PEC-strip BEM (validated to 2e-4 against the infinite image) bounds C1 finite-plane truncation below 1e-3
   - name: refinement_rule_validated
     description: >-
-      physics-independent check of remaining_discretization_error on 4200 synthetic refinement sequences (frozen
-      generator and seed in the runner): two- and three-term expansions with leading order in [order_min, order_max],
-      terms of opposite and equal sign, ratios 1.25/1.5/2 jittered within refinement_ratio_spread, 4-5 levels, with and
-      without solver noise; zero false convergences, per-value coverage >= 0.95, clean geometric est/true in [1, 3]
+      physics-independent check of remaining_discretization_error on synthetic refinement sequences (frozen generator
+      and seed in the runner, not the L2 data): 2800 sequences of two- and three-term expansions with leading order in
+      [order_min, order_max], terms of opposite and equal sign, ratios 1.25/1.5/2 jittered within
+      refinement_ratio_spread, 4-5 levels, with and without solver noise -> zero false convergences, per-value coverage
+      >= 0.95 in every family, clean geometric est/true in [1, 3]; and power (review T0058): per leading order 1, 1.5, 2,
+      >= 90 % of 100 same-sign sequences with true error < conv_tol / 10 declared converged. Detail records the pooled
+      coverage with its Clopper-Pearson lower bound, labelled generator-conditional (not a level of any metric)
   - name: l2_converged
     description: >-
       estimated remaining discretization error (remaining_discretization_error over >= refinement_min_levels
@@ -135,9 +152,11 @@ sanity_checks:
   - name: l2_constant_refinement_ratio
     description: >-
       every solve reports meta['mesh_params'] (size in m of every refined discretization parameter, same keys at
-      every level); for every parameter and step the realized ratio s_k/s_(k+1) >= refinement_ratio_min, and max/min
-      over all parameters and steps <= refinement_ratio_spread (contract sec. 3; additive refinement such as n = k or
-      2k+1, or one parameter refined differently from the others, fails)
+      every level) containing at least the keys the contract names for the case (seg, fil_w, fil_h, surf per conductor;
+      plane_x, plane_y, plane_layer per plane; review T0059); for every parameter and step the realized ratio
+      s_k/s_(k+1) is in [refinement_ratio_min, refinement_ratio_max], and max/min over all parameters and steps <=
+      refinement_ratio_spread (contract sec. 3; additive refinement such as n = k or 2k+1, one parameter refined
+      differently from the others, or rounded small counts such as 10 -> 13 -> 16, fail)
   - name: l2_one_mesh_per_solve
     description: >-
       every L2 solve reports meta['mesh_hash'] with one entry per frequency of the call, all equal (one mesh for all

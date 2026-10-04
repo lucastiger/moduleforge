@@ -15,6 +15,13 @@ outside the asymptotic range (sign reversals, observed order above the formal or
 §4.4) with a frozen synthetic self-check; an interval level that the method measures instead of 0.95 (§4.4); a
 verifiable contract (`meta['mesh_params']`, `meta['mesh_hash']`, mesh similarity; §3); physical references for the
 tie and image self-checks and a discriminating tube-PEEC test (§4.5); bar tolerance and bars' HF solves (§4.3, §4.4).
+T0060 (2026-10-03) answers reviews T0058/T0059 of T0057 before registration: the refinement rule gains a same-sign
+path (falling observed order, one sign, orders ≤ `order_max` + 1 → Richardson tail at `order_min`), so accurate L2
+sequences whose correction term shares the leading term's sign are no longer refused (power 0 % → 100 % at p = 2 on
+the founder's DoD; §4.4). The metric no longer carries the band as a `ci` with a generator number in `level`: the
+band is reported as two metrics of its own (§4.4). The contract names the required `mesh_params` keys, caps the
+ratio at 2.2 and says how to choose integer counts (§3). The validated scope is stated with adversarial results
+(§4.4).
 
 Labels: **[F]** fact checked first-hand (source + access date given) · **[I]** inference · **[S]** speculation.
 All web sources were accessed on 2026-09-29.
@@ -183,22 +190,52 @@ frequencies), different between levels (each level is a new mesh), and `res.meta
 integer that increases with the level. [I] This is still self-reported, but a violation now needs a falsified
 per-frequency report rather than an omission, and its physical consequence is tested by `l_monotone_in_frequency`.
 
-**Constant refinement ratio (T0041 attempt 3, review T0052).** Every discretization parameter the adapter controls
-(segment length, filament width and height, the first graded cell at the surface, plane cells, plane thickness
-layers) is refined by the **same fixed ratio** r ≥ 1.25 between consecutive levels, h_{k+1} = h_k / r. Integer
-counts are rounded up. Additive schemes (n = k, n = 2k + 1) are not allowed. `res.meta['mesh_params']` (T0057, reviews T0055/T0056;
-replaces the single scalar `mesh_h`) is required: a dict mapping **every** refined discretization parameter of the
-call's one mesh to its size in metres, e.g. `seg:w1` (segment length), `fil_w:w1`, `fil_h:w1`, `surf:w1` (first
-graded cell), `plane_cell:gnd`, `plane_layer:gnd`, with the same keys at every level. The runner checks:
-- `l2_constant_refinement_ratio`: for every parameter and every step, s_k/s_{k+1} ≥ `refinement_ratio_min` = 1.25,
-  and max/min over all parameters and steps ≤ `refinement_ratio_spread` = 1.1, so one parameter refined additively
-  or by a different ratio fails even if the others are geometric;
+**Constant refinement ratio (T0041 attempt 3, review T0052; T0060, review T0059).** Every discretization parameter
+the adapter controls (segment length, filament width and height, the first graded cell at the surface, plane cells,
+plane thickness layers) is refined by the **same fixed ratio** r between consecutive levels, h_{k+1} = h_k / r, with
+every realized ratio in [`refinement_ratio_min`, `refinement_ratio_max`] = [1.25, 2.2]. The upper limit (T0060) is
+the range the refinement rule is validated on (nominal 1.25–2 with up to 10 % jitter, §4.4); review T0059 found
+est/true down to 0.35 at q ≈ 3.8 with the T0057 rule. Additive schemes (n = k, n = 2k + 1) are not allowed.
+`res.meta['mesh_params']` (T0057, reviews T0055/T0056; replaces the single scalar `mesh_h`) is required: a dict
+mapping **every** refined discretization parameter of the call's one mesh to its size in metres, with the same keys at
+every level. **Required keys (T0060, review T0059).** At least these, for every object of the call (extra keys
+allowed, and every refined parameter must be reported):
+  - every conductor c (`Bar` or `RoundWire`, by name): `seg:c` (segment length along the conductor), `fil_w:c` and
+    `fil_h:c` (cross-section cell sizes in the two transverse directions; for a round wire, of its cross-section
+    representation), `surf:c` (first cell at the surface; equal to the cell size if ungraded);
+  - every plane g: `plane_x:g`, `plane_y:g` (cell sizes; FastHenry `seg1`/`seg2`) and `plane_layer:g` (layer thickness).
+
+  The runner (`required_mesh_keys`) fails `l2_constant_refinement_ratio` and treats the rule's h as unknown (∞, so
+  `l2_converged` fails) when a required key is missing. [I] This turns "omitted a parameter it holds fixed" into a
+  visible failure for every named parameter; a parameter the contract does not name (e.g. an adapter-internal
+  quadrature order) can still be omitted, and the sizes remain self-reported (checked against geometry only by
+  `length_scaling`).
+- **Integer counts (T0060, review T0059).** For a count-defined parameter (size = extent / n) the realized ratio is
+  n_{k+1}/n_k, and rounding can break the checks (nominal 1.25 from 10 rounded up: 10 → 13 → 16 gives 1.23 < 1.25). The
+  adapter must choose counts so that the **realized** ratios pass; the runner checks only those. A rule that composes
+  across parameters: every parameter's realized ratios in [max(1.25, q/√1.1), q·√1.1] (then max/min over any mix ≤ 1.1).
+  [F] (`research/scripts/e001_rule_t0060_validation.py --counts-only`) n_k = ⌊n0 q^k + ½⌋, k = 0..4, satisfies it for
+  every n0 ≥ the value below:
+
+  | nominal q | smallest n0 | example | realized ratios |
+  |---|---|---|---|
+  | 1.25 | none ≤ 400 (rounding always leaves the band) | – | – |
+  | 1.3 | 9 | 9, 12, 15, 20, 26 | 1.333, 1.25, 1.333, 1.3 |
+  | 1.4 | 7 | 7, 10, 14, 19, 27 | 1.429, 1.4, 1.357, 1.421 |
+  | 1.5 | 10 | 10, 15, 23, 34, 51 | 1.5, 1.533, 1.478, 1.5 |
+  | 2 | 1 | 1, 2, 4, 8, 16 | 2 (exact) |
+
+  Exact integer geometric sequences also work (q = 3/2 with n0 a multiple of 2⁴, q = 5/4 with n0 a multiple of 4⁴).
+  Real-valued sizes (graded first cell, plane cells defined by size) can follow h_0 q^-k exactly. [I] Cost: filament
+  count grows ≈ q³ per level for bars, so q ≈ 1.3–1.5 with base counts ≥ 9–10 is the practical choice for direct LU.
+The runner checks:
+- `l2_constant_refinement_ratio`: the required keys are present; for every parameter and every step, s_k/s_{k+1} ∈
+  [1.25, 2.2], and max/min over all parameters and steps ≤ `refinement_ratio_spread` = 1.1, so one parameter refined
+  additively, by a different ratio or by badly rounded counts fails even if the others are geometric;
 - `length_scaling`: the similar case (lengths × 2, f / 4) at the same level must report every `mesh_params` entry
   exactly doubled (rtol 1e-9) and the same `n_filaments`. This checks the self-report against geometry: a mesh
   defined relative to geometry and δ must scale exactly.
 - The refinement rule (§4.4) uses the realized sizes: h_k = geometric mean over parameters of s_k/s_0.
-[I] Integer counts rounded up make small counts violate the 1.1 spread (3 → 4 → 5 → 7 is 1.33, 1.25, 1.4); the
-adapter must start from counts large enough (≳ 10) or choose ratios its rounding can hold.
 
 **Solver accuracy (T0041): `res.meta['solver_tol']` is required.** It is a float upper bound on the relative
 **forward error** of every returned port impedance due to the linear algebra and the output format (review T0052:
@@ -451,16 +488,23 @@ the actual branch split), then divided by |L| of the compared quantity.
 - **B3 M12 vs exact references.** [F] `b3_mutual_exact.py` passes: 9.8e-7 at 100 Hz (bound 2.0e-6) and 9.0e-6 at
   10 GHz (bound 1.5e-5); see §4.2a for the decomposition of the 10 GHz difference.
 
-### 4.4 Refinement rule and discretization uncertainty (T0057; reviews T0030, T0052, T0055, T0056; `remaining_discretization_error`)
+### 4.4 Refinement rule and discretization uncertainty (T0057, T0060; reviews T0030, T0052, T0055, T0056, T0058, T0059; `remaining_discretization_error`)
+- **[F] Error in T0057 (review T0058, confirmed by the founder's DoD on the registered path).** Path A below rejected
+  every observed order above `order_max` = 2 as cancellation. For e = A h^p + B h^(p+dp) with A·B > 0 the observed order
+  is always above p with no cancellation (proof below), so at the formal order p = 2 every accurate sequence with a
+  same-sign correction was refused: [F] `estimator_adversarial.py` at T0057's commit declared 61 % (p = 1), 12 %
+  (p = 1.5) and 0 of 10 898 (p = 2) accurate same-sign sequences converged. A correct, accurate L2 would very likely
+  have failed `l2_converged` and made E001 INVALID. T0057's self-check counted only false convergences, so it could
+  not see this; it now also measures power.
 - **[F] Error in T0041 (reviews T0055/T0056).** The attempt-3 rule worked on |d| (blind to sign reversals), and it
   filed a *falling* observed ratio as "steady" and applied Roache's 1.25. For e(h) = A h^p + B h^(p+1) with A·B < 0 at
   ratio ≥ 1.25 the sequence looks smooth before its turning point while the slow term is hidden. The founder's
   `estimator_adversarial.py` found 86 false convergences in 3 000 sequences at T0041's commit (reproduced first-hand,
   estimates 5–20× low).
-- **Rule (T0057).** Levels k0 = 1, 2, … are solved (≥ `refinement_min_levels` = 4, ≤ `refinement_max` = 5). For every
-  *compared* L (compared frequencies only; the bars' informational HF solves no longer gate, review T0056) the rule
-  takes the realized mesh sizes h_k from `meta['mesh_params']` (§3) and the last three changes d. It returns a finite
-  estimate only if
+- **Rule (T0057 path A + T0060 path B).** Levels k0 = 1, 2, … are solved (≥ `refinement_min_levels` = 4, ≤
+  `refinement_max` = 5). For every *compared* L (compared frequencies only; the bars' informational HF solves no longer
+  gate, review T0056) the rule takes the realized mesh sizes h_k from `meta['mesh_params']` (§3). Path A uses the last
+  three changes d and returns a finite estimate if
   1. no two of the last three changes above the noise floor have opposite signs (a turning point: a slower term of
      opposite sign is still hidden; mixed-order expansions do this, [ROY] [I]);
   2. both observed orders (from d_{n−3}, d_{n−2} and from d_{n−2}, d_{n−1}, solved exactly on the non-uniform h [CEL])
@@ -468,12 +512,111 @@ the actual branch split), then divided by |L| of the compared quantity.
      superconvergence ([EH]; [ROA]). This is what flags A h^p + B h^(p+1), A·B < 0, before its turning point: there
      the contraction ratio falls below q^−(p+1) ≤ q^−2;
   3. the two orders agree within `steady_tol`/ln q, i.e. the two contraction ratios agree within a factor 1.1.
-  Otherwise ∞ (not converged). The estimate is the single-term Richardson tail Fs·(|d_last| + noise)/((h_{n−2}/h_{n−1})^p − 1)
+  If all three hold (**path A**, steady), the estimate is the single-term Richardson tail Fs·(|d_last| + noise)/((h_{n−2}/h_{n−1})^p − 1)
   with p the smaller observed order (extrapolated one step when the order falls), widened by the noise but never
   below `order_min` = 1; Fs = 1.25 [ROA], or Fs = 3 when the whole observed order interval lies below `order_min`
   ([ROA]; [EH] also switch to 3 outside their accepted order range [I]). Sequences whose last three changes are all
   within the noise floor get the tail at `order_min`: the order cannot be observed, and the contract's assumption
-  p ≥ 1 is all that bounds it (stated, not verified). Without `mesh_params` the runner's estimate is ∞.
+  p ≥ 1 is all that bounds it (stated, not verified). Without `mesh_params` (or with a required key missing, §3) the
+  runner's estimate is ∞.
+- **Path B, same-sign (T0060, review T0058).** Finite also when, over the **whole** history (3 changes at 4 levels, 4
+  at 5): every change above the noise has one sign; every observed order is below the previous one beyond the noise
+  (upper end of its noise interval < lower end of the previous one); the last order is ≥ `order_min`; and no order
+  exceeds `order_max` + 1 = 3. Estimate: Fs·(|d_last| + noise)/((h_{n−2}/h_{n−1})^{order_min} − 1), Fs = 1.25, and
+  never less than path A's estimate where A is finite. Everything else stays ∞: rising orders above `order_max`
+  (cancellation before a turning point), sign reversals, unsteady rising orders. Path B only turns some ∞ of T0057
+  into finite estimates; wherever T0057 was finite the estimate is unchanged or larger. The noise floor is raised to
+  4 ulp of max|L| (float64 cannot resolve smaller changes), so rounding cannot fake a falling order.
+- **Why path B separates the two cases [F, derived here].** Constant ratio q, e = A h^p (1 + c h^dp), dp > 0. The
+  changes are d_k ∝ (1 + c′ y_k) with y_k = h_{k−1}^dp falling by q^−dp per level and c′ = c (1 − q^−(p+dp))/(1 − q^−p),
+  which has c's sign. The contraction ratio is r_k = q^−p f(y), f(y) = (1 + c′ q^−dp y)/(1 + c′ y), and
+  f′(y) = c′ (q^−dp − 1)/(1 + c′ y)². With c′ > 0 (same sign), f < 1 and f′ < 0, so as y falls r rises toward q^−p and
+  the observed order **falls monotonically toward p from above** (staying in (p, p + dp)). With c′ < 0 (opposite sign),
+  f′ > 0 on both sides of the turning point, so the observed order **rises**: from above p + dp toward ∞ before the
+  turning point of d, and from below toward p after it. A falling order therefore never comes from two terms of
+  opposite sign (constant ratio; with ratio jitter and with more terms this is checked numerically, below).
+- **Why the tail at `order_min` is safe on path B [F, derived here].** Lemma: if e(h) = Σ_i c_i h^{p_i} with all c_i of
+  one sign and all p_i ≥ p_lo, then for any ratio ρ = h_{n−1}/h_n > 1, |e(h_{n−1}) − e(h_n)| = Σ_i |c_i| h_n^{p_i}(ρ^{p_i} − 1)
+  ≥ (ρ^{p_lo} − 1) Σ_i |c_i| h_n^{p_i} = (ρ^{p_lo} − 1)|e(h_n)|. So |d_last|/(ρ^{p_lo} − 1) bounds the remaining error with
+  Fs = 1 for any number of same-sign terms and any realized ratios; Fs = 1.25 is margin. Power: by the same algebra
+  |d_last| ≤ (ρ^{p_max} − 1)|e_n| with p_max the largest exponent, so on path B est/true ≤ 1.25 (ρ^{p_max} − 1)/(ρ − 1):
+  ≤ 3.75 for p_max = 2 and ≤ 8.75 for p_max = 3 at ρ = 2, i.e. any same-sign sequence with true error < conv_tol/10 and
+  exponents ≤ 3 is declared converged when it reaches path B.
+- **Why the cap `order_max` + 1 [F, measured; I, choice].** For a same-sign expansion the change ratio is a mediant of
+  the per-term ratios, so the observed order lies between the smallest and the largest exponent (any realized h: the
+  pair ratio is monotone in p). Without a cap, a differential-evolution search found three-term mixed-sign sequences
+  (4 levels) on path B with true/est = 26–30: orders 4.8 → 4.4 or 6.2 → 4.8, a fast term collapsing over a plateau
+  left by a nearly cancelling pair. With the cap at 3 the worst found is ≈ 2.5 (table below); a cap of 4 lets 4.6
+  through but keeps power for strong h⁴ corrections (p = 2, dp = 2: 132/150 = 88 % at cap 3, 150/150 at cap 4; dp ≤ 1:
+  150/150 at both). The cap encodes "the first correction is at most one order above the formal order"
+  (T0058's suggestion), which is the DoD's error model. Changing it needs a new experiment id.
+- **[F] T0060 validation** (`research/scripts/e001_rule_t0060_validation.py`, full run 2026-10-03; seeds 1–5 and 31–34,
+  independent of the DoD seed 20261003, the self-check seed 20261004 and T0057's sweep seed 99; registered path with
+  realized h, `order_range` (1, 2), `steady_tol` 0.1; T0057 rule loaded from git f8976fc).
+  1. Founder DoD distribution (A h^p + B h^(p+1), q ∈ {1.25, 1.5, 2}, 4–5 levels) on seeds 1–5: 0 false
+     convergences in 7 488 opposite-sign sequences with true error > conv_tol; same-sign accurate sequences declared
+     converged 500/500 (p = 1), 10 773/10 773 (p = 1.5), 49 942/49 942 (p = 2). The DoD itself (seed 20261003):
+     0 / 1 542 and 100 %, 100 %, 100 % (T0057: 61 %, 12 %, 0 %).
+  2. Random continuous families, 3 000 each (p ~ U[1, 2], dp ~ U[0.05, 3], q ~ U[1.25, 2] × per-level jitter ≤ 1.1,
+     4–5 levels, random start; noise = uniform ±1e-4 |L|, the full solver budget). Power = declared converged among
+     true error < conv_tol/10:
+
+     | Family | Noise | Rule | False conv. / declared | Coverage | Worst true/est | Power | Via path B |
+     |---|---|---|---|---|---|---|---|
+     | 2 terms, opposite sign | 0 | T0057 = T0060 | 0 / 1 089 | 1.0000 | 1.00 | 0.386 | 0 |
+     | 2 terms, opposite sign | 1e-4 | T0057 = T0060 | 0 / 1 198 | 1.0000 | 1.00 | 0.446 | 0 |
+     | 2 terms, same sign | 0 | T0057 | 0 / 1 358 | 1.0000 | 1.00 | 0.501 | – |
+     | 2 terms, same sign | 0 | T0060 | 0 / 2 027 | 1.0000 | 1.00 | 0.837 | 2 027 |
+     | 2 terms, same sign | 1e-4 | T0057 | 0 / 1 436 | 1.0000 | 1.00 | 0.528 | – |
+     | 2 terms, same sign | 1e-4 | T0060 | 0 / 1 459 | 1.0000 | 1.00 | 0.534 | 50 |
+     | 3 terms, random signs | 0 | T0057 | 0 / 824 | 0.9976 | 1.07 | 0.294 | – |
+     | 3 terms, random signs | 0 | T0060 | 0 / 1 203 | 0.9992 | 1.07 | 0.489 | 791 |
+     | 3 terms, random signs | 1e-4 | T0057 | 0 / 1 041 | 0.9981 | 1.21 | 0.409 | – |
+     | 3 terms, random signs | 1e-4 | T0060 | 0 / 1 066 | 0.9981 | 1.21 | 0.412 | 35 |
+     | 4 terms, same sign | 0 | T0057 | 0 / 621 | 1.0000 | 1.00 | 0.240 | – |
+     | 4 terms, same sign | 0 | T0060 | 0 / 1 452 | 1.0000 | 1.00 | 0.728 | 1 452 |
+     | 4 terms, same sign | 1e-4 | T0057 | 0 / 935 | 0.9989 | 1.05 | 0.430 | – |
+     | 4 terms, same sign | 1e-4 | T0060 | 0 / 991 | 0.9990 | 1.05 | 0.439 | 110 |
+
+     Opposite-sign two-term sequences are never accepted by path B (column 8 = 0), as the derivation predicts, even
+     with ratio jitter. Same-sign power below 1 here comes from exponents above the cap (dp up to 3) and from
+     sequences not yet monotone at 4–5 levels. Coverage below 1 occurs in the noisy and three-term families. In these
+     random draws the worst true/est is 1.21 with the solver budget included.
+  3. Adversarial search (differential evolution, 4 seeds × 200 generations per row, objective = largest true/est among
+     declared-converged sequences, A ∈ ±[1e-3, 0.3], terms ∈ ±[1e-3, 3.2], q ∈ [1.25, 2], optional free jitter ≤ 1.1):
+
+     | Expansion | Levels | T0057 worst true/est (false conv. found) | T0060 worst true/est (false conv. found; path) |
+     |---|---|---|---|
+     | 2 terms, constant ratio | 4 | 1.006 (no) | 0.800 (no; A) |
+     | 2 terms, constant ratio | 5 | 1.006 (yes) | 0.800 (no; A) |
+     | 2 terms, jitter ≤ 1.1 | 4 | 1.007 (yes) | 0.800 (no; A) |
+     | 2 terms, jitter ≤ 1.1 | 5 | 1.006 (no) | 0.800 (no; A) |
+     | 3 terms, constant ratio | 4 | 1.87 (yes) | 2.49 (yes; B) |
+     | 3 terms, constant ratio | 5 | 1.65 (yes) | 2.41 (no; B) |
+     | 3 terms, jitter ≤ 1.1 | 4 | 1.54 (no) | 2.25 (no; B) |
+     | 3 terms, jitter ≤ 1.1 | 5 | 1.42 (yes) | 1.55 (yes; A) |
+
+     0.800 = 1/Fs: the estimate is ≥ 1.25× the truth everywhere the search went. T0057's two-term near misses (1.006)
+     were same-sign sequences on path A's extrapolated order; path B's larger tail removes them. "Yes" = some
+     declared-converged sequence had true error > conv_tol; noise-free estimates scale with the coefficients, so any
+     true/est > 1 can be scaled into a false convergence within these bounds.
+- **Validated scope (T0060; answers review T0059's "state it honestly") [F for the measured parts, I for the reading].**
+  - Proven (constant or any realized ratio): expansions whose terms all share one sign with exponents ≥ `order_min`
+    (path B, any number of terms); single power terms with order in [1, 2] (path A, Fs = 1.25).
+  - Proven for constant ratio, verified numerically with ≤ 10 % per-level jitter: two terms of opposite sign are never
+    accepted by path B; on path A, after the turning point, the estimate at the smaller observed order bounds the tail.
+    No false convergence or underestimate (true/est ≤ 0.80) was found for two-term expansions with p ∈ [1, 2],
+    dp ∈ [0.05, 3], ratio 1.25–2.2, 4–5 levels, noise-free, by random sampling or by optimization.
+  - Not covered: **three or more terms of mixed sign.** Random draws give coverage ≥ 0.998 and no false convergence,
+    but optimized sequences reach true/est ≈ 2.5 with T0060 (≈ 1.9 with T0057; review T0059 reported 1.55 for T0057
+    at q ≤ 2.2). The worst cases contain a nearly cancelling opposite-sign pair with close exponents (dp ≈ 0.1–0.3),
+    which over 4–5 levels acts like a term of order < `order_min`. T0060 trades this larger worst case for power on
+    same-sign sequences. [I] 4–5 levels cannot separate such a pair from a clean expansion; more levels or a
+    `refinement_max` > 5 would be a new experiment.
+  - Ratios: realized 1.25–2.2, now enforced by the contract (`refinement_ratio_max`). Leading order < 1: outside the
+    assumption (T0057 rows above). Noise: at the full solver budget the rule's power on accurate sequences is ≈ 0.4–0.5
+    for both rules (changes comparable to the 2e-4 noise floor leave the order unobservable). [I] An adapter with a
+    direct LU (solver_tol × amplification ≪ 1e-4) avoids this.
 - **Assumption (the rule's validity rests on it) [I].** The leading error term has order in [1, 2]: 2 is the formal
   order of a Galerkin (piecewise-constant current) energy functional for smooth current; 1 is what a thin-strip
   edge singularity or a staircase boundary gives. The E001 compared quantities have no edge singularity (bars at
@@ -507,11 +650,17 @@ the actual branch split), then divided by |L| of the compared quantity.
   - Earlier prototype (same rule but the fast-side test on q·1.1 instead of the realized h): 1 false convergence at
     q = 1.25 with jitter. It was fixed by computing the admissible ratio on the realized h (the reason the contract
     now reports per-parameter sizes).
-- **Physics-independent self-check `refinement_rule_validated` (runs in every mode).** A frozen generator and seed in
-  the runner (4 200 sequences, the same families with p ∈ {1, 1.5, 2}, without and with ±`solver_err_budget` noise).
-  It fails unless there are 0 false convergences, per-value coverage ≥ 0.95 and clean geometric est/true ∈ [1, 3].
-  [F] At design time: 0 false convergences, minimum coverage 0.9891 (opp+1 with noise), geometric 1.250. [F] The
-  attempt-3 rule fails it (8 false convergences, coverage 0.926).
+- **Physics-independent self-check `refinement_rule_validated` (runs in every mode; T0057, revised T0060).** See §4.5
+  item 9a: frozen generator, seed 20261004, safety + coverage + power (review T0058: T0057's version counted only
+  false convergences, so the power failure was invisible to it). [F] The T0057 rule on T0057's self-check: 0 false
+  convergences, coverage 0.9891; it fails the T0060 power criterion (DoD: 0 % at p = 2).
+- **[F] T0060 stand-in plumbing test (scratch `/tmp`, not committed).** `l2_solve` patched to return the closed form ×
+  (1 + err(h)) with the contract's meta (required `mesh_params` keys, per-frequency `mesh_hash`, solver_tol 0), q = 1.5,
+  through `main("smoke")`: err = 0.02 h² → all 16 checks pass, `max_rel_err_vs_analytic` without `ci`, band metrics
+  [0, 0.0055]; err = 0.004 h² + 0.05 h³ (observed order > 2, same sign; T0057: ∞) → all pass, band [0, 0.012]; a
+  missing `plane_layer` key → `l2_converged` and `l2_constant_refinement_ratio` fail; one count rounded up from 10 at
+  1.25 → `l2_constant_refinement_ratio` fails (1.0156). Review T0058's hand example (0.004 h² + 0.002 h³, q = 1.25,
+  5 levels, true 8.1e-4): T0057 ∞, T0060 2.5e-3 (converged).
 - **[F] Stand-in plumbing test (scratch, not committed).** A stand-in `moduleforge.solvers.l2` returns the closed form
   × (1 + bias + 0.03·h^p) with `mesh_params` ∝ h, per-frequency `mesh_hash`, solver_tol 0. Through `--smoke` (7
   classes, 9 compared values, 16 sanity checks):
@@ -524,17 +673,27 @@ the actual branch split), then divided by |L| of the compared quantity.
   - a different mesh hash per frequency: `l2_one_mesh_per_solve` fails (8).
   - The stand-in found one bug, now fixed: an exactly constant ratio gave 1.0000000000000002 > 1 (float rounding);
     the check now allows 1e-9.
-- **Metric interval: what it means (review T0056).** `max_rel_err_vs_analytic` carries the estimated error band
-  [max_i(err_i − u_i)⁺, max_i(err_i + u_i)] with u_i = rule estimate + `solver_err_budget` + stated model error (§4.3).
-  - It is not a sampling CI (the cases are deterministic). It is not a guaranteed bound. It is not a confidence
-    interval.
-  - The recorded `level` is **not** 0.95. It is the per-value coverage of the discretization estimate that
-    `refinement_rule_validated` measures on the same run (minimum over families, rounded down to 0.01: 0.98 at
-    design time). It is conditional on the assumption above.
-  - The joint coverage of the max over ~32 values is not established. The model terms are stated bounds; (b) and
-    the [I] parts of (a) are inferences. A1 reads the point value.
-  - Attempt 3's "0.95, Roache's ~95 %" is withdrawn. Roache's empirical coverage is for CFD practice, and the rule
-    no longer uses his factor unchecked.
+- **Metric interval (T0060; reviews T0058/T0059 of T0057; supersedes T0057's `level`).** T0057 wrote the band into
+  `MetricValue.ci` and the self-check's minimum per-family coverage (0.98) into `MetricValue.level`. In the schema
+  (`tools/mfos/mfos/models.py`, `stats.py` derives α = (1 − level)/2 from it) `level` is the confidence level of `ci`.
+  The 0.98 was a constant of a frozen synthetic generator (review T0059: 0.97–1.00 depending only on the seed), per
+  value rather than for the max, and not a confidence level of anything measured on the run.
+  - What the method supports: a **deterministic error band** [max_i(err_i − u_i)⁺, max_i(err_i + u_i)], u_i = rule
+    estimate + `solver_err_budget` + stated model error (§4.3). The model and solver parts are bounds (checked against
+    exact references and by `l2_solver_tolerance`). The discretization part is a bound under an assumption: rigorous on
+    path B for same-sign expansions (lemma above) and for single terms with the order in range, and validated
+    empirically for two terms of either sign. It fails for some mixed-sign three-term expansions (below). There is no
+    sampling model, so no probability, and no confidence level can honestly be attached.
+  - What is recorded: `max_rel_err_vs_analytic` without `ci` (the evaluator reads only the point value for A1, and the
+    schema's default `level` = 0.95 is inert without a `ci`); the band as two metrics of its own,
+    `max_rel_err_band_lo` and `max_rel_err_band_hi`, described as above. The self-check's coverage goes into the
+    `refinement_rule_validated` detail with its one-sided 95 % Clopper–Pearson lower bound, labelled
+    generator-conditional. [F] Design-time run: pooled coverage 1195/1195, lower bound 0.9975.
+  - [I] Alternative for the founder: keep the band in `ci` with `level` = 1.0 read as "enclosure under the stated
+    assumptions" (consistent with α = 0 in stats.py). I did not choose it, because the noisy self-check families and
+    the three-term search show the enclosure can fail, so 1.0 would overstate.
+  - This departs from "a CI on every metric an acceptance criterion reads" only where the criterion reads the point
+    (A1); no criterion of O001 reads a CI of E001.
 - **Sources.** [ROA] P. J. Roache, J. Fluids Eng. 116(3):405–413 (1994). [EH] L. Eça, M. Hoekstra, "A procedure for
   the estimation of the numerical uncertainty of CFD calculations based on grid refinement studies", J. Comput.
   Phys. 262:104–130 (2014). [F] Its abstract (MARIN publication page, accessed 2026-10-01) says the safety factor
@@ -598,8 +757,18 @@ The unmutated runner passes all 8 analytic checks.
 | image pairs without the cross-section term | closed_forms_independent_check (C1 image term) |
 | attempt-2 refinement estimator | DoD convergence_estimator.py (algebraic p = 1: 0.42× true) |
 | attempt-3 refinement estimator (T0057) | refinement_rule_validated (8 false convergences); DoD estimator_adversarial.py (86) |
+| T0057 rule (no same-sign path; review T0058) | DoD estimator_adversarial.py power (61 % / 12 % / 0 % at p = 1 / 1.5 / 2) |
+| T0060 path B without the order cap | three-term adversarial search, true/est up to ≈ 30 (§4.4) |
+| `mesh_params` missing a required key (stand-in) | l2_constant_refinement_ratio, l2_converged |
+| one count rounded up from 10 at 1.25 (10 → 13 → 16; stand-in) | l2_constant_refinement_ratio (1.0156) |
 
-9a. `refinement_rule_validated` (T0057, §4.4): physics-independent check of the refinement rule; runs in every mode.
+9a. `refinement_rule_validated` (T0057, T0060, §4.4): physics-independent check of the refinement rule; runs in every
+   mode. Frozen generator, seed 20261004 (set before the T0060 rule was run on it): 2 800 safety/coverage sequences
+   and, per leading order 1, 1.5, 2, 100 same-sign sequences with true error < conv_tol/10. Fails unless 0 false
+   convergences, coverage ≥ 0.95 in every family with a declared-converged sequence (T0058: families with none no
+   longer count as 1.0), power ≥ 0.9 at every p, and geometric est/true ∈ [1, 3]. [F] Design time: 0 false
+   convergences; power 1.00 / 1.00 / 1.00; coverage 1.0 in every family, pooled 1195/1195, Clopper–Pearson 95 % lower
+   bound 0.9975; geometric est/true 1.250. Runtime ≈ 1 s.
 10a. **Tube-PEEC discrimination (T0057, reviews T0055/T0056; in `closed_forms_independent_check`).** At l = 1.5 mm
    bound (a) (4.3–4.7e-3) is as large as the correction it validates (4.1e-3 at 100 Hz to 9.9e-3 at 80 MHz). The
    filament-at-r model passes the bound at 100 Hz (4.05e-3 < 4.29e-3), so that part has no teeth at 1.5 mm. New entry
@@ -700,10 +869,14 @@ hash the runner, or record its sha256 in the spec (tools/mfos is protected).
    `5.0e6`-style strings for every experiment, not only E001.
 8. T0022 must report κ_est in `solver_tol`, `mesh_params` and per-frequency `mesh_hash` per call, and use a constant
    refinement ratio with base counts large enough for the 1.1 spread (§3).
-10. Feasibility risk of the T0057 rule (§4.4): it refuses to certify pre-asymptotic, erratic (e.g. staircase
-    round-wire meshes) or superconvergent (order > 2) sequences. Such an L2 makes E001 INVALID, not falsely PASS;
-    raising `order_max` or `refinement_max` needs a new experiment id. The builder should look at its convergence
-    sequences before E001 is run.
+10. Feasibility risk of the rule (§4.4), reduced by T0060: same-sign superconvergent sequences (observed order > 2,
+    falling, ≤ 3) are now certified. It still refuses pre-asymptotic, erratic (e.g. staircase round-wire meshes),
+    rising-order, and same-sign sequences with observed orders > 3 (strong h⁴ corrections at p = 2: 12 % refused).
+    Such an L2 makes E001 INVALID, not falsely PASS. Changing `order_max`, the cap or `refinement_max` needs a new
+    experiment id. The builder should look at its convergence sequences before E001 is run, and keep the noise floor
+    small: at the full `solver_err_budget` the rule's power on accurate sequences falls to about one half (§4.4).
+11. (T0060) Founder choice on the metric interval (§4.4): band as two metrics (chosen) or `ci` with `level` = 1.0
+    read as "enclosure under assumptions" (not chosen; it would overstate).
    [I] At the 100 Hz cases this most likely means a direct LU of the uncompressed system.
 9. `b3_mutual_exact.py` at 10 GHz uses the δ → 0, proximity-free limit as "exact". It passes, but the runner-vs-
    reference difference there is mostly physics the reference omits (§4.2a). If the founder wants a tighter M12

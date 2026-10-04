@@ -49,7 +49,8 @@ The clause, verbatim from `src/fasthenry/mulGlobal.h` of the pinned tarball:
   is trusted only through E001's analytic validation.
 - **`.units mm`** scales the reported impedance by 1000 (5704 nH for the self-test bar), as in the build this
   replaces. Decks are written in metres (T0022).
-- Linux x86-64 build (burst VMs) not yet verified first-hand; the script is the same.
+- Linux x86-64 build: verified 2026-10-04 on a GCP e2-standard-4 VM (Ubuntu 24.04) via scripts/burst_gcp.sh;
+  the pinned tarball's sha256 checked and the self-test passed (5.704 nH vs 5.695 nH).
 
 ## Alternatives considered
 - FastHenry2 (FastFieldSolvers) — rejected: its sources carry MIT's earlier notice, "internal, noncommercial

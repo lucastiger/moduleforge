@@ -3,7 +3,7 @@ objective: O001
 title: 'L2 feasibility spike: rigorous exact-kernel L2 for frozen E001 and E002 scale (go/no-go with measurements)'
 type: investigate
 agent: scientist
-status: needs_founder
+status: merge
 depends_on: []
 description: "Founder-approved feasibility spike (2026-10-04), replacing the auto-generated diagnosis\
   \ of T0022: T0022 is understood (four attempts; its reports in project/tasks/T0022.yaml). It built an\
@@ -72,8 +72,8 @@ runs:
 - T0067-scientist-20261004T150032-01ba
 created_by: orchestrator
 created_at: '2026-10-04T21:14:18+00:00'
-protected_approved: false
-approval: null
+protected_approved: true
+approval: I0029
 target: null
 lens: null
 trigger: null

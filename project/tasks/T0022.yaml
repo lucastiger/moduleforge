@@ -4,7 +4,7 @@ title: L2 reference adapter moduleforge.solvers.l2 (provisioned FastHenry binary
   meshed planes, refinement, memoization)
 type: implement
 agent: builder
-status: todo
+status: running
 depends_on:
 - T0020
 - T0021
@@ -91,16 +91,20 @@ description: 'Implement `moduleforge.solvers.l2` with two parts.
   Do not modify pyproject.toml; n2 already moved the runtime dependencies.
 
 
-  Founder requirement (2026-10-04, E001 registered as spec sha256:1c60eaaf...; runner frozen): E001''s
-  refinement rule is safe at any solver accuracy but accepts accurate solves reliably only when its noise
-  floor 2 x meta[''solver_tol''] x amplification is <= ~2e-9 (reviews T0064/T0065 of T0063; note sec.
-  3/4.4). Use a direct LU solve (no iterative or compressed solve) for E001''s sizes and report meta[''solver_tol'']
-  as a tight, honest bound on the relative error of the port impedance. Do not report LAPACK''s norm-wise
-  ferr unscaled: it overestimates by 1e2-1e3 and must be converted to the port quantity (T0064). The smoke
-  run''s l2_solver_tolerance sanity value (reported / required) must be <= 1e-4. Implement exactly the
-  contract in note sec. 3 as registered (mesh_params, mesh_hash, one mesh per solve, constant refinement
-  ratio >= 1.25 with integer counts chosen so every ratio holds); do not edit the runner or the spec:
-  they are frozen.'
+  Founder requirement (revised 2026-10-04 after attempt 1; E001 registered, spec sha256:1c60eaaf..., runner
+  frozen): report meta[''solver_tol''] as an honest bound on the TOTAL numerical error of the port impedance:
+  the linear solve, FastHenry''s own kernel round-off for thin filaments (attempt 1 saw ~1e-6 relative
+  jumps in A1 at level 4) and output rounding (6 digits). E001''s frozen refinement rule is safe at any
+  noise floor and, with A1''s real sequence, converges at a floor >= 2e-6 (estimate 3.6e-6) but refuses
+  at <= 2e-7: under-reporting the error is what made every case ''not converged''. The registered budget
+  (solver_err_budget 1e-5, checked by l2_solver_tolerance) still applies. The earlier ''direct LU only,
+  ratio <= 1e-4'' requirement is withdrawn: it is unattainable with FastHenry''s kernel precision and
+  it forced a memory-bound dense LU that left C1 8.9 % off. Use FastHenry''s own iterative (multipole)
+  solve where a dense LU does not fit (the C1 plane needs lateral cells much smaller than the 1 mm loop
+  height), provided solver_tol bounds its error honestly. Implement exactly the contract in note sec.
+  3 as registered; do not edit the runner or the spec. If C1 cannot reach the 2 % criterion within this
+  machine''s 16 GB even so, stop and report blocked with the measured error vs plane mesh and memory:
+  the founder will decide between a larger burst VM and the in-house fallback (note sec. 2).'
 context_files:
 - research/notes/o001-l2-reference.md
 - experiments/runners/e001_reference.py
@@ -155,23 +159,18 @@ definition_of_done:
 - cmd: grep -rnE 'git clone|urlopen|urlretrieve|wget' src/moduleforge/solvers; test $? -eq 1
   exists: null
   timeout_s: 30
-- cmd: 'uv run python -c "import json; r=json.load(open(''/tmp/e001-smoke/result.json'')); s={x[''name'']:
-    x for x in r[''sanity'']}[''l2_solver_tolerance'']; assert s[''value''] is not None and s[''value'']
-    <= 1e-4, (''reported solver_tol / required must be <= 1e-4 (E001 noise floor <= 2e-9): direct LU with
-    a tight, honest error estimate'', s); print(''solver_tol / required'', s[''value''])"'
-  exists: null
-  timeout_s: 300
 experiment: null
 risk: high
 model: null
 budget_usd: 7.0
 max_turns: 100
-attempts: 1
+attempts: 2
 max_attempts: 3
 branch: task/T0022-l2-reference-adapter-moduleforge-solvers
 pr: null
 runs:
 - T0022-builder-20261003T221916-fea7
+- T0022-builder-20261004T025500-a65f
 created_by: planner:T0019
 created_at: '2026-09-29T22:56:48+00:00'
 protected_approved: false
@@ -324,3 +323,10 @@ history:
 
     '
   at: '2026-10-04T06:26:27+00:00'
+- attempt: 1
+  outcome: requirements_revised
+  summary: 'founder session: withdrew the ''direct LU, solver_tol/required <= 1e-4'' requirement (unattainable;
+    it under-reported FastHenry''s ~1e-6 kernel error and caused every l2_converged refusal and the C1
+    memory limit). Report the total numerical error honestly; iterative FastHenry solves are allowed where
+    a dense LU does not fit.'
+  at: '2026-10-04T09:54:59+00:00'

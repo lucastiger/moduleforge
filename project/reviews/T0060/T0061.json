@@ -1,0 +1,65 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "\"Accepts accurate solvers\" is shown only for noise-free sequences; at the solver noise the contract allows, acceptance is about 50 % per value",
+      "detail": "Two power measurements exist, the runner's self-check and the founder's estimator_adversarial.py DoD. Both use noise-free sequences only. In the runner, the noise floor is 2*min(solver_err_budget, solver_tol*amp). An adapter that only just passes l2_solver_tolerance therefore runs with a floor of 2e-4 relative. The note itself says (sec. 4.4 'Validated scope', and open issue 10) that power on accurate sequences at that budget is about 0.4-0.5 for both the T0057 and T0060 rules. l2_converged needs every compared value of every case to converge. So an accurate iterative solver that sits at the tolerance budget would very likely make E001 INVALID, and no gate would flag this in advance. The note discloses it, so this is a limit on the claim rather than a hidden defect.",
+      "evidence": "refinement_rule_selfcheck power loop calls remaining_discretization_error(exact, h=hh, **kw) with no noise. estimator_adversarial.py also has no noise. Note: 'at the full solver budget the rule's power on accurate sequences is \u2248 0.4\u20130.5 for both rules'.",
+      "suggested_check": "Run the self-check power family with uniform noise at the contract-permitted floor, or require in the contract that solver_tol*amp is much smaller than the budget."
+    },
+    {
+      "severity": "minor",
+      "title": "Path B also raises estimates T0057 had already accepted, so some accurate sequences are newly refused",
+      "detail": "When both paths pass, the rule returns max(est_b, est_a), and est_b is the tail at order_min = 1. That inflates the estimate by (rho^p_obs - 1)/(rho - 1), roughly 1.6-2x at p \u2248 1.5. The note says 'Path B only turns some \u221e of T0057 into finite estimates', which is not accurate: path B also changes finite estimates. Hand-computed counterexample: e = A(h^1.5 + 0.3 h^2.5), q = 2, levels h = 0.5 ... 0.03125, A = 1.076. At level 5 the true error is 0.60 %. The observed orders 1.564 \u2192 1.533 are steady, so path A gives 0.76 % (T0057: converged). Path B is also eligible, so the T0060 rule returns 1.39 %: not converged at refinement_max, and l2_converged fails. The power criterion only counts sequences with true error below conv_tol/10, so it cannot see this. Raising the estimate is the safe direction, which is why this is minor.",
+      "evidence": "Hand computation. |d| = 0.2929, 0.09525, 0.03221, 0.01113 (\u00d71.076 applied) for levels 2-5. orders 1.6206, 1.5643, 1.5333. p_pt = 1.5023. est_a = 1.25\u00b7|d5|/(2^1.5023\u22121) = 0.0076. est_b = 1.25\u00b7|d5| = 0.0139. true = 0.0060.",
+      "suggested_check": "Measure acceptance of same-sign sequences with true error in [conv_tol/10, conv_tol] for T0057 vs T0060, and correct the note's sentence."
+    },
+    {
+      "severity": "minor",
+      "title": "Path B drops the steadiness guard, but out-of-assumption behaviour is cited from stale T0057 numbers",
+      "detail": "Path B accepts orders that are falling and not steady, as long as the last order is at least 1. A falling observed order is also what an asymptotic order below order_min looks like. Hand example: e = h^0.5 + h^2.5, q = 2, 4 levels, gives orders 1.662 \u2192 1.034. Path A refuses it (not steady). Path B accepts it with est = 0.215 against a true value of 0.359, i.e. true/est = 1.67. Scaled by 0.04, that is a false convergence (est 0.86 %, true 1.44 %). The leading order is outside the registered [1, 2] assumption, so this is a scope issue. However, the note's 'Validated scope' points to 'T0057 rows above' for leading order < 1, and those rows were measured with the rule this change replaces, which has no path B.",
+      "evidence": "|d| = 1.1161, 0.3526, 0.1722. tol_p = 0.144 fails path A. Path B: one sign, falling, last order \u2265 1, max order \u2264 3. Return value 1.25\u00b70.1722.",
+      "suggested_check": "Re-run the p = 0.5 rows of the seed-99 sweep with the T0060 rule and quote those numbers."
+    },
+    {
+      "severity": "minor",
+      "title": "Open-issues list in the note is out of order, so an [I] line now sits under the wrong item",
+      "detail": "Item 11 (founder choice on the metric interval) was inserted between item 10 and item 10's continuation line '[I] At the 100 Hz cases this most likely means a direct LU of the uncompressed system.' That line now reads as part of item 11. The numbering runs 7, 8, 10, 11, 9.",
+      "evidence": "research/notes/o001-l2-reference.md lines 872-881.",
+      "suggested_check": "Move item 11 after the [I] line."
+    },
+    {
+      "severity": "note",
+      "title": "Self-check made smaller and reseeded after the previous review showed its coverage depended on the seed",
+      "detail": "The safety/coverage part went from 4 200 sequences (seed 20261002) to 2 800 (seed 20261004), and reported coverage went from a minimum of 0.9891 to 1.0 in every family. The packet says the seed was fixed before the new rule was run on it, which cannot be checked. Because coverage no longer feeds a metric level, the effect is small, but the gate's sensitivity to a per-family failure rate of about 1 % is lower.",
+      "evidence": "Diff: n_per_family 300\u2192200, seed 20261002\u219220261004. The analytic-only run shows per-family converged counts of 42-174.",
+      "suggested_check": "Keep the per-family count at 300 or more, or report per-family Clopper-Pearson bounds."
+    },
+    {
+      "severity": "note",
+      "title": "\"Rigorous for same-sign expansions\" holds only for sequences that path B accepts",
+      "detail": "The lemma covers path B's tail at order_min. A same-sign sequence that fails path B's 'falling beyond the noise' test (common with noise: 50 of 1 459 noisy same-sign acceptances went via path B) falls back to path A's estimate unchanged. The note's own search found T0057 path-A near misses of true/est 1.006 on same-sign sequences. The wording of the E001.yaml band description and of the note slightly overstates this.",
+      "evidence": "Note T0060 validation table row '2 terms, same sign, 1e-4, T0060: via path B 50'. Adversarial table: T0057 1.006.",
+      "suggested_check": "Qualify the wording: 'rigorous for same-sign expansions accepted on path B'."
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran all 8 definition-of-done commands. Each passed: mfos exp check E001 (exit 0); ruff check on the runner (all checks passed); runner --analytic-only (all sanity checks pass, refinement_rule_validated: 0 false convergences, power 1/1/1, pooled coverage 1195/1195, geometric est/true 1.250); b1_exact_limits; convergence_estimator; design_contract; b3_mutual_exact; estimator_adversarial (0/1542 false convergences; power 100 % at p = 1, 1.5, 2).",
+    "Read the DoD estimator_adversarial.py to see what it actually tests: noise-free, constant ratio, second exponent p+1 only, power counted at conv_tol/10.",
+    "Re-derived the path B lemma: with all c_i of one sign and p_i \u2265 p_lo, |d_last| \u2265 (rho^p_lo \u2212 1)|e_n|, so the tail is a bound with Fs = 1. Also re-derived the monotonicity argument (f'(y) sign): two terms of the same sign give a falling order, opposite signs give a rising one. Both are correct.",
+    "Checked that path A in the new code is logically identical to the T0057 rule (same sign test, fast-side test, steadiness test, p_star, slow-order Fs = 3). The only difference is the 4-ulp noise floor. So the new estimate is never below T0057's wherever T0057 was finite.",
+    "Checked whether the claim holds with several mesh parameters (the rule's h is a geometric mean, with a 1.1 ratio spread). The 'last order \u2265 order_min on the geometric-mean h' condition implies rho_min^p \u2265 rho_geo, so path B stays safe for a single dominant parameter.",
+    "Hand-computed counterexample: path B accepts a sequence with leading order 0.5 (outside the assumption) with true/est 1.67, which T0057 refused.",
+    "Hand-computed counterexample: an accurate p = 1.5 same-sign sequence (true error 0.60 %) is accepted by T0057 (est 0.76 %) and refused by T0060 (est 1.39 %) at refinement_max.",
+    "Checked the effect of removing the CI. O001 criterion A1 uses uncertainty: point, and evaluate.judge reads only mv.value for point criteria. The mf-evidence rule requires a CI only for criteria with use: ci. So dropping ci/level from max_rel_err_vs_analytic is consistent with policy and with the evaluator.",
+    "Checked consistency between the spec, the runner and the note: refinement_ratio_max = 2.2 in the YAML and DEFAULT_CFG; checked_config accepts it; required_mesh_keys matches the note's contract list; 2 800 = 7 families \u00d7 2 \u00d7 200.",
+    "Spot-checked the note's integer-count table (q = 1.3, n0 = 9..13; q = 1.25 with n0 = 256 is exact). All are consistent with the stated rule."
+  ],
+  "caveats": [
+    "Bash was restricted to the listed commands, so the counterexamples were computed by hand and not run through remaining_discretization_error. I checked each condition branch against the code by reading it.",
+    "research/scripts/e001_rule_t0060_validation.py failed in this checkout: `git show f8976fc:...` exited 128. The note's sec. 4.4 validation tables (random families, differential-evolution search, counts) could not be reproduced here. This may be a limitation of the review clone rather than of the work.",
+    "Scope where the claim holds: the rule accepts accurate (true < conv_tol/10), noise-free sequences whose terms share one sign and whose exponents are at most order_max + 1. It is rigorous on path B for such expansions. It depends on the leading order lying in [1, 2] and on the solver noise floor being well below the changes between levels. Mixed-sign expansions with three or more terms can still be underestimated by about 2.5x, as the note says.",
+    "The band is now honestly labelled as deterministic, with no confidence level, which matches the evaluator's semantics. Whether to report it as two metrics or as a ci with level = 1.0 is left as a founder choice in the note."
+  ]
+}

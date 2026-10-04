@@ -415,3 +415,4 @@
 {"ts": "2026-10-04T03:02:08+00:00", "event": "verified", "actor": "orchestrator", "task": "T0060"}
 {"ts": "2026-10-04T03:02:10+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0061-critic-20261003T200210-6b07", "task": "T0061", "role": "critic", "session": "2d4aeeda-6a44-40a9-bd63-bfa56c561767"}
 {"ts": "2026-10-04T03:02:10+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0062-critic-20261003T200210-1c1c", "task": "T0062", "role": "critic", "session": "b262579c-bd49-4539-ba97-8f8c89c290ff"}
+{"ts": "2026-10-04T03:10:10+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0061-critic-20261003T200210-6b07", "status": "completed", "cost": 2.261756, "subtype": "success", "report": "structured_output"}

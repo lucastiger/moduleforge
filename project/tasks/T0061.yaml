@@ -3,7 +3,7 @@ objective: O001
 title: Review T0060 (physics)
 type: review
 agent: critic
-status: running
+status: done
 depends_on: []
 description: 915bbafbee02cfc661b3b357aead6bdd070bc8dc
 context_files: []
@@ -29,4 +29,6 @@ target: T0060
 lens: physics
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: review:accept_with_caveats
+  summary: 6 findings

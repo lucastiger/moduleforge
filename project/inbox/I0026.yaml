@@ -1,0 +1,14 @@
+id: I0026
+kind: protected_change
+subject: 'T0063: merge needs founder approval'
+summary: 'E001 final: solver error budget 1e-5 (rule power under solver noise), review minors (T0061/T0062)
+
+  Risk high; 5 files. PR: None'
+refs:
+- T0063
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-04T05:14:38+00:00'
+resolved_at: null

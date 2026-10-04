@@ -3,7 +3,7 @@ objective: O001
 title: 'E001 final: solver error budget 1e-5 (rule power under solver noise), review minors (T0061/T0062)'
 type: design_experiment
 agent: scientist
-status: merge
+status: needs_founder
 depends_on:
 - T0060
 description: 'Final change before E001 is registered (founder decision, 2026-10-04): tighten the solver

@@ -462,3 +462,5 @@
 {"ts": "2026-10-04T21:14:18+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0022", "signal": "dod_failed", "action": "diagnose"}
 {"ts": "2026-10-04T21:14:18+00:00", "event": "investigation_spawned", "actor": "orchestrator", "task": "T0067", "about": "T0022", "cls": "implementation"}
 {"ts": "2026-10-04T21:14:53+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 2483, "runs_extended": 0}
+{"ts": "2026-10-04T21:59:10+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0028", "kind": "budget_increase", "subject": "[O001] stage 1 of the approved increase: cap +$30 for the L2 feasibility spike"}
+{"ts": "2026-10-04T21:59:14+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0028", "status": "approved", "note": "usd=56.51"}

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-04T21:14:58+00:00 from repository state — do not edit_
+_generated 2026-10-04T21:59:17+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -8,15 +8,13 @@ _generated 2026-10-04T21:14:58+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $138.44/$165 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $138.44/$195 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
 cancelled: 14, done: 42, failed: 3, todo: 8
 
 
 ## Recent events
-- 2026-10-04T06:26:27+00:00 task_failed_attempt {"task": "T0022", "signal": "dod_failed", "action": "repair"}
-- 2026-10-04T09:55:00+00:00 run_started {"run": "T0022-builder-20261004T025500-a65f", "task": "T0022", "role": "builder", "session": "7788cdb5-25f6-4286-94b8-3eb2ba9c9a56"}
 - 2026-10-04T10:10:23+00:00 run_finished {"run": "T0022-builder-20261004T025500-a65f", "status": "completed", "cost": 4.0858482, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T10:10:23+00:00 task_failed_attempt {"task": "T0022", "signal": "dod_failed", "action": "repair"}
 - 2026-10-04T16:29:36+00:00 run_started {"run": "T0022-builder-20261004T092936-f666", "task": "T0022", "role": "builder", "session": "ae40ab93-ba01-4438-b405-e336ca39f31f"}
@@ -30,3 +28,5 @@ cancelled: 14, done: 42, failed: 3, todo: 8
 - 2026-10-04T21:14:18+00:00 task_failed_attempt {"task": "T0022", "signal": "dod_failed", "action": "diagnose"}
 - 2026-10-04T21:14:18+00:00 investigation_spawned {"task": "T0067", "about": "T0022", "cls": "implementation"}
 - 2026-10-04T21:14:53+00:00 sleep_detected {"gap_s": 2483, "runs_extended": 0}
+- 2026-10-04T21:59:10+00:00 inbox_opened {"id": "I0028", "kind": "budget_increase", "subject": "[O001] stage 1 of the approved increase: cap +$30 for the L2 feasibility spike"}
+- 2026-10-04T21:59:14+00:00 inbox_resolved {"id": "I0028", "status": "approved", "note": "usd=56.51"}

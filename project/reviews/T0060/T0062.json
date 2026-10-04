@@ -1,0 +1,51 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "Rule still refuses most accurate solvers when the noise floor is at the registered solver budget",
+      "detail": "The claim is that the refinement rule must accept accurate solvers. The runner sets the rule's noise floor to 2*min(solver_err_budget, solver_tol*amp). The contract allows solver_tol up to budget/amp, so a compliant adapter that reports a tolerance at that limit gets a floor of 2e-4 relative. At that floor, with exact values (no actual solver noise), accurate sequences are mostly refused. Path B needs the last observed order to fall 'beyond the noise', and the widened intervals overlap. Path A rejects observed orders above order_max = 2, which same-sign sequences always show. The rejections concentrate at q = 2 with 5 levels, where the last change is closest to the floor. l2_converged requires all 32 compared values to pass. The joint pass probability is therefore close to 0 at the budget floor, and about 0.66 at 2e-5 if the values were independent (in practice they are correlated within a case). The note (sec. 4.4) mentions about 0.4-0.5 power at full budget noise on its own families. That understates the effect for the registered DoD error model. The self-check power test (refinement_rule_validated) is noise-free, so it cannot detect this. The claim holds only for adapters whose reported solver_tol*amp is at most about 1e-5.",
+      "evidence": "Founder DoD distribution (A h^p + B h^(p+1), same sign, q in {1.25, 1.5, 2}), sequences with true error < conv_tol/10. Single look, exact values, declared floor 2e-4: power 0.281 (p=1.5), 0.105 (p=2). Floor 6e-5: 0.833 / 0.716. Floor 2e-5: 0.994 / 0.943. Runner's sequential procedure (check at 4 levels, then 5) at floor 2e-4: 0.099 (p=1.5), 0.162 (p=2); at floor 2e-5: 1.0 / 0.987. With actual uniform noise of \u00b11e-4 and floor 2e-4: 0.36 / 0.19. Example (q=2, 5 levels, true error 7.4e-4): orders (point, low, high) = (2.20, 2.19, 2.21), (2.11, 2.08, 2.15), (2.06, 1.91, 2.22). The orders clearly fall, but the last interval overlaps the previous one, so path B fails; path A fails because both low ends exceed 2. Number of gating values from build_cases: 32.",
+      "suggested_check": "Add a power test at the registered noise floor (2 x budget, both with exact values and with noise) to refinement_rule_validated, and either relax the rule there or cap the floor in the contract at about 1e-5 (e.g. require a direct-LU solver_tol)."
+    },
+    {
+      "severity": "minor",
+      "title": "Error-band caveat says 'validated for two terms of either sign', which holds only without noise",
+      "detail": "The new band metric descriptions in E001.yaml say the discretization part is validated empirically for two terms of either sign. The only known weakness they name is optimized mixed-sign three-term sequences (up to about 2.5x low). With the noise floor at the budget, the noise-limited branch (inherited from T0057, unchanged here) underestimates a random two-term opposite-sign sequence by more than 2.5x. A nearly cancelling pair with exponents >= 1 can leave three consecutive changes below the floor while |e| is several times the tail at order_min. Such cases are rare, and A1 reads the point value, so no decision is affected.",
+      "evidence": "Random search over 300k opposite-sign two-term sequences (p ~ U[1,2], dp ~ U[0.05,3], jitter <= 1.1, 4-5 levels). Noise-free: worst true/(est+budget) = 0.800 on path A, as the note claims. With \u00b11e-4 noise: worst 2.659 on path A (q=1.97, 4 levels, p=1.042, dp=0.083, A=-0.184, B=+0.208, true 9.3e-4, est 2.5e-4). The same sequence with exact values and the 2e-4 floor gives 1.15. Rate with exact values and 2e-4 floor: 10 band under-covers in 80,489 declared-converged sequences.",
+      "suggested_check": "State in the band descriptions that the two-term validation is noise-free, and add the noise-limited-branch case to the caveat."
+    },
+    {
+      "severity": "minor",
+      "title": "The serialized metric still carries level = 0.95, against the spec text",
+      "detail": "E001.yaml says the band 'is not written into MetricValue.ci/.level'. The runner calls run.metric(name, value, n=...) without ci, but ExperimentRun.metric defaults level=0.95 and MetricValue serializes it. The result JSON will therefore show ci: null, level: 0.95 for max_rel_err_vs_analytic and both band metrics. This is harmless for A1 (use: point), but it partly undoes the 'honest level' intent for anyone reading the result file.",
+      "evidence": "mfos.models.MetricValue(value=0.01, ci=None, n=3, level=0.95).model_dump() -> {'value': 0.01, 'ci': None, 'level': 0.95, 'n': 3, 'unit': ''}. ExperimentRun.metric signature: level: float = 0.95.",
+      "suggested_check": "Change the description to say level is the unused schema default, or pass an explicit sentinel."
+    },
+    {
+      "severity": "note",
+      "title": "Note says path B never accepts opposite-sign two-term sequences; with noise it occasionally does, safely",
+      "detail": "The note's T0060 validation table reports 0 path-B acceptances for opposite-sign two-term sequences with 1e-4 noise. In my noisy run, path B affected 109 acceptances (out of about 63k declared converged). All were safe (worst true/(est+budget) = 0.693). They occur when the errors are large (order 1) and the noise floor, scaled by |v[-1]|, under-covers the perturbation of earlier changes. That situation is unrealistic for L2 values, so this is documentation accuracy only.",
+      "evidence": "Path identified by re-running with order_max_same_sign=-1 (path B disabled) and comparing estimates; with noise, path B affected 109 opposite-sign two-term acceptances; noise-free: 0.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran all 8 DoD commands (mfos exp check E001, ruff, --analytic-only, b1_exact_limits, convergence_estimator, design_contract, b3_mutual_exact, estimator_adversarial): all exit 0. Read the result JSON: refinement_rule_validated passed, 0 false convergences, power 1.0 at every p, pooled coverage 1.0 of 1195.",
+    "Read the founder's estimator_adversarial.py and design_contract.py to see what they test: both are noise-free, constant ratio, and use the B h^(p+1) model only.",
+    "Re-derived the observed-order monotonicity argument for path B (f'(y) = c'(q^-dp - 1)/(1+c'y)^2, with c' carrying the sign of c) and the same-sign bound |d_last| >= (rho^p_lo - 1)|e_n|: both correct. Also checked that noise intervals covering the true orders cannot make rising orders look falling.",
+    "Measured power at noise floors 1e-5 to 2e-4, with both actual noise and exact values plus a declared floor, on the founder DoD distribution, single look and with the runner's sequential 4-then-5-level procedure. Power collapses to 10-16% at the 2e-4 floor that the registered budget permits.",
+    "Diagnosed the rejections at the 2e-4 floor: mostly path B's beyond-noise falling test plus path A's order cap; most are at q=2 with 5 levels.",
+    "Multi-parameter test: error driven only by the parameter refined at the slowest allowed ratio, with the rule's h a geometric mean over K = 2/4/11 parameters at the spread limit. Worst true/est 0.861 / 0.897 / 0.923 (still conservative).",
+    "Random search of 300k opposite-sign two-term sequences with jitter, with and without noise, attributing the acceptance path by disabling path B. Noise-free worst 0.800 (matches the note); with noise worst 2.659 on path A (noise-limited branch); 109 noisy path-B acceptances, all safe.",
+    "Checked MetricValue/ExperimentRun.metric: ci=None is allowed, but level 0.95 is still serialized.",
+    "Checked objective O001: A1 reads E001.max_rel_err_vs_analytic as a point value, so removing ci does not affect acceptance.",
+    "Checked the note's integer-count table by hand (q=1.3 n0=9; q=1.5 n0=10; the n0=8 failure at q=1.3; n0=256 at q=1.25 works only as an isolated case, consistent with the table's 'every n0 >=' meaning). No defect found."
+  ],
+  "caveats": [
+    "The claim 'accepts accurate solvers' holds for noise-free sequences, or for adapters whose reported solver_tol x amplification is at most about 1e-5 (noise floor <= 2e-5). At the registered maximum floor (2 x solver_err_budget = 2e-4) per-value power is 10-16% at p = 1.5-2, and l2_converged over 32 values would almost surely fail.",
+    "The power guarantee is measured only for corrections within path B's order cap (order_max + 1 = 3), as the note states (p=2, dp=2: 88% power).",
+    "The error band is not a bound for mixed-sign expansions with three or more terms (up to ~2.5x low, disclosed), nor rarely for noisy two-term sequences through the inherited noise-limited branch (up to ~2.7x low, not disclosed). A1 is unaffected because it reads the point value.",
+    "I did not check the note's comparisons with the earlier T0057 rule (git f8976fc), the research/scripts/e001_rule_t0060_validation.py results, or that the self-check seed was frozen before the rule was run; Bash access was partly revoked during the review."
+  ]
+}

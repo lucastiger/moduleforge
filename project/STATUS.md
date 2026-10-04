@@ -1,8 +1,8 @@
 # ModuleForge status
-_generated 2026-10-04T05:16:50+00:00 from repository state — do not edit_
+_generated 2026-10-04T05:18:58+00:00 from repository state — do not edit_
 
-## Founder inbox (1 open)
-- **I0027** [experiment_registration] register E001 (pre-registration)
+## Founder inbox (0 open)
+- nothing needs you
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -15,8 +15,6 @@ cancelled: 14, done: 42, failed: 2, todo: 7
 
 
 ## Recent events
-- 2026-10-04T04:11:25+00:00 run_started {"run": "T0063-scientist-20261003T211125-c722", "task": "T0063", "role": "scientist", "session": "a1b0c58e-ee01-4794-941e-4dff215c5a40"}
-- 2026-10-04T04:11:57+00:00 run_finished {"run": "T0063-scientist-20261003T211125-c722", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-04T04:11:57+00:00 capacity_backoff {"task": "T0063", "minutes": 30}
 - 2026-10-04T04:42:21+00:00 run_started {"run": "T0063-scientist-20261003T214221-33c6", "task": "T0063", "role": "scientist", "session": "e07ea640-4d02-4520-b964-a138924756ca"}
 - 2026-10-04T04:58:45+00:00 run_finished {"run": "T0063-scientist-20261003T214221-33c6", "status": "completed", "cost": 3.5479912000000002, "subtype": "success", "report": "structured_output"}
@@ -30,3 +28,5 @@ cancelled: 14, done: 42, failed: 2, todo: 7
 - 2026-10-04T05:16:16+00:00 merged {"task": "T0063"}
 - 2026-10-04T05:16:16+00:00 inbox_opened {"id": "I0027", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}
 - 2026-10-04T05:16:27+00:00 inbox_resolved {"id": "I0024", "status": "rejected", "note": "Superseded by I0027 (registration request for E001 as finalized by T0063)."}
+- 2026-10-04T05:18:41+00:00 experiment_registered {"id": "E001", "hash": "sha256:1c60eaaf3ee5121dae83c1ebd092b41968cd34bf9546ea00604f241fb95b0b5c", "by": "founder"}
+- 2026-10-04T05:18:41+00:00 inbox_resolved {"id": "I0027", "status": "approved", "note": "Founder: register E001 now (2026-10-04); T0022 must deliver a direct, tightly reported solve so E001's solver noi

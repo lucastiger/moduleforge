@@ -1,0 +1,186 @@
+id: E001
+title: L2 reference validation against closed-form partial and loop inductances (bars, round-wire chains,
+  image plane, 5/20/80 MHz)
+objective: O001
+status: registered
+runner: uv run python experiments/runners/e001_reference.py
+config:
+  f_lf_hz: 100.0
+  freqs_hf_hz:
+  - 5000000.0
+  - 20000000.0
+  - 80000000.0
+  sigma_cu: 58000000.0
+  sigma_al: 37700000.0
+  plane_margin_mm: 15.0
+  refinement_start: 1
+  refinement_max: 5
+  refinement_min_levels: 4
+  refinement_ratio_min: 1.25
+  refinement_ratio_max: 2.2
+  refinement_ratio_spread: 1.1
+  order_min: 1.0
+  order_max: 2.0
+  steady_tol: 0.1
+  conv_tol: 0.01
+  solver_err_budget: 1.0e-05
+  recip_tol: 0.001
+  monotone_tol: 0.001
+  scaling_tol: 0.01
+  scaling_cases:
+  - A1
+  - B2
+  - C1
+  tol_published: 1.0e-09
+  tol_independent: 1.0e-06
+  tol_truncation: 0.001
+  smoke_cases:
+  - A1
+  - A3
+  - B2
+  - B3
+  - B4
+  - C0
+  - C1
+  cases:
+  - A1
+  - A2
+  - A3
+  - A4
+  - B1
+  - B2
+  - B3
+  - B4
+  - C0
+  - C1
+sealed_seed: false
+metrics:
+- name: max_rel_err_vs_analytic
+  description: 'max over cases, compared quantities (L11, M12, L22) and frequencies of |L2 - closed form|
+    / |closed form|, L2 at the finest level reached by the pre-registered refinement rule. Deterministic
+    (no sampling); acceptance A1 reads the point value. Recorded without `ci` and with MetricValue.level
+    = 0.0, meaning "no confidence level" (the schema default 0.95 would claim one; T0063, review T0062):
+    its uncertainty is the error band below, which has no confidence level (reviews T0058/T0059 of T0057;
+    note sec. 4.4). Every E001 metric is written with level = 0.0; none has a ci.'
+  unit: ''
+- name: max_rel_err_band_lo
+  description: 'lower end of the estimated error band of max_rel_err_vs_analytic, max_i (err_i - u_i)+
+    with u_i = refinement-rule estimate of the remaining discretization error + solver_err_budget + stated
+    residual model error of the closed form (note sec. 4.3). Not a confidence bound and not a guaranteed
+    bound: the discretization part is a bound only under the order assumption of note sec. 4.4, leading
+    order in [order_min, order_max] (rigorous for same-sign expansions accepted on path B; validated empirically,
+    noise-free, for two terms of either sign; optimized mixed-sign three-term expansions can make it low
+    by up to ~2.5x, and with solver noise at the budget rare two-term opposite-sign sequences are covered
+    low, up to ~1.5x at 1e-5; a leading order below order_min is out of scope and can make it low by up
+    to ~7x).'
+  unit: ''
+- name: max_rel_err_band_hi
+  description: upper end of the same band, max_i (err_i + u_i); same caveats as max_rel_err_band_lo
+  unit: ''
+- name: max_rel_err_hf
+  description: same maximum restricted to 5/20/80 MHz comparisons
+  unit: ''
+- name: max_rel_err_lf
+  description: same maximum restricted to the LF (100 Hz) comparisons
+  unit: ''
+- name: analytic_value_span
+  description: diversity statistic - max/min of the compared closed-form values
+  unit: ''
+- name: n_geometry_classes
+  description: number of distinct geometry classes compared (design has 7)
+  unit: ''
+sanity_checks:
+- name: closed_forms_published_values
+  description: Kelvin ber/bei at x=1,2,5 vs exact rational series; rectangle GMD of a square = 0.44705
+    a and thin-strip limit e^-1.5 w (Grover); round-wire internal impedance DC and HF limits; reaction-weighted
+    mean distance 128 r/(45 pi) (uniform), r^2, 5r^4/3 and -> 4r/pi (surface); current-profile normalisation;
+    dipole response chi -> j (r/delta)^2/4 at DC and -> 1 for a perfect conductor
+- name: closed_forms_independent_check
+  description: Hoer-Love mutual vs 6-D Gauss-Legendre; filament formula vs quadrature; Bessel series vs
+    Hankel asymptotics; Hoer-Love self vs GMD formula and thin-bar -> filament limit; rectangle partial
+    sum vs Grover closed form (thin limit); Bessel internal impedance vs reaction integral with the log
+    kernel; corrected round-wire self term vs an independent axisymmetric tube PEEC (solves the current
+    distribution) for l = 1.5, 5, 10 mm at every compared frequency within the stated bound, and the correction
+    must remove all but a fraction r/l of the filament-at-r error against the tube PEEC (discriminating
+    at l = 1.5 mm too); proximity dipole vs the exact two-wire line (PEC); finite cross-section of mutuals
+    (filament + mean-value term) vs a brute-force average of the filament kernel over both Bessel-profile
+    cross-sections (B3 M12 at 100 Hz and 80 MHz, C1 wire-image pairs at 20 MHz) within the stated remainder
+    bound (d)
+- name: image_plane_independent
+  description: 'the runner''s 3-D image term (C1 loop at 5/20/80 MHz and an open U path at 20 MHz) vs
+    a generic Neumann quadrature against the explicitly mirrored polyline (image current reversed), filaments
+    on the axes (the finite cross-section is checked in closed_forms_independent_check), relative <= tol_independent
+    (checks the image code''s wiring; it shares the image convention); physical reference without images:
+    per-length plane term of a long loop (a = 400 and 800 mm, b = 5 mm, h = 1 mm) vs a 2-D BEM that solves
+    the surface current of a floating PEC strip at the same recessed surface, relative <= 2e-4 (BEM accuracy)
+    + (b/a)^2'
+- name: wheeler_recession_independent
+  description: per-unit-length inductance increment of a line current 1 mm over the recessed image plane
+    vs Carson's exact half-space integral at 0.5/5/20/80 MHz; |difference| <= mu0/2pi (delta/2h)^2 (the
+    stated second-order term)
+- name: tied_branch_independent
+  description: 'tie assembly (B4 and an asymmetric pair) vs the explicit parallel formula (Z11 Z22 - Z12
+    Z21)/(Z11 + Z22 - Z12 - Z21) of the corresponding two-port, relative <= 1e-10 (wiring; algebraically
+    the same as the assembly); physical reference: a 20 x 3 x 0.3 mm Cu bar split lengthwise into 0.7
+    + 2.3 mm strips tied at both ends vs the unsplit bar''s Hoer-Love self at 1 Hz (current divides by
+    conductance -> uniform density), relative <= (omega L/R)^2'
+- name: analytic_length_scaling
+  description: every closed-form case value doubles (rtol 1e-9) when all lengths double and f -> f/4
+- name: regime_valid
+  description: assumptions of each closed form hold for the registered geometry - LF bars show < 1e-4
+    internal-inductance skin deficit (round wire of the half-diagonal; equals the bars' stated model error);
+    plane delta/t <= 0.2 and (delta/2h)^2 <= 1e-3 at every plane frequency
+- name: plane_truncation_bound
+  description: 2-D PEC-strip BEM (validated to 2e-4 against the infinite image) bounds C1 finite-plane
+    truncation below 1e-3
+- name: refinement_rule_validated
+  description: 'physics-independent check of remaining_discretization_error on synthetic refinement sequences
+    (frozen generator and seed in the runner, not the L2 data): 2800 sequences of two- and three-term
+    expansions with leading order in [order_min, order_max], terms of opposite and equal sign, ratios
+    1.25/1.5/2 jittered within refinement_ratio_spread, 4-5 levels, with and without solver noise -> zero
+    false convergences, per-value coverage >= 0.95 in every family, clean geometric est/true in [1, 3];
+    and power (review T0058): per leading order 1, 1.5, 2, >= 90 % of 100 same-sign sequences with true
+    error < conv_tol / 10 declared converged; and power at the solver budget (T0063; reviews T0061/T0062
+    of T0060): noise floor 2 x solver_err_budget, values perturbed by +-solver_err_budget or exact, >=
+    90 % of 400 accurate same-sign sequences per leading order and mode from the founder DoD distribution
+    of estimator_adversarial.py declared converged. The same at-budget test on the broad self-check generator
+    is recorded in the detail but does not gate (note sec. 4.4). Detail records the pooled coverage and
+    every power count with its Clopper-Pearson lower bound, labelled generator-conditional (not a level
+    of any metric)'
+- name: l2_converged
+  description: estimated remaining discretization error (remaining_discretization_error over >= refinement_min_levels
+    levels on the realized mesh sizes, solver noise floor from the reported solver_tol) of every compared
+    L2 value < conv_tol relative at the finest level of the pre-registered rule; the bars' informational
+    HF solves do not gate it
+- name: l2_solver_tolerance
+  description: every L2 solve reports meta['solver_tol'] (relative forward-error bound of Z from the linear
+    algebra, compression and output rounding, conditioning included) <= solver_err_budget / amplification
+    of its case (contract sec. 3)
+- name: l2_constant_refinement_ratio
+  description: every solve reports meta['mesh_params'] (size in m of every refined discretization parameter,
+    same keys at every level) containing at least the keys the contract names for the case (seg, fil_w,
+    fil_h, surf per conductor; plane_x, plane_y, plane_layer per plane; review T0059); for every parameter
+    and step the realized ratio s_k/s_(k+1) is in [refinement_ratio_min, refinement_ratio_max], and max/min
+    over all parameters and steps <= refinement_ratio_spread (contract sec. 3; additive refinement such
+    as n = k or 2k+1, one parameter refined differently from the others, or rounded small counts such
+    as 10 -> 13 -> 16, fail)
+- name: l2_one_mesh_per_solve
+  description: every L2 solve reports meta['mesh_hash'] with one entry per frequency of the call, all
+    equal (one mesh for all frequencies), new at every level, and a positive integer meta['n_filaments']
+    that increases with the level
+- name: reciprocity
+  description: '|Z12 - Z21| / |Z12| <= 1e-3 for every two-port case and frequency'
+- name: l_monotone_in_frequency
+  description: driving-point Im(Z11)/omega never increases with frequency by more than 0.1% (RL driving-point
+    theorem; valid because one mesh serves all frequencies of a solve)
+- name: length_scaling
+  description: L2 with all lengths doubled and f -> f/4 returns 2 L within 1% (A1, B2, C1), on a mesh
+    whose every meta['mesh_params'] entry is exactly doubled with the same n_filaments (mesh defined relative
+    to geometry and delta, contract sec. 3)
+timeout_min: 240
+cpu_hours_est: 2.0
+registered_by: founder
+registered_at: '2026-10-04T05:18:41+00:00'
+spec_hash: sha256:1c60eaaf3ee5121dae83c1ebd092b41968cd34bf9546ea00604f241fb95b0b5c
+runner_files:
+  experiments/runners/e001_reference.py: 4cff1bf8130d56117ca6e6ac7952926506b662ec625565ab26e7d880e1024051

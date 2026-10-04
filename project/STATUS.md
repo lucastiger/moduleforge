@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-04T21:14:20+00:00 from repository state — do not edit_
+_generated 2026-10-04T21:14:58+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -15,7 +15,6 @@ cancelled: 14, done: 42, failed: 3, todo: 8
 
 
 ## Recent events
-- 2026-10-04T06:26:10+00:00 run_finished {"run": "T0022-builder-20261003T221916-fea7", "status": "completed", "cost": 6.637737599999999, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T06:26:27+00:00 task_failed_attempt {"task": "T0022", "signal": "dod_failed", "action": "repair"}
 - 2026-10-04T09:55:00+00:00 run_started {"run": "T0022-builder-20261004T025500-a65f", "task": "T0022", "role": "builder", "session": "7788cdb5-25f6-4286-94b8-3eb2ba9c9a56"}
 - 2026-10-04T10:10:23+00:00 run_finished {"run": "T0022-builder-20261004T025500-a65f", "status": "completed", "cost": 4.0858482, "subtype": "success", "report": "structured_output"}
@@ -30,3 +29,4 @@ cancelled: 14, done: 42, failed: 3, todo: 8
 - 2026-10-04T20:33:31+00:00 run_finished {"run": "T0022-builder-20261004T120439-f0a0", "status": "completed", "cost": 6.3753128, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T21:14:18+00:00 task_failed_attempt {"task": "T0022", "signal": "dod_failed", "action": "diagnose"}
 - 2026-10-04T21:14:18+00:00 investigation_spawned {"task": "T0067", "about": "T0022", "cls": "implementation"}
+- 2026-10-04T21:14:53+00:00 sleep_detected {"gap_s": 2483, "runs_extended": 0}

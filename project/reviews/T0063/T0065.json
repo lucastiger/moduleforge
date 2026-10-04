@@ -1,0 +1,60 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "minor",
+      "title": "Uniform U(\u00b1budget) noise is called 'worst-case compliant'; under structured or adversarial \u00b1budget patterns, p=2 power on the founder DoD distribution is 0.81\u20130.92",
+      "detail": "The E001.yaml config comment says the rule accepts '91-100 % (p = 2: 0.91-0.95)' of accurate founder-DoD sequences 'under worst-case compliant noise' at 1e-5. The runner docstring also calls U(\u00b1solver_err_budget) 'the worst-case compliant solver error'. Uniform random noise is a typical case, not the worst case. A compliant solver's error is deterministic and can sit anywhere in [-budget, +budget] per level. Results at the 2e-5 floor, p=2: Rademacher \u00b1budget gives 0.915; error alternating in sign by level gives 0.834; error only on the finest level, same sign as A, gives 0.898. Requiring acceptance under every pattern in {-b,0,+b}^n gives 0.81 at p=2 and 0.91 at p=1.5. Plausible monotone drift (error growing with level) stays at 0.92\u20130.95. Safety is not affected (see checks). The gate copies the founder DoD's own noise model, so it is satisfied. The wording in the soon-to-be-immutable spec still overstates what was validated.",
+      "evidence": "Scratch run, seed 777, n=400 per p, founder DoD distribution, floor 2e-5 (exact values gave 376/400 at p=2). Uniform 376/400; Rademacher 366/400; adversarial 3^n patterns 324/400 (p=2) and 363/400 (p=1.5). Seed 991, n=2000: alternating 0.834, last-level-only 0.898, drift 0.928/0.938, geometric drift 0.920/0.952.",
+      "suggested_check": "Replace 'worst-case compliant noise' with 'uniform random noise within \u00b1budget' in the YAML comment and runner docstring, and state the adversarial-pattern figure."
+    },
+    {
+      "severity": "minor",
+      "title": "Under compliant noise the band undercovers by up to 1.63\u00d7, more than the stated '~1.5x at 1e-5'",
+      "detail": "The max_rel_err_band_lo description says that with solver noise at the budget, rare two-term opposite-sign sequences are covered low by 'up to ~1.5x at 1e-5'. I ran broad self-check opposite-sign sequences (dp in {0.5,1,2}) through every {-b,0,+b}^n noise pattern at budget 1e-5. 133 of 172,670 declared-converged (sequence, pattern) pairs were undercovered, the worst at true/(est+budget) = 1.626. The band has no confidence level and A1 reads the point value, so no decision changes. The caveat's number is too small.",
+      "evidence": "Scratch run, seed 778, 3000 sequences \u00d7 all 3^n patterns: declared converged 172670, false convergences 0, undercovered 133, worst 1.626.",
+      "suggested_check": "Quote the worst-case figure (~1.6x), or say the 1.5x figure is for uniform random noise."
+    },
+    {
+      "severity": "minor",
+      "title": "The direct-LU mitigation assumes the reported bound is about \u03ba\u00b7u, but LAPACK ferr overestimates the true error by 10^2\u201310^3",
+      "detail": "Note \u00a73 recommends zgesvx's ferr as the tightest honest solver_tol and quotes it as 'almost always a slight overestimate of the true error'. \u00a74.4 and open item 12 then project floors of ~2e-10 for the bars and ~5e-9 for B3 'at \u03ba_est\u00b7u \u2248 1e-12'. These floors are the main mitigation for the broad generator's 0.29\u20130.77 power. On well-conditioned random complex systems (\u03ba\u224813), ferr was 118\u00d7 and 227\u00d7 the true normwise error (n=200, 800). It was ~1900\u00d7 on a column-scaled system. ferr grows with n, and PEEC systems are larger than these. A ferr-reporting adapter would therefore sit 2\u20133 orders above the projected floors. For B3 that puts the floor in the 1e-7\u20131e-6 range, where the note's own table gives broad p=2 power of 0.3\u20130.6. Refusal leads to INVALID, not a false PASS, so this affects feasibility only. The mitigation as written is optimistic.",
+      "evidence": "scipy.linalg.lapack.zgesvx: n=200, \u03ba\u224814: ferr 1.68e-13 vs true 1.42e-15 (\u00d7118). n=800: ferr 6.65e-13 vs 2.92e-15 (\u00d7227). Column-scaled n=50: ferr 3.4e-6 vs true 1.8e-9.",
+      "suggested_check": "State that ferr is typically 10^2\u201310^3 above the true error. Base the projected floors on ferr rather than \u03ba\u00b7u, or recommend \u03ba_est\u00b7u with a stated safety factor."
+    },
+    {
+      "severity": "note",
+      "title": "The note's power ranges and a cross-reference disagree",
+      "detail": "The broad-generator power at the 2e-5 floor is given as '28\u201376 %' (\u00a73 step 4), '29-77 %' (YAML, open item 12), and 0.275\u20130.757 (runner self-check output, also in \u00a74.4). \u00a73 says power is '\u2265 0.97 of both at floors \u2264 2e-9', but the \u00a74.4 table shows 0.96 (noisy, p=2) and the YAML says '>= 96 %'. The \u00a74.4 disclosure paragraph says the broad result is stated 'in open item 10'; it is in open item 12.",
+      "evidence": "research/notes/o001-l2-reference.md \u00a73 step 4, \u00a74.4 table and lines 736-742, open items 10/12; E001.yaml config comment.",
+      "suggested_check": "Use one sourced range and fix the item number."
+    },
+    {
+      "severity": "note",
+      "title": "Per-value power does not translate into E001 validity once a case needs level 5",
+      "detail": "l2_converged requires all 32 compared values to converge. The runner checks at 4 levels, then at 5. On the founder DoD distribution at p=2 and the 2e-5 floor, every value accurate at level 4 is accepted at level 4 (1.000), which protects cases that are converged early. If any value in a case forces level 5, p=2 values pass only 0.771 at 5 levels (p=1.5: 0.987). Adding a level can therefore turn an accepted value into a refusal, and joint acceptance across many values falls toward zero. Open item 12 discloses this risk qualitatively but does not give this figure.",
+      "evidence": "Scratch run, seed 5150, 4000 per p, conditioned on true error < conv_tol/10 at level 4. Floor 2e-5: P(pass@4)=1.000, P(pass@5)=0.771 at p=2 and 0.987 at p=1.5. Floors \u2264 2e-6: both 1.000.",
+      "suggested_check": "Add the level-5 per-value figure to open item 12 so the founder sees the joint risk at the cap."
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran all 8 definition-of-done commands on this commit: mfos exp check E001 (exit 0, silent), ruff (all checks passed), runner --analytic-only (all 9 sanity checks pass in /tmp/e001-analytic/result.json), b1_exact_limits, convergence_estimator, design_contract, b3_mutual_exact, estimator_adversarial (noisy at 1e-5: 0 false convergences of 2966; power 3/3, 109/109, 481/518). The self-check detail matches the note exactly: founder-DoD gate min 0.935 (381/400 noisy, 374/400 floor at p=2); broad 0.275\u20130.757; pooled coverage 1284/1284, lower bound 0.9977.",
+    "Recomputed solver_tol_required per case from the runner at budget 1e-5: A1 1.996e-7, A2 2.078e-7, A3 1.013e-7, A4 1.021e-7, B1 1.392e-8, B2 1.163e-8, B3 4.109e-9, B4/C0/C1 \u2248 9.99e-6; amplification 48.1\u201398.7 (bars) and 718.5\u20132433.5 (wires). These match the YAML and note.",
+    "Loaded the draft YAML with PyYAML and passed it through checked_config: no differences from DEFAULT_CFG, and solver_err_budget parses as float 1e-05. Registration will not change runner behaviour.",
+    "Tested the new gate: re-ran refinement_rule_selfcheck at budgets 1e-4 and 3e-5. power_budget_min is 0.108 and 0.695, so the gate fails there, against 0.935 at 1e-5.",
+    "Seed sensitivity of the gate: true at-budget power on the founder DoD distribution with n=20000 is 0.938 (noisy) and 0.940 (floor) at p=2, and \u22650.99 at p=1.5. A 400-sample gate would fall below 0.9 on another seed with probability \u22480.001.",
+    "Adversarial noise: power under Rademacher, alternating, last-level, drift and all-{-b,0,+b}^n patterns. Uniform noise is not the worst case; p=2 power is 0.81 under the adversarial criterion.",
+    "Safety under adversarial compliant noise: minimum estimate over all 3^n patterns. 0 false convergences among 1168 hidden opposite-sign founder-DoD sequences and 0 among 172,670 broad opposite-sign trials. Coverage worst case is 1.626\u00d7.",
+    "Sequential (4-then-5-level) runner procedure at the floors 2e-5, 2e-6 and 2e-9, to estimate joint validity across the 32 gated values.",
+    "Checked the MetricValue.level change: mfos models.py and evidence.py have no validator on level; nothing in mfos reads it beyond the defaults (grep), so level=0.0 is inert for the evaluator.",
+    "Read reviews T0061 and T0062. The T0061 minors (path B raising finite estimates, stale p<1 numbers, open-item order) and T0062 minors (noise-free qualifier on the band, level 0.95) are each addressed in the diff. The two note-severity items (per-family count 200; noisy path-B acceptances of opposite-sign sequences) are not, which does not contradict 'review minors'.",
+    "Checked LAPACK zgesvx through SciPy: it exists and returns a normwise ferr. Measured ferr against the true error on well- and badly-scaled complex systems."
+  ],
+  "caveats": [
+    "The '\u2265 0.9 power at the budget' claim holds for uniform random solver noise within \u00b1budget (or exact values at the 2e-5 floor) on the founder DoD distribution. It does not hold for worst-case or alternating compliant error patterns (p=2: 0.81\u20130.83), and it does not hold on the runner's broader generator (0.275\u20130.757), which the work discloses.",
+    "Safety (no false convergence) holds under every tested compliant noise model, including per-sequence adversarial patterns. This is the property that protects against a false A1 PASS.",
+    "At the 2e-5 cap, a case that needs level 5 has substantial joint INVALID risk for p=2-like values (per-value 0.77 at 5 levels). The practical mitigation is an adapter reporting a much smaller solver_tol, and the note's projected floors for that route are 2\u20133 orders optimistic if ferr is the reported bound.",
+    "The gate was moved from the broad to the founder-DoD generator after the broad gate failed. This is disclosed. I confirmed the gate can fail (budgets 1e-4 and 3e-5) and is insensitive to the seed.",
+    "Bash allowed only single `uv run` commands (no heredocs, git or echo). Checks were inline Python under uv run; nothing was written to the repository. I did not reproduce research/scripts/e001_rule_t0063_budget.py in full (part 3 needs git show of f8976fc)."
+  ]
+}

@@ -4,7 +4,7 @@ title: L2 reference adapter moduleforge.solvers.l2 (provisioned FastHenry binary
   meshed planes, refinement, memoization)
 type: implement
 agent: builder
-status: todo
+status: running
 depends_on:
 - T0020
 - T0021
@@ -116,7 +116,29 @@ description: 'Implement `moduleforge.solvers.l2` with two parts.
   mm cells converge, 15.423 -> 15.416 nH, and a direct solve at 1 mm fits in 16 GB). Keep one mesh per
   solve and the registered constant refinement ratio. Add unit tests that compare kernel entries against
   an independent high-precision quadrature (your benchmarks/infra/fh_kernel_accuracy.py reference) and
-  run the E001 smoke DoD as written. See project/decisions/D0003-l2-exact-inhouse-kernel.md.'
+  run the E001 smoke DoD as written. See project/decisions/D0003-l2-exact-inhouse-kernel.md.
+
+
+  Founder session (2026-10-04, after attempt 3; both DoD timeouts): attempt 3''s exact kernel is accurate
+  (A1 1.3e-7, B2 1.6e-5 at level 4; kernel entries within 1e-9 of quadrature) but too slow: A1 level 4
+  took 204 s, C1 at level 4 was never run, and the E001 smoke check timed out at 40 min. SCOPE NOW: the
+  primitive API and E001 only. The layout `loop_inductance` (and its DoD and half-bridge unit test) moved
+  to a separate task that T0024 waits for; keep any existing loop_inductance code compiling but do not
+  optimise it here.
+
+  (1) Speed. On uniform meshes the partial-inductance entries depend only on the relative offset of the
+  two filaments (and the plane blocks are translation-invariant): compute each distinct offset once and
+  scatter, and vectorise the closed forms (numpy, or jax which is already a dependency). The E001 smoke
+  check must finish within its 40-minute limit; report the smoke wall time and a projection for the full
+  E001 run, which must fit the frozen spec''s timeout_min = 240 with margin (aim <= 180 min). Run C1 at
+  level 4 and report its error, memory and time.
+
+  (2) B2 refused: its observed order rose 2.0 -> 3.3, which the frozen rule rejects. Use a wire cross-section
+  mesh whose convergence is steady under the constant refinement ratio (e.g. a staircase whose edge cells
+  change smoothly between levels), and show B2''s level sequence and the rule''s estimate.
+
+  If the full E001 run cannot fit 240 min on this machine, report the measured projection: running E001
+  on a larger burst VM (scripts/burst.sh) is the founder''s fallback.'
 context_files:
 - research/notes/o001-l2-reference.md
 - experiments/runners/e001_reference.py
@@ -146,15 +168,6 @@ definition_of_done:
     assert v <= 0.02, v; print('E001 smoke max_rel_err', v)"
   exists: null
   timeout_s: 2400
-- cmd: uv run python -c "import hashlib, os, numpy as np; from moduleforge.generate.halfbridge import
-    generate_layouts; from moduleforge.solvers.l2 import loop_inductance; l=generate_layouts(1, seed=7,
-    dies_per_switch=2)[0]; r=loop_inductance(l, freqs_hz=[5e6, 2e7, 8e7], refinement=0); L=np.asarray(r.L_H);
-    assert L.shape==(3,) and np.all(np.isfinite(L)), L; assert 1e-9 < L[1] < 1e-7, L; assert L[0] >= L[1]*(1-1e-6)
-    and L[1] >= L[2]*(1-1e-6), L; m=r.meta; p=m['binary_path']; assert os.path.isabs(p) and os.path.isfile(p),
-    m; assert m['binary_sha256'] == hashlib.sha256(open(p, 'rb').read()).hexdigest(), m; assert m['tool_version'],
-    m; print(L, p, m['binary_sha256'])"
-  exists: null
-  timeout_s: 1800
 - cmd: 'uv run python -c "import os, subprocess, sys; env={k: v for k, v in os.environ.items() if k not
     in (''MF_FASTHENRY_BIN'',)}; env[''PATH'']=''/nonexistent''; p=subprocess.run([sys.executable, ''-c'',
     ''from moduleforge.solvers.l2 import resolve_fasthenry; resolve_fasthenry()''], env=env, capture_output=True,
@@ -176,7 +189,7 @@ risk: high
 model: null
 budget_usd: 7.0
 max_turns: 100
-attempts: 3
+attempts: 4
 max_attempts: 4
 branch: task/T0022-l2-reference-adapter-moduleforge-solvers
 pr: null
@@ -184,6 +197,7 @@ runs:
 - T0022-builder-20261003T221916-fea7
 - T0022-builder-20261004T025500-a65f
 - T0022-builder-20261004T092936-f666
+- T0022-builder-20261004T120439-f0a0
 created_by: planner:T0019
 created_at: '2026-09-29T22:56:48+00:00'
 protected_approved: false
@@ -612,3 +626,8 @@ history:
 
     TIMEOUT after 1800s'
   at: '2026-10-04T19:01:48+00:00'
+- attempt: 3
+  outcome: scope_narrowed
+  summary: 'founder session: layout loop_inductance split into its own task; this attempt = speed (translation-invariant
+    kernel reuse) + steady B2 convergence + C1 at level 4 within the smoke limit'
+  at: '2026-10-04T19:04:38+00:00'

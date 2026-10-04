@@ -1,0 +1,61 @@
+id: T0066
+objective: O001
+title: 'L2 layout loop_inductance: fast exact-kernel solve of generated half-bridges (for E002)'
+type: implement
+agent: builder
+status: todo
+depends_on:
+- T0022
+description: 'Split from T0022 (founder session, 2026-10-04). Implement `moduleforge.solvers.l2.loop_inductance(layout,
+  freqs_hz, refinement=0) -> LoopResult` (L_H, R_ohm aligned with freqs; meta with tool version, binary
+  provenance per D0002, discretization sizes, solver_tol) on the exact in-house kernel of D0003, built
+  on Layout.to_conductors() with the physics T0022''s description lists (graded trace cells, segmented
+  bond wires, finite meshed backside Cu and baseplate, dies as ideal shorts, the to_conductors() port).
+  T0022''s attempt 3 took > 30 min for one 2-die layout: the hot spot was inclined bond-wire segments
+  coupled per filament pair (couple at segment level instead) and the uniform-mesh kernel reuse T0022
+  adds. E002 will evaluate many sealed layouts: report the wall time per layout at refinement 0 and 1
+  for 2- and 6-die layouts; T0024 sizes E002''s sample from it. Inclined-pair couplings must carry an
+  error bound in solver_tol (attempt 3''s thin-filament centre-line approximation did not). Tests under
+  tests/unit/solvers/ include the generated 2-die half-bridge within 1-100 nH.'
+context_files: []
+deliverables:
+- src/moduleforge/solvers/l2.py
+- tests/unit/solvers/
+touches:
+- src/moduleforge/solvers/**
+- tests/unit/solvers/**
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/solvers
+  exists: null
+  timeout_s: 1800
+- cmd: uv run ruff check src/moduleforge/solvers tests/unit/solvers
+  exists: null
+  timeout_s: 300
+- cmd: uv run python -c "import hashlib, os, numpy as np; from moduleforge.generate.halfbridge import
+    generate_layouts; from moduleforge.solvers.l2 import loop_inductance; l=generate_layouts(1, seed=7,
+    dies_per_switch=2)[0]; r=loop_inductance(l, freqs_hz=[5e6, 2e7, 8e7], refinement=0); L=np.asarray(r.L_H);
+    assert L.shape==(3,) and np.all(np.isfinite(L)), L; assert 1e-9 < L[1] < 1e-7, L; assert L[0] >= L[1]*(1-1e-6)
+    and L[1] >= L[2]*(1-1e-6), L; m=r.meta; p=m['binary_path']; assert os.path.isabs(p) and os.path.isfile(p),
+    m; assert m['binary_sha256'] == hashlib.sha256(open(p, 'rb').read()).hexdigest(), m; assert m['tool_version'],
+    m; print(L, p, m['binary_sha256'])"
+  exists: null
+  timeout_s: 900
+experiment: null
+risk: high
+model: null
+budget_usd: 8.0
+max_turns: 120
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: founder
+created_at: '2026-10-04T19:04:38+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

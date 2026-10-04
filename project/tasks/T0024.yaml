@@ -9,6 +9,7 @@ depends_on:
 - T0022
 - T0023
 - T0047
+- T0066
 description: 'Draft experiments/drafts/E002.yaml, experiments/drafts/E003.yaml, experiments/runners/e002_ranking.py
   and experiments/runners/e003_timing.py. Write research/notes/o001-e002-e003-design.md with the rationale
   and a power analysis.

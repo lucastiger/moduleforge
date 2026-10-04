@@ -1,0 +1,60 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "Power under solver noise is shown only on the founder DoD distribution; the gate was moved there after the broad gate failed",
+      "detail": "The headline purpose ('rule power under solver noise') holds only for the narrow founder DoD distribution: A h^p + B h^(p+1), constant ratio, starting at h = 1. On the runner's own broader self-check generator, power at the 2e-5 budget floor is 0.275\u20130.757. That is far below 0.9, and it reaches >= 0.96 only at floors <= 2e-9. The gate was moved from the broad generator to the DoD distribution after the broad gate failed at 0.28. The author discloses this in the note (\u00a74.4, open item 12), and refusal gives INVALID, never a false PASS. Still, the claim is true only in this narrower scope, and real L2 sequences may look like the broad generator's correction-dominated cases.",
+      "evidence": "/tmp/e001-analytic/result.json refinement_rule_validated detail: DoD-distribution power min 0.935 (gates); broad generator noisy 272/400, 225/400, 110/400 and floor 303/400, 264/400, 147/400 (reported only). My large-sample estimate on the DoD distribution at 1e-5, p = 2: noisy 0.939 (95 % CI 0.933\u20130.945), floor 0.941 (n = 6000, seed 4242), so the DoD gate does not depend on a lucky seed.",
+      "suggested_check": "Before registration, the founder should explicitly accept open item 12, or adopt option (b) (cap solver_tol \u00d7 amplification at about 1e-9)."
+    },
+    {
+      "severity": "minor",
+      "title": "'Worst-case compliant noise' overstates the uniform-random noise model used",
+      "detail": "The spec comment, the runner docstring and the note call U(\u00b1budget) per-value noise the 'worst-case compliant' solver error. It is the worst case in magnitude only. If you take the worst \u00b1budget sign pattern on the same DoD distribution, power falls to about 0.80 at p = 2 and 0.89 at p = 1.5, below the 0.9 the yaml quotes ('91\u2013100 %'). The yaml also says opposite-sign under-coverage is 'up to ~1.5x at 1e-5'; adversarial patterns reach 1.87x. Safety is unaffected under adversarial patterns: 0 false convergences.",
+      "evidence": "Scratch run, seed 777, n = 300 per p, budget 1e-5. p = 2: uniform 0.943, alternating signs 0.90, accepted under all 2^n patterns 0.803. p = 1.5: 0.987, 0.95, 0.893. Safety, seed 778: 0 false convergences among 2 278 hidden opposite-sign sequences under any pattern, and worst true/(est+budget) 0.79 on the DoD distribution. Note part-5 generator (seed 68, 15 000 sequences, all patterns): 5 sequences under-covered, worst 1.869, 0 false convergences.",
+      "suggested_check": "Relabel the noise as 'uniform \u00b1budget' or 'worst-case magnitude', and quote the adversarial-pattern numbers next to the ~1.5x figure."
+    },
+    {
+      "severity": "minor",
+      "title": "Feasibility floors assume the norm-wise LAPACK ferr transfers to port Z without a scaling factor",
+      "detail": "The note's [I] estimates assume \u03ba_est\u00b7u \u2248 1e-12 gives floor \u2248 2e-10 for the bars and \u2248 5e-9 for B3, which needs \u03ba \u2272 4e3 for B3. But zgesvx's ferr is a norm-wise bound relative to ||x||\u221e. In a mixed-unit MNA/PEEC system, the port voltage can be orders of magnitude smaller than max|x|, so the port-Z bound is ferr \u00d7 max|x|/|V_port|. The note leaves this conversion to the adapter (step 2) but does not include it in the feasibility numbers. This affects only the INVALID risk, not false PASS.",
+      "evidence": "Toy 61\u00d761 MNA (60 filaments with R = 1\u20135 m\u03a9 and \u03c9L at 100 Hz, plus one port constraint) through scipy.linalg.lapack.zgesvx: ferr 4.05e-14, max|x| 0.0395, |V_port| 4.39e-5, so the port-relative bound is about 3.6e-11, roughly 900\u00d7 ferr.",
+      "suggested_check": "State in note \u00a73 step 4 that the floor estimate needs the component-wise transfer factor, which T0022 must report along with \u03ba_est."
+    },
+    {
+      "severity": "minor",
+      "title": "Small numeric and cross-reference inconsistencies between the yaml and the note",
+      "detail": "The broad-generator range at the 2e-5 floor is given as '28\u201376 %' (note \u00a73), '29\u201377 %' (yaml), '0.29\u20130.77' (\u00a74.4) and '0.275\u20130.757' (runner run). Note \u00a73 says the rule 'accepts \u2265 0.97 of both at floors \u2264 2e-9', but the \u00a74.4 table shows 0.96 (noisy, p = 2) at 2e-9, and the yaml says '\u2265 96 %'. The \u00a74.4 disclosure says the broad result is in 'open item 10', but it is in open item 12. In \u00a74.4's sanity-check list the numbering runs 1\u20138, 9a, 10a, 9, 10, \u2026",
+      "evidence": "Read experiments/drafts/E001.yaml lines 44\u201355 and research/notes/o001-l2-reference.md \u00a73, \u00a74.4 and \u00a77 (grep of the numbered items).",
+      "suggested_check": "Harmonize the quoted ranges to one source run, and fix the open-item reference to 12."
+    },
+    {
+      "severity": "note",
+      "title": "level = 0.0 change verified as inert and round-trip safe",
+      "detail": "MetricValue.level is not read by evaluate.py, stats.py or any other mfos consumer. The stand-in smoke run writes level 0.0 / ci null for all 7 metrics and validates through m.ExperimentResult.model_validate_json. At solver_tol = 2\u00d7 required only l2_solver_tolerance fails, as claimed.",
+      "evidence": "grep for level in tools/mfos/mfos: models.py:193 default only. research/scripts/e001_t0063_standin.py 0.02 1.0 0.0 gives main 0 and no failed sanity checks; with 0.02 2.0 0.0 only ['l2_solver_tolerance'] fails. pydantic read-back: 16 sanity checks, all passed.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran every DoD command. `mfos exp check E001` printed no errors. `ruff check` on the runner passes. `--analytic-only` writes result.json with all 9 sanity checks passed. b1_exact_limits, convergence_estimator, design_contract, b3_mutual_exact and estimator_adversarial all pass; estimator_adversarial's noisy test at 1e-5 gives power p = 2 at 481/518 and 0 false convergences.",
+    "Confirmed that estimator_adversarial.py reads R.DEFAULT_CFG, not the yaml, and that the runner's DEFAULT_CFG and the yaml both carry solver_err_budget 1e-5.",
+    "Recomputed solver_tol_required and amplification per case: A1 2.00e-7 (amplification 50.1), A2 2.08e-7, A3/A4 1.01e-7/1.02e-7 (~98), B1 1.39e-8 (718.5), B2 1.16e-8 (859.6), B3 4.11e-9 (2433.5), HF-only cases ~1e-5. These match the yaml and the note.",
+    "Adversarial \u00b1budget sign patterns (all 2^n) on the DoD distribution: power drops to 0.80 at p = 2 and 0.89 at p = 1.5, with 0 false convergences among 2 278 hidden opposite-sign sequences.",
+    "Adversarial patterns on the note's part-5 opposite-sign generator (15 000 sequences): worst true/(est+budget) is 1.87, against the stated ~1.5x, with 0 false convergences.",
+    "Large-sample (n = 6000) estimate of at-budget power on the DoD distribution at p = 1.5 and 2, noisy and floor modes, with Clopper\u2013Pearson CIs. Probability that the n = 400 gate falls below 0.9 is \u2264 0.001.",
+    "Ran the stand-in plumbing test at TOL_FACTOR 1.0 and 2.0. Validated the result JSON through the pydantic ExperimentResult model (level 0.0 round-trips).",
+    "Checked that the evaluator and other mfos code never read MetricValue.level.",
+    "Checked that scipy.linalg.lapack.zgesvx exists and returns ferr/rcond. Toy MNA system shows the norm-wise-to-port-component scaling of about 900\u00d7.",
+    "Reproduced review T0061's hand examples with the current rule: est 0.01391 vs true 0.0060 (q = 2, h^1.5 example); est 0.215 vs true 0.359, and 0.0086 vs 0.0144 at scale 0.04 (h^0.5 + h^2.5).",
+    "Ran ruff on the two new research scripts: clean."
+  ],
+  "caveats": [
+    "The text of reviews T0061/T0062 is not in this worktree, so I could not check that every minor they raised was addressed. I checked only those the note names: path B raising finite estimates, leading order < order_min, level = 0.95, noisy two-term under-coverage, and open-items numbering.",
+    "The cited founder decision (2026-10-04) and inbox item I0024 are not recorded in this worktree. Reading ~/mf/main/project was blocked, so the decision's provenance is unverified.",
+    "The shell blocked compound commands, so I could not capture the exit code of `mfos exp check E001`. It printed nothing, which I read as success.",
+    "Accepted scope: budget 1e-5 restores >= 0.9 power on the founder DoD distribution under uniform \u00b1budget noise, with no loss of safety. Power on broader or correction-dominated sequences, or under adversarial noise patterns, is below 0.9 at the budget floor. That means E001 may come back INVALID unless the adapter reports a solver_tol well below the requirement.",
+    "Whether a FastHenry-based adapter can meet B3's 4.1e-9 (output precision, direct LU, transfer of ferr to port Z) is unverified and deferred to T0022."
+  ]
+}

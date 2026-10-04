@@ -10,6 +10,11 @@ wire–image mutuals with a rigorous remainder bound (§4.2a, §4.3 term (d)); a
 underestimate decelerating (algebraic) convergence, with ≥ 4 levels and a solver noise floor (§4.4); a constant
 refinement ratio, `meta['mesh_h']`, and a forward-error `solver_tol` that includes conditioning (§3); the metric
 interval recorded at level 0.95 as an estimated error band (§4.4); the stale B1 DoD text and B3's resistance fixed.
+T0057 (2026-10-01) answers reviews T0055/T0056 of T0041 before registration: a refinement rule that is conservative
+outside the asymptotic range (sign reversals, observed order above the formal order, unsteady order → not converged;
+§4.4) with a frozen synthetic self-check; an interval level that the method measures instead of 0.95 (§4.4); a
+verifiable contract (`meta['mesh_params']`, `meta['mesh_hash']`, mesh similarity; §3); physical references for the
+tie and image self-checks and a discriminating tube-PEEC test (§4.5); bar tolerance and bars' HF solves (§4.3, §4.4).
 
 Labels: **[F]** fact checked first-hand (source + access date given) · **[I]** inference · **[S]** speculation.
 All web sources were accessed on 2026-09-29.
@@ -171,18 +176,29 @@ for the call and use that same mesh at every frequency of the call: graded to th
 driving-point theorem, which holds for one fixed network only; with a mesh per frequency, mesh-to-mesh
 differences up to `conv_tol` (1 %) could exceed `monotone_tol` (0.1 %) and invalidate a correct run. Deck
 writers that emit one `.freq` card per value must emit them in one deck against one geometry, not one deck per
-frequency. `res.meta['n_filaments']` must be a single integer (the one mesh); the runner's
-`l2_one_mesh_per_solve` check fails otherwise.
+frequency. `res.meta['mesh_hash']` (T0057, review T0056) is a list with one entry per frequency of the call: a
+digest (e.g. sha256) of the mesh the deck actually used at that frequency, computed from the written geometry, not
+copied. The runner's `l2_one_mesh_per_solve` check requires the entries to be equal within a call (one mesh for all
+frequencies), different between levels (each level is a new mesh), and `res.meta['n_filaments']` to be a positive
+integer that increases with the level. [I] This is still self-reported, but a violation now needs a falsified
+per-frequency report rather than an omission, and its physical consequence is tested by `l_monotone_in_frequency`.
 
 **Constant refinement ratio (T0041 attempt 3, review T0052).** Every discretization parameter the adapter controls
 (segment length, filament width and height, the first graded cell at the surface, plane cells, plane thickness
 layers) is refined by the **same fixed ratio** r ≥ 1.25 between consecutive levels, h_{k+1} = h_k / r. Integer
-counts are rounded up. Additive schemes (n = k, n = 2k + 1) are not allowed: they make the error algebraic in k,
-and then the geometric model of the refinement rule (§4.4) underestimates. `res.meta['mesh_h']` (float > 0) is
-required: the characteristic relative cell size of the call, i.e. the largest refined cell size divided by its
-reference size. The runner's `l2_constant_refinement_ratio` check requires every realized ratio
-h_k/h_{k+1} ≥ `refinement_ratio_min` = 1.25 and max/min of the ratios ≤ `refinement_ratio_spread` = 1.1.
-[F] With a stand-in adapter that reports h = 1/k, the check fails (value 1.36).
+counts are rounded up. Additive schemes (n = k, n = 2k + 1) are not allowed. `res.meta['mesh_params']` (T0057, reviews T0055/T0056;
+replaces the single scalar `mesh_h`) is required: a dict mapping **every** refined discretization parameter of the
+call's one mesh to its size in metres, e.g. `seg:w1` (segment length), `fil_w:w1`, `fil_h:w1`, `surf:w1` (first
+graded cell), `plane_cell:gnd`, `plane_layer:gnd`, with the same keys at every level. The runner checks:
+- `l2_constant_refinement_ratio`: for every parameter and every step, s_k/s_{k+1} ≥ `refinement_ratio_min` = 1.25,
+  and max/min over all parameters and steps ≤ `refinement_ratio_spread` = 1.1, so one parameter refined additively
+  or by a different ratio fails even if the others are geometric;
+- `length_scaling`: the similar case (lengths × 2, f / 4) at the same level must report every `mesh_params` entry
+  exactly doubled (rtol 1e-9) and the same `n_filaments`. This checks the self-report against geometry: a mesh
+  defined relative to geometry and δ must scale exactly.
+- The refinement rule (§4.4) uses the realized sizes: h_k = geometric mean over parameters of s_k/s_0.
+[I] Integer counts rounded up make small counts violate the 1.1 spread (3 → 4 → 5 → 7 is 1.33, 1.25, 1.4); the
+adapter must start from counts large enough (≳ 10) or choose ratios its rounding can hold.
 
 **Solver accuracy (T0041): `res.meta['solver_tol']` is required.** It is a float upper bound on the relative
 **forward error** of every returned port impedance due to the linear algebra and the output format (review T0052:
@@ -402,8 +418,10 @@ the actual branch split), then divided by |L| of the compared quantity.
 - **(d) Finite cross-section of mutuals (§4.2a), every parallel wire–wire and wire–image pair:** the rigorous
   Taylor remainder of the first-order mean-value term, weighted by |u_i[k]|·|u_j[l]|. Sizes: 2.0e-6 to 1.2e-5 (B3
   M12), 1.6–3.1e-6 (B4), 0.4–0.9e-6 (C1), ≤ 2e-8 elsewhere.
-- **Bars (A1–A4):** 1e-4. Hoer–Love is exact for uniform current, and `regime_valid` bounds the 100 Hz skin
-  deficit at 2.8e-5 of the internal part.
+- **Bars (A1–A4):** 1e-4 (`BAR_MODEL_ERR`). Hoer–Love is exact for uniform current. The 100 Hz skin deficit of the
+  internal part (round wire of the half-diagonal, conservative [I]) is 2.8e-5 (A1, A3, A4 b1), 5.7e-6 (A4 b2) and
+  1.4e-6 (A2). T0057 (review T0055): `regime_valid` now fails above 1e-4, the stated bound, instead of 1e-3, so a
+  passing check implies the bound.
 
 **Per-class bound, term by term ([F] printed from `residual_model_error` and its terms; relative to |L|).**
 "prox" is the size of the proximity correction itself, shown to give a sense of term (b).
@@ -433,53 +451,99 @@ the actual branch split), then divided by |L| of the compared quantity.
 - **B3 M12 vs exact references.** [F] `b3_mutual_exact.py` passes: 9.8e-7 at 100 Hz (bound 2.0e-6) and 9.0e-6 at
   10 GHz (bound 1.5e-5); see §4.2a for the decomposition of the 10 GHz difference.
 
-### 4.4 Refinement rule and discretization uncertainty (reviews T0030, T0052; `remaining_discretization_error`)
-- **Rule.** Levels k0 = 1, 2, … are solved, at least `refinement_min_levels` = 4 and at most `refinement_max` = 5.
-  For every L (all solved frequencies and compared entries) the remaining error is estimated from the sequence of
-  changes d_k = |L_k − L_{k−1}|. The contract fixes a constant refinement ratio (§3), so in the asymptotic range
-  the changes contract geometrically with a constant observed ratio ρ = d_k/d_{k−1}.
-  - **Steady ratio (≥ 4 levels).** If the last observed ratio does not exceed the previous one beyond what the
-    noise floor can produce, use the geometric tail 1.25·base·ρ/(1−ρ). Here ρ = max(last two ratios, 0.5),
-    base = max(d_last, 0.5·d_prev) (the small-step guard from attempt 2), and 1.25 is Roache's three-grid factor
-    [ROA].
-  - **Decelerating ratio (review T0052).** If the ratio grows, the geometric asymptotic range is not established.
-    Additive refinement (error ∝ k^−p) and a slower mode emerging both look like this. Then the estimate is the
-    larger of two tails, both with Roache's factor 3 for an unverified range:
-    - the geometric tail;
-    - the additive-refinement tail, from L_k = L∞ + C k^−p fitted exactly to the last three levels (k = 1-based
-      position; ∞ if the data imply p ≤ 0).
-  - **3 levels:** geometric tail with factor 3, because one ratio cannot be checked. **2 levels:** ρ = 0.9 and
-    factor 3 (27× the change). **1 level:** ∞. **ρ ≥ 1:** ∞. The rule never decides convergence on fewer than
-    4 levels.
-  - **Noise floor.** A change ≤ 2·`solver_err_budget`·|L| is what two levels can differ by from the solver alone
-    (§3). It gives no evidence of slow contraction, and the deceleration test allows for it.
-- **Stopping.** The rule stops when every remaining error is < conv_tol = 1 %, or at refinement_max.
-  `disc_unc` = that estimate (relative).
-- **[F] Checks.**
-  - DoD `convergence_estimator.py` passes. Geometric ρ = 0.5/0.8/0.9: 1.25× the true remaining error. Algebraic
-    p = 1: 3.0×; p = 2: 3.3×. Attempt 2 gave 0.42× for p = 1.
-  - Scratch sweep, not tuned on the DoD. Algebraic (k + c)^−p with p ∈ {0.5, 1, 1.5, 2, 3},
-    c ∈ {−0.5, 0, 0.5, 2} and 4 or 5 levels: the lowest estimate/true ratio is 2.06. Geometric ρ = 0.25: 7.5×
-    (the ρ ≥ 0.5 floor). Two modes (0.3^k + 0.7^k): 3.4–4.0×.
-  - Noise: 2 000 geometric sequences (ρ = 0.5) with ±1e-4 solver noise; none was falsely held unconverged at 1 %.
-  - [I] Limits: no finite-sample rule bounds arbitrarily slow convergence. With p < 0.5 and an unlucky offset it
-    can still underestimate. The constant-ratio contract and the `l2_constant_refinement_ratio` check are the
-    primary defence; the deceleration test is the second.
-  - Scratch plumbing test (T0041 attempt 3). A stand-in `moduleforge.solvers.l2` returns the closed form with
-    Im Z × (1 + bias + 0.03·0.6^k), solver_tol 0, mesh_h = 2^−k. Run through `--smoke` and through full mode with
-    the draft's config (32 compared values, 7 classes, all 15 sanity checks reported, status complete):
-    - bias 0: converged at 4 levels, value 3.9e-3, interval [0, 0.0103];
-    - bias 3 %: interval [0.029, 0.040], so A1 fails as it should;
-    - solver_tol 1e-3 or missing: `l2_solver_tolerance` fails;
-    - mesh_h = 1/k (additive): `l2_constant_refinement_ratio` fails.
-- **Metric interval (review T0052).** `max_rel_err_vs_analytic` is recorded with **level 0.95** as an *estimated
-  error band*: [max_i(err_i − u_i)⁺, max_i(err_i + u_i)], with u_i = remaining discretization estimate + stated
-  residual model error.
-  - Attempt 2 called it a deterministic bound at level 1.0. That overstated it: the discretization part is a
-    GCI-type estimate, and Roache presents the 1.25-factor GCI as roughly a 95 % band ([ROA]; [I] from memory of
-    Roache's 1998 book, not re-fetched). Some model terms ((a), (b)) are [I].
-  - The level is nominal. It is not a sampling CI, because the cases are deterministic.
-  - Acceptance A1 reads the point value.
+### 4.4 Refinement rule and discretization uncertainty (T0057; reviews T0030, T0052, T0055, T0056; `remaining_discretization_error`)
+- **[F] Error in T0041 (reviews T0055/T0056).** The attempt-3 rule worked on |d| (blind to sign reversals), and it
+  filed a *falling* observed ratio as "steady" and applied Roache's 1.25. For e(h) = A h^p + B h^(p+1) with A·B < 0 at
+  ratio ≥ 1.25 the sequence looks smooth before its turning point while the slow term is hidden. The founder's
+  `estimator_adversarial.py` found 86 false convergences in 3 000 sequences at T0041's commit (reproduced first-hand,
+  estimates 5–20× low).
+- **Rule (T0057).** Levels k0 = 1, 2, … are solved (≥ `refinement_min_levels` = 4, ≤ `refinement_max` = 5). For every
+  *compared* L (compared frequencies only; the bars' informational HF solves no longer gate, review T0056) the rule
+  takes the realized mesh sizes h_k from `meta['mesh_params']` (§3) and the last three changes d. It returns a finite
+  estimate only if
+  1. no two of the last three changes above the noise floor have opposite signs (a turning point: a slower term of
+     opposite sign is still hidden; mixed-order expansions do this, [ROY] [I]);
+  2. both observed orders (from d_{n−3}, d_{n−2} and from d_{n−2}, d_{n−1}, solved exactly on the non-uniform h [CEL])
+     are ≤ `order_max` = 2, the formal order: an observed order above it is pre-asymptotic cancellation, not
+     superconvergence ([EH]; [ROA]). This is what flags A h^p + B h^(p+1), A·B < 0, before its turning point: there
+     the contraction ratio falls below q^−(p+1) ≤ q^−2;
+  3. the two orders agree within `steady_tol`/ln q, i.e. the two contraction ratios agree within a factor 1.1.
+  Otherwise ∞ (not converged). The estimate is the single-term Richardson tail Fs·(|d_last| + noise)/((h_{n−2}/h_{n−1})^p − 1)
+  with p the smaller observed order (extrapolated one step when the order falls), widened by the noise but never
+  below `order_min` = 1; Fs = 1.25 [ROA], or Fs = 3 when the whole observed order interval lies below `order_min`
+  ([ROA]; [EH] also switch to 3 outside their accepted order range [I]). Sequences whose last three changes are all
+  within the noise floor get the tail at `order_min`: the order cannot be observed, and the contract's assumption
+  p ≥ 1 is all that bounds it (stated, not verified). Without `mesh_params` the runner's estimate is ∞.
+- **Assumption (the rule's validity rests on it) [I].** The leading error term has order in [1, 2]: 2 is the formal
+  order of a Galerkin (piecewise-constant current) energy functional for smooth current; 1 is what a thin-strip
+  edge singularity or a staircase boundary gives. The E001 compared quantities have no edge singularity (bars at
+  100 Hz carry near-uniform current; wires are round; the C1 plane edges are 15 mm away). A leading order < 1
+  hidden behind an opposite-sign faster term cannot be detected in 4–5 levels (table, row 3).
+- **Noise floor (review T0056).** 2 × the L error the *reported* `solver_tol` allows (× amplification), capped at
+  2 × `solver_err_budget` × |L|, instead of the budget whatever the solver achieved.
+- **[F] Validation** (`research/scripts/e001_refinement_rule_sweep.py`, seed 99, independent of the founder's DoD seed
+  and of the runner's self-check seed; 7 families × 2 000: A h^p + B h^(p+dp), dp ∈ {0.5, 1, 2}, opposite and equal
+  sign, three terms of random sign, pure geometric; q ∈ {1.25, 1.5, 2} jittered by up to 10 % per level; 4–5 levels;
+  random start; coverage = estimate + solver budget ≥ total error among declared-converged sequences; cost = true
+  error < conv_tol/3 but not declared converged):
+
+  | Mode | Leading order | Solver noise | False conv. / declared converged | Coverage | Worst true/est | Cost |
+  |---|---|---|---|---|---|---|
+  | runner (h known) | 1, 1.5, 2 | 0 | 0 / 5 408 | 1.0000 | 1.00 | 0.51 |
+  | runner (h known) | 1, 1.5, 2 | ±1e-4 | 0 / 5 444 | 0.9989 | 1.65 | 0.50 |
+  | runner, outside the assumption | 0.5 | 0 | 8 / 3 021 | 0.896 | 2.56 | 0.42 |
+  | runner, outside the assumption | 0.5 | ±1e-4 | 12 / 1 958 | 0.874 | 6.94 | 0.66 |
+  | values-only fallback (no h) | 1, 1.5, 2 | 0 | 5 / 804 | 0.909 | 2.16 | 0.93 |
+  | values-only fallback (no h) | 1, 1.5, 2 | ±1e-4 | 3 / 1 296 | 0.995 | 1.48 | 0.89 |
+
+  - DoD `estimator_adversarial.py` (values-only, constant ratio): 0 of 1 395 false convergences. DoD
+    `convergence_estimator.py`: geometric ρ = 0.5/0.8/0.9 → 1.25× the true remaining error; algebraic p = 1, 2 → ∞
+    (allowed); constant → 0.
+  - The values-only fallback assumes an exactly constant ratio; with 10 % ratio jitter it is not safe (row 5). The
+    runner never uses it. It exists for generic callers and the DoD interface.
+  - The cost column is the price of conservatism on deliberately adversarial families (|B| up to 10^0.5 against
+    |A| ≤ 0.3): half of the well-converged sequences are refused because their last three changes are not yet
+    asymptotic. On the pure geometric family the cost is 0 without noise.
+  - Earlier prototype (same rule but the fast-side test on q·1.1 instead of the realized h): 1 false convergence at
+    q = 1.25 with jitter. It was fixed by computing the admissible ratio on the realized h (the reason the contract
+    now reports per-parameter sizes).
+- **Physics-independent self-check `refinement_rule_validated` (runs in every mode).** A frozen generator and seed in
+  the runner (4 200 sequences, the same families with p ∈ {1, 1.5, 2}, without and with ±`solver_err_budget` noise).
+  It fails unless there are 0 false convergences, per-value coverage ≥ 0.95 and clean geometric est/true ∈ [1, 3].
+  [F] At design time: 0 false convergences, minimum coverage 0.9891 (opp+1 with noise), geometric 1.250. [F] The
+  attempt-3 rule fails it (8 false convergences, coverage 0.926).
+- **[F] Stand-in plumbing test (scratch, not committed).** A stand-in `moduleforge.solvers.l2` returns the closed form
+  × (1 + bias + 0.03·h^p) with `mesh_params` ∝ h, per-frequency `mesh_hash`, solver_tol 0. Through `--smoke` (7
+  classes, 9 compared values, 16 sanity checks):
+  - p = 2, bias 0: all 16 checks pass, converged at 4 levels (estimate 0.98 %, true 0.79 %); interval [0, 0.0192]
+    contains the true 0;
+  - p = 2, bias 3 %: interval [0.0279, 0.0492] contains 0.03; A1 (≤ 0.02, point 0.0379) fails as it should;
+  - p = 1: `l2_converged` fails (estimate 1.89 %, true 1.54 % at 4 levels): truly not converged;
+  - p = 3: `l2_converged` fails (observed order > 2 flagged);
+  - one parameter refined additively (1/k): `l2_constant_refinement_ratio` fails (1.45);
+  - a different mesh hash per frequency: `l2_one_mesh_per_solve` fails (8).
+  - The stand-in found one bug, now fixed: an exactly constant ratio gave 1.0000000000000002 > 1 (float rounding);
+    the check now allows 1e-9.
+- **Metric interval: what it means (review T0056).** `max_rel_err_vs_analytic` carries the estimated error band
+  [max_i(err_i − u_i)⁺, max_i(err_i + u_i)] with u_i = rule estimate + `solver_err_budget` + stated model error (§4.3).
+  - It is not a sampling CI (the cases are deterministic). It is not a guaranteed bound. It is not a confidence
+    interval.
+  - The recorded `level` is **not** 0.95. It is the per-value coverage of the discretization estimate that
+    `refinement_rule_validated` measures on the same run (minimum over families, rounded down to 0.01: 0.98 at
+    design time). It is conditional on the assumption above.
+  - The joint coverage of the max over ~32 values is not established. The model terms are stated bounds; (b) and
+    the [I] parts of (a) are inferences. A1 reads the point value.
+  - Attempt 3's "0.95, Roache's ~95 %" is withdrawn. Roache's empirical coverage is for CFD practice, and the rule
+    no longer uses his factor unchecked.
+- **Sources.** [ROA] P. J. Roache, J. Fluids Eng. 116(3):405–413 (1994). [EH] L. Eça, M. Hoekstra, "A procedure for
+  the estimation of the numerical uncertainty of CFD calculations based on grid refinement studies", J. Comput.
+  Phys. 262:104–130 (2014). [F] Its abstract (MARIN publication page, accessed 2026-10-01) says the safety factor
+  depends on the observed order and the fit's standard deviation and reduces to the GCI for well-behaved data. The
+  order range and the Fs = 3 switch are from memory [I]. [CEL] I. B. Celik et al., "Procedure for estimation and
+  reporting of uncertainty due to discretization in CFD applications", J. Fluids Eng. 130(7):078001 (2008):
+  observed order for non-constant ratios [I, from memory]; the runner solves it by bisection, so it does not depend
+  on the citation. [ROY] C. J. Roy, "Grid convergence error analysis for mixed-order numerical schemes", AIAA J.
+  41(4):596–604 (2003) [I, from memory; the PDF link returned 404].
 
 ### 4.5 Sanity checks (each can fail; each separates "experiment broken" from "L2 wrong")
 Analytic checks, run on every mode including `--analytic-only`:
@@ -490,12 +554,23 @@ Analytic checks, run on every mode including `--analytic-only`:
    PEEC (§4.1); dipole vs two-wire line (§4.2).
 3. `image_plane_independent` (new): the runner's 3-D image term vs a generic Neumann quadrature over the explicitly
    mirrored polyline. It covers the C1 loop at 5/20/80 MHz and an open U path at 20 MHz. Agreement 4e-16,
-   tolerance 1e-6. Mutations "image sign" and "recess δ instead of δ/2" are caught.
+   tolerance 1e-6. Mutations "image sign" and "recess δ instead of δ/2" are caught. This part shares the image
+   convention (review T0056), so it checks wiring only. **Physical reference (T0057):** the per-length plane term of a
+   long loop (difference of a = 400 and 800 mm, b = 5 mm, h = 1 mm) against the 2-D BEM that *solves* the surface
+   current of a floating PEC strip (half-width 400h) placed at the same recessed surface; no image theory. [F]
+   Agreement 2.0e-5 at 5/20/80 MHz against a tolerance of 2e-4 (BEM accuracy) + (b/a)² = 3.6e-4. The difference
+   converges as (b/a)²: 3.2e-4, 8.0e-5 and 2.0e-5 for a₁ = 100, 200 and 400 mm. [I] The recession mutation (δ instead
+   of δ/2) shifts the term by ≈ 0.87·(δ/2)/h = 3–13e-3, so it would be caught here too.
 4. `wheeler_recession_independent` (new): vs Carson (§4.3c), tolerance (δ/2h)². The worst ratio is 0.50. Both
    mutations above are caught.
 5. `tied_branch_independent` (new): tie assembly vs the explicit parallel formula
    (Z11Z22 − Z12Z21)/(Z11 + Z22 − Z12 − Z21) for B4 and for an asymmetric pair (Ø0.25, span 7, height 1.2).
-   Agreement 4e-16, tolerance 1e-10. Mutation "ignore branch mutual" is caught.
+   Agreement 4e-16, tolerance 1e-10. Mutation "ignore branch mutual" is caught. For a 2×2 Z this formula is
+   algebraically the assembly (review T0056), so it checks wiring only. **Physical reference (T0057):** a
+   20 × 3 × 0.3 mm Cu bar split lengthwise into 0.7 + 2.3 mm strips tied at both ends, vs the unsplit bar's
+   Hoer–Love self [HL]. Near DC the current divides by conductance, so the density is uniform and the energy equals
+   the unsplit bar's (superposition of uniform-current boxes). The deviation is second order in ωL/R. [F] At 1 Hz:
+   2.9e-12 against (ωL/R)² = 4e-8; at 100 Hz: 4.4e-8.
 6. `analytic_length_scaling`.
 7. `regime_valid`.
 8. `plane_truncation_bound`.
@@ -522,6 +597,15 @@ The unmutated runner passes all 8 analytic checks.
 | uniform-current moment at every frequency | closed_forms_independent_check (cross-section average, 80/20 MHz) |
 | image pairs without the cross-section term | closed_forms_independent_check (C1 image term) |
 | attempt-2 refinement estimator | DoD convergence_estimator.py (algebraic p = 1: 0.42× true) |
+| attempt-3 refinement estimator (T0057) | refinement_rule_validated (8 false convergences); DoD estimator_adversarial.py (86) |
+
+9a. `refinement_rule_validated` (T0057, §4.4): physics-independent check of the refinement rule; runs in every mode.
+10a. **Tube-PEEC discrimination (T0057, reviews T0055/T0056; in `closed_forms_independent_check`).** At l = 1.5 mm
+   bound (a) (4.3–4.7e-3) is as large as the correction it validates (4.1e-3 at 100 Hz to 9.9e-3 at 80 MHz). The
+   filament-at-r model passes the bound at 100 Hz (4.05e-3 < 4.29e-3), so that part has no teeth at 1.5 mm. New entry
+   at every length and frequency: the corrected error must be ≤ (r/l) × the uncorrected error. Reason: the residual
+   is second order and the correction first order, so their ratio is O(r/l). [F] Worst ratio 0.058 at l = 1.5 mm
+   (r/l = 0.1) and 5 MHz, so the margin is ≥ 1.7×. A missing correction gives ratio 1; a flipped sign gives about 2.
 
 L2 checks:
 9. `l2_converged` (§4.4).
@@ -550,8 +634,9 @@ L2 checks:
   - Fix: the draft writes `5.0e+6` etc.
   - The runner's `checked_config` type-checks every key against `DEFAULT_CFG` and raises on a mismatch.
   - [F] The parsed draft config now equals `DEFAULT_CFG` in keys, values and types.
-- `l2_one_mesh_per_solve` checks the adapter's self-report: a single integer `meta['n_filaments']` per call.
-  [I] It is weak on its own; the physical consequence is tested by `l_monotone_in_frequency`.
+- `l2_one_mesh_per_solve` checks `meta['mesh_hash']` per frequency and the level-to-level change of the hash and of
+  `n_filaments` (§3). `l2_constant_refinement_ratio` checks every `meta['mesh_params']` entry, and `length_scaling`
+  checks those sizes against geometry (T0057, review T0056).
 
 **What would prove L2 wrong:** an error > 2 % on any case; non-convergence; a reciprocity, scaling or
 monotonicity violation; an unreported or too loose solver tolerance; a non-constant refinement ratio.
@@ -613,7 +698,12 @@ hash the runner, or record its sha256 in the spec (tools/mfos is protected).
    (tools/mfos is protected). Until then, E001's geometry, tolerances and bounds in the runner are not frozen.
 7. [I] PyYAML's YAML 1.1 floats can bite any spec. A spec-level type check in `mfos exp check` would catch
    `5.0e6`-style strings for every experiment, not only E001.
-8. T0022 must report κ_est in `solver_tol` and `mesh_h` per call, and use a constant refinement ratio (§3).
+8. T0022 must report κ_est in `solver_tol`, `mesh_params` and per-frequency `mesh_hash` per call, and use a constant
+   refinement ratio with base counts large enough for the 1.1 spread (§3).
+10. Feasibility risk of the T0057 rule (§4.4): it refuses to certify pre-asymptotic, erratic (e.g. staircase
+    round-wire meshes) or superconvergent (order > 2) sequences. Such an L2 makes E001 INVALID, not falsely PASS;
+    raising `order_max` or `refinement_max` needs a new experiment id. The builder should look at its convergence
+    sequences before E001 is run.
    [I] At the 100 Hz cases this most likely means a direct LU of the uncompressed system.
 9. `b3_mutual_exact.py` at 10 GHz uses the δ → 0, proximity-free limit as "exact". It passes, but the runner-vs-
    reference difference there is mostly physics the reference omits (§4.2a). If the founder wants a tighter M12

@@ -58,6 +58,7 @@ from scipy import integrate, special
 from mfos.evidence import ExperimentRun
 
 MU0 = 1.25663706212e-6  # H/m, CODATA 2018
+BAR_MODEL_ERR = 1e-4  # stated residual of the DC Hoer-Love closed forms at f_lf (note sec. 4.3); regime_valid enforces it
 
 
 def mm_to_m(x):
@@ -639,9 +640,16 @@ def analytic_values(case: dict, freqs, sig: dict) -> dict:
 
 # ============================================================ 2-D PEC strip BEM (plane truncation estimate)
 def strip_truncation_2d(h: float, sep: float, r: float, half_width: float) -> float:
-    """Relative error of the infinite-image formula for a two-wire line (separation sep, height h, radius r)
-    over a floating PEC strip of half-width half_width. Piecewise-constant surface current, graded panels,
-    A_z constant on the strip, zero net strip current. Returns (L'_strip - L'_inf) / L'_inf."""
+    """Relative error (L'_strip - L'_inf) / L'_inf of the infinite-image formula for a two-wire line (separation sep,
+    height h, radius r) over a floating PEC strip of half-width half_width (strip_line_l2d)."""
+    l_inf = MU0 / math.pi * (math.log(sep / r) - 0.5 * math.log(1 + sep**2 / (4 * h * h)))
+    return (strip_line_l2d(h, sep, r, half_width) - l_inf) / l_inf
+
+
+def strip_line_l2d(h: float, sep: float, r: float, half_width: float) -> float:
+    """Per-unit-length inductance (H/m) of a two-wire line (separation sep, height h, radius r) over a floating PEC
+    strip of half-width half_width, by solving the strip's surface current (no image theory): piecewise-constant
+    surface current, graded panels, A_z constant on the strip, zero net strip current."""
     # panels: uniform (h/40) over the wires' neighbourhood, then geometric growth (ratio 1.02) to the edges
     core = min(sep / 2 + 5 * h, half_width)
     xs = list(np.linspace(0.0, core, int(math.ceil(core / (h / 40))) + 1))
@@ -681,9 +689,7 @@ def strip_truncation_2d(h: float, sep: float, r: float, half_width: float) -> fl
         return val
 
     # external sources evaluated at the wire centre (mean-value property of harmonic A_z), self term at radius r
-    l_strip = a_at(-sep / 2, h) - a_at(sep / 2, h)
-    l_inf = MU0 / math.pi * (math.log(sep / r) - 0.5 * math.log(1 + sep**2 / (4 * h * h)))
-    return (l_strip - l_inf) / l_inf
+    return a_at(-sep / 2, h) - a_at(sep / 2, h)
 
 
 # ============================================================ analytic self-checks
@@ -803,6 +809,12 @@ def analytic_checks(run: ExperimentRun, cases: list[dict], sig: dict, cfg: dict)
             lt = tube_peec_segment(ln, ra, f, sa, 80).imag / w
             bound = MU0 / (2 * math.pi) * (ra * ra / ln + (2 * ra) ** 6 / (48 * ln**5)) / la
             e[f"wire self vs tube PEEC l={ln * 1e3:g}mm @{f:.3g} Hz"] = (abs(la / lt - 1), bound)
+            # discriminating at every length (reviews T0055/T0056: at 1.5 mm the bound ~ the correction itself): the
+            # corrected residual is second order, the correction first order, so the correction must remove all but a
+            # fraction r/l of the filament-at-r error against the tube PEEC (observed <= 0.06 at l = 1.5 mm, r/l = 0.1)
+            lu = (w * wire_ext_self(ln, ra) + ln * z_internal_per_m(f, ra, sa).imag) / w
+            e[f"self-term correction removes the filament-at-r error l={ln * 1e3:g}mm @{f:.3g} Hz"] = (
+                abs(la / lt - 1), ra / ln * abs(lu / lt - 1))
     # proximity dipole (PEC geometric part) vs the exact two-wire line (mu0/pi)[arccosh(p/2r) - ln(p/r)] [RWV]
     lw, pw = 1.0, 1.5e-3
     pair = {"conductors": [wire("a", [(0, 0, 0), (lw * 1e3, 0, 0)], 0.3), wire("b", [(lw * 1e3, 1.5, 0), (0, 1.5, 0)], 0.3)],
@@ -871,6 +883,26 @@ def analytic_checks(run: ExperimentRun, cases: list[dict], sig: dict, cfg: dict)
             mirror = path * np.array([1, 1, -1]) + np.array([0, 0, 2 * zm])
             ref = -neumann(path, mirror)  # image current = -(mirrored path element) for a horizontal path
             e[f"{cc['conductors'][0]['name']} image term @{f / 1e6:g} MHz"] = (abs(img / ref - 1), ti)
+    # physical reference without image theory (review T0056): per-length plane term of a long 5 mm wide loop 1 mm over
+    # the plane (difference of a = 400 and 800 mm cancels the ends to O((b/a)^2)) vs the 2-D BEM that solves the surface
+    # current of a floating PEC strip (half-width 400 h) placed at the same recessed surface z_top - delta/2;
+    # tolerance = BEM accuracy 2e-4 (plane_truncation_bound) + (b/a)^2
+    hb, bb, rb, a1, a2 = 1e-3, 5e-3, 1.5e-4, 400.0, 800.0
+    pl0 = dict(c1["planes"][0], x_min=-1.0, y_min=-1.0, x_max=1.0, y_max=1.0)
+    for f in cfg["freqs_hf_hz"]:
+        w = 2 * math.pi * f
+        per = []
+        for am in (a1, a2):
+            lp = loop_rect("loop", hb * 1e3, a=am, b=bb * 1e3)
+            cl = dict(id="L", cls="check", conductors=[lp], planes=[pl0], ties=[], compare=[("L11", 0, 0)],
+                      ports=[end_port("p", lp)])
+            per.append(np.imag(_assemble(cl, f, sig, prox=False, xsec=False)[0][0, 0]
+                               - _assemble(dict(cl, planes=[]), f, sig, prox=False, xsec=False)[0][0, 0]) / w)
+        runner = (per[1] - per[0]) / mm_to_m(a2 - a1)
+        he = hb + skin_depth(f, sig[pl0["mat"]]) / 2
+        bem = strip_line_l2d(he, bb, rb, 400 * he) - MU0 / math.pi * math.log(bb / rb)
+        e[f"per-length plane term vs PEC strip BEM @{f / 1e6:g} MHz"] = (abs(runner / bem - 1),
+                                                                        2e-4 + (bb / mm_to_m(a1)) ** 2)
     rep("image_plane_independent", e)
 
     # (2c) Wheeler recession vs Carson's exact half-space integral: per-unit-length inductance increment over a
@@ -906,6 +938,23 @@ def analytic_checks(run: ExperimentRun, cases: list[dict], sig: dict, cfg: dict)
             z2 = analytic_z(two, f, sig)
             zpar = (z2[0, 0] * z2[1, 1] - z2[0, 1] * z2[1, 0]) / (z2[0, 0] + z2[1, 1] - z2[0, 1] - z2[1, 0])
             e[f"{tag} @{f / 1e6:g} MHz"] = (abs(analytic_z(tied, f, sig)[0, 0] / zpar - 1), 1e-10)
+    # physical reference (review T0056; the formula above is algebraically the tie assembly): a 20 x 3 x 0.3 mm Cu bar
+    # split lengthwise into 0.7 and 2.3 mm strips tied at both ends. Near DC the current divides by conductance, so the
+    # density is uniform and L equals the unsplit bar's Hoer-Love self [HL]; the deviation is second order in
+    # omega L / R (tolerance (omega L/R)^2 at 1 Hz). Ignoring the branch mutual changes L by 29 %.
+    ws, fsb = (0.7, 2.3), 1.0
+    strips, y0 = [], -sum(ws) / 2
+    for i, wd in enumerate(ws):
+        strips.append(bar(f"s{i}", (0, y0 + wd / 2, 0), (20, y0 + wd / 2, 0), wd, 0.3))
+        y0 += wd
+    split = dict(id="S", cls="check", conductors=strips, planes=[], compare=[("L11", 0, 0)],
+                 ports=[end_port("p", strips[0])], ties=[[["s0", 0], ["s1", 0]], [["s0", 1], ["s1", 1]]])
+    full = bar("f", (0, 0, 0), (20, 0, 0), sum(ws), 0.3)
+    lfull = box_mutual(*_box(_segments({"conductors": [full]})[0]), *_box(_segments({"conductors": [full]})[0]))
+    rfull = mm_to_m(20.0) / (sig[CU] * full["width"] * full["thickness"])
+    lt = np.imag(analytic_z(split, fsb, sig)[0, 0]) / (2 * math.pi * fsb)
+    e["split bar (0.7 + 2.3 mm, tied) vs unsplit Hoer-Love @1 Hz"] = (abs(lt / lfull - 1),
+                                                                       (2 * math.pi * fsb * lfull / rfull) ** 2)
     rep("tied_branch_independent", e)
 
     # (3) exact similarity scaling of every closed-form case value
@@ -925,7 +974,7 @@ def analytic_checks(run: ExperimentRun, cases: list[dict], sig: dict, cfg: dict)
             for k in c["conductors"]:  # round wire of the bar's half-diagonal: conservative skin-effect bound
                 rb = 0.5 * math.hypot(k["width"], k["thickness"])
                 lint = np.imag(z_internal_per_m(f_lf, rb, sig[k["mat"]])) / (2 * math.pi * f_lf)
-                e[f"{c['id']}:{k['name']} LF skin deficit"] = (abs(1 - lint / (MU0 / (8 * math.pi))), 1e-3)
+                e[f"{c['id']}:{k['name']} LF skin deficit"] = (abs(1 - lint / (MU0 / (8 * math.pi))), BAR_MODEL_ERR)
     pl_cases = [c for c in cases if c["planes"]]
     for c in pl_cases:
         pl = c["planes"][0]
@@ -967,9 +1016,11 @@ def residual_model_error(case: dict, f: float, sig: dict, label: str | None = No
       (d) finite cross-section of every wire-wire and wire-image mutual (T0041, reviews T0051/T0052): the closed form
           carries the first-order mean-value term <|w|^2>/4 Lap M; the remainder is bounded rigorously by the Taylor
           remainder of the circle mean, <|w|^4>_abs/64 sup|Lap^2 M| (_pair_cross_section).
-    Bars: DC Hoer-Love is exact for uniform current; 1e-4 covers the LF skin deficit (bounded by regime_valid)."""
+    Bars: DC Hoer-Love is exact for uniform current; BAR_MODEL_ERR = 1e-4 covers the LF skin deficit of the internal
+    part, and regime_valid fails unless that deficit (round wire of the bar's half-diagonal, conservative) is below the
+    same 1e-4 (review T0055: the earlier 1e-3 regime tolerance did not imply the bound)."""
     if case["cls"].startswith("bar"):
-        return 1e-4
+        return BAR_MODEL_ERR
     w = 2 * math.pi * f
     zb, segs, pt, exc, xrem = _assemble(case, f, sig)
     worst = 0.0
@@ -1021,118 +1072,238 @@ def l2_solve(l2, case: dict, freqs, k: int, sig: dict) -> tuple[np.ndarray, dict
     return z, dict(getattr(res, "meta", {}) or {})
 
 
-def _algebraic_tail(v) -> float:
-    """Remaining error |L_n - L_inf| of the additive-refinement model L_k = L_inf + C k^-p (k = 1-based position in
-    the refinement sequence, h ~ 1/k), fitted exactly to the last three values; inf if the data imply p <= 0."""
-    n = len(v)
-    ka, kb, kc = float(n - 2), float(n - 1), float(n)
-    d1, d2 = abs(v[-2] - v[-3]), abs(v[-1] - v[-2])
-    if d2 == 0.0:
+# ============================================================ refinement rule (note sec. 4.4; reviews T0055/T0056)
+FS_VERIFIED = 1.25   # Roache's factor when the asymptotic range is verified (>= 3 grids, observed order) [ROA]
+FS_UNVERIFIED = 3.0   # Roache's factor when it is not (2 grids, or an order outside the admissible range) [ROA][EH]
+
+
+def _pair_ratio(h, k: int, p: float) -> float:
+    """d_k / d_(k-1) that a single error term C h^p produces on the mesh sequence h (changes d_k = L_k - L_(k-1))."""
+    return (h[k - 1] ** p - h[k] ** p) / (h[k - 2] ** p - h[k - 1] ** p)
+
+
+def _order_of(h, k: int, r: float) -> float:
+    """Observed order p > 0 with _pair_ratio(h, k, p) = r (strictly decreasing in p, so bisection is exact; for a
+    constant ratio q it is p = -ln r / ln q [CEL]). 0 when r is at or above the p -> 0 limit (no convergence), inf for
+    r <= 0."""
+    if r <= 0.0:
+        return math.inf
+    if not math.isfinite(r) or r >= math.log(h[k - 1] / h[k]) / math.log(h[k - 2] / h[k - 1]):
         return 0.0
-    if d1 == 0.0:
-        return math.inf
-
-    def q(p):  # d2/d1 implied by order p; decreases from ln(kc/kb)/ln(kb/ka) (p -> 0) to 0 (p -> inf)
-        return (kb**-p - kc**-p) / (ka**-p - kb**-p)
-
-    target = d2 / d1
-    if target >= math.log(kc / kb) / math.log(kb / ka):
-        return math.inf
-    lo, hi = 1e-12, 1.0
-    while q(hi) > target and hi < 256.0:
+    lo, hi = 0.0, 1.0
+    while _pair_ratio(h, k, hi) > r:
         lo, hi = hi, 2.0 * hi
-    if q(hi) > target:
-        return 0.0  # order > 256: the tail is negligible
-    for _ in range(200):
+        if hi > 512.0:
+            return math.inf
+    for _ in range(60):
         mid = 0.5 * (lo + hi)
-        lo, hi = (mid, hi) if q(mid) > target else (lo, mid)
-    p = lo  # q(lo) > target: the smaller-order (heavier-tail) side of the converged bracket
-    return d2 * kc**-p / (kb**-p - kc**-p)
+        lo, hi = (mid, hi) if _pair_ratio(h, k, mid) > r else (lo, mid)
+    return 0.5 * (lo + hi)
 
 
-def remaining_discretization_error(values, noise: float = 0.0, rho_min: float = 0.5, fs: float = 1.25,
-                                   fs_unverified: float = 3.0, rho_two: float = 0.9) -> float:
-    """Estimated |L_finest - L_converged| from L at successive refinement levels (finest last), same units.
-    The L2 contract fixes a constant refinement ratio, so in the asymptotic range the changes d_k contract
-    geometrically with a constant ratio rho = |d_k/d_(k-1)| (note sec. 4.4):
-      * >= 4 levels, steady ratio (the last observed ratio does not exceed the previous one beyond what the noise
-        floor can produce): geometric tail fs |d| rho/(1 - rho), rho = max(last two ratios, rho_min), Roache's
-        three-grid factor fs = 1.25 [ROA];
-      * >= 4 levels, decelerating ratio (asymptotic range not established, e.g. additive refinement with error
-        ~ k^-p, review T0052): the larger of the geometric tail and the additive-refinement tail (_algebraic_tail),
-        both with Roache's factor 3 for an unverified asymptotic range;
-      * 3 levels (one ratio, cannot be checked): geometric tail with factor 3; the pre-registered rule never decides
-        convergence on fewer than refinement_min_levels = 4 levels;
-      * 2 levels: assume rho = 0.9 with factor 3 (27 x the change); 1 level: inf.
-    Small-step guard (T0041): the tail base is max(|d_last|, rho_min |d_prev|), so one coincidentally small step
-    cannot declare convergence. rho >= 1 -> inf. `noise` (absolute, on a change) is the change two levels can show
-    from the solver alone (2 x solver_err_budget x |L| in the runner): a change at or below it gives no evidence of
-    slow contraction. A constant sequence gives 0."""
+def remaining_discretization_error(values, noise: float = 0.0, h=None, order_range=None, steady_tol: float = 0.1,
+                                   fs: float = FS_VERIFIED, fs_unverified: float = FS_UNVERIFIED) -> float:
+    """Estimated |L_finest - L_converged| (same units as values) from L at successive refinement levels (finest last);
+    inf = not converged. Conservative outside the asymptotic range (note sec. 4.4, reviews T0055/T0056).
+
+    h: relative mesh size per level (the runner derives it from meta['mesh_params']); order_range = (p_lo, p_hi): the
+    admissible orders of the leading error term (registered config order_min/order_max). Without h (values-only use)
+    the rule assumes a constant but unknown ratio: h = 2^-k with order_range (0, 1), i.e. it accepts steady contraction
+    ratios in [0.5, 1) and cannot check the order against the formal order.
+    A finite estimate needs, over the last three changes d (>= 4 levels):
+      1. no sign reversal among the changes larger than `noise` (a turning point: a slower term of opposite sign is
+         still hidden [ROY]);
+      2. both observed orders (from d_(n-3), d_(n-2) and from d_(n-2), d_(n-1), on the realized h) consistent with the
+         admissible range on the fast side: an order above p_hi (formal order) is pre-asymptotic cancellation, not
+         superconvergence [EH] (this is what flags e = A h^p + B h^(p+1), A B < 0, before its turning point);
+      3. steady: the two orders agree within steady_tol / ln(q) (q = nominal ratio), i.e. the two contraction ratios
+         within a factor (1 + steady_tol) at a constant ratio.
+    Then the estimate is the single-term Richardson tail fs (|d_last| + noise) / ((h_(n-2)/h_(n-1))^p - 1) [CEL] with
+    p = the smaller observed order, extrapolated one step when the order falls (decelerating), widened by the noise
+    but not below p_lo; fs = 1.25 [ROA], or 3 when the whole observed order interval lies below p_lo [ROA][EH].
+    Noise-limited sequences (last three changes <= noise) get the tail at p_lo: the order is unobservable and the
+    contract's assumption p >= p_lo is all that bounds it. `noise` (absolute, on a change) is the change two levels
+    can show from the solver alone. Exactly constant values give 0."""
     v = np.asarray(values, dtype=np.float64)
-    if v.size < 2:
+    n = v.size
+    if n < 2:
         return math.inf
-    d = np.abs(np.diff(v))
-    if v.size == 2:
-        return fs_unverified * float(d[-1]) * rho_two / (1 - rho_two)
+    if h is None:
+        hh, (p_lo, p_hi) = 2.0 ** -np.arange(n, dtype=np.float64), (0.0, 1.0)
+    else:
+        hh = np.asarray(h, dtype=np.float64)
+        if hh.shape != v.shape or not np.all(np.isfinite(hh)) or np.any(hh <= 0) or np.any(np.diff(hh) >= 0):
+            return math.inf
+        p_lo, p_hi = order_range
+    d = np.diff(v)
+    a = np.abs(d)
+    if np.all(a == 0.0):
+        return 0.0
 
-    def ratio(k):  # d[k] / d[k - 1]
-        if d[k] <= noise:
-            return 0.0
-        den = max(float(d[k - 1]), noise)
-        return math.inf if den == 0.0 else float(d[k] / den)
+    def tail(p: float, f: float) -> float:
+        if not p > 0.0:
+            return math.inf
+        return f * (float(a[-1]) + noise) / ((hh[-2] / hh[-1]) ** p - 1.0)
 
-    r_last = ratio(-1)
-    r_prev = ratio(-2) if v.size >= 4 else None
-    rho = max(r_last, r_prev or 0.0, rho_min)
-    base = max(float(d[-1]), rho_min * float(d[-2]))
+    if n < 4:
+        return math.inf
+    if np.all(a[-3:] <= noise):
+        return tail(p_lo, fs)
+    s = np.sign(d[-3:][a[-3:] > noise])
+    if s.min() != s.max():
+        return math.inf
+    obs = []
+    for k in (n - 2, n - 1):  # value index of the later change of each pair: d[k-1] / d[k-2]
+        num, den = float(a[k - 1]), float(a[k - 2])
+        r = num / den if den > 0 else math.inf
+        r_hi = (num + noise) / (den - noise) if den > noise else math.inf
+        r_lo = max(num - noise, 0.0) / (den + noise)
+        obs.append((_order_of(hh, k, r), _order_of(hh, k, r_hi), _order_of(hh, k, r_lo)))  # (point, low, high)
+    (pa, pa_lo, pa_hi), (pb, pb_lo, pb_hi) = obs
+    eps = 1e-9
+    if max(pa_lo, pb_lo) > p_hi * (1 + eps):
+        return math.inf
+    q_nom = math.exp(float(np.mean(np.log(hh[-4:-1] / hh[-3:]))))
+    tol_p = steady_tol / math.log(q_nom)
+    if pa_hi + tol_p < pb_lo or pb_hi + tol_p < pa_lo:
+        return math.inf
+    p_pt = 2.0 * pb - pa if pb < pa else min(pa, pb)
+    p_low = min(pa_lo, pb_lo)
+    p_star = min(p_pt, max(p_low, p_lo)) if p_pt >= p_lo else min(p_pt, p_low)
+    slow = max(pa_hi, pb_hi) < p_lo * (1 - eps)
+    return tail(p_star, fs_unverified if slow else fs)
 
-    def geometric(factor):
-        return math.inf if rho >= 1.0 else factor * base * rho / (1 - rho)
 
-    if r_prev is None:
-        return geometric(fs_unverified)
-    jitter = 1e-9 * r_prev  # floating-point rounding of an exactly geometric sequence
-    if noise > 0 and r_prev > 0 and math.isfinite(r_last) and math.isfinite(r_prev):
-        jitter += (r_last * (noise / d[-1] + noise / d[-2])
-                   + r_prev * (noise / d[-2] + noise / max(float(d[-3]), noise)))
-    if d[-1] <= noise or r_last <= r_prev + jitter:
-        return geometric(fs)
-    return max(geometric(fs_unverified), fs_unverified * _algebraic_tail(v))
+def refinement_rule_selfcheck(cfg: dict, n_per_family: int = 300, seed: int = 20261002) -> dict:
+    """Physics-independent check of remaining_discretization_error on synthetic refinement sequences that satisfy the
+    contract and the registered assumption (leading order in [order_min, order_max]); generator and seed are frozen
+    here (note sec. 4.4). Families: e = A h^p + B h^(p+dp) with dp in {0.5, 1, 2} and A, B of opposite and of equal
+    sign, three terms of random sign, and pure geometric; p in {order_min, mid, order_max}, constant ratio q in
+    {1.25, 1.5, 2} with per-level ratios jittered within refinement_ratio_spread, 4 or 5 levels, random start; each
+    without noise and with uniform solver noise of +/- solver_err_budget |L|. Returns false convergences (true remaining
+    discretization error > conv_tol, estimate < conv_tol), per-value coverage among declared-converged sequences
+    (estimate + solver_err_budget |L| >= |L_finest - L_exact|), and est/true of the noise-free geometric family."""
+    rng = np.random.default_rng(seed)
+    p_lo, p_hi, tol = cfg["order_min"], cfg["order_max"], cfg["conv_tol"]
+    budget, spread = cfg["solver_err_budget"], cfg["refinement_ratio_spread"]
+    fams = {"opp+0.5": ([0.5], -1), "opp+1": ([1.0], -1), "opp+2": ([2.0], -1), "same+0.5": ([0.5], 1),
+            "same+1": ([1.0], 1), "three": ([1.0, 2.0], 0), "geometric": ([], 1)}
+    out = {"false_conv": 0, "coverage": 1.0, "geo_lo": math.inf, "geo_hi": 0.0, "per_family": {}}
+    for name, (extra, sign) in fams.items():
+        for nz in (0.0, budget):
+            conv = cov = fc = 0
+            for _ in range(n_per_family):
+                q, nlev, k0 = rng.choice([1.25, 1.5, 2.0]), int(rng.choice([4, 5])), rng.uniform(0.0, 4.0)
+                qs = q * np.exp(rng.uniform(0.0, math.log(spread), nlev - 1))
+                hh = q ** -k0 / np.concatenate([[1.0], np.cumprod(qs)])
+                p = float(rng.choice([p_lo, 0.5 * (p_lo + p_hi), p_hi]))
+                a0 = 10 ** rng.uniform(-3.0, -0.5) * rng.choice([-1.0, 1.0])
+                e = a0 * hh**p
+                for dp in extra:
+                    sg = sign if sign else rng.choice([-1.0, 1.0])
+                    e = e + np.sign(a0) * sg * 10 ** rng.uniform(-3.0, 0.5) * hh ** (p + dp)
+                exact = 1.0 + e
+                vals = exact + rng.uniform(-nz, nz, nlev) * np.abs(exact)
+                est = remaining_discretization_error(vals, noise=2 * nz * abs(vals[-1]), h=hh / hh[0],
+                                                     order_range=(p_lo, p_hi), steady_tol=cfg["steady_tol"])
+                true_disc = abs(exact[-1] - 1.0)
+                if name == "geometric" and nz == 0.0 and math.isfinite(est):
+                    out["geo_lo"] = min(out["geo_lo"], est / true_disc)
+                    out["geo_hi"] = max(out["geo_hi"], est / true_disc)
+                if est < tol:
+                    conv += 1
+                    cov += est + nz * abs(vals[-1]) >= abs(vals[-1] - 1.0)
+                    fc += true_disc > tol
+            c = cov / conv if conv else 1.0
+            out["per_family"][f"{name}{'+noise' if nz else ''}"] = (int(fc), int(conv), round(float(c), 4))
+            out["false_conv"] += int(fc)
+            out["coverage"] = min(out["coverage"], c)
+    return out
+
+
+def mesh_sequence(metas) -> np.ndarray | None:
+    """Relative mesh size per level from meta['mesh_params'] (contract sec. 3): the geometric mean over parameters of
+    size_k / size_0. None if any level lacks it, a size is not a positive finite float, or the key sets differ."""
+    mp = [m.get("mesh_params") for m in metas]
+    if not mp or not all(isinstance(x, dict) and x for x in mp):
+        return None
+    keys = set(mp[0])
+    if any(set(x) != keys for x in mp):
+        return None
+    if not all(isinstance(x[k], (int, float)) and not isinstance(x[k], bool) and math.isfinite(x[k]) and x[k] > 0
+               for x in mp for k in keys):
+        return None
+    rel = np.array([[x[k] / mp[0][k] for k in sorted(keys)] for x in mp], dtype=np.float64)
+    return np.exp(np.mean(np.log(rel), axis=1))
+
+
+def refinement_ratio_violation(metas, cfg) -> float:
+    """Constant-refinement-ratio check of one solve sequence (contract sec. 3; reviews T0052, T0055, T0056): every
+    parameter in meta['mesh_params'] must shrink at every step by a realized ratio >= refinement_ratio_min, and all
+    ratios (every parameter, every step) must agree within refinement_ratio_spread (max/min). Returns the worst of
+    min-shortfall and spread/allowed (<= 1 passes); inf if mesh_params is missing or malformed or < 2 levels."""
+    if len(metas) < 2 or mesh_sequence(metas) is None:
+        return math.inf
+    keys = sorted(metas[0]["mesh_params"])
+    s = np.array([[m["mesh_params"][k] for k in keys] for m in metas], dtype=np.float64)
+    q = s[:-1] / s[1:]
+    return float(max(cfg["refinement_ratio_min"] / q.min(), (q.max() / q.min()) / cfg["refinement_ratio_spread"]))
+
+
+def one_mesh_violations(metas, n_freqs: int) -> int:
+    """One mesh per solve (contract sec. 3; review T0056): every solve reports meta['mesh_hash'] as a list with one
+    non-empty string per frequency of the call, all equal (one mesh for every frequency), and a positive integer
+    meta['n_filaments']; across the levels of a solve sequence the hashes differ and n_filaments strictly increases
+    (each level is a refined mesh). Returns the number of violations."""
+    bad, prev_n, seen = 0, 0, set()
+    for m in metas:
+        hs, nf = m.get("mesh_hash"), m.get("n_filaments")
+        ok_h = (isinstance(hs, (list, tuple)) and len(hs) == n_freqs and all(isinstance(x, str) and x for x in hs)
+                and len(set(hs)) == 1 and hs[0] not in seen)
+        ok_n = isinstance(nf, int) and not isinstance(nf, bool) and nf > prev_n
+        bad += (not ok_h) + (not ok_n)
+        if ok_h:
+            seen.add(hs[0])
+        prev_n = nf if ok_n else prev_n
+    return bad
 
 
 def l2_converged_solve(l2, case, freqs, sig, cfg):
     """Pre-registered refinement rule: solve levels k0, k0+1, ...; from the refinement_min_levels-th level on, stop at
-    the first level where the estimated remaining discretization error of every L (all solved frequencies, compared
-    entries) is below conv_tol relative, or at refinement_max. Returns (Z finest, {(fi, i, j): relative remaining
-    error}, finest level, list of meta dicts)."""
+    the first level where the estimated remaining discretization error of every compared L (compared frequencies only:
+    the bars' HF solves are informational and do not gate, review T0056) is below conv_tol relative, or at
+    refinement_max. The rule gets the realized mesh sizes (meta['mesh_params'] -> mesh_sequence; inf without them) and
+    a noise floor of 2 x the L error the reported solver tolerance allows (meta['solver_tol'] x amplification, capped
+    at solver_err_budget; review T0056). Returns (Z finest, {(fi, i, j): relative remaining error}, finest level,
+    list of meta dicts)."""
     k0 = cfg["refinement_start"]
     kmax = min(cfg["refinement_max"], getattr(l2, "MAX_REFINEMENT", cfg["refinement_max"]))
     nmin = cfg["refinement_min_levels"]
     if nmin < 4 or kmax - k0 + 1 < nmin:
-        raise ValueError("the refinement rule needs >= 4 levels (deceleration test) within refinement_max")
+        raise ValueError("the refinement rule needs >= 4 levels (three changes) within refinement_max")
     w = 2 * math.pi * np.asarray(freqs)[:, None, None]
-    keys = [(fi, i, j) for fi in range(len(freqs)) for _, i, j in case["compare"]]
+    keys = [(freqs.index(f), i, j) for f in case["cmp_freqs"] for _, i, j in case["compare"]]
+    amp = cfg["solver_err_budget"] / solver_tol_required(case, sig, cfg)
     hist, metas = [], []
     for k in range(k0, kmax + 1):
         z, meta = l2_solve(l2, case, freqs, k, sig)
         hist.append(np.imag(z) / w)
         metas.append(meta)
-        rem = {key: remaining_discretization_error([h[key] for h in hist],
-                                                   noise=2 * cfg["solver_err_budget"] * abs(hist[-1][key]))
-               / abs(hist[-1][key]) for key in keys}
+        tols = [m.get("solver_tol") for m in metas]
+        valid = all(isinstance(t, (int, float)) and not isinstance(t, bool) and t >= 0 for t in tols)
+        noise_rel = 2 * min(cfg["solver_err_budget"], max(tols) * amp if valid else math.inf)
+        hseq = mesh_sequence(metas)
+        rem = {}
+        for key in keys:
+            seq = [hh[key] for hh in hist]
+            est = (remaining_discretization_error(seq, noise=noise_rel * abs(seq[-1]), h=hseq,
+                                                  order_range=(cfg["order_min"], cfg["order_max"]),
+                                                  steady_tol=cfg["steady_tol"])
+                   if hseq is not None and len(seq) >= 2 else math.inf)
+            rem[key] = est / abs(seq[-1])
         if len(hist) >= nmin and max(rem.values()) < cfg["conv_tol"]:
             break
     return z, rem, k, metas
-
-
-def refinement_ratio_violation(mesh_h, cfg) -> float:
-    """Constant-refinement-ratio check of one solve sequence (contract sec. 3, review T0052): the realized ratios
-    h_k/h_(k+1) of meta['mesh_h'] must all be >= refinement_ratio_min and agree within refinement_ratio_spread
-    (max/min). Returns the worst of min-shortfall and spread/allowed (<= 1 passes); inf if mesh_h is missing."""
-    if len(mesh_h) < 2 or not all(isinstance(h, (int, float)) and not isinstance(h, bool) and h > 0 for h in mesh_h):
-        return math.inf
-    q = np.asarray(mesh_h[:-1], dtype=float) / np.asarray(mesh_h[1:], dtype=float)
-    return float(max(cfg["refinement_ratio_min"] / q.min(), (q.max() / q.min()) / cfg["refinement_ratio_spread"]))
 
 
 def solver_tol_required(case: dict, sig: dict, cfg: dict) -> float:
@@ -1147,7 +1318,9 @@ def solver_tol_required(case: dict, sig: dict, cfg: dict) -> float:
     return cfg["solver_err_budget"] / amp
 
 
-def l2_phase(run: ExperimentRun, cases: list[dict], sig: dict, cfg: dict) -> None:
+def l2_phase(run: ExperimentRun, cases: list[dict], sig: dict, cfg: dict, level: float) -> None:
+    """L2 solves, L2 sanity checks and metrics. `level` is the per-value coverage of the refinement rule measured by
+    refinement_rule_selfcheck on this run (note sec. 4.4); it is recorded as the interval level of the metric."""
     from moduleforge.solvers import l2  # lazy: only the L2 path needs it
 
     rows, conv, recip, mono, tol_ratio, mesh_bad, h_ratio = [], {}, {}, {}, {}, {}, {}
@@ -1161,9 +1334,8 @@ def l2_phase(run: ExperimentRun, cases: list[dict], sig: dict, cfg: dict) -> Non
         tol_ratio[c["id"]] = (max(float(t) for t in tols) / need
                               if all(isinstance(t, (int, float)) and not isinstance(t, bool) and t >= 0 for t in tols)
                               else math.inf)
-        mesh_bad[c["id"]] = sum(not (isinstance(m.get("n_filaments"), int) and not isinstance(m["n_filaments"], bool)
-                                      and m["n_filaments"] > 0) for m in metas)
-        h_ratio[c["id"]] = refinement_ratio_violation([m.get("mesh_h") for m in metas], cfg)
+        mesh_bad[c["id"]] = one_mesh_violations(metas, len(freqs))
+        h_ratio[c["id"]] = refinement_ratio_violation(metas, cfg)
         ana = analytic_values(c, c["cmp_freqs"], sig)
         for lab, i, j in c["compare"]:
             for f in c["cmp_freqs"]:
@@ -1172,7 +1344,9 @@ def l2_phase(run: ExperimentRun, cases: list[dict], sig: dict, cfg: dict) -> Non
                 la = ana[(lab, f)]
                 rows.append(dict(case=c["id"], cls=c["cls"], quantity=lab, f_hz=f, l2=l2v, analytic=la,
                                  rel_err=abs(l2v - la) / abs(la), disc_unc=rem[(fi, i, j)] * abs(l2v / la),
-                                 model_err=residual_model_error(c, f, sig, lab), refinement=kfin))
+                                 model_err=residual_model_error(c, f, sig, lab), refinement=kfin,
+                                 mesh_h=[float(x) for x in (mesh_sequence(metas) if mesh_sequence(metas) is not None
+                                                            else [])]))
         if len(c["ports"]) > 1:
             recip[c["id"]] = float(np.max(np.abs(z[:, 0, 1] - z[:, 1, 0]) / np.abs(z[:, 0, 1])))
         if len(freqs) > 1:
@@ -1185,10 +1359,12 @@ def l2_phase(run: ExperimentRun, cases: list[dict], sig: dict, cfg: dict) -> Non
                threshold=1.0, detail="meta['solver_tol'] / required (solver_err_budget / amplification): "
                + json.dumps(tol_ratio))
     run.sanity("l2_one_mesh_per_solve", passed=sum(mesh_bad.values()) == 0, value=float(sum(mesh_bad.values())),
-               threshold=0.0, detail="solves without a single integer meta['n_filaments']: " + json.dumps(mesh_bad))
-    run.sanity("l2_constant_refinement_ratio", passed=max(h_ratio.values()) <= 1.0, value=max(h_ratio.values()),
+               threshold=0.0, detail="violations of meta['mesh_hash'] (one equal hash per frequency, new per level) and "
+               "meta['n_filaments'] (positive int, increasing): " + json.dumps(mesh_bad))
+    run.sanity("l2_constant_refinement_ratio", passed=max(h_ratio.values()) <= 1.0 + 1e-9,  # float rounding of exact
+               value=max(h_ratio.values()),
                threshold=1.0, detail="worst of min ratio shortfall and ratio spread over refinement_ratio_spread, "
-               "from meta['mesh_h'] (<= 1 passes): " + json.dumps(h_ratio))
+               "over every meta['mesh_params'] entry and step (<= 1 passes): " + json.dumps(h_ratio))
     run.sanity("reciprocity", passed=bool(recip) and max(recip.values()) <= cfg["recip_tol"],
                value=max(recip.values()) if recip else None, threshold=cfg["recip_tol"], detail=json.dumps(recip))
     run.sanity("l_monotone_in_frequency", passed=bool(mono) and max(mono.values()) <= cfg["monotone_tol"],
@@ -1200,19 +1376,28 @@ def l2_phase(run: ExperimentRun, cases: list[dict], sig: dict, cfg: dict) -> Non
         if c is None:
             continue
         f0 = c["cmp_freqs"][-1]
-        z1, _ = l2_solve(l2, c, [f0], c["_k"], sig)
-        z2, _ = l2_solve(l2, scale_case(c, 2.0), [f0 / 4], c["_k"], sig)
+        z1, m1 = l2_solve(l2, c, [f0], c["_k"], sig)
+        z2, m2 = l2_solve(l2, scale_case(c, 2.0), [f0 / 4], c["_k"], sig)
         ratio = (np.imag(z2[0, 0, 0]) / (2 * math.pi * f0 / 4)) / (np.imag(z1[0, 0, 0]) / (2 * math.pi * f0))
-        scal[cid] = abs(ratio / 2 - 1)
+        # contract sec. 3: the mesh is defined relative to geometry and delta, so the similar case has the same mesh with
+        # every size doubled (checks meta['mesh_params'] against geometry instead of trusting it)
+        p1, p2 = m1.get("mesh_params"), m2.get("mesh_params")
+        similar = (mesh_sequence([m1]) is not None and mesh_sequence([m2]) is not None and set(p1) == set(p2)
+                   and all(abs(p2[k] / (2 * p1[k]) - 1) <= 1e-9 for k in p1)
+                   and m1.get("n_filaments") == m2.get("n_filaments"))
+        scal[cid] = abs(ratio / 2 - 1) if similar else math.inf
     run.sanity("length_scaling", passed=bool(scal) and max(scal.values()) <= cfg["scaling_tol"],
                value=max(scal.values()) if scal else None, threshold=cfg["scaling_tol"], detail=json.dumps(scal))
 
     errs = np.array([r["rel_err"] for r in rows])
-    unc = np.array([r["disc_unc"] + r["model_err"] for r in rows])
+    unc = np.array([r["disc_unc"] + cfg["solver_err_budget"] + r["model_err"] for r in rows])
     lo, hi = float(np.max(np.maximum(errs - unc, 0.0))), float(np.max(errs + unc))
-    # estimated error band, not a sampling CI and not a guaranteed bound (review T0052): the discretization part is a
-    # GCI-type estimate (Roache's Fs, ~95 % empirical coverage), the model part a stated bound (note sec. 4.3)
-    run.metric("max_rel_err_vs_analytic", float(errs.max()), ci=(lo, hi), n=len(rows), level=0.95)
+    # estimated error band, not a sampling CI and not a guaranteed bound (reviews T0052, T0056; note sec. 4.4):
+    # u_i = refinement-rule estimate + solver budget (checked by l2_solver_tolerance) + stated model bound (sec. 4.3).
+    # `level` is NOT a confidence level of this band: it is the per-value coverage of the discretization estimate on
+    # the registered synthetic family (refinement_rule_selfcheck), conditional on the leading error order lying in
+    # [order_min, order_max]; the joint coverage of the max over all values is not established.
+    run.metric("max_rel_err_vs_analytic", float(errs.max()), ci=(lo, hi), n=len(rows), level=level)
     hf = [r["rel_err"] for r in rows if r["f_hz"] >= 1e6]
     lf = [r["rel_err"] for r in rows if r["f_hz"] < 1e6]
     run.metric("max_rel_err_hf", max(hf) if hf else float("nan"), n=len(hf))
@@ -1229,7 +1414,8 @@ def l2_phase(run: ExperimentRun, cases: list[dict], sig: dict, cfg: dict) -> Non
 DEFAULT_CFG = {
     "f_lf_hz": 100.0, "freqs_hf_hz": [5.0e6, 2.0e7, 8.0e7], "sigma_cu": 5.8e7, "sigma_al": 3.77e7,
     "plane_margin_mm": 15.0, "refinement_start": 1, "refinement_max": 5, "refinement_min_levels": 4,
-    "refinement_ratio_min": 1.25, "refinement_ratio_spread": 1.1, "conv_tol": 0.01,
+    "refinement_ratio_min": 1.25, "refinement_ratio_spread": 1.1, "order_min": 1.0, "order_max": 2.0,
+    "steady_tol": 0.1, "conv_tol": 0.01,
     "solver_err_budget": 1.0e-4, "recip_tol": 1.0e-3, "monotone_tol": 1.0e-3, "scaling_tol": 0.01,
     "scaling_cases": ["A1", "B2", "C1"], "tol_published": 1.0e-9, "tol_independent": 1.0e-6,
     "tol_truncation": 1.0e-3, "smoke_cases": ["A1", "A3", "B2", "B3", "B4", "C0", "C1"], "cases": list(ALL_CASES),
@@ -1268,6 +1454,16 @@ def main(mode: str) -> int:
         sig = {CU: float(cfg["sigma_cu"]), AL: float(cfg["sigma_al"])}
         cases = build_cases(cfg)
         ok = analytic_checks(run, cases, sig, cfg)
+        rc = refinement_rule_selfcheck(cfg)
+        geo_ok = 1.0 <= rc["geo_lo"] and rc["geo_hi"] <= 3.0
+        rule_ok = rc["false_conv"] == 0 and rc["coverage"] >= 0.95 and geo_ok
+        ok &= rule_ok
+        run.sanity("refinement_rule_validated", passed=rule_ok, value=float(rc["false_conv"]), threshold=0.0,
+                   detail=f"false convergences {rc['false_conv']} (must be 0); per-value coverage min "
+                   f"{rc['coverage']:.4f} (>= 0.95); clean geometric est/true in [{rc['geo_lo']:.3f}, "
+                   f"{rc['geo_hi']:.3f}] (within [1, 3]); per family (false conv, converged, coverage): "
+                   + json.dumps(rc["per_family"]))
+        level = math.floor(100 * rc["coverage"]) / 100
         if mode == "analytic":
             run.notes += "analytic-only mode: L2 checks and metrics intentionally not produced (not evidence)"
             return 0 if ok else 1
@@ -1278,7 +1474,7 @@ def main(mode: str) -> int:
                 c["info_freqs"] = [2.0e7] if c["cls"].startswith("bar") else []
             cfg["refinement_max"] = cfg["refinement_start"] + cfg["refinement_min_levels"] - 1  # rule minimum
             cfg["scaling_cases"] = ["B2"]
-        l2_phase(run, cases, sig, cfg)
+        l2_phase(run, cases, sig, cfg, level)
     return 0
 
 

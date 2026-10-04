@@ -349,6 +349,35 @@ checkpointing needs dozens of nodes.
 (€533.49) equals 624 hours at its hourly rate; a persistent machine only pays off if it would be busy
 more than ~624 of the ~730 hours in a month.
 
+### Burst compute on Google Cloud (`scripts/burst_gcp.sh`)
+
+The founder's burst provider since 2026-10-04 (Hetzner's `scripts/burst.sh` still works). Same contract: one
+ephemeral VM per run, the code shipped as a git bundle (no GitHub credentials on the VM), results copied back with
+provenance, the VM deleted on every exit path. Default machine `n2-highmem-32` (32 vCPU, 256 GB) in
+`us-central1-a`; any machine type and zone can be passed. On-demand by default (a registered run must not be
+preempted); `MF_GCP_SPOT=1` gives a cheaper Spot VM for benchmarks.
+
+One-time setup (founder, in a terminal):
+
+```bash
+brew install --cask google-cloud-sdk         # then open a new terminal
+gcloud auth login                            # browser sign-in
+gcloud projects create <PROJECT_ID>          # or use an existing project
+gcloud config set project <PROJECT_ID>
+gcloud billing accounts list                 # note the ACCOUNT_ID
+gcloud billing projects link <PROJECT_ID> --billing-account <ACCOUNT_ID>
+gcloud services enable compute.googleapis.com
+ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/google_compute_engine   # key gcloud compute ssh uses
+scripts/burst_gcp.sh --check                 # account, project, API, machine type, CPU quota
+```
+
+New projects usually have a regional CPU quota below 32 vCPU. If `--check` reports too little quota, request an
+increase for "CPUs" and "N2 CPUs" in the VM's region (Console > IAM & Admin > Quotas); approval can take a day.
+
+Runs: `scripts/burst_gcp.sh E001` (a registered experiment; the orchestrator picks the results up on its next
+tick) or `scripts/burst_gcp.sh --cmd "<command>" <path>` (a benchmark: runs in the repository on the VM and copies
+`<path>` back).
+
 ---
 
 ## 11. Cost analysis (infrastructure only; Claude usage excluded)

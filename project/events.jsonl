@@ -423,3 +423,4 @@
 {"ts": "2026-10-04T03:16:37+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0024", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}
 {"ts": "2026-10-04T03:16:47+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0022", "status": "rejected", "note": "Superseded by I0024 (registration request for E001 as redesigned by T0060)."}
 {"ts": "2026-10-04T03:33:00+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0025", "kind": "budget_increase", "subject": "[O001] raise the objective budget by $60 (founder decision)"}
+{"ts": "2026-10-04T03:33:11+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0025", "status": "approved", "note": "usd=60"}

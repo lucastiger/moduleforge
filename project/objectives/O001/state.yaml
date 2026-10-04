@@ -10,7 +10,7 @@ replans: 2
 max_replans: 3
 needs_replan: false
 spent_usd: 104.9501
-budget_override_usd: null
+budget_override_usd: 164.95010000000002
 log:
 - 'founder answered I0003: (b): use the provisioned binary (MF_FASTHENRY_BIN, then PATH); no auto-build.
   Pin scripts/provision_compute.sh to the commit+sha256 the T0011 audit recommends. D0002 to be recorded

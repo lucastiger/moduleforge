@@ -1,8 +1,9 @@
 # ModuleForge status
-_generated 2026-10-04T02:24:13+00:00 from repository state — do not edit_
+_generated 2026-10-04T02:24:16+00:00 from repository state — do not edit_
 
-## Founder inbox (1 open)
+## Founder inbox (2 open)
 - **I0020** [experiment_registration] register E001 (pre-registration)
+- **I0022** [experiment_registration] register E001 (pre-registration)
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -11,13 +12,10 @@ _generated 2026-10-04T02:24:13+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $94.68/$120 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 35, failed: 2, merge: 1, todo: 7
+cancelled: 14, done: 36, failed: 2, todo: 7
 
-- T0057 `merge` scientist/design_experiment: E001 before registration: conservative refinement rule, honest interval level, verifiable mesh contract (T0055/T0056 reviews) (attempt 1)
 
 ## Recent events
-- 2026-10-02T22:32:10+00:00 sleep_detected {"gap_s": 408, "runs_extended": 0}
-- 2026-10-02T23:50:55+00:00 sleep_detected {"gap_s": 3618, "runs_extended": 0}
 - 2026-10-03T17:05:52+00:00 sleep_detected {"gap_s": 592, "runs_extended": 0}
 - 2026-10-03T17:18:44+00:00 sleep_detected {"gap_s": 772, "runs_extended": 0}
 - 2026-10-03T18:55:43+00:00 sleep_detected {"gap_s": 5141, "runs_extended": 0}
@@ -31,3 +29,5 @@ cancelled: 14, done: 35, failed: 2, merge: 1, todo: 7
 - 2026-10-04T01:27:52+00:00 sleep_detected {"gap_s": 597, "runs_extended": 0}
 - 2026-10-04T01:36:15+00:00 sleep_detected {"gap_s": 503, "runs_extended": 0}
 - 2026-10-04T02:23:58+00:00 inbox_resolved {"id": "I0021", "status": "approved", "note": "Approved per the founder's standing instruction (draft only, nothing frozen): DoD verified; T0058/T0059 accept_wi
+- 2026-10-04T02:24:15+00:00 merged {"task": "T0057"}
+- 2026-10-04T02:24:15+00:00 inbox_opened {"id": "I0022", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}

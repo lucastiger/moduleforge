@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-04T01:27:53+00:00 from repository state — do not edit_
+_generated 2026-10-04T01:36:16+00:00 from repository state — do not edit_
 
 ## Founder inbox (2 open)
 - **I0020** [experiment_registration] register E001 (pre-registration)
@@ -17,7 +17,6 @@ cancelled: 14, done: 35, failed: 2, needs_founder: 1, todo: 7
 - T0057 `needs_founder` scientist/design_experiment: E001 before registration: conservative refinement rule, honest interval level, verifiable mesh contract (T0055/T0056 reviews) (attempt 1)
 
 ## Recent events
-- 2026-10-02T22:11:58+00:00 sleep_detected {"gap_s": 387, "runs_extended": 0}
 - 2026-10-02T22:25:22+00:00 sleep_detected {"gap_s": 442, "runs_extended": 0}
 - 2026-10-02T22:32:10+00:00 sleep_detected {"gap_s": 408, "runs_extended": 0}
 - 2026-10-02T23:50:55+00:00 sleep_detected {"gap_s": 3618, "runs_extended": 0}
@@ -32,3 +31,4 @@ cancelled: 14, done: 35, failed: 2, needs_founder: 1, todo: 7
 - 2026-10-03T22:51:00+00:00 sleep_detected {"gap_s": 343, "runs_extended": 0}
 - 2026-10-03T23:11:00+00:00 sleep_detected {"gap_s": 406, "runs_extended": 0}
 - 2026-10-04T01:27:52+00:00 sleep_detected {"gap_s": 597, "runs_extended": 0}
+- 2026-10-04T01:36:15+00:00 sleep_detected {"gap_s": 503, "runs_extended": 0}

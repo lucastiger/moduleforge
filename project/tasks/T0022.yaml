@@ -4,7 +4,7 @@ title: L2 reference adapter moduleforge.solvers.l2 (provisioned FastHenry binary
   meshed planes, refinement, memoization)
 type: implement
 agent: builder
-status: todo
+status: running
 depends_on:
 - T0020
 - T0021
@@ -104,7 +104,19 @@ description: 'Implement `moduleforge.solvers.l2` with two parts.
   height), provided solver_tol bounds its error honestly. Implement exactly the contract in note sec.
   3 as registered; do not edit the runner or the spec. If C1 cannot reach the 2 % criterion within this
   machine''s 16 GB even so, stop and report blocked with the measured error vs plane mesh and memory:
-  the founder will decide between a larger burst VM and the in-house fallback (note sec. 2).'
+  the founder will decide between a larger burst VM and the in-house fallback (note sec. 2).
+
+
+  Founder decision D0003 (2026-10-04, after attempt 2 reported blocked): compute the partial-inductance
+  and resistance matrices yourself with exact closed forms (Hoer & Love 1965 for rectangular bars, the
+  exact filament mutual where filaments are used; ~1e-9 per entry), assemble and solve the mesh system
+  directly, and report meta[''solver_tol''] as the rigorous bound that follows. FastHenry (D0002 pin)
+  may still be used for geometry meshing and as a cross-check (meta[''fh_zc_rel_diff'']), but its kernel
+  and solve no longer produce reported values. Mesh C1''s plane at 1 mm or finer (your attempt 2: 0.5-1
+  mm cells converge, 15.423 -> 15.416 nH, and a direct solve at 1 mm fits in 16 GB). Keep one mesh per
+  solve and the registered constant refinement ratio. Add unit tests that compare kernel entries against
+  an independent high-precision quadrature (your benchmarks/infra/fh_kernel_accuracy.py reference) and
+  run the E001 smoke DoD as written. See project/decisions/D0003-l2-exact-inhouse-kernel.md.'
 context_files:
 - research/notes/o001-l2-reference.md
 - experiments/runners/e001_reference.py
@@ -164,13 +176,14 @@ risk: high
 model: null
 budget_usd: 7.0
 max_turns: 100
-attempts: 2
-max_attempts: 3
+attempts: 3
+max_attempts: 4
 branch: task/T0022-l2-reference-adapter-moduleforge-solvers
 pr: null
 runs:
 - T0022-builder-20261003T221916-fea7
 - T0022-builder-20261004T025500-a65f
+- T0022-builder-20261004T092936-f666
 created_by: planner:T0019
 created_at: '2026-09-29T22:56:48+00:00'
 protected_approved: false
@@ -451,3 +464,7 @@ history:
     \ of opposite sign cancel, but that cancellation can't be bounded worst-case.\n4. **C1 (loop over\
     \ plane).**\n   - The accuracy itself is reach"
   at: '2026-10-04T10:10:23+00:00'
+- attempt: 2
+  outcome: founder_decision
+  summary: 'D0003: exact in-house kernel; max_attempts raised to allow the redesign'
+  at: '2026-10-04T16:29:36+00:00'

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-04T10:10:24+00:00 from repository state — do not edit_
+_generated 2026-10-04T16:29:58+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -11,11 +11,11 @@ _generated 2026-10-04T10:10:24+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $125.81/$165 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 42, failed: 2, todo: 7
+cancelled: 14, done: 42, failed: 2, running: 1, todo: 6
 
+- T0022 `running` builder/implement: L2 reference adapter moduleforge.solvers.l2 (provisioned FastHenry binary only, SI-meter decks, meshed planes, refinement, memoization) (attempt 3)
 
 ## Recent events
-- 2026-10-04T05:10:20+00:00 run_finished {"run": "T0064-critic-20261003T215957-9049", "status": "completed", "cost": 2.1492234, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T05:14:37+00:00 run_finished {"run": "T0065-critic-20261003T215957-b549", "status": "completed", "cost": 2.1218578000000003, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T05:14:38+00:00 inbox_opened {"id": "I0026", "kind": "protected_change", "subject": "T0063: merge needs founder approval"}
 - 2026-10-04T05:15:50+00:00 inbox_resolved {"id": "I0026", "status": "approved", "note": "Approved per the founder's standing instruction (draft only, nothing frozen): DoD verified; T0064/T0065 accept_wi
@@ -30,3 +30,4 @@ cancelled: 14, done: 42, failed: 2, todo: 7
 - 2026-10-04T09:55:00+00:00 run_started {"run": "T0022-builder-20261004T025500-a65f", "task": "T0022", "role": "builder", "session": "7788cdb5-25f6-4286-94b8-3eb2ba9c9a56"}
 - 2026-10-04T10:10:23+00:00 run_finished {"run": "T0022-builder-20261004T025500-a65f", "status": "completed", "cost": 4.0858482, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T10:10:23+00:00 task_failed_attempt {"task": "T0022", "signal": "dod_failed", "action": "repair"}
+- 2026-10-04T16:29:36+00:00 run_started {"run": "T0022-builder-20261004T092936-f666", "task": "T0022", "role": "builder", "session": "ae40ab93-ba01-4438-b405-e336ca39f31f"}

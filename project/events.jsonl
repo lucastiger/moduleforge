@@ -455,3 +455,4 @@
 {"ts": "2026-10-04T17:50:55+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0022-builder-20261004T092936-f666", "status": "completed", "cost": 6.257618799999998, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-10-04T19:01:48+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0022", "signal": "dod_failed", "action": "repair"}
 {"ts": "2026-10-04T19:02:23+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 4289, "runs_extended": 0}
+{"ts": "2026-10-04T19:04:19+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 7019}

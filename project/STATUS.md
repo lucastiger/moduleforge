@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-04T19:02:31+00:00 from repository state — do not edit_
+_generated 2026-10-04T19:04:20+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -15,7 +15,6 @@ cancelled: 14, done: 42, failed: 2, todo: 7
 
 
 ## Recent events
-- 2026-10-04T05:16:16+00:00 merged {"task": "T0063"}
 - 2026-10-04T05:16:16+00:00 inbox_opened {"id": "I0027", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}
 - 2026-10-04T05:16:27+00:00 inbox_resolved {"id": "I0024", "status": "rejected", "note": "Superseded by I0027 (registration request for E001 as finalized by T0063)."}
 - 2026-10-04T05:18:41+00:00 experiment_registered {"id": "E001", "hash": "sha256:1c60eaaf3ee5121dae83c1ebd092b41968cd34bf9546ea00604f241fb95b0b5c", "by": "founder"}
@@ -30,3 +29,4 @@ cancelled: 14, done: 42, failed: 2, todo: 7
 - 2026-10-04T17:50:55+00:00 run_finished {"run": "T0022-builder-20261004T092936-f666", "status": "completed", "cost": 6.257618799999998, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T19:01:48+00:00 task_failed_attempt {"task": "T0022", "signal": "dod_failed", "action": "repair"}
 - 2026-10-04T19:02:23+00:00 sleep_detected {"gap_s": 4289, "runs_extended": 0}
+- 2026-10-04T19:04:19+00:00 loop_started {"pid": 7019}

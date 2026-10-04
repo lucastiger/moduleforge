@@ -4,7 +4,7 @@ title: L2 reference adapter moduleforge.solvers.l2 (provisioned FastHenry binary
   meshed planes, refinement, memoization)
 type: implement
 agent: builder
-status: running
+status: todo
 depends_on:
 - T0020
 - T0021
@@ -330,3 +330,124 @@ history:
     memory limit). Report the total numerical error honestly; iterative FastHenry solves are allowed where
     a dense LU does not fit.'
   at: '2026-10-04T09:54:59+00:00'
+- attempt: 2
+  outcome: agent_finished
+  summary: 'I''m stopping at blocked: the founder''s two requirements for this attempt conflict. One says
+    `meta[''solver_tol'']` must honestly bound the total numerical error, including FastHenry''s own kernel.
+    The other keeps the registered `solver_err_budget` of 1e-5, checked by `l2_solver_tolerance`. A worst-case
+    bound on the kernel error alone is above that budget. I didn''t change the adapter, so `src/moduleforge/solvers/l2.py`
+    is still attempt 1''s code (6e9c451) and the E001 smoke DoD still fails. I added one script, `benchmarks/infra/fh_kernel_accuracy.py`
+    (commit 2e1d2bb), that reproduces every number below.
+
+
+    **What I measured** (provisioned FastHenry 3.0wr; all decks in meters; reference is a 6-D Gauss quadrature
+    of the same integral, converged to about 1e-15):
+
+    1. **Kernel error by distance between'
+  report:
+    status: blocked
+    summary: "I'm stopping at blocked: the founder's two requirements for this attempt conflict. One says\
+      \ `meta['solver_tol']` must honestly bound the total numerical error, including FastHenry's own\
+      \ kernel. The other keeps the registered `solver_err_budget` of 1e-5, checked by `l2_solver_tolerance`.\
+      \ A worst-case bound on the kernel error alone is above that budget. I didn't change the adapter,\
+      \ so `src/moduleforge/solvers/l2.py` is still attempt 1's code (6e9c451) and the E001 smoke DoD\
+      \ still fails. I added one script, `benchmarks/infra/fh_kernel_accuracy.py` (commit 2e1d2bb), that\
+      \ reproduces every number below.\n\n**What I measured** (provisioned FastHenry 3.0wr; all decks\
+      \ in meters; reference is a 6-D Gauss quadrature of the same integral, converged to about 1e-15):\n\
+      1. **Kernel error by distance between filaments** (distance in units of filament width):\n\n| Distance\
+      \ | Worst relative error per inductance entry |\n|---|---|\n| under 15 widths | 1.6e-6 |\n| 15–45\
+      \ widths | 4.8e-7 |\n| 45 widths or more | 2.6e-5 (several pairs at 1.6–2.6e-5) |\n\n2. **Round-off\
+      \ is not the cause.** A translated copy of the same pair changes the value by only 1.8e-15. So the\
+      \ ~1e-6 jumps in A1 at level 4 come from FastHenry's far-field approximations. I reproduced the\
+      \ jump: A1 at 100 Hz goes 12.170765589 → 12.170765120 → 12.170775843 nH for levels 2–4, a +8.8e-7\
+      \ step at level 4.\n3. **What a worst-case bound gives.** Even when bounds assume none of the per-entry\
+      \ errors cancel:\n   - Using a single error level for all entries, A1 and A3 come out at about 5.2e-7.\
+      \ A1 is allowed 2e-7 and A3 1.0e-7.\n   - The wire cases at 20 MHz come out at about 1.5–3e-5, against\
+      \ an allowance of 1e-5.\n   - A tighter bound that sorts pairs by distance is about 1e-7 for A3,\
+      \ right at its limit, and still about 1e-5 or more for the wire cases.\n   - The actual summed error\
+      \ is around 1e-6 because errors of opposite sign cancel, but that cancellation can't be bounded\
+      \ worst-case.\n4. **C1 (loop over plane).**\n   - The accuracy itself is reachable. With FastHenry's\
+      \ default settings and plane cells of 2, 1 and 0.5 mm, L comes out 15.608, 15.423 and 15.416 nH.\
+      \ The 0.5 mm run took 7.5 s and 1 GB. Attempt 1's 8.9% error came from its 5 mm plane cells.\n \
+      \  - FastHenry's default auto-refinement changes the mesh when the multipole order changes, which\
+      \ breaks the one-mesh-per-solve rule.\n   - With auto-refinement off, the multipole result moves\
+      \ by up to 1.7% across orders 2–8. Orders 6 and 8 still differ by 4e-4, so no honest bound near\
+      \ C1's 1e-5 allowance is available that way.\n   - A direct solve at full precision only fits in\
+      \ 16 GB up to about 56 cells per axis.\n\n**Decision needed** — which of these do you want?\n- **(a)**\
+      \ Accept a cancellation-aware *estimate* of the kernel error instead of a worst-case bound. For\
+      \ the bars at 100 Hz, an exact identity (summed filament terms vs. Hoer–Love of whole segments)\
+      \ can measure the error directly; the 20 MHz wire cases and C1 would still need some other estimate.\
+      \ Under (a), C1 would use a direct solve with plane cells of 1 mm or finer.\n- **(b)** Keep worst-case\
+      \ bounds. Then `l2_solver_tolerance` fails for nearly every case and E001 is INVALID with FastHenry.\
+      \ Going on would need a larger budget, which means a new experiment id.\n- **(c)** Switch to the\
+      \ in-house fallback (note §2) with an exact kernel, where per-entry error is about 1e-9.\n\nThe\
+      \ checks below that I ran this attempt passed; I did not run the E001 smoke or the `loop_inductance`\
+      \ DoD command as written."
+    checks_run:
+    - cmd: uv run pytest -q tests/unit/solvers
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge/solvers tests/unit/solvers
+      exit_code: 0
+    - cmd: 'uv run python -c ''<loop_inductance DoD variant: generate_layouts(1, seed=7, dies_per_switch=2),
+        loop_inductance(freqs [5e6,2e7,8e7], refinement=0), print L — asserts not included>'''
+      exit_code: 0
+    - cmd: uv run python benchmarks/infra/fh_kernel_accuracy.py
+      exit_code: 0
+    - cmd: uv run ruff check benchmarks/infra/fh_kernel_accuracy.py src/moduleforge/solvers tests/unit/solvers
+        (before variable rename)
+      exit_code: 1
+    - cmd: uv run ruff check benchmarks/infra/fh_kernel_accuracy.py src/moduleforge/solvers tests/unit/solvers
+        (after fix)
+      exit_code: 0
+    - cmd: uv run python benchmarks/infra/fh_kernel_accuracy.py --no-plane
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    - cmd: DoD resolver check (PATH=/nonexistent, resolve_fasthenry must fail naming scripts/provision_compute.sh)
+      exit_code: 0
+    - cmd: DoD deck units check (fasthenry_deck(...) declares only '.units m')
+      exit_code: 0
+    - cmd: grep -rnE 'git clone|urlopen|urlretrieve|wget' src/moduleforge/solvers; test $? -eq 1
+      exit_code: 0
+    files_changed:
+    - benchmarks/infra/fh_kernel_accuracy.py
+    concerns:
+    - 'The E001 smoke DoD still fails: l2_converged refuses every case, and C1 is 8.9% off because of
+      attempt 1''s 5 mm plane cells. Not re-run this attempt; the last run is in /tmp/e001-smoke/result.json.'
+    - 'The founder brief calls the ~1e-6 A1 jumps kernel round-off. Measurements say otherwise: round-off
+      is ~1e-15, and the jumps come from FastHenry''s far-field approximations, with per-entry errors
+      up to 2.6e-5 at 45 or more filament widths.'
+    - FastHenry's default auto-refinement (-a on) re-meshes depending on the multipole order, which breaks
+      the one-mesh-per-solve and length-scaling contract. With -a off, results swing by up to 1.7% across
+      multipole orders 2-8.
+    - The 20 MHz kernel tolerances are rough estimates from a 1-D weight sum, not computed on the real
+      meshes; they still need confirming. The A1/A3 figures with a single error level assume all-positive
+      inductance entries and uniform current at 100 Hz.
+    - The founder-level options (accept a cancellation-aware estimate, enlarge the budget under a new
+      experiment id, or use the in-house exact-kernel fallback) change E001's evidence standard. This
+      needs a founder decision, not a builder choice.
+- attempt: 2
+  outcome: dod_failed
+  summary: agent reported blocked
+  failure_output: "I'm stopping at blocked: the founder's two requirements for this attempt conflict.\
+    \ One says `meta['solver_tol']` must honestly bound the total numerical error, including FastHenry's\
+    \ own kernel. The other keeps the registered `solver_err_budget` of 1e-5, checked by `l2_solver_tolerance`.\
+    \ A worst-case bound on the kernel error alone is above that budget. I didn't change the adapter,\
+    \ so `src/moduleforge/solvers/l2.py` is still attempt 1's code (6e9c451) and the E001 smoke DoD still\
+    \ fails. I added one script, `benchmarks/infra/fh_kernel_accuracy.py` (commit 2e1d2bb), that reproduces\
+    \ every number below.\n\n**What I measured** (provisioned FastHenry 3.0wr; all decks in meters; reference\
+    \ is a 6-D Gauss quadrature of the same integral, converged to about 1e-15):\n1. **Kernel error by\
+    \ distance between filaments** (distance in units of filament width):\n\n| Distance | Worst relative\
+    \ error per inductance entry |\n|---|---|\n| under 15 widths | 1.6e-6 |\n| 15–45 widths | 4.8e-7 |\n\
+    | 45 widths or more | 2.6e-5 (several pairs at 1.6–2.6e-5) |\n\n2. **Round-off is not the cause.**\
+    \ A translated copy of the same pair changes the value by only 1.8e-15. So the ~1e-6 jumps in A1 at\
+    \ level 4 come from FastHenry's far-field approximations. I reproduced the jump: A1 at 100 Hz goes\
+    \ 12.170765589 → 12.170765120 → 12.170775843 nH for levels 2–4, a +8.8e-7 step at level 4.\n3. **What\
+    \ a worst-case bound gives.** Even when bounds assume none of the per-entry errors cancel:\n   - Using\
+    \ a single error level for all entries, A1 and A3 come out at about 5.2e-7. A1 is allowed 2e-7 and\
+    \ A3 1.0e-7.\n   - The wire cases at 20 MHz come out at about 1.5–3e-5, against an allowance of 1e-5.\n\
+    \   - A tighter bound that sorts pairs by distance is about 1e-7 for A3, right at its limit, and still\
+    \ about 1e-5 or more for the wire cases.\n   - The actual summed error is around 1e-6 because errors\
+    \ of opposite sign cancel, but that cancellation can't be bounded worst-case.\n4. **C1 (loop over\
+    \ plane).**\n   - The accuracy itself is reach"
+  at: '2026-10-04T10:10:23+00:00'

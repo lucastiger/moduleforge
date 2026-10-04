@@ -6,9 +6,9 @@ evaluations: []
 last_verdict: null
 evaluated_runs: {}
 pending_evaluation: null
-replans: 2
+replans: 3
 max_replans: 3
-needs_replan: false
+needs_replan: true
 spent_usd: 147.0515
 budget_override_usd: 194.95329999999998
 log:

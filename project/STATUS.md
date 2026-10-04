@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-04T23:33:36+00:00 from repository state — do not edit_
+_generated 2026-10-04T23:33:40+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -11,13 +11,11 @@ _generated 2026-10-04T23:33:36+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $147.05/$195 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 43, failed: 3, merge: 1, todo: 7
+cancelled: 14, done: 44, failed: 3, running: 1, todo: 7
 
-- T0067 `merge` scientist/investigate: L2 feasibility spike: rigorous exact-kernel L2 for frozen E001 and E002 scale (go/no-go with measurements) (attempt 1)
+- T0069 `running` planner/plan: Plan O001 (diagnosis:T0067 of T0022 (implementation)) (attempt 1)
 
 ## Recent events
-- 2026-10-04T19:04:38+00:00 task_added {"task": "T0066"}
-- 2026-10-04T19:04:39+00:00 run_started {"run": "T0022-builder-20261004T120439-f0a0", "task": "T0022", "role": "builder", "session": "381844a4-672e-438a-bdba-fb3d77a9ef7f"}
 - 2026-10-04T20:33:31+00:00 run_finished {"run": "T0022-builder-20261004T120439-f0a0", "status": "completed", "cost": 6.3753128, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T21:14:18+00:00 task_failed_attempt {"task": "T0022", "signal": "dod_failed", "action": "diagnose"}
 - 2026-10-04T21:14:18+00:00 investigation_spawned {"task": "T0067", "about": "T0022", "cls": "implementation"}
@@ -31,3 +29,5 @@ cancelled: 14, done: 43, failed: 3, merge: 1, todo: 7
 - 2026-10-04T23:32:30+00:00 run_finished {"run": "T0068-critic-20261004T162532-83c9", "status": "completed", "cost": 1.8384040000000006, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T23:32:32+00:00 inbox_opened {"id": "I0029", "kind": "protected_change", "subject": "T0067: merge needs founder approval"}
 - 2026-10-04T23:33:28+00:00 inbox_resolved {"id": "I0029", "status": "approved", "note": "Approved per the founder's standing instruction (research code and diagnosis only): DoD verified; T0068 accept_wi
+- 2026-10-04T23:33:39+00:00 merged {"task": "T0067"}
+- 2026-10-04T23:33:40+00:00 run_started {"run": "T0069-planner-20261004T163340-4b89", "task": "T0069", "role": "planner", "session": "a43a84a8-e14c-4f6a-ad02-92c18c8d121a"}

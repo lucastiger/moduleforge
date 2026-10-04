@@ -1,0 +1,47 @@
+{
+  "summary": "The spike says go: a rigorous exact-kernel L2 can run E001 exactly as registered. The one open item is C1 at level 4, which did not finish on this Mac. On the wire cases, every rigor element held unchanged: the frozen cases, the 2 % criterion, the refinement rule and ratio check, and the 1e-5 solver budget with an honest solver_tol.\n\nQ1, wire convergence (this Mac, partly running alongside other jobs): B1, B2 and C0 all pass the frozen rule at level 4. The rule's remaining-error estimates are at most 1.4e-4, the ratio check scores 0.956 (passes at \u2264 1), and errors against the closed forms are at most 1.04e-4.\n| Case | Unknowns, levels 1\u21924 | Time, levels 1\u21924 | Peak memory | Reported solver_tol |\n|---|---|---|---|---|\n| B1 | 81 \u2192 441 | under 1 s | 0.2 GB (level 4) | \u2264 1.5e-13 |\n| B2 | 2,673 \u2192 14,553 | 1.6 s \u2192 603 s (dense LU) | 5.7 GB | \u2264 2.8e-12 |\n| C0 | 3,564 \u2192 19,404 | up to 264 s | 4.1 GB | \u2264 3.8e-12 |\nKernel quadrature and the far-field (proxy) truncation change L by at most 6.3e-13. Those two are measured, not bounded, and are not yet included in solver_tol.\n\nQ2, plane and C1: the plane kernel now takes 0.6\u20132.4 s, against the 21 min T0022's whole C1 level 1 took.\n| C1 level | Unknowns | Wall time | Peak memory | GMRES iterations | Error vs closed form |\n|---|---|---|---|---|---|\n| 1 | 21,852 | 35\u201342 s | 0.8 GB | 47\u201354 | +1.27e-3 |\n| 2 | 39,072 | 134\u2013174 s | 2.0 GB | 52\u201361 | +7.2e-4 |\n| 3 | 77,824 | 489 s | 6.3 GB | 62\u201371 | +3.2e-4 |\nEach level costs about 3.2\u20133.8\u00d7 the time and 2.6\u20133.1\u00d7 the memory of the one before. The convergence order is steady at about 1.1. I stopped level 4 (about 136k unknowns) after 21.5 min at 4.3 GB under memory pressure, so C1's rule verdict is pending the VM run.\n\nQ3, full E001 run (estimated, not measured): about 120\u2013180 min serial on this Mac, which fits the 240 min timeout but with little margin. On a GCP VM with every case in its own process it is about 45\u201375 min. B3, B4 and the bars A1\u2013A4 were not prototyped.\n\nQ4, E002 (estimated, about \u00b13\u00d7): each layout is about 0.5\u20130.6 M unknowns. That projects to 10\u201325 min per layout per process, or 30\u2013100 layouts per hour on a 256 GB VM. The layout path itself is not built.\n\nQ5: go for E001 as registered, no re-registration needed; productionizing is roughly 6\u20139 working days. E002 is a go on that estimate, with a separate 2\u20133 week build for the layout path.\n\nHow it works: wires use graded annuli with azimuthal modes, exact same-axis couplings, and moment-matched proxy filaments for distant ones. The plane uses a uniform grid with its kernel computed once per distinct offset and applied by FFT. Solves use GMRES with a rigorous a-posteriori bound on Z (|dZ| \u2264 \u2016P(Mx)\u2016\u00b2/r_min). That bound settles T0022 attempt 2's objection that an iterative solve could not meet the budget.",
+  "failure_class": "implementation",
+  "root_cause": "T0022 missed time and memory because of how it discretized and solved, not because of the physics or the frozen rule. Wire cross-sections used square stand-ins for annular sectors with coarse surface cells, which made the convergence sequences unsteady. C1 evaluated about 20 M wire\u2013plane pairs by quadrature with no reuse, then solved densely. Exact annuli with azimuthal modes, a plane kernel computed once per distinct offset and applied by FFT, proxy-compressed wire\u2013plane coupling, and GMRES with a rigorous residual bound remove both problems.",
+  "confidence": 0.75,
+  "evidence": [
+    "[F] B1 converges at level 4. The relative changes at 5 MHz are -6.6e-5, -3.9e-5, -2.3e-5 and -1.6e-5 (levels 1\u21925), and the rule estimates at most 1.2e-4. The 100 Hz error is 1.05e-9 and HF errors at level 4 are at most 9e-6 (vm_bench, /tmp/spk1).",
+    "[F] B2 converges at level 4. The 80 MHz changes are -1.1e-4, -6.5e-5 and -3.7e-5 (order about 1.9), the rule estimates at most 1.4e-4, and errors are at most 1.04e-4. The noise floor is 4.8e-9 relative and the ratio check scores 0.956.",
+    "[F] C0 converges at level 4 with a closed-form error of at most 2.3e-5. Its level-4 GMRES needed only 4 iterations.",
+    "[F] C1 levels 1-3 have 21,852, 39,072 and 77,824 unknowns; take 35-42, 134-174 and 489 s; and peak at 0.78, 2.0 and 6.3 GB. GMRES needs 47-71 iterations. Errors vs the closed form are +1.27e-3, +7.2e-4 and +3.2e-4, and solver_tol is at most 3e-11.",
+    "[F] Raising the quadrature orders 1.5-2x changes L by at most 6.3e-13. Raising the proxy/harmonic order P from 5 to 7 changes it by at most 7.9e-15 (kernel_checks.py).",
+    "[F] C1 level 4 did not finish within 21.5 min on the 17 GB Mac (4.3 GB RSS); I stopped it.",
+    "[F] E002 layouts have 12 wires (72 pieces) at 2 dies per switch and 36 wires (216 pieces) at 6, over 1825 mm2 of traces, a 0.3 mm backside Cu plane and a 3 mm baseplate."
+  ],
+  "alternative_explanations": [
+    {
+      "explanation": "The frozen refinement rule is too strict for any physical wire sequence, so the observed order drifts outside [1, 2] and E001 would need re-registration.",
+      "how_to_discriminate": "Apply the same frozen rule to sequences from exact-geometry annuli. Done: B1, B2 and C0 are accepted at level 4, which refutes this for those cases."
+    },
+    {
+      "explanation": "C1 is intrinsically too large for 16 GB and 240 min whatever the method.",
+      "how_to_discriminate": "Measure C1 levels 1-4 with FFT plus GMRES. Levels 1-3 fit (at most 6.3 GB, 489 s); level 4 did not finish locally within 21.5 min, so the VM run decides."
+    },
+    {
+      "explanation": "C1's first-order convergence comes from a plane-rim (half-cell) discretization artifact that could stop the rule from settling at level 4-5.",
+      "how_to_discriminate": "Use C1's level-4 value from the VM run. If the rule refuses, cover the plane rim half-cells and re-run (the frozen spec stays as is)."
+    }
+  ],
+  "discriminating_tests": [
+    "uv run python research/scripts/spike_l2/vm_bench.py --out research/spike_l2_results (on GCP: gives C1 level 4 and its rule verdict, plus VM timings)",
+    "uv run python research/scripts/spike_l2/kernel_checks.py (quadrature and P convergence)",
+    "uv run python research/scripts/spike_l2/vm_bench.py --out /tmp/spk --cases B1,B2 (reproduces Q1)"
+  ],
+  "recommended_actions": [
+    "Founder: run scripts/burst_gcp.sh --cmd \"uv run python research/scripts/spike_l2/vm_bench.py --out research/spike_l2_results\" research/spike_l2_results to get C1 level 4, its rule verdict and VM timings.",
+    "Builder task (about 6-9 days): productionize l2proto into moduleforge.solvers.l2 for the E001 contract. That covers bars via the D0003 Hoer-Love kernel with Toeplitz reuse, B3/B4 two-port and ties, a geometry-derived mesh_hash, stated kernel-error bounds folded into solver_tol, chunked and parallel wire-plane kernels, and unit tests. Gate the merge on the E001 smoke DoD.",
+    "Separate builder task for the layout path: inclined-wire kernel through proxies, masked trace grid on a shared lateral FFT grid, ports and die shorts, backside Cu plus baseplate. T0024 should size E002's sample after measuring 3-5 layouts; the current estimate is 10-25 min per layout per process.",
+    "No re-registration of E001 is needed. Prefer running the full E001 on the VM, because the Mac margin under 240 min is only 1.3-2x."
+  ],
+  "files_written": [
+    "research/diagnoses/T0067.md",
+    "research/scripts/spike_l2/l2proto.py",
+    "research/scripts/spike_l2/vm_bench.py",
+    "research/scripts/spike_l2/kernel_checks.py"
+  ],
+  "affects_acceptance_criteria": false
+}

@@ -1,8 +1,7 @@
 # ModuleForge status
-_generated 2026-10-04T05:16:17+00:00 from repository state — do not edit_
+_generated 2026-10-04T05:16:50+00:00 from repository state — do not edit_
 
-## Founder inbox (2 open)
-- **I0024** [experiment_registration] register E001 (pre-registration)
+## Founder inbox (1 open)
 - **I0027** [experiment_registration] register E001 (pre-registration)
 
 ## Objectives
@@ -16,7 +15,6 @@ cancelled: 14, done: 42, failed: 2, todo: 7
 
 
 ## Recent events
-- 2026-10-04T03:41:02+00:00 capacity_backoff {"task": "T0063", "minutes": 30}
 - 2026-10-04T04:11:25+00:00 run_started {"run": "T0063-scientist-20261003T211125-c722", "task": "T0063", "role": "scientist", "session": "a1b0c58e-ee01-4794-941e-4dff215c5a40"}
 - 2026-10-04T04:11:57+00:00 run_finished {"run": "T0063-scientist-20261003T211125-c722", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-04T04:11:57+00:00 capacity_backoff {"task": "T0063", "minutes": 30}
@@ -31,3 +29,4 @@ cancelled: 14, done: 42, failed: 2, todo: 7
 - 2026-10-04T05:15:50+00:00 inbox_resolved {"id": "I0026", "status": "approved", "note": "Approved per the founder's standing instruction (draft only, nothing frozen): DoD verified; T0064/T0065 accept_wi
 - 2026-10-04T05:16:16+00:00 merged {"task": "T0063"}
 - 2026-10-04T05:16:16+00:00 inbox_opened {"id": "I0027", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}
+- 2026-10-04T05:16:27+00:00 inbox_resolved {"id": "I0024", "status": "rejected", "note": "Superseded by I0027 (registration request for E001 as finalized by T0063)."}

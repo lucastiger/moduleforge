@@ -1,46 +1,75 @@
 id: T0067
 objective: O001
-title: Diagnose failure of T0022
+title: 'L2 feasibility spike: rigorous exact-kernel L2 for frozen E001 and E002 scale (go/no-go with measurements)'
 type: investigate
 agent: scientist
-status: todo
+status: running
 depends_on: []
-description: 'Task T0022 (''L2 reference adapter moduleforge.solvers.l2 (provisioned FastHenry binary
-  only, SI-meter decks, meshed planes, refinement, memoization)'') failed with preliminary class `implementation`:
-  definition of done not met.
-
-  Failure output (tail):
-
-  ```
-
-  FAIL rm -rf /tmp/e001-smoke && uv run python experiments/runners/e001_reference.py --smoke && uv run
-  python -c "import json; r=json.load(open(''/tmp/e001-smoke/result.json'')); assert r[''status'']==''complete'',
-  r[''status'']; assert r[''sanity''] and all(s[''passed''] for s in r[''sanity'']), r[''sanity'']; v=r[''metrics''][''max_rel_err_vs_analytic''][''value''];
-  assert v <= 0.02, v; print(''E001 smoke max_rel_err'', v)"
-
-  TIMEOUT after 2400s
-
-  ```
-
-  Determine the true failure class and root cause. Follow skill mf-diagnosis: list at least two alternative
-  explanations, design a discriminating test, run it if cheap, and write your notes to research/diagnoses/T0067.md.'
+description: "Founder-approved feasibility spike (2026-10-04), replacing the auto-generated diagnosis\
+  \ of T0022: T0022 is understood (four attempts; its reports in project/tasks/T0022.yaml). It built an\
+  \ exact in-house kernel (D0003) that is accurate (A1 1.3e-7, B2 ~1e-3, kernel entries within 1e-9 of\
+  \ quadrature) but could not satisfy the frozen E001 within time and memory: B1/B2 level sequences are\
+  \ monotone but not steady (pre-asymptotic: surface cells 1.4 delta -> 0.65 delta over levels 1-4; annular\
+  \ sectors approximated by squares), so the frozen rule refuses them; C1 level 1 alone took 21 min (about\
+  \ 20 million wire-to-plane pairs by quadrature, single-threaded); layout solves took > 30 min.\n\nGoal:\
+  \ measured go/no-go for building an L2 that keeps EVERY rigor element (E001 frozen as registered: cases,\
+  \ 2 % criterion, refinement rule, solver budget 1e-5 with a rigorous solver_tol per D0003) and is fast\
+  \ enough for E002. Do not edit experiments/specs or the E001 runner.\n\nAnswer, with numbers:\nQ1 Wire\
+  \ convergence. Prototype a wire cross-section discretization with exact geometry (annular-sector cells\
+  \ with high-accuracy kernels) or an azimuthal-harmonic (modal) basis with graded radial cells, refined\
+  \ by the registered constant ratio (>= 1.25) and starting fine enough that every level is in the asymptotic\
+  \ range. For B1 and B2 (B3/B4 if affordable) give the level sequences (>= 4 levels) at the E001 frequencies,\
+  \ the frozen rule's verdict (remaining_discretization_error on the registered path, with an honest noise\
+  \ floor), the error vs the closed form, and unknowns, memory and time per level.\nQ2 Plane and C1. Exploit\
+  \ the uniform plane grid (entries depend only on relative offset: compute each distinct offset once)\
+  \ and parallel kernel evaluation over cores; measure C1 levels 1-3 (and 4 if affordable) and give the\
+  \ scaling of time and memory with level, plus the error vs the closed form.\nQ3 Full E001 projection:\
+  \ wall time and memory for the full registered run (all cases, levels and frequencies) on this Mac (10\
+  \ cores, 17 GB) and on a GCP VM of 32-88 vCPU / 256+ GB, from measured per-core scaling, against the\
+  \ frozen timeout_min = 240.\nQ4 E002 scale: projected L2 time per generated half-bridge layout (2 and\
+  \ 6 dies per switch) at the discretization E002 would need, so T0024 can size E002's sample.\nQ5 Verdict:\
+  \ GO (design and estimated cost of the L2 build), GO only with a re-registered E001 that keeps every\
+  \ criterion but changes its compute envelope (which parameters and why), or NO-GO (with the data).\n\
+  \nPracticalities: prototypes go under research/scripts/spike_l2/ (your write scope; nothing under src/).\
+  \ T0022's code is on its branch (commits 6e9c451, 90a981d, fcece62, 484f284; read it with git show)\
+  \ and may be copied there. Keep each local measurement bounded (about 10 min) and extrapolate; agents\
+  \ cannot use cloud credentials, so also write research/scripts/spike_l2/vm_bench.py (with --out <dir>\
+  \ and --quick) that measures Q1-Q4 at full size; the founder session will run it on GCP with\n  scripts/burst_gcp.sh\
+  \ --cmd \"uv run python research/scripts/spike_l2/vm_bench.py --out research/spike_l2_results\" research/spike_l2_results\n\
+  and the results will feed the final go/no-go. Write the findings to research/diagnoses/T0067.md, ending\
+  \ with a go/no-go table."
 context_files:
 - project/tasks/T0022.yaml
 deliverables:
 - research/diagnoses/T0067.md
+- research/scripts/spike_l2/
 touches:
 - research/diagnoses/T0067.md
-definition_of_done: []
+- research/scripts/spike_l2/**
+definition_of_done:
+- cmd: null
+  exists: research/diagnoses/T0067.md
+  timeout_s: 60
+- cmd: grep -q -i 'go/no-go' research/diagnoses/T0067.md
+  exists: null
+  timeout_s: 60
+- cmd: uv run ruff check research/scripts/spike_l2
+  exists: null
+  timeout_s: 300
+- cmd: uv run python research/scripts/spike_l2/vm_bench.py --help
+  exists: null
+  timeout_s: 300
 experiment: null
 risk: medium
 model: null
-budget_usd: 5.0
-max_turns: 80
-attempts: 0
+budget_usd: 8.0
+max_turns: 150
+attempts: 1
 max_attempts: 3
-branch: null
+branch: task/T0067-l2-feasibility-spike-rigorous-exact-kern
 pr: null
-runs: []
+runs:
+- T0067-scientist-20261004T150032-01ba
 created_by: orchestrator
 created_at: '2026-10-04T21:14:18+00:00'
 protected_approved: false
@@ -49,4 +78,8 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: repurposed
+  summary: 'founder session: diagnosis replaced by the founder-approved L2 feasibility spike (go/no-go
+    with measurements)'
+  at: '2026-10-04T22:00:32+00:00'

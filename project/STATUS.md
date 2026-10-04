@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-04T21:59:17+00:00 from repository state — do not edit_
+_generated 2026-10-04T22:00:54+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -11,11 +11,11 @@ _generated 2026-10-04T21:59:17+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $138.44/$195 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 42, failed: 3, todo: 8
+cancelled: 14, done: 42, failed: 3, running: 1, todo: 7
 
+- T0067 `running` scientist/investigate: L2 feasibility spike: rigorous exact-kernel L2 for frozen E001 and E002 scale (go/no-go with measurements) (attempt 1)
 
 ## Recent events
-- 2026-10-04T10:10:23+00:00 run_finished {"run": "T0022-builder-20261004T025500-a65f", "status": "completed", "cost": 4.0858482, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T10:10:23+00:00 task_failed_attempt {"task": "T0022", "signal": "dod_failed", "action": "repair"}
 - 2026-10-04T16:29:36+00:00 run_started {"run": "T0022-builder-20261004T092936-f666", "task": "T0022", "role": "builder", "session": "ae40ab93-ba01-4438-b405-e336ca39f31f"}
 - 2026-10-04T17:50:55+00:00 run_finished {"run": "T0022-builder-20261004T092936-f666", "status": "completed", "cost": 6.257618799999998, "subtype": "success", "report": "structured_output"}
@@ -30,3 +30,4 @@ cancelled: 14, done: 42, failed: 3, todo: 8
 - 2026-10-04T21:14:53+00:00 sleep_detected {"gap_s": 2483, "runs_extended": 0}
 - 2026-10-04T21:59:10+00:00 inbox_opened {"id": "I0028", "kind": "budget_increase", "subject": "[O001] stage 1 of the approved increase: cap +$30 for the L2 feasibility spike"}
 - 2026-10-04T21:59:14+00:00 inbox_resolved {"id": "I0028", "status": "approved", "note": "usd=56.51"}
+- 2026-10-04T22:00:32+00:00 run_started {"run": "T0067-scientist-20261004T150032-01ba", "task": "T0067", "role": "scientist", "session": "7bf99934-9660-46d7-baaf-8c2045505570"}

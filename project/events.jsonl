@@ -408,3 +408,6 @@
 {"ts": "2026-10-04T02:23:58+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0021", "status": "approved", "note": "Approved per the founder's standing instruction (draft only, nothing frozen): DoD verified; T0058/T0059 accept_with_caveats. Founder session confirmed T0058's major on the registered path (accurate same-sign solvers accepted 0/10898 at p=2) -> follow-up before E001 registration, with corrected DoD on the registered path."}
 {"ts": "2026-10-04T02:24:15+00:00", "event": "merged", "actor": "orchestrator", "task": "T0057"}
 {"ts": "2026-10-04T02:24:15+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0022", "kind": "experiment_registration", "subject": "register E001 (pre-registration)"}
+{"ts": "2026-10-04T02:24:40+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0020", "status": "rejected", "note": "Superseded by I0022 (registration request for E001 as redesigned by T0057); registration still waits for the refinement-rule power fix."}
+{"ts": "2026-10-04T02:24:40+00:00", "event": "task_added", "actor": "founder", "task": "T0060"}
+{"ts": "2026-10-04T02:24:45+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0060-scientist-20261003T192445-c7d2", "task": "T0060", "role": "scientist", "session": "888f0806-61ca-49c8-9604-8d63d9cda8dd"}

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-04T05:18:58+00:00 from repository state — do not edit_
+_generated 2026-10-04T05:19:31+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -11,11 +11,11 @@ _generated 2026-10-04T05:18:58+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $115.09/$165 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 14, done: 42, failed: 2, todo: 7
+cancelled: 14, done: 42, failed: 2, running: 1, todo: 6
 
+- T0022 `running` builder/implement: L2 reference adapter moduleforge.solvers.l2 (provisioned FastHenry binary only, SI-meter decks, meshed planes, refinement, memoization) (attempt 1)
 
 ## Recent events
-- 2026-10-04T04:11:57+00:00 capacity_backoff {"task": "T0063", "minutes": 30}
 - 2026-10-04T04:42:21+00:00 run_started {"run": "T0063-scientist-20261003T214221-33c6", "task": "T0063", "role": "scientist", "session": "e07ea640-4d02-4520-b964-a138924756ca"}
 - 2026-10-04T04:58:45+00:00 run_finished {"run": "T0063-scientist-20261003T214221-33c6", "status": "completed", "cost": 3.5479912000000002, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T04:59:56+00:00 verified {"task": "T0063"}
@@ -30,3 +30,4 @@ cancelled: 14, done: 42, failed: 2, todo: 7
 - 2026-10-04T05:16:27+00:00 inbox_resolved {"id": "I0024", "status": "rejected", "note": "Superseded by I0027 (registration request for E001 as finalized by T0063)."}
 - 2026-10-04T05:18:41+00:00 experiment_registered {"id": "E001", "hash": "sha256:1c60eaaf3ee5121dae83c1ebd092b41968cd34bf9546ea00604f241fb95b0b5c", "by": "founder"}
 - 2026-10-04T05:18:41+00:00 inbox_resolved {"id": "I0027", "status": "approved", "note": "Founder: register E001 now (2026-10-04); T0022 must deliver a direct, tightly reported solve so E001's solver noi
+- 2026-10-04T05:19:16+00:00 run_started {"run": "T0022-builder-20261003T221916-fea7", "task": "T0022", "role": "builder", "session": "1fb29926-0ec2-4a36-8fef-97d203d303f8"}

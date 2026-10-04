@@ -445,3 +445,4 @@
 {"ts": "2026-10-04T05:16:27+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0024", "status": "rejected", "note": "Superseded by I0027 (registration request for E001 as finalized by T0063)."}
 {"ts": "2026-10-04T05:18:41+00:00", "event": "experiment_registered", "actor": "orchestrator", "id": "E001", "hash": "sha256:1c60eaaf3ee5121dae83c1ebd092b41968cd34bf9546ea00604f241fb95b0b5c", "by": "founder"}
 {"ts": "2026-10-04T05:18:41+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0027", "status": "approved", "note": "Founder: register E001 now (2026-10-04); T0022 must deliver a direct, tightly reported solve so E001's solver noise floor is <= ~2e-9."}
+{"ts": "2026-10-04T05:19:16+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0022-builder-20261003T221916-fea7", "task": "T0022", "role": "builder", "session": "1fb29926-0ec2-4a36-8fef-97d203d303f8"}

@@ -4,7 +4,7 @@ title: L2 reference adapter moduleforge.solvers.l2 (provisioned FastHenry binary
   meshed planes, refinement, memoization)
 type: implement
 agent: builder
-status: todo
+status: running
 depends_on:
 - T0020
 - T0021
@@ -88,7 +88,19 @@ description: 'Implement `moduleforge.solvers.l2` with two parts.
   - a generated 2-die half-bridge within 1–100 nH.
 
 
-  Do not modify pyproject.toml; n2 already moved the runtime dependencies.'
+  Do not modify pyproject.toml; n2 already moved the runtime dependencies.
+
+
+  Founder requirement (2026-10-04, E001 registered as spec sha256:1c60eaaf...; runner frozen): E001''s
+  refinement rule is safe at any solver accuracy but accepts accurate solves reliably only when its noise
+  floor 2 x meta[''solver_tol''] x amplification is <= ~2e-9 (reviews T0064/T0065 of T0063; note sec.
+  3/4.4). Use a direct LU solve (no iterative or compressed solve) for E001''s sizes and report meta[''solver_tol'']
+  as a tight, honest bound on the relative error of the port impedance. Do not report LAPACK''s norm-wise
+  ferr unscaled: it overestimates by 1e2-1e3 and must be converted to the port quantity (T0064). The smoke
+  run''s l2_solver_tolerance sanity value (reported / required) must be <= 1e-4. Implement exactly the
+  contract in note sec. 3 as registered (mesh_params, mesh_hash, one mesh per solve, constant refinement
+  ratio >= 1.25 with integer counts chosen so every ratio holds); do not edit the runner or the spec:
+  they are frozen.'
 context_files:
 - research/notes/o001-l2-reference.md
 - experiments/runners/e001_reference.py
@@ -143,16 +155,23 @@ definition_of_done:
 - cmd: grep -rnE 'git clone|urlopen|urlretrieve|wget' src/moduleforge/solvers; test $? -eq 1
   exists: null
   timeout_s: 30
+- cmd: 'uv run python -c "import json; r=json.load(open(''/tmp/e001-smoke/result.json'')); s={x[''name'']:
+    x for x in r[''sanity'']}[''l2_solver_tolerance'']; assert s[''value''] is not None and s[''value'']
+    <= 1e-4, (''reported solver_tol / required must be <= 1e-4 (E001 noise floor <= 2e-9): direct LU with
+    a tight, honest error estimate'', s); print(''solver_tol / required'', s[''value''])"'
+  exists: null
+  timeout_s: 300
 experiment: null
 risk: high
 model: null
 budget_usd: 7.0
 max_turns: 100
-attempts: 0
+attempts: 1
 max_attempts: 3
-branch: null
+branch: task/T0022-l2-reference-adapter-moduleforge-solvers
 pr: null
-runs: []
+runs:
+- T0022-builder-20261003T221916-fea7
 created_by: planner:T0019
 created_at: '2026-09-29T22:56:48+00:00'
 protected_approved: false

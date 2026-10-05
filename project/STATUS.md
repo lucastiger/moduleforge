@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-05T05:45:13+00:00 from repository state — do not edit_
+_generated 2026-10-05T05:59:39+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -8,17 +8,14 @@ _generated 2026-10-05T05:45:13+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $162.13/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $164.21/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 49, failed: 3, running: 2, todo: 7
+cancelled: 19, done: 49, failed: 3, running: 1, todo: 8
 
 - T0071 `running` builder/implement: Complete moduleforge.solvers.l2 for E001: exact bars, two-port Z, ties; frozen E001 smoke passes within 40 min (attempt 1)
-- T0074 `running` builder/implement: L2 layout path: Layout -> exact-kernel loop_inductance reusing l2_core's compressed wire-to-plane operator (l2_layout.py) (attempt 1)
 
 ## Recent events
-- 2026-10-05T02:10:19+00:00 capacity_backoff {"task": "T0070", "minutes": 30}
-- 2026-10-05T02:20:45+00:00 inbox_resolved {"id": "I0033", "status": "approved", "note": ""}
 - 2026-10-05T02:40:25+00:00 run_started {"run": "T0070-builder-20261004T194025-abdf", "task": "T0070", "role": "builder", "session": "86dd30fc-e625-4937-908e-8326f5d987f8"}
 - 2026-10-05T03:53:00+00:00 run_finished {"run": "T0070-builder-20261004T194025-abdf", "status": "completed", "cost": 5.770738400000001, "subtype": "success", "report": "structured_output"}
 - 2026-10-05T03:59:41+00:00 verified {"task": "T0070"}
@@ -32,3 +29,5 @@ cancelled: 19, done: 49, failed: 3, running: 2, todo: 7
 - 2026-10-05T05:41:25+00:00 merged {"task": "T0070"}
 - 2026-10-05T05:44:46+00:00 run_started {"run": "T0071-builder-20261004T224446-66bd", "task": "T0071", "role": "builder", "session": "bac608e4-1d02-4bc5-90e0-c8b8d476c924"}
 - 2026-10-05T05:44:46+00:00 run_started {"run": "T0074-builder-20261004T224446-9f94", "task": "T0074", "role": "builder", "session": "fcdf6da1-56d3-4f62-961d-3de40ad9e112"}
+- 2026-10-05T05:59:38+00:00 run_finished {"run": "T0074-builder-20261004T224446-9f94", "status": "error", "cost": 2.078287, "subtype": "success", "report": "missing"}
+- 2026-10-05T05:59:38+00:00 capacity_backoff {"task": "T0074", "minutes": 30}

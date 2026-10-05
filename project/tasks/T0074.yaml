@@ -4,7 +4,7 @@ title: 'L2 layout path: Layout -> exact-kernel loop_inductance reusing l2_core''
   operator (l2_layout.py)'
 type: implement
 agent: builder
-status: running
+status: todo
 depends_on:
 - T0070
 description: 'Restores T0069 plan node n4a, which the open-task-limit bug dropped; the founder asked for
@@ -133,7 +133,7 @@ risk: high
 model: null
 budget_usd: 8.0
 max_turns: 150
-attempts: 1
+attempts: 0
 max_attempts: 3
 branch: task/T0074-l2-layout-path-layout-exact-kernel-loop-
 pr: null
@@ -150,4 +150,7 @@ rationale: A2-A5 and K1-K3 need L2 values for generated layouts. Review T0068 sh
   cannot reach E002 scale without compression, so this is the E002 feasibility risk. It runs in parallel
   with T0071 so the risk surfaces early. The founder asked for this node's restoration (I0032), and D0004
   sets its solver and provenance rules.
-history: []
+history:
+- outcome: capacity_backoff
+  summary: You've hit your session limit · resets 12:20am (America/Los_Angeles)
+  at: '2026-10-05T05:59:38+00:00'

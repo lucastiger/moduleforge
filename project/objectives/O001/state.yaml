@@ -8,7 +8,7 @@ evaluated_runs: {}
 pending_evaluation: null
 replans: 3
 max_replans: 3
-needs_replan: false
+needs_replan: true
 spent_usd: 149.5279
 budget_override_usd: 244.9479
 log:
@@ -25,3 +25,4 @@ log:
 - diagnosis:T0031 of T0030 (implementation)
 - diagnosis:T0032 of T0029 (implementation)
 - diagnosis:T0067 of T0022 (implementation)
+- 'founder approved I0031: Founder (2026-10-04): confirm (i) and (ii); recorded as D0004 (project/decisions/D0004-l2-iterative-solve-fasthenry-optional.md)'

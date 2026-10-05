@@ -28,8 +28,15 @@ description: 'Replaces failed T0022 (4 attempts). It uses the design measured by
   the uncovered plane-rim half-cells (an O(a) term, T0067) and fix the discretization. Never touch the
   rule.
 
-  (3) Wire-to-plane coupling: chunked (bounded memory) and parallel over cores. C1 level 4 must fit in
-  <= 12 GB on this 17 GB Mac and leave room for the 40-minute E001 smoke run.
+  (3) Wire-to-plane coupling: COMPRESSED, not stored dense (founder amendment, 2026-10-04). The spike''s
+  GCP benchmark (research/spike_l2_results/C1_k4.json) measured C1 level 4 at 16.0 GB peak, of which the
+  dense wire-to-plane block is ~10 GB (22,932 x 56,448 float64), with a 343 s build growing ~3x per level.
+  Chunked recomputation would rebuild it on each of ~70 GMRES iterations, so use a compressed operator, e.g.
+  precorrected FFT: project the proxy currents onto the plane''s lateral grid, apply by FFT, and correct
+  the near field exactly. Its error bound is a stated bound counted in solver_tol (item 4, D0004). Parallel
+  over cores. C1 level 4 must fit in <= 12 GB on this 17 GB Mac and leave room for the 40-minute E001 smoke
+  run. Expose the operator in l2_core: the layout path (n4a) reuses it for wire-to-plane and wire-to-trace
+  coupling instead of building its own.
 
   (4) Solve: dense LU for small systems, otherwise GMRES with the block preconditioner. meta[''solver_tol'']
   = the rigorous a-posteriori bound ||P(Mx)||^2/r_min, plus rounding, plus STATED BOUNDS (not measured

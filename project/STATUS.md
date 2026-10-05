@@ -1,8 +1,7 @@
 # ModuleForge status
-_generated 2026-10-05T00:25:25+00:00 from repository state — do not edit_
+_generated 2026-10-05T00:28:07+00:00 from repository state — do not edit_
 
-## Founder inbox (2 open)
-- **I0031** [decision] [O001] Confirm two amendments to D0003 for the L2 rebuild (iterative solve with a rigorous bound; FastHenry optional)
+## Founder inbox (1 open)
 - **I0032** [plan_approval] [O001] approve initial plan (3 tasks)
 
 ## Objectives
@@ -19,7 +18,6 @@ cancelled: 19, done: 45, failed: 3, proposed: 3, todo: 2
 - T0072 `proposed` none/experiment: Run E001: L2 reference vs closed-form partial inductances (attempt 0)
 
 ## Recent events
-- 2026-10-04T22:00:32+00:00 run_started {"run": "T0067-scientist-20261004T150032-01ba", "task": "T0067", "role": "scientist", "session": "7bf99934-9660-46d7-baaf-8c2045505570"}
 - 2026-10-04T23:25:25+00:00 run_finished {"run": "T0067-scientist-20261004T150032-01ba", "status": "completed", "cost": 6.7698348, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T23:25:31+00:00 verified {"task": "T0067"}
 - 2026-10-04T23:25:32+00:00 run_started {"run": "T0068-critic-20261004T162532-83c9", "task": "T0068", "role": "critic", "session": "b375b044-2b89-41de-b9b3-eee6f75e64e0"}
@@ -34,3 +32,4 @@ cancelled: 19, done: 45, failed: 3, proposed: 3, todo: 2
 - 2026-10-04T23:42:44+00:00 inbox_opened {"id": "I0032", "kind": "plan_approval", "subject": "[O001] approve initial plan (3 tasks)"}
 - 2026-10-04T23:42:44+00:00 plan_applied {"objective": "O001", "created": ["T0070", "T0071", "T0072"], "dropped": 5}
 - 2026-10-05T00:25:13+00:00 inbox_resolved {"id": "I0030", "status": "approved", "note": "usd=95.42"}
+- 2026-10-05T00:27:53+00:00 inbox_resolved {"id": "I0031", "status": "approved", "note": "Founder (2026-10-04): confirm (i) and (ii); recorded as D0004 (project/decisions/D0004-l2-iterative-solve-fasthen

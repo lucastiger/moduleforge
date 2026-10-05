@@ -20,7 +20,7 @@ options:
 - 'Reject (i): dense LU only. C1 level 4 and the E002 layouts then do not fit on this machine, so E001
   and E002 would need a large-memory host and probably re-registration'
 recommendation: Confirm both and record D0004 before n1 starts.
-status: open
-response: ''
+status: approved
+response: 'Founder (2026-10-04): confirm (i) and (ii); recorded as D0004 (project/decisions/D0004-l2-iterative-solve-fasthenry-optional.md)'
 created_at: '2026-10-04T23:42:44+00:00'
-resolved_at: null
+resolved_at: '2026-10-05T00:27:53+00:00'

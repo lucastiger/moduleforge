@@ -479,3 +479,4 @@
 {"ts": "2026-10-04T23:42:44+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0032", "kind": "plan_approval", "subject": "[O001] approve initial plan (3 tasks)"}
 {"ts": "2026-10-04T23:42:44+00:00", "event": "plan_applied", "actor": "orchestrator", "objective": "O001", "created": ["T0070", "T0071", "T0072"], "dropped": 5}
 {"ts": "2026-10-05T00:25:13+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0030", "status": "approved", "note": "usd=95.42"}
+{"ts": "2026-10-05T00:27:53+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0031", "status": "approved", "note": "Founder (2026-10-04): confirm (i) and (ii); recorded as D0004 (project/decisions/D0004-l2-iterative-solve-fasthenry-optional.md)"}

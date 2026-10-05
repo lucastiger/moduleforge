@@ -79,7 +79,16 @@ description: 'Restores T0069 plan node n4a, which the open-task-limit bug droppe
   - the generated 2-die half-bridge within 1-100 nH.
 
   Cite every closed form (skill mf-conventions). Never weaken a test or tolerance. Report wall time, CPU
-  time, peak memory and GMRES iterations for seed 7 at 2 and 6 dies per switch, refinement 0.'
+  time, peak memory and GMRES iterations for seed 7 at 2 and 6 dies per switch, refinement 0.
+
+
+  Founder amendment (2026-10-05), from review T0080 of T0070: l2_core''s FFT wire-to-plane operator only
+  works when every wire segment length equals the plane cell along that axis and the plane extent is a
+  whole number of segments. Otherwise it raises NotImplementedError, and it also raises for collinear
+  parallel edges or parallel edges closer than 2.5 r. C1 happens to fit this lattice; generated layouts
+  will not. l2_layout.py must therefore provide the general projection itself, e.g. precorrected FFT onto
+  the shared grid with the near field corrected exactly, with its error bound counted in solver_tol (D0004).
+  l2_core is still not edited here.'
 context_files:
 - project/tasks/T0066.yaml
 - project/decisions/D0004-l2-iterative-solve-fasthenry-optional.md
@@ -94,6 +103,7 @@ context_files:
 - src/moduleforge/geometry/stack.py
 - src/moduleforge/generate/halfbridge.py
 - .claude/skills/mf-conventions/SKILL.md
+- project/reviews/T0070/T0080.json
 deliverables:
 - src/moduleforge/solvers/l2_layout.py
 - tests/unit/solvers/test_l2_layout.py

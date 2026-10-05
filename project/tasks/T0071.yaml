@@ -48,7 +48,46 @@ description: 'Completes moduleforge.solvers.l2 for E001 on n1''s core. This is t
   - solver_tol vs a dense LU.
 
   Cite closed forms. Never weaken a test or tolerance. Do not change files under src/moduleforge/solvers/l2_layout.py
-  (n4a works there in parallel).'
+  (n4a works there in parallel).
+
+
+  Founder amendment (2026-10-05), from the reviews of T0070 (project/reviews/T0070/T0079.json, T0080.json).
+  Required:
+
+
+  (R1, major, T0079) E001 solves C1 at 5, 20 and 80 MHz in one call, on one mesh graded to 80 MHz. With
+  that grading the plane''s surface layer (plane_layer:gnd) shrinks by up to 1.4196 per level (L2 -> L3),
+  while segments and plane cells shrink by 1.2857. The ratio spread is then 1.1041 > refinement_ratio_spread
+  1.1, and refinement_ratio_violation = 1.0037, so E001''s l2_constant_refinement_ratio sanity check fails
+  and E001 would be INVALID. T0070''s checks ran C1 at 20 MHz only. Fix the grading (l2_core may be edited)
+  so every mesh parameter refines at one ratio, within the spread, for any max frequency and every E001
+  case. Add l2.mesh_meta(conductors, planes, ports, freqs_hz, refinement, ties=()), which returns the
+  mesh_params, n_filaments and mesh_hash that solve() would put in meta for the same arguments. Build
+  it through the same code path as solve(), without solving, and add a unit test asserting equality with
+  solve()''s meta. The new definition-of-done check runs it on every E001 case at the case''s registered
+  frequencies.
+
+
+  (R2, T0080) mesh_params must be real mesh sizes. For round wires, fil_w = pi*r/c and fil_h = r/c are
+  nominal values. The real azimuthal resolution is the harmonic cutoff m <= P, and P is fixed across levels,
+  so the constant-ratio check passes by construction. Report sizes the mesh actually has. Every key the
+  runner requires (required_mesh_keys) must be a real size that refines at the constant ratio; if that
+  means P grows with the level, grow it.
+
+
+  (R3, T0080) Count float64 cancellation in the Hoer-Love box formula on thin layers as a stated rounding
+  bound in solver_tol. Against 50-digit mpmath on C1''s real layer stacks, entries were off by up to 4.6e-8
+  relative, which the current rounding term (~2e-10) does not cover. Extend test_plane_table_entries_vs_independent_quadrature
+  to the 1-7 um surface layers that real meshes use.
+
+
+  (R4, T0080) block_gmres ignores scipy''s convergence flag. Record it per solve in meta (e.g. gmres_info)
+  and never drop it silently.
+
+
+  (R5, T0079) C1 level 4 took 1518 s at 20 MHz against 113 s at level 3 (963k unknowns: 13x the time for
+  2.3x the unknowns, which points to memory pressure). The E001 projection must include peak RSS per level
+  and the C1 solves at all three frequencies.'
 context_files:
 - research/notes/o001-l2-reference.md
 - experiments/runners/e001_reference.py
@@ -59,6 +98,8 @@ context_files:
 - src/moduleforge/solvers/l2.py
 - src/moduleforge/solvers/l2_core.py
 - .claude/skills/mf-conventions/SKILL.md
+- project/reviews/T0070/T0079.json
+- project/reviews/T0070/T0080.json
 deliverables:
 - src/moduleforge/solvers/l2.py
 - src/moduleforge/solvers/l2_core.py
@@ -84,6 +125,20 @@ definition_of_done:
     assert v <= 0.02, v; print('E001 smoke max_rel_err', v)"
   exists: null
   timeout_s: 2400
+- cmd: "uv run python - <<'EOF'\nimport importlib.util as iu, sys\ns = iu.spec_from_file_location('e001r',\
+    \ 'experiments/runners/e001_reference.py'); e = iu.module_from_spec(s)\nsys.modules['e001r'] = e;\
+    \ s.loader.exec_module(e)\nfrom moduleforge.solvers import l2\ncfg = e.checked_config({}); sig = {e.CU:\
+    \ float(cfg['sigma_cu']), e.AL: float(cfg['sigma_al'])}\nk0, km, nmin = cfg['refinement_start'], min(cfg['refinement_max'],\
+    \ l2.MAX_REFINEMENT), cfg['refinement_min_levels']\nworst, bad = {}, {}\nfor c in e.build_cases(cfg):\n\
+    \    fr = sorted(set(c['cmp_freqs']) | set(c['info_freqs']))\n    cd, pl, po, ti = e._to_l2(l2, c,\
+    \ sig)\n    ms = [l2.mesh_meta(conductors=cd, planes=pl, ports=po, freqs_hz=fr, refinement=k, ties=ti)\
+    \ for k in range(k0, km + 1)]\n    worst[c['id']] = max(e.refinement_ratio_violation(ms[:n], cfg,\
+    \ e.required_mesh_keys(c)) for n in range(nmin, len(ms) + 1))\n    bad[c['id']] = e.one_mesh_violations(ms,\
+    \ len(fr))\nprint('ratio violation per case (registered frequencies, every stopping level):', worst,\
+    \ 'mesh violations:', bad)\nassert all(v <= 1.0 + 1e-9 for v in worst.values()) and not any(bad.values()),\
+    \ (worst, bad)\nEOF"
+  exists: null
+  timeout_s: 900
 - cmd: grep -rnE 'git clone|urlopen|urlretrieve|wget' src/moduleforge/solvers; test $? -eq 1
   exists: null
   timeout_s: 30

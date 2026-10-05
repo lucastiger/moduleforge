@@ -28,7 +28,10 @@ options:
 - approve
 - reject (with note for the planner)
 recommendation: ''
-status: open
-response: ''
+status: approved
+response: 'Founder (2026-10-04): approve, with two amendments to T0070 per the founder session''s recommendation:
+  (1) wire-to-plane coupling compressed, error bound in solver_tol, exposed for n4a; (2) C1 check timeout
+  1500 -> 3600 s (accuracy, rule and tolerance checks unchanged). Plan nodes n4a, n4b, n5, n6, n7 were
+  dropped by the open-task-limit bug (fixed in c90e66a) and are to be restored separately.'
 created_at: '2026-10-04T23:42:44+00:00'
-resolved_at: null
+resolved_at: '2026-10-05T00:28:30+00:00'

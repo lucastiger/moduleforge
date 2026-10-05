@@ -4,7 +4,7 @@ title: 'Complete moduleforge.solvers.l2 for E001: exact bars, two-port Z, ties; 
   within 40 min'
 type: implement
 agent: builder
-status: proposed
+status: todo
 depends_on:
 - T0070
 description: 'Completes moduleforge.solvers.l2 for E001 on n1''s core. This is the rest of failed T0022''s

@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E001: L2 reference vs closed-form partial inductances'
 type: experiment
 agent: none
-status: proposed
+status: todo
 depends_on:
 - T0071
 description: The orchestrator runs the registered E001 spec on merged main after n2 merges. It feeds A1

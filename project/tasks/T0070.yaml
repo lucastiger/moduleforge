@@ -4,7 +4,7 @@ title: 'L2 core in src: exact-kernel round wires, FFT plane, bounded GMRES; E001
   under the frozen rule'
 type: implement
 agent: builder
-status: running
+status: todo
 depends_on: []
 description: 'Replaces failed T0022 (4 attempts). It uses the design measured by the founder-approved
   spike T0067 (research/diagnoses/T0067.md) and reviewed in T0068 (project/reviews/T0067/T0068.json).
@@ -131,7 +131,7 @@ risk: high
 model: null
 budget_usd: 8.0
 max_turns: 150
-attempts: 1
+attempts: 0
 max_attempts: 3
 branch: task/T0070-l2-core-in-src-exact-kernel-round-wires-
 pr: null
@@ -160,3 +160,6 @@ history:
 - outcome: capacity_backoff
   summary: You've hit your session limit · resets 7:20pm (America/Los_Angeles)
   at: '2026-10-05T01:39:36+00:00'
+- outcome: capacity_backoff
+  summary: You've hit your session limit · resets 7:20pm (America/Los_Angeles)
+  at: '2026-10-05T02:10:19+00:00'

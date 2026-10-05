@@ -558,3 +558,5 @@
 {"ts": "2026-10-05T20:26:35+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0083-critic-20261005T132635-ca0c", "task": "T0083", "role": "critic", "session": "030320d9-b27c-47c8-b2a6-52d850f2a119"}
 {"ts": "2026-10-05T20:27:08+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 598, "runs_extended": 2}
 {"ts": "2026-10-05T20:40:26+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 657, "runs_extended": 2}
+{"ts": "2026-10-05T20:42:56+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0083-critic-20261005T132635-ca0c", "status": "error", "cost": 0.6756326, "subtype": "success", "report": "missing"}
+{"ts": "2026-10-05T20:42:58+00:00", "event": "capacity_backoff", "actor": "orchestrator", "task": "T0083", "minutes": 30}

@@ -224,11 +224,13 @@ class AgentRunner:
     def _kill(pid: Optional[int]) -> None:
         if not pid:
             return
+        # macOS answers EPERM, not ESRCH, when the group is left with only the unreaped leader (it exited on SIGINT):
+        # T0071's 90-minute timeout raised it on 2026-10-05, so the run was recorded as interrupted, not timed out.
         try:
             os.killpg(pid, signal.SIGINT)
             time.sleep(5)
             os.killpg(pid, signal.SIGTERM)
-        except ProcessLookupError:
+        except (ProcessLookupError, PermissionError):
             pass
 
     def spent_since(self, since_epoch: float) -> float:

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-05T01:39:03+00:00 from repository state — do not edit_
+_generated 2026-10-05T01:39:36+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0033** [plan_approval] [O001] approve initial plan (5 tasks)
@@ -11,9 +11,8 @@ _generated 2026-10-05T01:39:03+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $151.46/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 46, failed: 3, proposed: 5, running: 1, todo: 4
+cancelled: 19, done: 46, failed: 3, proposed: 5, todo: 5
 
-- T0070 `running` builder/implement: L2 core in src: exact-kernel round wires, FFT plane, bounded GMRES; E001's C1 and B2 converge under the frozen rule (attempt 1)
 - T0074 `proposed` builder/implement: L2 layout path: Layout -> exact-kernel loop_inductance reusing l2_core's compressed wire-to-plane operator (l2_layout.py) (attempt 0)
 - T0075 `proposed` builder/implement: Layout L2 at E002 scale: measured CPU time, memory and refinement convergence per layout (feasibility gate) (attempt 0)
 - T0076 `proposed` scientist/design_experiment: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timing) + runners, sized from the measured L2 layout cost (attempt 0)
@@ -21,8 +20,6 @@ cancelled: 19, done: 46, failed: 3, proposed: 5, running: 1, todo: 4
 - T0078 `proposed` none/experiment: Run E003: L1 median single-core evaluation time (attempt 0)
 
 ## Recent events
-- 2026-10-05T00:25:13+00:00 inbox_resolved {"id": "I0030", "status": "approved", "note": "usd=95.42"}
-- 2026-10-05T00:27:53+00:00 inbox_resolved {"id": "I0031", "status": "approved", "note": "Founder (2026-10-04): confirm (i) and (ii); recorded as D0004 (project/decisions/D0004-l2-iterative-solve-fasthen
 - 2026-10-05T00:28:30+00:00 inbox_resolved {"id": "I0032", "status": "approved", "note": "Founder (2026-10-04): approve, with two amendments to T0070 per the founder session's recommendation: (1) wire-to
 - 2026-10-05T00:28:40+00:00 loop_started {"pid": 45063}
 - 2026-10-05T00:28:42+00:00 run_started {"run": "T0073-planner-20261004T172842-247b", "task": "T0073", "role": "planner", "session": "e80c3914-e2fe-4207-81e8-5de87f498d77"}
@@ -36,3 +33,5 @@ cancelled: 19, done: 46, failed: 3, proposed: 5, running: 1, todo: 4
 - 2026-10-05T01:09:00+00:00 run_finished {"run": "T0070-builder-20261004T180827-e764", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-05T01:09:00+00:00 capacity_backoff {"task": "T0070", "minutes": 30}
 - 2026-10-05T01:39:03+00:00 run_started {"run": "T0070-builder-20261004T183903-9e70", "task": "T0070", "role": "builder", "session": "70d954f6-e016-4962-b36d-327f16a04779"}
+- 2026-10-05T01:39:36+00:00 run_finished {"run": "T0070-builder-20261004T183903-9e70", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
+- 2026-10-05T01:39:36+00:00 capacity_backoff {"task": "T0070", "minutes": 30}

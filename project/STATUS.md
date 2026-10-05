@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-05T05:42:00+00:00 from repository state — do not edit_
+_generated 2026-10-05T05:45:13+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -11,12 +11,12 @@ _generated 2026-10-05T05:42:00+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $162.13/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 49, failed: 3, todo: 9
+cancelled: 19, done: 49, failed: 3, running: 2, todo: 7
 
+- T0071 `running` builder/implement: Complete moduleforge.solvers.l2 for E001: exact bars, two-port Z, ties; frozen E001 smoke passes within 40 min (attempt 1)
+- T0074 `running` builder/implement: L2 layout path: Layout -> exact-kernel loop_inductance reusing l2_core's compressed wire-to-plane operator (l2_layout.py) (attempt 1)
 
 ## Recent events
-- 2026-10-05T02:09:46+00:00 run_started {"run": "T0070-builder-20261004T190946-e3b0", "task": "T0070", "role": "builder", "session": "95d744f2-d4d0-4942-85a3-594e81e20189"}
-- 2026-10-05T02:10:19+00:00 run_finished {"run": "T0070-builder-20261004T190946-e3b0", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-05T02:10:19+00:00 capacity_backoff {"task": "T0070", "minutes": 30}
 - 2026-10-05T02:20:45+00:00 inbox_resolved {"id": "I0033", "status": "approved", "note": ""}
 - 2026-10-05T02:40:25+00:00 run_started {"run": "T0070-builder-20261004T194025-abdf", "task": "T0070", "role": "builder", "session": "86dd30fc-e625-4937-908e-8326f5d987f8"}
@@ -30,3 +30,5 @@ cancelled: 19, done: 49, failed: 3, todo: 9
 - 2026-10-05T04:31:58+00:00 inbox_opened {"id": "I0034", "kind": "protected_change", "subject": "T0070: merge needs founder approval"}
 - 2026-10-05T05:41:11+00:00 inbox_resolved {"id": "I0034", "status": "approved", "note": "Approved per the founder's standing instruction: DoD verified; reviews T0079 and T0080 accept_with_caveats (C1 an
 - 2026-10-05T05:41:25+00:00 merged {"task": "T0070"}
+- 2026-10-05T05:44:46+00:00 run_started {"run": "T0071-builder-20261004T224446-66bd", "task": "T0071", "role": "builder", "session": "bac608e4-1d02-4bc5-90e0-c8b8d476c924"}
+- 2026-10-05T05:44:46+00:00 run_started {"run": "T0074-builder-20261004T224446-9f94", "task": "T0074", "role": "builder", "session": "fcdf6da1-56d3-4f62-961d-3de40ad9e112"}

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-05T20:43:01+00:00 from repository state — do not edit_
+_generated 2026-10-05T20:45:58+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -8,17 +8,14 @@ _generated 2026-10-05T20:43:01+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $185.35/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $189.83/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 51, failed: 3, review: 1, running: 1, todo: 9
+cancelled: 19, done: 51, failed: 3, review: 1, todo: 10
 
-- T0071 `running` builder/implement: Complete moduleforge.solvers.l2 for E001: exact bars, two-port Z, ties; frozen E001 smoke passes within 40 min (attempt 2)
 - T0074 `review` builder/implement: L2 layout path: Layout -> exact-kernel loop_inductance with a precorrected-FFT wire-to-grid operator (l2_layout.py) (attempt 2)
 
 ## Recent events
-- 2026-10-05T16:36:48+00:00 sleep_detected {"gap_s": 587, "runs_extended": 0}
-- 2026-10-05T18:01:43+00:00 sleep_detected {"gap_s": 564, "runs_extended": 0}
 - 2026-10-05T18:51:28+00:00 sleep_detected {"gap_s": 2729, "runs_extended": 0}
 - 2026-10-05T19:29:36+00:00 sleep_detected {"gap_s": 2042, "runs_extended": 0}
 - 2026-10-05T19:34:54+00:00 loop_started {"pid": 32377}
@@ -32,3 +29,5 @@ cancelled: 19, done: 51, failed: 3, review: 1, running: 1, todo: 9
 - 2026-10-05T20:40:26+00:00 sleep_detected {"gap_s": 657, "runs_extended": 2}
 - 2026-10-05T20:42:56+00:00 run_finished {"run": "T0083-critic-20261005T132635-ca0c", "status": "error", "cost": 0.6756326, "subtype": "success", "report": "missing"}
 - 2026-10-05T20:42:58+00:00 capacity_backoff {"task": "T0083", "minutes": 30}
+- 2026-10-05T20:45:56+00:00 run_finished {"run": "T0071-builder-20261005T123730-4cd6", "status": "error", "cost": 4.4823088, "subtype": "success", "report": "missing"}
+- 2026-10-05T20:45:56+00:00 capacity_backoff {"task": "T0071", "minutes": 30}

@@ -1,0 +1,65 @@
+{
+ "case": "C1",
+ "level": 3,
+ "freqs": [
+  5000000.0,
+  20000000.0,
+  80000000.0
+ ],
+ "L": [
+  1.4779054266646703e-08,
+  1.4395501305019316e-08,
+  1.4200581050275897e-08
+ ],
+ "wall_s": 1009.7949636950001,
+ "peak_rss_gb": 5.729557037353516,
+ "cpu": 32,
+ "mesh_params": {
+  "seg:loop": 0.0003125,
+  "fil_w:loop": 2.9452431127404307e-05,
+  "fil_h:loop": 9.375e-06,
+  "surf:loop": 2.426714105393233e-06,
+  "plane_x:gnd": 0.000625,
+  "plane_y:gnd": 0.000546875,
+  "plane_layer:gnd": 2.078038897031176e-06
+ },
+ "n_filaments": 77824,
+ "n_wire": 13312,
+ "timings": {
+  "wire_kernel_s": 8.124468030999992,
+  "plane_kernel_s": 4.841951610000024,
+  "wire_plane_kernel_s": 181.937239149
+ },
+ "solver_tol": 2.989174672645997e-11,
+ "mesh_hash": [
+  "k3-n77824",
+  "k3-n77824",
+  "k3-n77824"
+ ],
+ "plane_nx": 64,
+ "plane_ny": 64,
+ "plane_layers": 8,
+ "infos": [
+  {
+   "method": "GMRES+FFT",
+   "iters": 62.0,
+   "solve_s": 269.6624193619999,
+   "resid_bound": 1.3940879211788717e-18,
+   "round_bound": 2.6370795825006095e-11
+  },
+  {
+   "method": "GMRES+FFT",
+   "iters": 68.0,
+   "solve_s": 261.7599281749999,
+   "resid_bound": 2.780014097562005e-18,
+   "round_bound": 2.864520011472597e-11
+  },
+  {
+   "method": "GMRES+FFT",
+   "iters": 71.0,
+   "solve_s": 282.88177064599995,
+   "resid_bound": 1.0257952600517276e-17,
+   "round_bound": 2.989173646850737e-11
+  }
+ ]
+}

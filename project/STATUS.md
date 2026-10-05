@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-05T06:00:43+00:00 from repository state — do not edit_
+_generated 2026-10-05T06:30:46+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -11,12 +11,12 @@ _generated 2026-10-05T06:00:43+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $166.71/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 49, failed: 3, todo: 9
+cancelled: 19, done: 49, failed: 3, running: 2, todo: 7
 
+- T0071 `running` builder/implement: Complete moduleforge.solvers.l2 for E001: exact bars, two-port Z, ties; frozen E001 smoke passes within 40 min (attempt 1)
+- T0074 `running` builder/implement: L2 layout path: Layout -> exact-kernel loop_inductance reusing l2_core's compressed wire-to-plane operator (l2_layout.py) (attempt 1)
 
 ## Recent events
-- 2026-10-05T03:59:41+00:00 verified {"task": "T0070"}
-- 2026-10-05T03:59:43+00:00 run_started {"run": "T0079-critic-20261004T205943-a6fb", "task": "T0079", "role": "critic", "session": "bfca28f5-9ffe-49b4-884e-76cea6fec2e8"}
 - 2026-10-05T03:59:43+00:00 run_started {"run": "T0080-critic-20261004T205943-6047", "task": "T0080", "role": "critic", "session": "a2d2a7b2-1b9a-4a78-8519-0434dd26ed9c"}
 - 2026-10-05T04:00:15+00:00 sleep_detected {"gap_s": 437, "runs_extended": 2}
 - 2026-10-05T04:29:41+00:00 run_finished {"run": "T0080-critic-20261004T205943-6047", "status": "completed", "cost": 2.3995642000000004, "subtype": "success", "report": "structured_output"}
@@ -30,3 +30,5 @@ cancelled: 19, done: 49, failed: 3, todo: 9
 - 2026-10-05T05:59:38+00:00 capacity_backoff {"task": "T0074", "minutes": 30}
 - 2026-10-05T06:00:43+00:00 run_finished {"run": "T0071-builder-20261004T224446-66bd", "status": "error", "cost": 2.5031184000000004, "subtype": "success", "report": "missing"}
 - 2026-10-05T06:00:43+00:00 capacity_backoff {"task": "T0071", "minutes": 30}
+- 2026-10-05T06:30:46+00:00 run_started {"run": "T0071-builder-20261004T233046-60a9", "task": "T0071", "role": "builder", "session": "de1feac4-55c9-483e-b4d0-089448c1c22c"}
+- 2026-10-05T06:30:46+00:00 run_started {"run": "T0074-builder-20261004T233046-f7d3", "task": "T0074", "role": "builder", "session": "40f16ff4-bd7f-49cd-9778-d341a596a935"}

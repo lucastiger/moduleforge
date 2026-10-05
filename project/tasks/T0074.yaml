@@ -4,7 +4,7 @@ title: 'L2 layout path: Layout -> exact-kernel loop_inductance reusing l2_core''
   operator (l2_layout.py)'
 type: implement
 agent: builder
-status: review
+status: todo
 depends_on:
 - T0070
 description: 'Restores T0069 plan node n4a, which the open-task-limit bug dropped; the founder asked for
@@ -291,3 +291,54 @@ history:
       exit_code: 0
     - cmd: uv run mfos gate --fast
       exit_code: 0
+- attempt: 1
+  outcome: review_rejected
+  summary: adversarial review rejected the work
+  failure_output: 's each filament through its centre line only. Its own docstring calls this bound ''as
+    core.proxy_truncation_bound with P = 1''. The code then reports it separately as tol_parts[''mesh_cross_section_not_in_tol'']
+    and does NOT add it to solver_tol, on the grounds that it is a ''mesh'' error. That argument is inconsistent:
+    the self terms use the filament''s finite radius (rod_self, joint_correction), while the inter-filament
+    and filament-to-grid mutuals use the thin-line kernel. So the operator is not the exact kernel of
+    its own discretised model, and the excluded term is exactly what l2_core counts. On the DoD layout
+    the excluded bound is 1.5–1.7%, about 40× the reported solver_tol of 3.5e-4. Counted as D0004 requires,
+    solver_tol would be about 1.6e-2, which fails the DoD condition t < 1e-3. On the hand-made tiny layout
+    at refinement 0 the excluded bound is 8.6%. The ''exact-kernel'' claim and the passing tolerance gate
+    both rest on leaving this term out.
+
+    - [major] l2_core''s compressed wire-to-plane operator is not reused, contrary to the claim: The claim
+    says the path reuses l2_core''s compressed wire-to-plane operator. l2_core.WirePlaneOp / wire_plane_op
+    are never referenced. l2_layout writes a new precorrected-FFT operator (WireGridPFFT) and reuses only
+    plane_table, circulant_fft/apply, Gauss helpers, block_gmres and a_posteriori. l2_core''s operator
+    only supports axis-parallel edges whose segment length equals the cell size (it raises NotImplementedError
+    ''(layout path)''), so arc bond wires could not reuse it as written. The new operator therefore does
+    not inherit l2_core''s validation, and the claim misstates what was built.
+
+    - [major] L at a given frequency depends on which other frequencies are requested (mesh graded to
+    max(freqs)): The thickness layers are graded to the skin depth at max(freqs_hz), so the same layout,
+    frequency and refinement give different answers depending on the rest of the frequency list. The DoD
+    layout at 20 MHz gives L = 11.573 nH inside the [5e6, 2e7, 8e7] call and 11.283 nH when called with
+    [2e7] alone, a 2.6% difference. R changes by 52% (0.105 vs 0.069 Ω). This spread is about 70× the
+    reported solver_tol, so the L(f) curve and the monotonicity assertion partly reflect the mesh choice.
+    In the 3-frequency call, R(20 MHz)/R(5 MHz) = 4.07, where skin-effect scaling would give about 2.
+    That points to an under-resolved current profile at the lower frequencies.
+
+    - [major] Refinement-0 results are about 10% from convergence, and solver_tol grows past 1e-3 with
+    refinement: On the test file''s tiny_layout at 20 MHz, L falls 6.199 → 5.730 → 5.561 nH from refinement
+    0 to 2 (−7.6%, then −2.9%). Geometric extrapolation of these steps gives about 5.47 nH, so refinement
+    0, which is what the DoD exercises, is roughly 13% high. None of this discretisation error appears
+    in meta. The reported solver_tol also rises with refinement: 9.1e-5 → 3.2e-4 → 1.06e-3. At refinement
+    2 it already breaks the module''s own < 1e-3 meta contract on a 24×14 mm layout, and it is far above
+    E001''s 1e-5 L2 budget. Refinements 3–4 are offered but have not been shown to report a usable bound.
+    R is non-monotone with refinement (0.0171, 0.0182, 0.0154 Ω).
+
+    - [minor] Weak layout-level tests: the Layout→system mapping has no independent reference: Only the
+    internals (hand-built Grid and filaments, C1 loop) are checked against l2.solve. The Layout path itself
+    (net labels, die short merges, wire-end node mapping, landing clamp, port cell choice) is checked
+    only by a 1–100 nH window (two decades), monotonicity and the meta contract. A wrong node mapping
+    or die short that changes L by tens of percent would pass. Port cells are picked with _nearest_cell(top_mask,
+    …) without restricting to the port''s net.
+
+    - [note] Landing clamp and ideal die shorts change the geometry without any bound: 96 filament vertices
+    were lifted to z_top_cu + 0.5·d on the DoD layout, and the vertical die path is a node merge. Both
+    are documented model choices but carry no stated effect on L.'
+  at: '2026-10-05T08:46:30+00:00'

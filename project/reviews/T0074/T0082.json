@@ -1,0 +1,63 @@
+{
+  "verdict": "reject",
+  "findings": [
+    {
+      "severity": "blocker",
+      "title": "solver_tol leaves out a proxy-truncation-type bound that D0004 (i) requires; counting it breaks the DoD threshold",
+      "detail": "D0004 (i) says meta['solver_tol'] must include stated bounds for 'proxy-filament truncation'. l2_core follows this: Stated.proxy is chosen by select_P so that it is \u22642e-7 and is added to solver_tol. l2_layout couples each filament through its centre line only. Its own docstring calls this bound 'as core.proxy_truncation_bound with P = 1'. The code then reports it separately as tol_parts['mesh_cross_section_not_in_tol'] and does NOT add it to solver_tol, on the grounds that it is a 'mesh' error. That argument is inconsistent: the self terms use the filament's finite radius (rod_self, joint_correction), while the inter-filament and filament-to-grid mutuals use the thin-line kernel. So the operator is not the exact kernel of its own discretised model, and the excluded term is exactly what l2_core counts. On the DoD layout the excluded bound is 1.5\u20131.7%, about 40\u00d7 the reported solver_tol of 3.5e-4. Counted as D0004 requires, solver_tol would be about 1.6e-2, which fails the DoD condition t < 1e-3. On the hand-made tiny layout at refinement 0 the excluded bound is 8.6%. The 'exact-kernel' claim and the passing tolerance gate both rest on leaving this term out.",
+      "evidence": "DoD run: tol_parts = [{resid 2.0e-13, round 1.6e-9, stated 3.3e-4, mesh_cross_section_not_in_tol 0.0151}, {\u2026stated 3.5e-4, mesh 0.0174}, {\u2026stated 2.3e-4, mesh 0.0144}]. l2_core.py:627-640 (Stated.proxy counted in total), 676-686 (select_P targets 2e-7). l2_layout.py: centreline_bound docstring; solve_system adds mesh_b only to parts, not tols. Tiny layout ref0: mesh 0.0863 vs solver_tol 9.1e-5.",
+      "suggested_check": "Get a founder ruling on whether the filament centre-line approximation counts as 'proxy-filament truncation' under D0004 (i). If it does, count it (or use P\u22653 proxies per filament, as l2_core does) and re-run the DoD."
+    },
+    {
+      "severity": "major",
+      "title": "l2_core's compressed wire-to-plane operator is not reused, contrary to the claim",
+      "detail": "The claim says the path reuses l2_core's compressed wire-to-plane operator. l2_core.WirePlaneOp / wire_plane_op are never referenced. l2_layout writes a new precorrected-FFT operator (WireGridPFFT) and reuses only plane_table, circulant_fft/apply, Gauss helpers, block_gmres and a_posteriori. l2_core's operator only supports axis-parallel edges whose segment length equals the cell size (it raises NotImplementedError '(layout path)'), so arc bond wires could not reuse it as written. The new operator therefore does not inherit l2_core's validation, and the claim misstates what was built.",
+      "evidence": "grep of core.* symbols used in l2_layout.py: no WirePlaneOp, wire_plane_op, coax_tables or proxy_rule. l2_core.py:578-579 and 649-650 raise NotImplementedError for non-matching or inclined edges.",
+      "suggested_check": "Restate the deliverable as 'new pFFT wire-to-grid operator built on l2_core's plane FFT machinery' and have it accepted as such."
+    },
+    {
+      "severity": "major",
+      "title": "L at a given frequency depends on which other frequencies are requested (mesh graded to max(freqs))",
+      "detail": "The thickness layers are graded to the skin depth at max(freqs_hz), so the same layout, frequency and refinement give different answers depending on the rest of the frequency list. The DoD layout at 20 MHz gives L = 11.573 nH inside the [5e6, 2e7, 8e7] call and 11.283 nH when called with [2e7] alone, a 2.6% difference. R changes by 52% (0.105 vs 0.069 \u03a9). This spread is about 70\u00d7 the reported solver_tol, so the L(f) curve and the monotonicity assertion partly reflect the mesh choice. In the 3-frequency call, R(20 MHz)/R(5 MHz) = 4.07, where skin-effect scaling would give about 2. That points to an under-resolved current profile at the lower frequencies.",
+      "evidence": "Independent run: loop_inductance(gen_layout,[2e7],0) \u2192 L=1.1283e-8, R=0.0689; DoD call \u2192 L[1]=1.1573e-8, R[1]=0.1051.",
+      "suggested_check": "Mesh once for the finest skin depth needed and check that L(f_i) does not depend on the other entries of freqs_hz, or document L as conditional on the frequency list."
+    },
+    {
+      "severity": "major",
+      "title": "Refinement-0 results are about 10% from convergence, and solver_tol grows past 1e-3 with refinement",
+      "detail": "On the test file's tiny_layout at 20 MHz, L falls 6.199 \u2192 5.730 \u2192 5.561 nH from refinement 0 to 2 (\u22127.6%, then \u22122.9%). Geometric extrapolation of these steps gives about 5.47 nH, so refinement 0, which is what the DoD exercises, is roughly 13% high. None of this discretisation error appears in meta. The reported solver_tol also rises with refinement: 9.1e-5 \u2192 3.2e-4 \u2192 1.06e-3. At refinement 2 it already breaks the module's own < 1e-3 meta contract on a 24\u00d714 mm layout, and it is far above E001's 1e-5 L2 budget. Refinements 3\u20134 are offered but have not been shown to report a usable bound. R is non-monotone with refinement (0.0171, 0.0182, 0.0154 \u03a9).",
+      "evidence": "Independent runs of loop_inductance(tiny_layout(), [2e7], ref) for ref 0, 1, 2: L = 6.199, 5.730, 5.561 nH; solver_tol = 9.13e-5, 3.19e-4, 1.06e-3; n_unknowns = 9712, 27244, 68076.",
+      "suggested_check": "Add a test asserting solver_tol < 1e-3 at refinement \u2265 2, plus a convergence study across refinement on a layout before using this path as an L2 reference."
+    },
+    {
+      "severity": "minor",
+      "title": "Weak layout-level tests: the Layout\u2192system mapping has no independent reference",
+      "detail": "Only the internals (hand-built Grid and filaments, C1 loop) are checked against l2.solve. The Layout path itself (net labels, die short merges, wire-end node mapping, landing clamp, port cell choice) is checked only by a 1\u2013100 nH window (two decades), monotonicity and the meta contract. A wrong node mapping or die short that changes L by tens of percent would pass. Port cells are picked with _nearest_cell(top_mask, \u2026) without restricting to the port's net.",
+      "evidence": "tests/unit/solvers/test_l2_layout.py:370-399; l2_layout.py port selection in build_layout_system.",
+      "suggested_check": "Compare build_layout_system on an axis-aligned layout (straight wires) against l2.solve on the same conductors."
+    },
+    {
+      "severity": "note",
+      "title": "Landing clamp and ideal die shorts change the geometry without any bound",
+      "detail": "96 filament vertices were lifted to z_top_cu + 0.5\u00b7d on the DoD layout, and the vertical die path is a node merge. Both are documented model choices but carry no stated effect on L.",
+      "evidence": "mesh_params.clamped_vertices = 96 in the DoD run.",
+      "suggested_check": "Report the L sensitivity to LANDING_GAP (e.g. 0.25 vs 0.5 vs 1.0)."
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran `uv run pytest -q tests/unit/solvers/test_l2_layout.py`: 14 passed in 91 s.",
+    "Ran `uv run ruff check src/moduleforge/solvers tests/unit/solvers`: all checks passed.",
+    "Ran the forbidden-pattern grep (git clone|urlopen|urlretrieve|wget) on src/moduleforge/solvers: no matches.",
+    "Ran the DoD python assertion with extra output: passes. L = [12.60, 11.57, 11.12] nH, solver_tol 3.5e-4, wall 133 s, n_unknowns 56712, 108\u2013134 GMRES iterations. Inspected tol_parts: the excluded mesh_cross_section term is 1.4\u20131.7%.",
+    "Re-ran the DoD layout with freqs=[2e7] only: L = 11.283 nH vs 11.573 nH in the 3-frequency call; R 0.069 vs 0.105 \u03a9. The answer depends on the frequency list.",
+    "Refinement study on tiny_layout at 20 MHz, refinements 0/1/2: L 6.199/5.730/5.561 nH, solver_tol 9.1e-5/3.2e-4/1.06e-3 (exceeds 1e-3 at refinement 2).",
+    "Checked which l2_core symbols l2_layout uses: WirePlaneOp / wire_plane_op are unused, so the claimed reuse does not hold.",
+    "Read D0004 and l2_core.Stated/select_P: l2_core counts the proxy-truncation bound in solver_tol, while l2_layout's P=1 centre-line analogue is excluded."
+  ],
+  "caveats": [
+    "Whether the blocker stands turns on reading D0004 (i). If the founder rules that the filament centre-line approximation is a cross-section mesh choice and not 'proxy-filament truncation', the blocker drops to major and the verdict would be accept_with_caveats (refinement 0 only, L conditional on the frequency list, solver_tol not a bound on discretisation error).",
+    "The excluded centre-line bound is admittedly pessimistic (pairs closer than 2\u03c1 are charged 100%). The true error from the thin-filament kernel may be much smaller than 1.5%; I did not compute finite-section mutuals to measure it.",
+    "I did not test the precorrected-FFT far-field interpolation bound at production parameters (PFFT_NEAR=18, stencil 8); the author's test checks it only at reduced settings (8/4).",
+    "Refinements 3\u20134 and other generated layouts (other seeds, dies_per_switch) were not run because of the time and cost budget."
+  ]
+}

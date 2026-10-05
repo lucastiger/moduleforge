@@ -4,7 +4,7 @@ title: 'Complete moduleforge.solvers.l2 for E001: exact bars, two-port Z, ties; 
   within 40 min'
 type: implement
 agent: builder
-status: running
+status: todo
 depends_on:
 - T0070
 description: 'Completes moduleforge.solvers.l2 for E001 on n1''s core. This is the rest of failed T0022''s
@@ -160,7 +160,7 @@ risk: high
 model: null
 budget_usd: 7.0
 max_turns: 120
-attempts: 2
+attempts: 1
 max_attempts: 3
 branch: task/T0071-complete-moduleforge-solvers-l2-for-e001
 pr: null
@@ -381,3 +381,6 @@ history:
 - outcome: capacity_backoff
   summary: You've hit your session limit · resets 5:30pm (America/Los_Angeles)
   at: '2026-10-05T22:25:44+00:00'
+- outcome: capacity_backoff
+  summary: You've hit your session limit · resets 5:30pm (America/Los_Angeles)
+  at: '2026-10-05T22:59:03+00:00'

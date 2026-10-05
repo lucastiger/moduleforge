@@ -4,7 +4,7 @@ title: 'Complete moduleforge.solvers.l2 for E001: exact bars, two-port Z, ties; 
   within 40 min'
 type: implement
 agent: builder
-status: todo
+status: running
 depends_on:
 - T0070
 description: 'Completes moduleforge.solvers.l2 for E001 on n1''s core. This is the rest of failed T0022''s
@@ -87,7 +87,20 @@ description: 'Completes moduleforge.solvers.l2 for E001 on n1''s core. This is t
 
   (R5, T0079) C1 level 4 took 1518 s at 20 MHz against 113 s at level 3 (963k unknowns: 13x the time for
   2.3x the unknowns, which points to memory pressure). The E001 projection must include peak RSS per level
-  and the C1 solves at all three frequencies.'
+  and the C1 solves at all three frequencies.
+
+
+  Repair (founder, 2026-10-05), replacing the projection rule above: E001 runs on the Google Cloud burst
+  VM (n2-highmem-32: 32 vCPU, 251 GB) under policy compute.burst_experiments (commit 3030025). No re-registration
+  is needed: cpu_hours_est only routes, and the registered timeout_min = 240 applies on the VM. Report
+  the Mac projection for information only, and do not block on it.
+
+  Still required on this Mac: the frozen E001 smoke DoD (7 smoke cases at 20 MHz, refinement_max as registered)
+  within its 40-minute limit. So A3 and A4 at level 5 must fit in memory. Replace the dense complex LU
+  for bars with the iterative solve under D0004''s bound (e.g. GMRES with L stored once in real float64,
+  or the Toeplitz structure along the bar), and keep a dense LU only where it fits. Your run is 150 minutes:
+  run long checks in the background, and do not spend the run on the three-frequency C1 projection. As
+  you did, never tune grading to make the rule accept a sequence.'
 context_files:
 - research/notes/o001-l2-reference.md
 - experiments/runners/e001_reference.py
@@ -147,7 +160,7 @@ risk: high
 model: null
 budget_usd: 7.0
 max_turns: 120
-attempts: 1
+attempts: 2
 max_attempts: 3
 branch: task/T0071-complete-moduleforge-solvers-l2-for-e001
 pr: null
@@ -157,6 +170,7 @@ runs:
 - T0071-builder-20261005T000129-220a
 - T0071-builder-20261005T003215-ff71
 - T0071-builder-20261005T020853-f29c
+- T0071-builder-20261005T123730-4cd6
 created_by: planner:T0069
 created_at: '2026-10-04T23:42:44+00:00'
 protected_approved: false

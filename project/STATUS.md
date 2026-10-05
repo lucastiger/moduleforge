@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-05T19:37:08+00:00 from repository state — do not edit_
+_generated 2026-10-05T19:37:41+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -11,12 +11,12 @@ _generated 2026-10-05T19:37:08+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $179.39/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 51, failed: 3, todo: 9
+cancelled: 19, done: 51, failed: 3, running: 2, todo: 7
 
+- T0071 `running` builder/implement: Complete moduleforge.solvers.l2 for E001: exact bars, two-port Z, ties; frozen E001 smoke passes within 40 min (attempt 2)
+- T0074 `running` builder/implement: L2 layout path: Layout -> exact-kernel loop_inductance with a precorrected-FFT wire-to-grid operator (l2_layout.py) (attempt 2)
 
 ## Recent events
-- 2026-10-05T08:46:29+00:00 run_finished {"run": "T0082-critic-20261005T013401-faca", "status": "completed", "cost": 1.3230003999999997, "subtype": "success", "report": "structured_output"}
-- 2026-10-05T08:46:30+00:00 task_failed_attempt {"task": "T0074", "signal": "review_rejected", "action": "repair"}
 - 2026-10-05T09:08:21+00:00 tick_error {"error": "PermissionError: [Errno 1] Operation not permitted", "consecutive": 1}
 - 2026-10-05T09:08:53+00:00 run_interrupted {"run": "T0071-builder-20261005T003215-ff71"}
 - 2026-10-05T09:08:53+00:00 run_started {"run": "T0071-builder-20261005T020853-f29c", "task": "T0071", "role": "builder", "session": "1b44fcc0-0839-493c-ba85-c54ea72e5423"}
@@ -30,3 +30,5 @@ cancelled: 19, done: 51, failed: 3, todo: 9
 - 2026-10-05T19:29:36+00:00 sleep_detected {"gap_s": 2042, "runs_extended": 0}
 - 2026-10-05T19:34:54+00:00 loop_started {"pid": 32377}
 - 2026-10-05T19:37:06+00:00 loop_started {"pid": 34498}
+- 2026-10-05T19:37:30+00:00 run_started {"run": "T0071-builder-20261005T123730-4cd6", "task": "T0071", "role": "builder", "session": "a00b6f9c-1ceb-4745-9d83-535c5065b31f"}
+- 2026-10-05T19:37:30+00:00 run_started {"run": "T0074-builder-20261005T123730-3239", "task": "T0074", "role": "builder", "session": "0cd8580c-0623-4209-ba51-55d0c542ab19"}

@@ -1,10 +1,10 @@
 id: T0074
 objective: O001
-title: 'L2 layout path: Layout -> exact-kernel loop_inductance reusing l2_core''s compressed wire-to-plane
-  operator (l2_layout.py)'
+title: 'L2 layout path: Layout -> exact-kernel loop_inductance with a precorrected-FFT wire-to-grid operator
+  (l2_layout.py)'
 type: implement
 agent: builder
-status: todo
+status: running
 depends_on:
 - T0070
 description: 'Restores T0069 plan node n4a, which the open-task-limit bug dropped; the founder asked for
@@ -88,7 +88,31 @@ description: 'Restores T0069 plan node n4a, which the open-task-limit bug droppe
   parallel edges or parallel edges closer than 2.5 r. C1 happens to fit this lattice; generated layouts
   will not. l2_layout.py must therefore provide the general projection itself, e.g. precorrected FFT onto
   the shared grid with the near field corrected exactly, with its error bound counted in solver_tol (D0004).
-  l2_core is still not edited here.'
+  l2_core is still not edited here.
+
+
+  Repair (founder, 2026-10-05): read both reviews of attempt 1 (project/reviews/T0074/T0081.json and T0082.json)
+  and address every finding, the blocker first.
+
+  (1) Blocker: D0004 (i) requires solver_tol to include the stated bound for replacing each filament''s
+  cross-section with its centre line in inter-wire and wire-to-grid coupling. Count it; do not report
+  it apart. It is 1.5-1.7 % at refinement 0, so make the bound small rather than excluding it, e.g. with
+  a finite-radius or proxy treatment of near pairs as l2_core does. solver_tol must stay a usable bound
+  (< 1e-3) at every refinement 0-4; it reached 1.06e-3 at refinement 2.
+
+  (2) Discretization error stays outside solver_tol (D0004), and T0075 gates convergence. Do not present
+  refinement-0 values as accurate. Report the frequency-set dependence of the max(freqs)-graded mesh (2.6
+  % at 20 MHz) and the refinement trend in meta or the docstring.
+
+  (3) Add a layout-level test with an independent reference: a simple layout whose loop L has a closed
+  form, or that matches l2.solve on the equivalent conductor model. Restrict port cells to the port''s
+  net.
+
+  (4) State the effect of the landing clamp and the ideal die shorts, or bound it.
+
+  The title no longer claims reuse of l2_core''s compressed operator (that operator needs lattice-aligned
+  segments). The new WireGridPFFT must be validated by its own tests against a dense reference, including
+  its stated interpolation bound.'
 context_files:
 - project/tasks/T0066.yaml
 - project/decisions/D0004-l2-iterative-solve-fasthenry-optional.md
@@ -104,6 +128,8 @@ context_files:
 - src/moduleforge/generate/halfbridge.py
 - .claude/skills/mf-conventions/SKILL.md
 - project/reviews/T0070/T0080.json
+- project/reviews/T0074/T0081.json
+- project/reviews/T0074/T0082.json
 deliverables:
 - src/moduleforge/solvers/l2_layout.py
 - tests/unit/solvers/test_l2_layout.py
@@ -133,7 +159,7 @@ risk: high
 model: null
 budget_usd: 8.0
 max_turns: 150
-attempts: 1
+attempts: 2
 max_attempts: 3
 branch: task/T0074-l2-layout-path-layout-exact-kernel-loop-
 pr: null
@@ -142,6 +168,7 @@ runs:
 - T0074-builder-20261004T233046-f7d3
 - T0074-builder-20261005T000129-0208
 - T0074-builder-20261005T003215-4c55
+- T0074-builder-20261005T123730-3239
 created_by: planner:T0073
 created_at: '2026-10-05T00:31:24+00:00'
 protected_approved: false

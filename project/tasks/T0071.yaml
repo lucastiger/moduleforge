@@ -4,7 +4,7 @@ title: 'Complete moduleforge.solvers.l2 for E001: exact bars, two-port Z, ties; 
   within 40 min'
 type: implement
 agent: builder
-status: running
+status: todo
 depends_on:
 - T0070
 description: 'Completes moduleforge.solvers.l2 for E001 on n1''s core. This is the rest of failed T0022''s
@@ -179,3 +179,183 @@ history:
 - attempt: 1
   outcome: resumed
   summary: T0071-builder-20261005T003215-ff71
+- attempt: 1
+  outcome: agent_finished
+  summary: 'Bars (exact Hoer-Love), multi-port Z, ties, mesh_meta, gmres_info and peak RSS are implemented
+    and the unit tests pass. The E001 smoke DoD does not pass, and the full-run projection looks over
+    the 200 min threshold. Under the packet''s rule this is a blocked report, so I am not claiming completion.
+
+
+    **What works**
+
+    - The Hoer-Love corner sum is now evaluated in double-double (new `l2_dd.py`). It matches a 70-digit
+    Decimal evaluation to about 1e-30. float64 was off by up to 1.8e-7 on 1-7 um layers. This replaces
+    the loose rounding bound, so solver_tol for bars is now about 1e-12 (it was 6e-4 to 1e-2) and the
+    plane near-table is accurate too (R3).
+
+    - `l2.mesh_meta` uses the same `core.build_meshes` path as `solve`. A unit test asserts equality with
+    solve''s meta.
+
+    - R1/R2: every mesh parameter re'
+  report:
+    status: blocked
+    summary: 'Bars (exact Hoer-Love), multi-port Z, ties, mesh_meta, gmres_info and peak RSS are implemented
+      and the unit tests pass. The E001 smoke DoD does not pass, and the full-run projection looks over
+      the 200 min threshold. Under the packet''s rule this is a blocked report, so I am not claiming completion.
+
+
+      **What works**
+
+      - The Hoer-Love corner sum is now evaluated in double-double (new `l2_dd.py`). It matches a 70-digit
+      Decimal evaluation to about 1e-30. float64 was off by up to 1.8e-7 on 1-7 um layers. This replaces
+      the loose rounding bound, so solver_tol for bars is now about 1e-12 (it was 6e-4 to 1e-2) and the
+      plane near-table is accurate too (R3).
+
+      - `l2.mesh_meta` uses the same `core.build_meshes` path as `solve`. A unit test asserts equality
+      with solve''s meta.
+
+      - R1/R2: every mesh parameter refines at one ratio, and mesh_params are real sizes. The packet''s
+      mesh_meta DoD script exits 0, worst ratio violation 0.987.
+
+      - R4/R5: `gmres_info`, `gmres_converged` and `peak_rss_mb` are recorded in meta.
+
+      - Edited the old `test_unsupported_scope_raises` because bars and ties are no longer unsupported.
+      It now checks the cases that are still unsupported (bars mixed with wires, inclined bars).
+
+
+      **Why smoke fails** (the run before the last mesh change; it took 1642 s with 10 GB peak RSS)
+
+      - The only failed sanity check was `l2_converged` (rule inf for A1, A3, C1). Everything else passed,
+      and max_rel_err was 7.9e-5.
+
+      - A1 is now accepted at level 5 (88 s, 6.5 GB).
+
+      - A3: L11 is accepted at level 4, but M12 changes sign at the 1e-9 level (noise floor 1.4e-9), so
+      it needs level 5. A3 and A4 at level 5 would be about 24.7k unknowns and a dense complex matrix
+      of about 9.8 GB. That does not fit in this Mac''s 16 GB.
+
+      - C1: the 20 MHz sequence at levels 1-3 changes by -3.8e-4 then -2.2e-4, smooth. Whether the rule
+      accepts it at level 4 is unknown. I did not re-run the full smoke after the last bar-mesh change.
+
+
+      **Projection against timeout_min = 240**
+
+
+      | Case | Level | Unknowns | Wall time | Peak RSS |
+
+      |---|---|---|---|---|
+
+      | C1 at 5/20/80 MHz | 3 | 413k | 160 s | 4.8 GB |
+
+      | C1 at 20 MHz alone | 4 | about 963k | 1518 s (T0079 finding) | not recorded |
+
+      | A1 | 5 | 12.3k | 88 s | 6.5 GB |
+
+      | A3 | 4 | 10.8k | 54 s | 5.0 GB |
+
+
+      - The C1 level-4 call at three frequencies was still running when I stopped, so that number is not
+      measured. Extrapolating, the C1 sequence plus two C1 scaling solves at level 4 comes to roughly
+      200 min or more before A3/A4 level 5.
+
+      - That is on the order of or above the 200 min stop threshold, and A3/A4 level 5 cannot run in memory
+      with the dense solver. Moving E001 to a burst host means re-registering cpu_hours_est, which is
+      a founder decision.
+
+
+      **What would unblock it**
+
+      - An iterative or Toeplitz bar solver, or a smaller bar level table, so that level 5 fits in memory.
+
+      - A way to get regular sequences at the coarse levels, where the grading is strong. I stopped tuning
+      bar grading rather than game the rule.
+
+
+      **Checks run** (see the checks list)
+
+      - The smoke command did not satisfy its assertion.
+
+      - ruff, the grep check, `mfos gate --fast` and the mesh_meta script all pass.
+
+      - All 51 unit tests in `tests/unit/solvers` pass.
+
+
+      Work is committed on the T0071 branch (e10c8c0).'
+    checks_run:
+    - cmd: uv run pytest -q tests/unit/solvers
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge/solvers tests/unit/solvers
+      exit_code: 0
+    - cmd: mesh_meta DoD script (ratio violation per case, every stopping level)
+      exit_code: 0
+    - cmd: grep -rnE 'git clone|urlopen|urlretrieve|wget' src/moduleforge/solvers; test $? -eq 1
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    - cmd: rm -rf /tmp/e001-smoke && uv run python experiments/runners/e001_reference.py --smoke && assertion
+        script
+      exit_code: 1
+    concerns:
+    - 'E001 smoke: l2_converged fails. A1 is accepted only at level 5, A3''s M12 is not accepted at level
+      4, and A3/A4 at level 5 cannot fit the dense solve in 16 GB. The smoke result is from before the
+      last bar-mesh change and was not re-run.'
+    - Full-run projection is likely at or over the 200 min stop threshold. The C1 level-4 three-frequency
+      solve was not finished when interrupted, so that figure is extrapolated.
+    - Moving E001 to a burst host means re-registering cpu_hours_est, a founder decision.
+    - The bar grading targets delta/2 at level 5 (the finest). It is tied to the cell counts so the grading
+      function is the same at every level.
+    files_changed:
+    - src/moduleforge/solvers/l2.py
+    - src/moduleforge/solvers/l2_core.py
+    - src/moduleforge/solvers/l2_dd.py
+    - tests/unit/solvers/test_l2_core.py
+    - tests/unit/solvers/test_l2_e001_bars.py
+    - tests/unit/solvers/test_l2_e001_ports.py
+- attempt: 1
+  outcome: dod_failed
+  summary: agent reported blocked
+  failure_output: 'Bars (exact Hoer-Love), multi-port Z, ties, mesh_meta, gmres_info and peak RSS are
+    implemented and the unit tests pass. The E001 smoke DoD does not pass, and the full-run projection
+    looks over the 200 min threshold. Under the packet''s rule this is a blocked report, so I am not claiming
+    completion.
+
+
+    **What works**
+
+    - The Hoer-Love corner sum is now evaluated in double-double (new `l2_dd.py`). It matches a 70-digit
+    Decimal evaluation to about 1e-30. float64 was off by up to 1.8e-7 on 1-7 um layers. This replaces
+    the loose rounding bound, so solver_tol for bars is now about 1e-12 (it was 6e-4 to 1e-2) and the
+    plane near-table is accurate too (R3).
+
+    - `l2.mesh_meta` uses the same `core.build_meshes` path as `solve`. A unit test asserts equality with
+    solve''s meta.
+
+    - R1/R2: every mesh parameter refines at one ratio, and mesh_params are real sizes. The packet''s
+    mesh_meta DoD script exits 0, worst ratio violation 0.987.
+
+    - R4/R5: `gmres_info`, `gmres_converged` and `peak_rss_mb` are recorded in meta.
+
+    - Edited the old `test_unsupported_scope_raises` because bars and ties are no longer unsupported.
+    It now checks the cases that are still unsupported (bars mixed with wires, inclined bars).
+
+
+    **Why smoke fails** (the run before the last mesh change; it took 1642 s with 10 GB peak RSS)
+
+    - The only failed sanity check was `l2_converged` (rule inf for A1, A3, C1). Everything else passed,
+    and max_rel_err was 7.9e-5.
+
+    - A1 is now accepted at level 5 (88 s, 6.5 GB).
+
+    - A3: L11 is accepted at level 4, but M12 changes sign at the 1e-9 level (noise floor 1.4e-9), so
+    it needs level 5. A3 and A4 at level 5 would be about 24.7k unknowns and a dense complex matrix of
+    about 9.8 GB. That does not fit in this Mac''s 16 GB.
+
+    - C1: the 20 MHz sequence at levels 1-3 changes by -3.8e-4 then -2.2e-4, smooth. Whether the rule
+    accepts it at level 4 is unknown. I did not re-run the full smoke after the last bar-mesh change.
+
+
+    **Projection against timeout_min = 240**
+
+
+    | Case | Level | Unknowns | Wall time | Peak '
+  at: '2026-10-05T09:30:53+00:00'

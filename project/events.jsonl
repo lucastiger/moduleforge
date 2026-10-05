@@ -541,3 +541,5 @@
 {"ts": "2026-10-05T09:08:21+00:00", "event": "tick_error", "actor": "orchestrator", "error": "PermissionError: [Errno 1] Operation not permitted", "consecutive": 1}
 {"ts": "2026-10-05T09:08:53+00:00", "event": "run_interrupted", "actor": "orchestrator", "run": "T0071-builder-20261005T003215-ff71"}
 {"ts": "2026-10-05T09:08:53+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0071-builder-20261005T020853-f29c", "task": "T0071", "role": "builder", "session": "1b44fcc0-0839-493c-ba85-c54ea72e5423"}
+{"ts": "2026-10-05T09:30:52+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0071-builder-20261005T020853-f29c", "status": "completed", "cost": 4.8149814, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-10-05T09:30:53+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0071", "signal": "dod_failed", "action": "repair"}

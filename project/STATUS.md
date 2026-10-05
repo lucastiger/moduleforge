@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-05T09:08:56+00:00 from repository state — do not edit_
+_generated 2026-10-05T09:30:54+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -8,16 +8,13 @@ _generated 2026-10-05T09:08:56+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $174.58/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $179.39/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 51, failed: 3, running: 1, todo: 8
+cancelled: 19, done: 51, failed: 3, todo: 9
 
-- T0071 `running` builder/implement: Complete moduleforge.solvers.l2 for E001: exact bars, two-port Z, ties; frozen E001 smoke passes within 40 min (attempt 1)
 
 ## Recent events
-- 2026-10-05T07:02:02+00:00 run_finished {"run": "T0071-builder-20261005T000129-220a", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
-- 2026-10-05T07:02:02+00:00 capacity_backoff {"task": "T0071", "minutes": 30}
 - 2026-10-05T07:32:15+00:00 run_started {"run": "T0071-builder-20261005T003215-ff71", "task": "T0071", "role": "builder", "session": "1b44fcc0-0839-493c-ba85-c54ea72e5423"}
 - 2026-10-05T07:32:15+00:00 run_started {"run": "T0074-builder-20261005T003215-4c55", "task": "T0074", "role": "builder", "session": "177e1f8d-208a-44bc-be0e-fc2d5d09b7d1"}
 - 2026-10-05T08:13:38+00:00 run_finished {"run": "T0074-builder-20261005T003215-4c55", "status": "completed", "cost": 4.0163486, "subtype": "success", "report": "structured_output"}
@@ -31,3 +28,5 @@ cancelled: 19, done: 51, failed: 3, running: 1, todo: 8
 - 2026-10-05T09:08:21+00:00 tick_error {"error": "PermissionError: [Errno 1] Operation not permitted", "consecutive": 1}
 - 2026-10-05T09:08:53+00:00 run_interrupted {"run": "T0071-builder-20261005T003215-ff71"}
 - 2026-10-05T09:08:53+00:00 run_started {"run": "T0071-builder-20261005T020853-f29c", "task": "T0071", "role": "builder", "session": "1b44fcc0-0839-493c-ba85-c54ea72e5423"}
+- 2026-10-05T09:30:52+00:00 run_finished {"run": "T0071-builder-20261005T020853-f29c", "status": "completed", "cost": 4.8149814, "subtype": "success", "report": "structured_output"}
+- 2026-10-05T09:30:53+00:00 task_failed_attempt {"task": "T0071", "signal": "dod_failed", "action": "repair"}

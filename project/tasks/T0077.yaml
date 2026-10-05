@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E002: L1 vs L2 loop-inductance ranking on sealed generated layouts'
 type: experiment
 agent: none
-status: proposed
+status: todo
 depends_on:
 - T0076
 - T0072

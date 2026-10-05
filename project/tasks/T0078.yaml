@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E003: L1 median single-core evaluation time'
 type: experiment
 agent: none
-status: proposed
+status: todo
 depends_on:
 - T0076
 description: The orchestrator runs registered E003 on merged main. It feeds A6 (l1_eval_ms_p50 <= 50 ms,

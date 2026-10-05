@@ -4,7 +4,7 @@ title: 'Layout L2 at E002 scale: measured CPU time, memory and refinement conver
   gate)'
 type: implement
 agent: builder
-status: proposed
+status: todo
 depends_on:
 - T0074
 description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; restoration requested

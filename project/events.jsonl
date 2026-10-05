@@ -528,3 +528,5 @@
 {"ts": "2026-10-05T07:02:02+00:00", "event": "capacity_backoff", "actor": "orchestrator", "task": "T0074", "minutes": 30}
 {"ts": "2026-10-05T07:02:02+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0071-builder-20261005T000129-220a", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 {"ts": "2026-10-05T07:02:02+00:00", "event": "capacity_backoff", "actor": "orchestrator", "task": "T0071", "minutes": 30}
+{"ts": "2026-10-05T07:32:15+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0071-builder-20261005T003215-ff71", "task": "T0071", "role": "builder", "session": "1b44fcc0-0839-493c-ba85-c54ea72e5423"}
+{"ts": "2026-10-05T07:32:15+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0074-builder-20261005T003215-4c55", "task": "T0074", "role": "builder", "session": "177e1f8d-208a-44bc-be0e-fc2d5d09b7d1"}

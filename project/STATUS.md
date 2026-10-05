@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-05T04:00:17+00:00 from repository state — do not edit_
+_generated 2026-10-05T04:29:44+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -8,17 +8,15 @@ _generated 2026-10-05T04:00:17+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $157.23/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $159.63/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 46, failed: 3, review: 1, running: 2, todo: 9
+cancelled: 19, done: 47, failed: 3, review: 1, running: 1, todo: 9
 
 - T0070 `review` builder/implement: L2 core in src: exact-kernel round wires, FFT plane, bounded GMRES; E001's C1 and B2 converge under the frozen rule (attempt 1)
 - T0079 `running` critic/review: Review T0070 (physics) (attempt 1)
-- T0080 `running` critic/review: Review T0070 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-05T01:09:00+00:00 run_finished {"run": "T0070-builder-20261004T180827-e764", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-05T01:09:00+00:00 capacity_backoff {"task": "T0070", "minutes": 30}
 - 2026-10-05T01:39:03+00:00 run_started {"run": "T0070-builder-20261004T183903-9e70", "task": "T0070", "role": "builder", "session": "70d954f6-e016-4962-b36d-327f16a04779"}
 - 2026-10-05T01:39:36+00:00 run_finished {"run": "T0070-builder-20261004T183903-9e70", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
@@ -33,3 +31,4 @@ cancelled: 19, done: 46, failed: 3, review: 1, running: 2, todo: 9
 - 2026-10-05T03:59:43+00:00 run_started {"run": "T0079-critic-20261004T205943-a6fb", "task": "T0079", "role": "critic", "session": "bfca28f5-9ffe-49b4-884e-76cea6fec2e8"}
 - 2026-10-05T03:59:43+00:00 run_started {"run": "T0080-critic-20261004T205943-6047", "task": "T0080", "role": "critic", "session": "a2d2a7b2-1b9a-4a78-8519-0434dd26ed9c"}
 - 2026-10-05T04:00:15+00:00 sleep_detected {"gap_s": 437, "runs_extended": 2}
+- 2026-10-05T04:29:41+00:00 run_finished {"run": "T0080-critic-20261004T205943-6047", "status": "completed", "cost": 2.3995642000000004, "subtype": "success", "report": "structured_output"}

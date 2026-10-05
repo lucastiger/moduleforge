@@ -1,0 +1,65 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "minor",
+      "title": "I did not see the C1 level-4 check finish; the level 1\u20133 trend projects a clear pass",
+      "detail": "I started the exact C1 definition-of-done command. It ran past the 600 s foreground limit and then in the background, slowed by my other runs sharing the CPU. It had printed nothing when I stopped. I solved C1 at 20 MHz myself for levels 1\u20133 instead. The changes have one sign, contract by about 0.55 per level (observed order about 2 on h-ratio about 1.33), and the error against the analytic value falls monotonically. Projecting one level gives err about 1e-4 (limit 0.02) and a rule estimate of about 5e-4 at p_lo = 1 (limit 1e-2). The level-4 pass of C1 is therefore projected, not observed.",
+      "evidence": "C1 at 20 MHz: level 1: n=85330, L=1.4402989872e-08, rel +7.90e-4, solver_tol 6.24e-07. Level 2: n=177930, L=1.4397204548e-08, rel +3.88e-4. Level 3: n=413088, L=1.4394027541e-08, rel +1.68e-4, 259 s wall, 109 GMRES iterations, solver_tol 6.82e-07. solver_tol_required is 9.98e-06.",
+      "suggested_check": "Let the orchestrator's definition-of-done run of the C1 command finish on an idle machine and record the level-4 values."
+    },
+    {
+      "severity": "minor",
+      "title": "The definition-of-done checks only 20 MHz; E001 compares C1 and B2 at more frequencies on one mesh graded to 80 MHz",
+      "detail": "The definition-of-done sets cmp_freqs=[2e7]. E001 itself compares C1 at 5, 20 and 80 MHz, and B2 at 100 Hz plus those three, in one call per level. That mesh is graded to the skin depth at 80 MHz. I ran B2 (and B1, B3, C0) at their full registered frequency sets: they converge at level 4 and their errors are within the stated model error. I ran C1 at the full set only at level 1, where all three frequencies are within 5e-4 of analytic (model error 1.4e-3). C1 convergence at 5 and 80 MHz under the rule was not shown.",
+      "evidence": "B2 at full frequency set: level 4, errors 2.4e-9 / 1.1e-4 / 1.0e-4 / 9.3e-5, rule estimates up to 7.4e-5, tol_ratio 0.027, ratio check 0.976, 0 mesh violations, largest L increase with frequency -0.0088 (L falls). B3: M12 errors up to 3.6e-5, reciprocity 2.8e-15. C0: errors up to 3.2e-5. C1 at level 1 with fmax 80 MHz: errors +4.6e-4 / +4.2e-4 / +5.0e-4.",
+      "suggested_check": "Run l2_converged_solve for C1 with freqs [5e6, 2e7, 8e7] and refinement_max 4."
+    },
+    {
+      "severity": "minor",
+      "title": "solver_tol does not count Hoer-Love rounding on the real thin plane layers",
+      "detail": "The l2_core docstring says solver_tol includes rounding and every stated operator bound. The Hoer-Love box formula cancels heavily on thin layers, and that error is not counted. On the actual C1 plane layers the float64 near-field entries are off by up to 4.6e-8 relative. The rounding term 2\u00b7u\u00b7n\u00b7(e_l+e_r) is about 2e-10, so it does not cover this. The unit test test_plane_table_entries_vs_independent_quadrature asserts 1e-9 accuracy, but only on 0.1\u20130.3 mm layers, not the 1\u20137 \u00b5m surface layers real meshes use. Against C1's 1e-5 budget the effect is negligible, but 'rigorous bound' overstates it.",
+      "evidence": "hl_box in float64 vs the same formula in mpmath at 50 digits, offsets up to (4,4), surface-layer pairs. Worst relative error: level 1 / 20 MHz 1.1e-8 (layer 7.4 \u00b5m); level 4 / 20 MHz 1.7e-8 (2.8 \u00b5m); level 4 / 80 MHz 4.6e-8 (1.3 \u00b5m).",
+      "suggested_check": "Add a stated cancellation term for the Hoer-Love entries to Stated, or test plane_table on \u00b5m-thin layers against a high-precision reference."
+    },
+    {
+      "severity": "minor",
+      "title": "The wire fil_w and fil_h entries in mesh_params are nominal values, not mesh sizes",
+      "detail": "For round wires, fil_w = \u03c0\u00b7r/c and fil_h = r/c, which shrink with the annulus count c. The real azimuthal discretization is harmonics m \u2264 P, and P is the same at every level, so the azimuthal resolution is never refined. The annuli are graded, so r/c is not a real cell height either; only surf is a real size. These nominal values make E001's constant-ratio check pass by construction for one transverse direction. The practical impact is small because the azimuthal truncation is covered separately by the stated proxy bound (about 7e-8 for C1).",
+      "evidence": "l2_core.solve_case: mp['fil_w:\u2026'] = math.pi * wm.r / c and mp['fil_h:\u2026'] = wm.r / c. P comes from select_P and does not depend on the level.",
+      "suggested_check": "Document in meta that fil_w stands in for a harmonic order covered by the stated bound, or report the real azimuthal resolution."
+    },
+    {
+      "severity": "note",
+      "title": "The FFT plane works only on lattices that match the wire segments; C1 happens to match",
+      "detail": "The wire-to-plane operator needs every wire segment length to equal the plane cell along that axis, and the plane extent to be a whole number of segments. Otherwise it raises NotImplementedError. Collinear parallel edges, or parallel edges closer than 2.5\u00b7r, also raise. C1 fits (40 mm = 4\u00d710 mm and 35 mm = 7\u00d75 mm). This is a stated scope limit, not a defect for the claim, but the FFT plane is not general yet.",
+      "evidence": "build_plane_mesh and wire_plane_op raise NotImplementedError; _coupled_distances raises for dist < 2.5\u00b7r.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "GMRES non-convergence shows up only through solver_tol",
+      "detail": "block_gmres ignores the convergence flag from scipy's gmres (restart 100, at most 5 restarts). A solve that does not converge shows up only as a larger a-posteriori bound in solver_tol, which E001's tol_ratio check does catch. Iterations grow with level (83 \u2192 93 \u2192 109) and already pass the restart length at level 3. I re-derived the a-posteriori bound by hand (for complex-symmetric M with Re M = R, the projected residual gives |dZ| \u2264 \u2016\u03c1_i\u2016\u2016\u03c1_j\u2016/r_min) and it is correct.",
+      "evidence": "block_gmres: `sol, _ = spla.gmres(...)`; gmres_iters [83], [93], [109] for C1 levels 1\u20133.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran `uv run pytest -q tests/unit/solvers`: 25 passed in 37.7 s. Ran `uv run ruff check src/moduleforge/solvers tests/unit/solvers`: all checks passed.",
+    "Ran the B2 definition-of-done command exactly as written: level 4, err 5.85e-5, rule 2.31e-4, tol_ratio 2.96e-5, ratio check 0.972, 0 mesh violations. The assertion passed.",
+    "Ran B2, B1, B3 and C0 through l2_converged_solve at their full E001 frequency sets (refinement_max 4). All converged at level 4. Every error against analytic was below the stated residual model error (largest 1.35e-4 for B3 L11 against a model error of 1.2e-3). B3 reciprocity 2.8e-15; L falls with frequency in every case.",
+    "Solved C1 at 20 MHz for levels 1\u20133 myself, since the level-4 definition-of-done run had not finished. Error against analytic falls 7.9e-4 \u2192 3.9e-4 \u2192 1.7e-4 with same-sign changes contracting by about 0.55 (order about 2). solver_tol was 6\u20137e-7 against 9.98e-6 required.",
+    "Solved C1 at level 1 with the full 5/20/80 MHz set (one mesh graded to 80 MHz): errors +4.6e-4, +4.2e-4, +5.0e-4, within the 1.4e-3 model error. solver_tol 7.9e-7, almost all of it from the stated proxy bound.",
+    "Compared Hoer-Love box entries in float64 with 50-digit mpmath on the actual C1 layer stacks (levels 1 and 4, 20 and 80 MHz). Worst relative error 4.6e-8; the solver_tol accounting does not include it.",
+    "Re-derived the a-posteriori error bound by hand (Z \u2212 Z~ = \u2212e_i\u1d40 M e_j, \u2016e\u2016 \u2264 \u2016P\u03c1\u2016/r_min from Re M = R) and confirmed the projector and stationarity argument for complex-symmetric M.",
+    "Checked the closed form in test_B1_dc_closed_form independently. The Grover GMD form ln(2l/r) \u2212 3/4 is right; for a uniform disc the mean distance is 128r/(45\u03c0) and the mean square distance is r\u00b2. The test is not circular.",
+    "Read the unit tests for circularity. The fil_F, Hoer-Love, coax-table and wire-to-plane operator tests compare against independent quadratures or a dense kernel. The proxy-order and a-posteriori tests compare against a higher order or dense LU, not against the implementation's own formula."
+  ],
+  "caveats": [
+    "I did not see the C1 level-4 definition-of-done assertion pass myself. The run took more than 40 minutes while other jobs shared the CPU. The level 1\u20133 sequence and its projection give a clear margin (err about 1e-4 against 0.02, rule about 5e-4 against 1e-2), but the deterministic orchestrator run decides.",
+    "Convergence is shown only for C1 and B2 at 20 MHz (definition-of-done scope). I separately confirmed B1, B2, B3 and C0 at their full E001 frequency sets. C1 at 5 and 80 MHz was checked only at level 1, so its convergence under the rule is not shown.",
+    "Scope is RoundWire plus at most one Plane, with axis-parallel edges and a plane lattice that matches the wire segments. Bars, ties (needed for E001 A1\u2013A4 and B4), inclined edges and lattices that don't match the segments raise NotImplementedError.",
+    "solver_tol rests on stated (assumed) bounds: ELLIPSE_M = 10 for the Bernstein-ellipse bounds, a heuristic nested-rule estimate for the coax tables, and the proxy multipole bound. It also leaves out Hoer-Love cancellation (about 5e-8). It is not a strictly rigorous bound, though all of these terms are far below C1's 1e-5 budget.",
+    "Run time grows steeply with level for C1 (level 3 about 4 minutes per frequency under load). The full E001 run at three frequencies plus the scaling solve was not timed against its 240-minute timeout."
+  ]
+}

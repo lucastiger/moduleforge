@@ -487,3 +487,5 @@
 {"ts": "2026-10-05T00:31:24+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0073-planner-20261004T172842-247b", "status": "completed", "cost": 0.8222129999999999, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-10-05T00:31:24+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0033", "kind": "plan_approval", "subject": "[O001] approve initial plan (5 tasks)"}
 {"ts": "2026-10-05T00:31:24+00:00", "event": "plan_applied", "actor": "orchestrator", "objective": "O001", "created": ["T0074", "T0075", "T0076", "T0077", "T0078"], "dropped": 0}
+{"ts": "2026-10-05T00:38:22+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0070-builder-20261004T172858-ae02", "status": "error", "cost": 1.109463, "subtype": "success", "report": "missing"}
+{"ts": "2026-10-05T00:38:22+00:00", "event": "capacity_backoff", "actor": "orchestrator", "task": "T0070", "minutes": 30}

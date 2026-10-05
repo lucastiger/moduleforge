@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-05T08:46:31+00:00 from repository state — do not edit_
+_generated 2026-10-05T09:08:56+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -16,9 +16,6 @@ cancelled: 19, done: 51, failed: 3, running: 1, todo: 8
 - T0071 `running` builder/implement: Complete moduleforge.solvers.l2 for E001: exact bars, two-port Z, ties; frozen E001 smoke passes within 40 min (attempt 1)
 
 ## Recent events
-- 2026-10-05T07:01:29+00:00 run_started {"run": "T0074-builder-20261005T000129-0208", "task": "T0074", "role": "builder", "session": "b91e6a78-7189-4590-a8b1-5a3b68840cd9"}
-- 2026-10-05T07:02:02+00:00 run_finished {"run": "T0074-builder-20261005T000129-0208", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
-- 2026-10-05T07:02:02+00:00 capacity_backoff {"task": "T0074", "minutes": 30}
 - 2026-10-05T07:02:02+00:00 run_finished {"run": "T0071-builder-20261005T000129-220a", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-05T07:02:02+00:00 capacity_backoff {"task": "T0071", "minutes": 30}
 - 2026-10-05T07:32:15+00:00 run_started {"run": "T0071-builder-20261005T003215-ff71", "task": "T0071", "role": "builder", "session": "1b44fcc0-0839-493c-ba85-c54ea72e5423"}
@@ -31,3 +28,6 @@ cancelled: 19, done: 51, failed: 3, running: 1, todo: 8
 - 2026-10-05T08:34:01+00:00 run_started {"run": "T0082-critic-20261005T013401-faca", "task": "T0082", "role": "critic", "session": "6d0c0b20-b9e5-4e50-902d-4735f68ec38e"}
 - 2026-10-05T08:46:29+00:00 run_finished {"run": "T0082-critic-20261005T013401-faca", "status": "completed", "cost": 1.3230003999999997, "subtype": "success", "report": "structured_output"}
 - 2026-10-05T08:46:30+00:00 task_failed_attempt {"task": "T0074", "signal": "review_rejected", "action": "repair"}
+- 2026-10-05T09:08:21+00:00 tick_error {"error": "PermissionError: [Errno 1] Operation not permitted", "consecutive": 1}
+- 2026-10-05T09:08:53+00:00 run_interrupted {"run": "T0071-builder-20261005T003215-ff71"}
+- 2026-10-05T09:08:53+00:00 run_started {"run": "T0071-builder-20261005T020853-f29c", "task": "T0071", "role": "builder", "session": "1b44fcc0-0839-493c-ba85-c54ea72e5423"}

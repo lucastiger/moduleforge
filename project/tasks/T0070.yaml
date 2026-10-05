@@ -4,7 +4,7 @@ title: 'L2 core in src: exact-kernel round wires, FFT plane, bounded GMRES; E001
   under the frozen rule'
 type: implement
 agent: builder
-status: running
+status: review
 depends_on: []
 description: 'Replaces failed T0022 (4 attempts). It uses the design measured by the founder-approved
   spike T0067 (research/diagnoses/T0067.md) and reviewed in T0068 (project/reviews/T0067/T0068.json).
@@ -164,3 +164,164 @@ history:
 - outcome: capacity_backoff
   summary: You've hit your session limit · resets 7:20pm (America/Los_Angeles)
   at: '2026-10-05T02:10:19+00:00'
+- attempt: 1
+  outcome: agent_finished
+  summary: 'All DoD commands exit 0, including the C1 and B2 E001 checks at level 4, but I am reporting
+    partial. The wire-to-plane operator is exact axial-Toeplitz FFT, not a general precorrected FFT, and
+    it raises NotImplementedError when wire segments and plane cells are not aligned.
+
+
+    What was built:
+
+    - l2_core.py: the core, split into functions the layout path can import.
+
+    - l2.py: the public API. Bar and Tie raise NotImplementedError. RoundWire and Plane work with any
+    number of ports.
+
+    - tests/unit/solvers/test_l2_core.py: 25 tests, about 16 s.
+
+
+    The core:
+
+    - Graded annuli with azimuthal harmonics, exact coaxial Toeplitz tables, and moment-matched proxy
+    filaments for other edges and the plane.
+
+    - A plane kernel computed once per distinct (offset, layer pair), applied by FFT.
+
+    - Dense LU for small systems'
+  report:
+    status: partial
+    summary: 'All DoD commands exit 0, including the C1 and B2 E001 checks at level 4, but I am reporting
+      partial. The wire-to-plane operator is exact axial-Toeplitz FFT, not a general precorrected FFT,
+      and it raises NotImplementedError when wire segments and plane cells are not aligned.
+
+
+      What was built:
+
+      - l2_core.py: the core, split into functions the layout path can import.
+
+      - l2.py: the public API. Bar and Tie raise NotImplementedError. RoundWire and Plane work with any
+      number of ports.
+
+      - tests/unit/solvers/test_l2_core.py: 25 tests, about 16 s.
+
+
+      The core:
+
+      - Graded annuli with azimuthal harmonics, exact coaxial Toeplitz tables, and moment-matched proxy
+      filaments for other edges and the plane.
+
+      - A plane kernel computed once per distinct (offset, layer pair), applied by FFT.
+
+      - Dense LU for small systems, otherwise GMRES with a block/Schur preconditioner.
+
+      - solver_tol is the rigorous a-posteriori bound ‖ρ_i‖‖ρ_j‖/r_min, plus rounding, plus stated bounds
+      for the coaxial tables, proxy truncation, plane-table quadrature and wire-to-plane quadrature.
+
+
+      Design choices that need your review:
+
+      1. **Wire-to-plane coupling (item 3).** The wire-to-plane block is never stored dense. For an edge
+      whose segment length equals the plane''s axial cell it is Toeplitz in the axial index, so it is
+      stored as a table over (proxy, layer, lateral row, axial offset) and applied by FFT along the edge.
+      That is exact (no compression error), and memory is O(Q·nl·n2·(n+n1)) instead of O(Q·n·nl·n1·n2).
+      A segment length that does not match the plane cell raises NotImplementedError, so the generality
+      of a true precorrected FFT is not there. The layout path (n4a) needs either the same alignment or
+      an axial-resampling extension. I did not build that, and `solve()` currently supports only one plane.
+
+      2. **Mesh counts changed.** The spike''s cells (a/h ≈ 1.1 at level 1) gave non-steady orders and
+      the frozen rule returned inf. A control with the wire at 1.5 mm and 2 mm (same cell size, larger
+      gap) converged. So segments per edge are now 14/18/24/32/42 (ratios 1.286/1.333/1.333/1.3125) and
+      annuli 9/12/16/21/28. Plane layers are 7/9/12/16/21 with one fixed smooth grading rate, replacing
+      the x2-graded layers. The plane cell equals the segment length along each axis.
+
+      3. **Proxy order.** P is chosen from the stated bound (1e-9 with no plane, 2e-7 with a plane). C1
+      gets P=9, because with P=8 the reported solver_tol (~3.9e-6) widened the rule''s noise floor and
+      the rule returned inf.
+
+      4. **Coaxial kernel tolerance is a nested-rule estimate.** The coaxial tables are built twice (default
+      rule and a 1.5× richer rule). The difference ×10 is reported as the stated error scale, which is
+      a measured estimate rather than an a-priori bound. The u=0 kink quadrature needed ngk=64 and panels=60,
+      because ngk=12 gave 1e-7 relative error.
+
+      5. **Gauss-error bound assumption.** Plane-table and wire-to-plane quadrature bounds use the Gauss–Legendre
+      Bernstein-ellipse theorem with an assumed factor of 10 between the integrand on the ellipse and
+      on the real interval (`ELLIPSE_M`). They come out around 1e-13.
+
+
+      Not done or not verified:
+
+      - Only B1, B2 and C1 were run against E001. Bars, ties and inclined wires raise NotImplementedError.
+
+      - B3''s solver_tol requirement (4.1e-9) was not run through the runner. B3''s mutual coupling would
+      get P≈8–9 under the 1e-9 no-plane target, and B2 level 1 reports 2.2e-10.
+
+      - The runner''s 40-minute smoke run was not run. C1 level 4 alone takes about 5–7 min and 7.8 GB,
+      and the final DoD run took 427 s.
+
+
+      C1 results by level, for the report requested in the packet:
+
+
+      | Level | Unknowns | Wall (s) | Peak RSS (GB) | L (nH) | Error vs closed form | solver_tol |
+
+      |---|---|---|---|---|---|---|
+
+      | 1 | 85,330 | 13 | 1.9 | 14.40299 | 7.9e-4 | 6.2e-7 |
+
+      | 2 | 177,930 | 33 | 3.3 | 14.39720 | 3.9e-4 | 6.4e-7 |
+
+      | 3 | 413,088 | 78 | 5.0 | 14.39403 | 1.7e-4 | 6.8e-7 |
+
+      | 4 | 962,944 | 293 | 7.8 | 14.39238 | 5.3e-5 | 6.9e-7 |
+
+
+      Frozen-rule results from the DoD commands, both levels 1–4:
+
+      - C1 converged at level 4 with remaining-error estimate 4.4e-4 (limit 1e-2), L error 5.3e-5 (limit
+      2e-2), solver_tol ratio 0.069 (limit 1), ratio check 0.988 and mesh violations 0. Peak RSS was 7.8
+      GB, under the 12 GB bound.
+
+      - B2 converged at level 4 with estimate 2.3e-4, L error 5.8e-5, tol ratio 3e-5, ratio check 0.972
+      and mesh violations 0.'
+    files_changed:
+    - src/moduleforge/solvers/__init__.py
+    - src/moduleforge/solvers/l2.py
+    - src/moduleforge/solvers/l2_core.py
+    - tests/unit/solvers/test_l2_core.py
+    checks_run:
+    - cmd: uv run pytest -q tests/unit/solvers
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge/solvers tests/unit/solvers
+      exit_code: 0
+    - cmd: E001 DoD one-liner for case B2 (levels 1-4, f=2e7, via /tmp/dod.sh, identical text to the packet
+        command)
+      exit_code: 0
+    - cmd: E001 DoD one-liner for case C1 (levels 1-4, f=2e7, via /tmp/dod.sh, identical text to the packet
+        command)
+      exit_code: 0
+    - cmd: grep -rnE 'git clone|urlopen|urlretrieve|wget' src/moduleforge/solvers
+      exit_code: 1
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    concerns:
+    - The wire-to-plane operator is exact axial-Toeplitz FFT, not a general precorrected FFT. It requires
+      wire segment length to equal the plane's axial cell and an integer number of segments across the
+      plane extent. Any other geometry raises NotImplementedError. n4a will need an axial-resampling extension
+      or a plane lattice chosen to match its wire segments. solve() accepts only one plane.
+    - The mesh counts differ from the spike (segments 14/18/24/32/42, annuli 9/12/16/21/28, layers 7/9/12/16/21).
+      With the spike's counts the cells were too coarse relative to the wire height and the frozen rule
+      returned inf for C1.
+    - The frozen rule is sensitive to solver_tol through its noise floor. The C1 solver_tol is 6.9e-7,
+      dominated by the stated proxy bound times the absolute-weight energy ratio |x|^T|L||x| / |Z|. At
+      about 3.9e-6 the rule returned inf. The ratio is conservative, around 9 for C1.
+    - The coaxial kernel error scale is a nested-rule estimate (difference to a 1.5x richer rule, times
+      10), not an a-priori bound. The plane and wire-to-plane quadrature bounds assume ELLIPSE_M = 10.
+      Both are stated assumptions.
+    - The solver_tol requirement for B3 (4.1e-9) and the HF-only requirement for B4/C0 were not checked
+      with the runner. B3, B4, bars and ties are out of scope for this task (the packet's DoD covers C1
+      and B2).
+    - 'The 40-minute E001 smoke run was not run. Cost for the C1 chain: roughly 7 min and 7.8 GB RSS at
+      level 4, 427 s for the full DoD command including 4 levels.'
+    - Level 5 was not run in the packet DoD (refinement_max reduced to 4). MAX_REFINEMENT is 5 and level
+      5 meshes are defined, but C1 level 5 was not run, so its memory (probably 12 GB or more) is unmeasured.

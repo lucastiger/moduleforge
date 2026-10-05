@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-05T02:40:25+00:00 from repository state — do not edit_
+_generated 2026-10-05T03:59:43+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -8,18 +8,16 @@ _generated 2026-10-05T02:40:25+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $151.46/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $157.23/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 46, failed: 3, running: 1, todo: 9
+cancelled: 19, done: 46, failed: 3, review: 1, running: 2, todo: 9
 
-- T0070 `running` builder/implement: L2 core in src: exact-kernel round wires, FFT plane, bounded GMRES; E001's C1 and B2 converge under the frozen rule (attempt 1)
+- T0070 `review` builder/implement: L2 core in src: exact-kernel round wires, FFT plane, bounded GMRES; E001's C1 and B2 converge under the frozen rule (attempt 1)
+- T0079 `running` critic/review: Review T0070 (physics) (attempt 1)
+- T0080 `running` critic/review: Review T0070 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-05T00:31:24+00:00 inbox_opened {"id": "I0033", "kind": "plan_approval", "subject": "[O001] approve initial plan (5 tasks)"}
-- 2026-10-05T00:31:24+00:00 plan_applied {"objective": "O001", "created": ["T0074", "T0075", "T0076", "T0077", "T0078"], "dropped": 0}
-- 2026-10-05T00:38:22+00:00 run_finished {"run": "T0070-builder-20261004T172858-ae02", "status": "error", "cost": 1.109463, "subtype": "success", "report": "missing"}
-- 2026-10-05T00:38:22+00:00 capacity_backoff {"task": "T0070", "minutes": 30}
 - 2026-10-05T01:08:27+00:00 run_started {"run": "T0070-builder-20261004T180827-e764", "task": "T0070", "role": "builder", "session": "cc23fa8e-a6de-49b6-8358-18aa604d93ba"}
 - 2026-10-05T01:09:00+00:00 run_finished {"run": "T0070-builder-20261004T180827-e764", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-05T01:09:00+00:00 capacity_backoff {"task": "T0070", "minutes": 30}
@@ -31,3 +29,7 @@ cancelled: 19, done: 46, failed: 3, running: 1, todo: 9
 - 2026-10-05T02:10:19+00:00 capacity_backoff {"task": "T0070", "minutes": 30}
 - 2026-10-05T02:20:45+00:00 inbox_resolved {"id": "I0033", "status": "approved", "note": ""}
 - 2026-10-05T02:40:25+00:00 run_started {"run": "T0070-builder-20261004T194025-abdf", "task": "T0070", "role": "builder", "session": "86dd30fc-e625-4937-908e-8326f5d987f8"}
+- 2026-10-05T03:53:00+00:00 run_finished {"run": "T0070-builder-20261004T194025-abdf", "status": "completed", "cost": 5.770738400000001, "subtype": "success", "report": "structured_output"}
+- 2026-10-05T03:59:41+00:00 verified {"task": "T0070"}
+- 2026-10-05T03:59:43+00:00 run_started {"run": "T0079-critic-20261004T205943-a6fb", "task": "T0079", "role": "critic", "session": "bfca28f5-9ffe-49b4-884e-76cea6fec2e8"}
+- 2026-10-05T03:59:43+00:00 run_started {"run": "T0080-critic-20261004T205943-6047", "task": "T0080", "role": "critic", "session": "a2d2a7b2-1b9a-4a78-8519-0434dd26ed9c"}

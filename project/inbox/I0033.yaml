@@ -1,0 +1,33 @@
+id: I0033
+kind: plan_approval
+subject: '[O001] approve initial plan (5 tasks)'
+summary: 'O001 has used 0 of 3 evaluations, and the L2 reference is still the only blocker. T0070 (the
+  L2 core, gated on C1 converging under the frozen E001 rule) is running. T0071 (bars, ports, ties, E001
+  smoke run) and T0072 (the E001 run) are queued behind it. The founder approved T0069''s plan and D0004:
+  GMRES solves with a rigorous a-posteriori bound, and FastHenry optional with provenance from source
+  hashes. The founder also said that nodes n4a, n4b, n5, n6 and n7 were dropped by the open-task-limit
+  bug and are to be restored separately. This plan restores exactly those five nodes. Their dependencies
+  now point at real tasks: n1 is T0070 and n3 is T0072. Five open tasks remain (T0049, T0050, T0070, T0071,
+  T0072), so all five fit under the limit of 10. Two edits follow D0004 and the founder''s change to T0070.
+  First, n4a must reuse the compressed wire-to-plane operator that T0070 exposes in l2_core, and count
+  its error bound in solver_tol. Second, n4a must show bound >= true error against a dense LU on a small
+  layout. Neither edit changes the approved evidence standard. The biggest open risks are still C1 at
+  level 4 (T0070''s check, for F1) and whether L2 can solve a layout at E002 scale within O001''s compute
+  (n4b''s gate). That gate is the cheapest kill shot for E002''s feasibility, so n5 is not paid for until
+  it passes. The new tasks total $22, about $37.50 with the already-queued T0070–T0072, which leaves room
+  for reviews and a retry within the $95.42 that remains.'
+refs:
+- O001
+- T0074
+- T0075
+- T0076
+- T0077
+- T0078
+options:
+- approve
+- reject (with note for the planner)
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-05T00:31:24+00:00'
+resolved_at: null

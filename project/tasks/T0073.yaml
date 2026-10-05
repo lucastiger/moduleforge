@@ -4,7 +4,7 @@ title: 'Plan O001 (founder approved I0031: Founder (2026-10-04): confirm (i) and
   (project/decisions/D0004-l2-iterative-solve-fasthenry-optional.md))'
 type: plan
 agent: planner
-status: running
+status: done
 depends_on: []
 description: ''
 context_files: []
@@ -30,4 +30,20 @@ target: null
 lens: null
 trigger: 'founder approved I0031: Founder (2026-10-04): confirm (i) and (ii); recorded as D0004 (project/decisions/D0004-l2-iterative-solve-fasthenry-optional.md)'
 rationale: ''
-history: []
+history:
+- outcome: planned
+  summary: 'O001 has used 0 of 3 evaluations, and the L2 reference is still the only blocker. T0070 (the
+    L2 core, gated on C1 converging under the frozen E001 rule) is running. T0071 (bars, ports, ties,
+    E001 smoke run) and T0072 (the E001 run) are queued behind it. The founder approved T0069''s plan
+    and D0004: GMRES solves with a rigorous a-posteriori bound, and FastHenry optional with provenance
+    from source hashes. The founder also said that nodes n4a, n4b, n5, n6 and n7 were dropped by the open-task-limit
+    bug and are to be restored separately. This plan restores exactly those five nodes. Their dependencies
+    now point at real tasks: n1 is T0070 and n3 is T0072. Five open tasks remain (T0049, T0050, T0070,
+    T0071, T0072), so all five fit under the limit of 10. Two edits follow D0004 and the founder''s cha'
+  created:
+  - T0074
+  - T0075
+  - T0076
+  - T0077
+  - T0078
+  dropped_for_limits: 0

@@ -1,0 +1,145 @@
+id: T0076
+objective: O001
+title: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timing) + runners, sized from
+  the measured L2 layout cost
+type: design_experiment
+agent: scientist
+status: proposed
+depends_on:
+- T0075
+description: 'Restores T0069 plan node n5 (dropped by the open-task-limit bug; restoration requested by
+  the founder on I0032). It re-issues T0024, which was blocked by failed T0022. Draft experiments/drafts/E002.yaml,
+  experiments/drafts/E003.yaml, experiments/runners/e002_ranking.py and experiments/runners/e003_timing.py.
+  Write research/notes/o001-e002-e003-design.md with the rationale and a power analysis.
+
+
+  Everything in T0024''s description (project/tasks/T0024.yaml) still applies:
+
+  - sealed seed;
+
+  - strata over all families and 2-6 dies per switch;
+
+  - metrics and bootstrap CIs with a fixed bootstrap seed;
+
+  - the top-decile rounding rule declared in advance;
+
+  - secondary Spearman at 5 and 80 MHz (F4), and residual correlations with loop area, plane distance
+  and die count (F3);
+
+  - sanity checks l2_converged, sample_diverse, all_drc_valid, l2_reference_valid and all_finite;
+
+  - exclusions declared in advance;
+
+  - E003 thread pinning, n_evals, warm-up and recorded CPU model;
+
+  - the founder context on L1''s die-count-correlated mesh bias.
+
+
+  Changes:
+
+  (1) L2 is moduleforge.solvers.l2_layout.loop_inductance. l2_reference_valid re-solves E001''s C1 in
+  the run with moduleforge.solvers.l2 and must agree within 2 %.
+
+  (2) Size n from the measured layout cost in research/notes/o001-l2-layout-cost.md and benchmarks/l2_layout_cost.py,
+  not from T0067''s estimate, and from the CPU-h O001 has left. State cpu_hours_est and timeout_min honestly.
+  Above 6 CPU-h the run goes to burst compute. Under D0004 the in-house L2 needs no FastHenry binary,
+  only uv sync. Provenance is tool_version plus the solver-source sha256.
+
+  (3) If no n makes A2/K1 and A4/K2 decidable within the objective''s compute budget, say so in the note
+  and stop with status blocked; the founder decides.
+
+  (4) --smoke uses <= 4 layouts at 2 dies per switch from an unsealed dev seed, with the l2_converged
+  refinement solve on one layout only. It is a pipeline check only. Never use it to change n, strata,
+  metrics or thresholds.
+
+  Do not write under src/.'
+context_files:
+- project/tasks/T0024.yaml
+- project/objectives/O001/objective.yaml
+- project/decisions/D0004-l2-iterative-solve-fasthenry-optional.md
+- research/notes/o001-l2-layout-cost.md
+- research/notes/o001-l2-reference.md
+- experiments/specs/E001.yaml
+- experiments/runners/e001_reference.py
+- src/moduleforge/generate/halfbridge.py
+- src/moduleforge/physics/peec/
+- src/moduleforge/solvers/l2_layout.py
+- src/moduleforge/solvers/l2.py
+- benchmarks/l1_timing.py
+- benchmarks/l2_layout_cost.py
+- tools/mfos/mfos/evidence.py
+- tools/mfos/mfos/stats.py
+- .mfos/policy.toml
+- .claude/skills/mf-evidence/SKILL.md
+deliverables:
+- experiments/drafts/E002.yaml
+- experiments/drafts/E003.yaml
+- experiments/runners/e002_ranking.py
+- experiments/runners/e003_timing.py
+- research/notes/o001-e002-e003-design.md
+touches:
+- experiments/drafts/E002.yaml
+- experiments/drafts/E003.yaml
+- experiments/runners/e002_ranking.py
+- experiments/runners/e003_timing.py
+- research/notes/o001-e002-e003-design.md
+definition_of_done:
+- cmd: null
+  exists: experiments/drafts/E002.yaml
+  timeout_s: 60
+- cmd: null
+  exists: experiments/drafts/E003.yaml
+  timeout_s: 60
+- cmd: null
+  exists: experiments/runners/e002_ranking.py
+  timeout_s: 60
+- cmd: null
+  exists: experiments/runners/e003_timing.py
+  timeout_s: 60
+- cmd: null
+  exists: research/notes/o001-e002-e003-design.md
+  timeout_s: 60
+- cmd: uv run mfos exp check E002
+  exists: null
+  timeout_s: 120
+- cmd: uv run mfos exp check E003
+  exists: null
+  timeout_s: 120
+- cmd: uv run ruff check experiments/runners/e002_ranking.py experiments/runners/e003_timing.py
+  exists: null
+  timeout_s: 120
+- cmd: 'rm -rf /tmp/e002-smoke && uv run python experiments/runners/e002_ranking.py --smoke && uv run
+    python -c "import json,math; r=json.load(open(''/tmp/e002-smoke/result.json'')); assert r[''status'']==''complete'',
+    r[''status'']; m=r[''metrics'']; ks=(''spearman_rho_Lloop'',''mape_Lloop'',''top_decile_recall'');
+    assert all(math.isfinite(m[k][''value'']) for k in ks), m; assert m[''spearman_rho_Lloop''][''ci'']
+    and m[''mape_Lloop''][''ci''], m; names={s[''name''] for s in r[''sanity'']}; assert {''l2_converged'',''sample_diverse'',''all_drc_valid'',''l2_reference_valid''}
+    <= names, names; print({k: m[k][''value''] for k in m})"'
+  exists: null
+  timeout_s: 5400
+- cmd: rm -rf /tmp/e003-smoke && uv run python experiments/runners/e003_timing.py --smoke && uv run python
+    -c "import json,math; r=json.load(open('/tmp/e003-smoke/result.json')); assert r['status']=='complete',
+    r['status']; v=r['metrics']['l1_eval_ms_p50']['value']; assert math.isfinite(v) and v > 0, v; print('p50
+    ms', v)"
+  exists: null
+  timeout_s: 900
+experiment: null
+risk: high
+model: null
+budget_usd: 7.0
+max_turns: 90
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: planner:T0073
+created_at: '2026-10-05T00:31:24+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: E002 produces A2-A5 and K1-K3, with the F1/F2 sanity checks and the F3/F4 diagnostics. E003
+  produces A6. A power analysis based on measured cost keeps an INCONCLUSIVE verdict from wasting one
+  of the 3 evaluations. Sealed seeds address F5.
+history: []

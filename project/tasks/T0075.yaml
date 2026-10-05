@@ -1,0 +1,114 @@
+id: T0075
+objective: O001
+title: 'Layout L2 at E002 scale: measured CPU time, memory and refinement convergence per layout (feasibility
+  gate)'
+type: implement
+agent: builder
+status: proposed
+depends_on:
+- T0074
+description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; restoration requested
+  by the founder on I0032). The goal is to make the layout L2 affordable and convergent at E002 scale,
+  and to measure it, so that E002 is sized from data. T0068 finding 1: do not use T0067''s 30-100 layouts/h.
+
+
+  Write benchmarks/l2_layout_cost.py with options --out DIR and --quick.
+
+  - Each solve runs in a fresh subprocess.
+
+  - Each solve records: seed, dies_per_switch, refinement, f_hz = 2e7, L_H, R_ohm, wall_s, cpu_s (the
+  child''s user+sys time over all threads), peak_rss_gb, n_unknowns, gmres_iters, solver_tol.
+
+  - Output goes to DIR/cost.json as {''solves'': [...], ''convergence'': [{''seed'', ''dies_per_switch'',
+  ''rel_change''}]}, with rel_change = (L_ref1 - L_ref0)/L_ref1.
+
+  - --quick: seed 7 at 2 dies per switch (refinement 0 and 1) and at 6 dies (refinement 0).
+
+  - Full mode adds at least 3 more unsealed dev seeds across families and 2-6 dies, at refinement 0 and
+  1.
+
+
+  Optimize l2_layout.py (parallel kernel assembly, preconditioner, FFT reuse across frequencies) until:
+
+  - every refinement-0 solve uses <= 2400 CPU-s and <= 12 GB;
+
+  - the change from refinement 0 to refinement 1 is < 1 % (E002''s l2_converged criterion from T0024).
+
+  Do not edit l2.py or l2_core.py, because E001 validates that code. solver_tol stays as D0004 defines
+  it, including the bound for any compression. Budget rationale: O001 has 60 CPU-h, and E002 needs on
+  the order of 60-90 layouts plus a refinement subset.
+
+
+  Write research/notes/o001-l2-layout-cost.md with:
+
+  - the full-mode table;
+
+  - cost per layout vs dies per switch and refinement;
+
+  - how GMRES iterations grow;
+
+  - the projected E002 CPU-h as a function of n.
+
+  If the gates cannot be met, stop and report blocked with the measurements; the founder then decides
+  (multi-fidelity search or more compute). Do not coarsen the model until the check passes. Never use
+  a sealed seed.'
+context_files:
+- src/moduleforge/solvers/l2_layout.py
+- src/moduleforge/solvers/l2_core.py
+- project/decisions/D0004-l2-iterative-solve-fasthenry-optional.md
+- project/reviews/T0067/T0068.json
+- research/diagnoses/T0067.md
+- project/tasks/T0024.yaml
+- src/moduleforge/generate/halfbridge.py
+- benchmarks/l1_timing.py
+- .mfos/policy.toml
+deliverables:
+- benchmarks/l2_layout_cost.py
+- research/notes/o001-l2-layout-cost.md
+- src/moduleforge/solvers/l2_layout.py
+touches:
+- src/moduleforge/solvers/l2_layout.py
+- tests/unit/solvers/test_l2_layout*.py
+- benchmarks/l2_layout_cost.py
+- research/notes/o001-l2-layout-cost.md
+definition_of_done:
+- cmd: rm -rf /tmp/l2cost && uv run python benchmarks/l2_layout_cost.py --quick --out /tmp/l2cost
+  exists: null
+  timeout_s: 5400
+- cmd: uv run python -c "import json, math; r=json.load(open('/tmp/l2cost/cost.json')); rows=r['solves'];
+    assert rows and {x['dies_per_switch'] for x in rows} >= {2, 6}, rows; assert all(math.isfinite(x['L_H'])
+    and 1e-9 < x['L_H'] < 1e-7 for x in rows), rows; bad=[x for x in rows if x['refinement'] == 0 and
+    (x['cpu_s'] > 2400 or x['peak_rss_gb'] > 12)]; assert not bad, bad; conv=r['convergence']; assert
+    conv and all(abs(c['rel_change']) < 0.01 for c in conv), conv; print([(x['dies_per_switch'], x['refinement'],
+    round(x['cpu_s']), x['peak_rss_gb']) for x in rows], conv)"
+  exists: null
+  timeout_s: 120
+- cmd: null
+  exists: research/notes/o001-l2-layout-cost.md
+  timeout_s: 60
+- cmd: uv run pytest -q tests/unit/solvers
+  exists: null
+  timeout_s: 1800
+- cmd: uv run ruff check benchmarks/l2_layout_cost.py src/moduleforge/solvers tests/unit/solvers
+  exists: null
+  timeout_s: 300
+experiment: null
+risk: high
+model: null
+budget_usd: 6.0
+max_turns: 100
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: planner:T0073
+created_at: '2026-10-05T00:31:24+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: 'Kill shot for the evidence plan: if L2 cannot evaluate a layout within the objective''s compute
+  budget, E002 cannot decide A2/K1. This gate tells the founder before E002 design and run money is spent.'
+history: []

@@ -1,0 +1,142 @@
+id: T0074
+objective: O001
+title: 'L2 layout path: Layout -> exact-kernel loop_inductance reusing l2_core''s compressed wire-to-plane
+  operator (l2_layout.py)'
+type: implement
+agent: builder
+status: proposed
+depends_on:
+- T0070
+description: 'Restores T0069 plan node n4a, which the open-task-limit bug dropped; the founder asked for
+  its restoration on I0032. It re-issues founder task T0066 (blocked by failed T0022) on T0070''s core.
+  It is amended for D0004 and for the founder''s change to T0070 (item 3).
+
+
+  Implement src/moduleforge/solvers/l2_layout.py: loop_inductance(layout, freqs_hz, refinement=0) -> LoopResult.
+
+  - L_H and R_ohm are arrays aligned with freqs.
+
+  - meta has: tool_version; a sha256 of the solver source files (D0004 provenance, with no FastHenry binary
+  and no binary_path/binary_sha256); n_unknowns; mesh params; solver_tol; wall_s; cpu_s; gmres_iters.
+
+  - Build on Layout.to_conductors() (src/moduleforge/geometry/).
+
+  - Import from moduleforge.solvers.l2_core. Do not edit l2.py or l2_core.py: T0071 changes them in parallel,
+  and E001 (T0072) validates that code. Put any extension in l2_layout.py.
+
+
+  Physics (no image planes):
+
+  - top-Cu traces as a masked 2-D current grid, so current spreads across wide traces (T0022''s 1-D bars
+  did not);
+
+  - backside Cu and baseplate as finite meshed planes at their true extent and thickness;
+
+  - all three on one shared lateral grid, so every Cu-to-Cu block is block-Toeplitz and applied by FFT;
+
+  - bond wires as inclined round segments with the closed-form non-parallel filament mutual (Grover 1946),
+  coupled through the proxy filaments, with the error bound included in solver_tol (T0022''s centre-line
+  approximation had none);
+
+  - dies as ideal shorts;
+
+  - the same port as to_conductors();
+
+  - one mesh per call.
+
+
+  Coupling: for wire-to-plane and wire-to-trace coupling, REUSE the compressed operator that T0070 exposes
+  in l2_core (e.g. precorrected FFT). Do not build a dense block or a second implementation. Memory and
+  time must grow about linearly with wires x grid. T0068 finding 1: a dense array would need 26-118 GB
+  and about 1 h of kernel build per layout.
+
+
+  Solve: use l2_core''s GMRES driver (a small system may use the dense direct solve). Per D0004 (i), meta[''solver_tol'']
+  is the sum of: the a-posteriori bound ||P(Mx)||^2/r_min, a rounding bound, and STATED (derived, not
+  measured level-to-level) bounds for kernel quadrature, proxy truncation, the compressed operator, and
+  the plane and wire-to-plane tables.
+
+
+  Tests in tests/unit/solvers/test_l2_layout*.py:
+
+  - inclined filament mutual vs an independent quadrature (<= 1e-9 relative);
+
+  - a straight trace at 100 Hz vs the Hoer-Love (1965) bar self-inductance closed form, implemented independently
+  in the test;
+
+  - the layout path''s internals on E001''s C1 geometry vs l2.solve at the same refinement, agreeing within
+  0.5 %;
+
+  - reported solver_tol >= the true relative Z error against a dense LU on a layout small enough for one
+  (D0004 consequence);
+
+  - reciprocity of a two-port;
+
+  - L non-increasing with frequency;
+
+  - doubling all lengths and dividing f by 4 gives 2L;
+
+  - the generated 2-die half-bridge within 1-100 nH.
+
+  Cite every closed form (skill mf-conventions). Never weaken a test or tolerance. Report wall time, CPU
+  time, peak memory and GMRES iterations for seed 7 at 2 and 6 dies per switch, refinement 0.'
+context_files:
+- project/tasks/T0066.yaml
+- project/decisions/D0004-l2-iterative-solve-fasthenry-optional.md
+- project/decisions/D0003-l2-exact-inhouse-kernel.md
+- research/diagnoses/T0067.md
+- project/reviews/T0067/T0068.json
+- research/scripts/spike_l2/l2proto.py
+- src/moduleforge/solvers/l2_core.py
+- src/moduleforge/solvers/l2.py
+- src/moduleforge/geometry/layout.py
+- src/moduleforge/geometry/conductors.py
+- src/moduleforge/geometry/stack.py
+- src/moduleforge/generate/halfbridge.py
+- .claude/skills/mf-conventions/SKILL.md
+deliverables:
+- src/moduleforge/solvers/l2_layout.py
+- tests/unit/solvers/test_l2_layout.py
+touches:
+- src/moduleforge/solvers/l2_layout.py
+- tests/unit/solvers/test_l2_layout*.py
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/solvers
+  exists: null
+  timeout_s: 1800
+- cmd: uv run ruff check src/moduleforge/solvers tests/unit/solvers
+  exists: null
+  timeout_s: 300
+- cmd: uv run python -c "import numpy as np; from moduleforge.generate.halfbridge import generate_layouts;
+    from moduleforge.solvers.l2_layout import loop_inductance; l=generate_layouts(1, seed=7, dies_per_switch=2)[0];
+    r=loop_inductance(l, freqs_hz=[5e6, 2e7, 8e7], refinement=0); L=np.asarray(r.L_H); assert L.shape==(3,)
+    and np.all(np.isfinite(L)), L; assert 1e-9 < L[1] < 1e-7, L; assert L[0] >= L[1]*(1-1e-6) and L[1]
+    >= L[2]*(1-1e-6), L; m=r.meta; t=float(m['solver_tol']); assert 0 <= t < 1e-3, t; assert m['tool_version']
+    and m['n_unknowns'] > 0, m; print(L, m['wall_s'], t)"
+  exists: null
+  timeout_s: 1800
+- cmd: grep -rnE 'git clone|urlopen|urlretrieve|wget' src/moduleforge/solvers; test $? -eq 1
+  exists: null
+  timeout_s: 30
+experiment: null
+risk: high
+model: null
+budget_usd: 8.0
+max_turns: 150
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: planner:T0073
+created_at: '2026-10-05T00:31:24+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: A2-A5 and K1-K3 need L2 values for generated layouts. Review T0068 showed the spike's architecture
+  cannot reach E002 scale without compression, so this is the E002 feasibility risk. It runs in parallel
+  with T0071 so the risk surfaces early. The founder asked for this node's restoration (I0032), and D0004
+  sets its solver and provenance rules.
+history: []

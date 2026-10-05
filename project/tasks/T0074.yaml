@@ -4,7 +4,7 @@ title: 'L2 layout path: Layout -> exact-kernel loop_inductance reusing l2_core''
   operator (l2_layout.py)'
 type: implement
 agent: builder
-status: running
+status: todo
 depends_on:
 - T0070
 description: 'Restores T0069 plan node n4a, which the open-task-limit bug dropped; the founder asked for
@@ -133,7 +133,7 @@ risk: high
 model: null
 budget_usd: 8.0
 max_turns: 150
-attempts: 1
+attempts: 0
 max_attempts: 3
 branch: task/T0074-l2-layout-path-layout-exact-kernel-loop-
 pr: null
@@ -159,3 +159,6 @@ history:
 - outcome: capacity_backoff
   summary: You've hit your session limit · resets 12:20am (America/Los_Angeles)
   at: '2026-10-05T06:31:19+00:00'
+- outcome: capacity_backoff
+  summary: You've hit your session limit · resets 12:20am (America/Los_Angeles)
+  at: '2026-10-05T07:02:02+00:00'

@@ -1,0 +1,52 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "C1 at E001's registered frequencies (max 80 MHz) fails the constant-refinement-ratio check",
+      "detail": "The DoD runs C1 at 20 MHz only, so the mesh is graded to the skin depth at 20 MHz. In E001 as registered, C1 is solved at hf = [5, 20, 80] MHz on one mesh graded to 80 MHz. At that grading, the plane's surface layer (plane_layer:gnd) shrinks by up to 1.4196 per level (L2->L3), but the segment and plane-cell counts shrink by only 1.2857 (14->18). The ratio spread is 1.1041, above refinement_ratio_spread = 1.1. The runner's refinement_ratio_violation returns 1.0037 > 1 + 1e-9, so the l2_constant_refinement_ratio sanity check would fail and E001 would be INVALID on C1. So 'E001's C1 converges under the frozen rule' holds only for the narrower 20 MHz-only call the DoD uses. B2 is not affected: at its full registered frequency set the violation is 0.976.",
+      "evidence": "I built mesh_params for levels 1-5 with the src builders (build_wire_mesh / build_plane_mesh on the C1 geometry) and passed them to e.refinement_ratio_violation(metas, cfg, required_mesh_keys(C1)). Result: fmax=2e7 -> 0.98788 (passes, matching the DoD run); fmax=8e7 -> 1.00372 (fails) for both 4 and 5 levels. Per-level plane_layer ratios at 80 MHz: 1.383, 1.420, 1.396, 1.356. Segment ratios: 1.286, 1.333, 1.333, 1.3125.",
+      "suggested_check": "Rerun the C1 refinement-ratio check with freqs=[5e6,2e7,8e7]. Fix it by choosing a layer grading or LAYERS counts whose surface-layer ratio stays within 1.1x of the count ratios (e.g. define the first layer as h0*q^-k exactly)."
+    },
+    {
+      "severity": "minor",
+      "title": "The C1 pass at 20 MHz has little refinement-ratio headroom, and level 4 is very slow",
+      "detail": "At 20 MHz the ratio violation is 0.988, about 1.2% from failing. A small change in sigma, thickness or frequency tips it over (see the major finding). Run time also jumps sharply at level 4: 113 s at level 3 (413k unknowns) vs 1518 s at level 4 (963k unknowns), about 13x for 2.3x the unknowns, which suggests memory pressure. E001 proper solves three frequencies on C1 and may go to level 5, which will cost far more than the DoD.",
+      "evidence": "C1 DoD run meta: wall_s per level = 22.9, 78.8, 113.0, 1517.6 s; n_filaments = 85330, 177930, 413088, 962944.",
+      "suggested_check": "Time a level-4 C1 solve at 3 frequencies and record peak RSS."
+    },
+    {
+      "severity": "note",
+      "title": "Part of solver_tol rests on an assumption, not a proof",
+      "detail": "The a-posteriori residual bound is rigorous; I re-derived it by hand. Z - Z~ = e_i^T rho_j, and ||e|| <= ||rho|| / r_min follows from Re M = R >= r_min on null(C^T) with L real symmetric. However, the quadrature parts of the 'stated' term (plane, wp) assume ELLIPSE_M = 10 (Bernstein-ellipse sup bound), and the coaxial-table term uses a nested-rule difference times 10. The C1 solver_tol (~6.9e-7) is dominated by proxy truncation times |L| amplification, not by these terms. It sits 15x below the 1e-5 requirement, so this does not affect the claim.",
+      "evidence": "C1 tol_parts: resid ~1e-19, round ~2e-9, stated ~6.9e-7. Stated parts: proxy 7.1e-8, plane ~3.6e-13, wp ~1.2e-14.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "Plane physics is tested only on monkeypatched tiny meshes in the unit suite",
+      "detail": "The unit tests check the plane kernel entries, operator symmetry, the wire-plane operator against a dense kernel, and the a-posteriori bound on tiny meshes. The physical plane result (image-like L reduction) is only checked by the DoD C1 run, which takes about 30 min. My independent limit checks found no problem: at 1 kHz the plane changes L by only 1.9e-5, L decreases monotonically from 1 kHz to 2 GHz, R increases, and reversing the wire direction gives the same L to 1e-15.",
+      "evidence": "Tiny loop-over-plane: L/Lfree - 1 = -1.9e-5 (1 kHz), -6.6e-2 (100 kHz), -0.128 (20 MHz), -0.137 (2 GHz). Reversed straight wire and staple over the plane: identical L.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran `uv run pytest -q tests/unit/solvers`: 25 passed in 33 s.",
+    "Ran `uv run ruff check src/moduleforge/solvers tests/unit/solvers`: all checks passed.",
+    "Reproduced the B2 DoD command with extra diagnostics: level 4, L = 7.2513 nH vs analytic 7.2517 nH, err 5.8e-5, rule 2.3e-4, tol_ratio 3.0e-5, ratio violation 0.972, mesh violations 0. Passes.",
+    "Reproduced the C1 DoD command with diagnostics: level 4, L = 14.3924 nH vs analytic 14.3916 nH, err 5.3e-5, rule 4.4e-4, tol_ratio 0.069, ratio violation 0.988, mesh violations 0. Passes (level-4 wall time 1518 s).",
+    "Ran B2 beyond the DoD scope, at E001's full registered frequencies (100 Hz, 5, 20, 80 MHz; refinement_max 5): converged at level 4, all errors <= 1.1e-4 against a stated model error of ~9e-4, tol_ratio 0.027, ratio violation 0.976, mesh violations 0.",
+    "Computed the C1 refinement-ratio violation with the runner's own function on src-built meshes graded to E001's registered fmax of 80 MHz: 1.0037 (FAIL). At 20 MHz: 0.988 (pass).",
+    "Low-frequency limit on a tiny mesh: loop over a Cu plane at 1 kHz vs the free loop gives relative L difference -1.9e-5. L decreases monotonically and R increases from 1 kHz to 2 GHz (passive, physically consistent).",
+    "Orientation invariance: a straight wire and a staple over the plane, with polyline direction reversed, give identical L and R to ~1e-15. This exercises the flip/sign path of the compressed wire-plane operator, which the dense-kernel unit test does not cover.",
+    "Re-derived the a-posteriori forward-error bound by hand (stationarity of Z = X^T M X, error in null(C^T), Re M = R >= r_min) and found it correct.",
+    "Checked the B1 DC closed-form reference in the tests (ln(2l/r) - 3/4 plus mean-distance terms <d> = 128r/(45 pi), <d^2> = r^2) against the standard Grover/Maxwell mean-distance expansion. It is independent and correct."
+  ],
+  "caveats": [
+    "Valid scope: the claim holds as the DoD tests it. B2 and C1 converge under the frozen rule with refinement_max = 4 at a single 20 MHz frequency, and B2 also converges at E001's full registered frequency set.",
+    "Outside that scope: C1 at E001's registered frequencies (5/20/80 MHz, one mesh graded to 80 MHz) would fail l2_constant_refinement_ratio (violation 1.0037). This is a src mesh-grading defect that the 20 MHz-only DoD does not exercise.",
+    "I did not run C1 at the registered frequencies end to end, because that is too expensive. The failure is shown by applying the runner's own check to the meshes the src builders produce, which is the same data solve() reports in meta['mesh_params'].",
+    "I did not run the network-call grep from the DoD because a compound shell command was denied in this environment. Instead I read the imports of l2.py and l2_core.py: hashlib, itertools, math, os, time, concurrent.futures, dataclasses, functools, numpy, scipy. None of them fetch from the network.",
+    "Bars and ties are out of scope: they raise NotImplementedError, as the module docstring says."
+  ]
+}

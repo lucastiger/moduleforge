@@ -4,7 +4,7 @@ title: 'L2 core in src: exact-kernel round wires, FFT plane, bounded GMRES; E001
   under the frozen rule'
 type: implement
 agent: builder
-status: review
+status: merge
 depends_on: []
 description: 'Replaces failed T0022 (4 attempts). It uses the design measured by the founder-approved
   spike T0067 (research/diagnoses/T0067.md) and reviewed in T0068 (project/reviews/T0067/T0068.json).

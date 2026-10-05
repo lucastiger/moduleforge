@@ -62,7 +62,9 @@ def _history(t: m.Task) -> str:
     for h in t.history[-3:]:
         out.append(f"- attempt {h.get('attempt')}: {h.get('outcome')} — {h.get('summary', '')[:600]}")
         if h.get("failure_output"):
-            out.append("  ```\n  " + h["failure_output"][-1500:].replace("\n", "\n  ") + "\n  ```")
+            # All of it (at most 4000 characters as stored): a review lists its findings most severe first, and the
+            # last 1500 characters held only T0074's minor findings, not its blocker.
+            out.append("  ```\n  " + h["failure_output"].replace("\n", "\n  ") + "\n  ```")
     return "\n".join(out) + (
         "\nStart from a fresh look at the code. Do not repeat an approach that already failed "
         "unless you can say concretely why it will now work.")

@@ -355,3 +355,29 @@ def test_a_plans_own_cancellations_free_room_for_its_tasks(sandbox):
     assert s.task("T9100").history[-1]["dropped_for_limits"] == 0
     by_title = {t.title: t for t in created}
     assert by_title["new 3"].depends_on == [by_title["new 2"].id]
+
+
+def test_a_founder_listed_experiment_goes_to_burst_whatever_its_estimate(sandbox):
+    """E001 (2026-10-05) was registered at 2 CPU-h but needs more memory and time than this machine has; listing it
+    in policy compute.burst_experiments routes it to burst compute without re-registering its estimate."""
+    pol = sandbox / ".mfos" / "policy.toml"
+    text = pol.read_text()
+    assert "local_cpu_hours_max = 6.0" in text and 'burst_experiments = ["E001"]' in text
+    pol.write_text(text.replace('burst_experiments = ["E001"]', 'burst_experiments = ["E000"]'))
+    setup_objective()
+    s = _tick_until(lambda s: any("burst compute" in i.subject for i in s.inbox("open")))
+    item = next(i for i in s.inbox("open") if "burst compute" in i.subject)
+    assert "scripts/burst_gcp.sh E000" in item.summary
+    assert not list((sandbox / "experiments" / "results").glob("E000/*/result.json"))  # nothing ran locally
+
+
+def test_a_repair_packet_carries_every_review_finding(sandbox):
+    """T0074, 2026-10-05: the packet kept only the last 1500 characters of the rejection, i.e. the minor findings,
+    and dropped the blocker that the review lists first."""
+    from mfos import models as m
+    from mfos.packets import _history
+    findings = "- [blocker] solver_tol leaves out the cross-section bound" + "\n- [minor] detail" * 200
+    t = m.Task(id="T9200", objective="O000", title="x", type="implement", agent="builder", description="x",
+               history=[{"attempt": 1, "outcome": "review_rejected", "summary": "rejected",
+                         "failure_output": findings[:4000]}])
+    assert "[blocker] solver_tol leaves out the cross-section bound" in _history(t)

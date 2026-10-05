@@ -51,6 +51,9 @@ experiments = 1                  # simultaneous experiment processes (each may u
 # Experiments whose registered cpu_hours_est exceeds this run on burst compute (scripts/burst.sh),
 # not on this machine. 6 CPU-hours is ~1.5-2 h on a MacBook Air's 4 performance cores.
 local_cpu_hours_max = 6.0
+# Registered experiments that always run on burst compute, whatever their estimate (founder, 2026-10-05: E001
+# needs level-5 bar solves and three-frequency C1 solves beyond this Mac's 17 GB and its 240-minute timeout, T0071).
+burst_experiments = ["E001"]
 
 [budgets]                        # USD, from Claude Code's client-side cost estimates
 daily_usd = 60.0
@@ -121,6 +124,6 @@ identity_name = "mfos-bot"
 identity_email = "mfos-bot@users.noreply.github.com"
 
 [limits]
-run_wall_minutes = 90
+run_wall_minutes = 150         # 90 cut T0071 off mid-solve (2026-10-05): its own checks take up to ~85 min
 backoff_minutes = 30             # pause dispatch after a rate/usage-limit error (does not count as an attempt)
 sleep_gap_seconds = 300          # a longer gap between ticks means the machine slept: extend run deadlines

@@ -146,12 +146,15 @@ class Orchestrator:
 
     def _needs_burst(self, t: m.Task) -> Optional[float]:
         """CPU-hours estimate if this experiment should run on burst compute instead of this machine."""
-        limit = float(self.pol.get("compute", {}).get("local_cpu_hours_max", 1e9))
+        compute = self.pol.get("compute", {})
+        limit = float(compute.get("local_cpu_hours_max", 1e9))
         spec_path = self.s.root / "experiments" / "specs" / f"{t.experiment}.yaml"
         if not spec_path.exists():
             return None
         est = float(self.s.read_yaml(spec_path, m.ExperimentSpec).cpu_hours_est or 0)
-        return est if est > limit else None
+        # The founder can route a registered experiment to burst compute without re-registering its estimate
+        # (E001: registered at 2 CPU-h, measured by T0071 to exceed this machine's memory and the 240-minute timeout).
+        return est if est > limit or t.experiment in compute.get("burst_experiments", []) else None
 
     def _request_burst(self, t: m.Task, est: float) -> None:
         t.status = "needs_founder"
@@ -159,7 +162,8 @@ class Orchestrator:
                           "at": now(), "since": time.time()})
         self.s.save_task(t)
         self.s.add_inbox(kind="decision", subject=f"{t.experiment} needs burst compute (~{est:g} CPU-h)",
-                         summary=f"Run it on an ephemeral VM: `scripts/burst.sh {t.experiment}`. Results copied back "
+                         summary=f"Run it on an ephemeral VM: `scripts/burst_gcp.sh {t.experiment}` (Google Cloud) or "
+                                 f"`scripts/burst.sh {t.experiment}`. Results copied back "
                                  f"into experiments/results/ are picked up automatically (provenance records the host). "
                                  f"To run it here instead: `uv run mfos exp run {t.experiment}`.",
                          refs=[t.id, t.experiment or ""])

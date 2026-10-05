@@ -3,7 +3,7 @@ objective: O001
 title: Review T0074 (numerics)
 type: review
 agent: critic
-status: running
+status: todo
 depends_on: []
 description: 7ccc4aae2e5aed6b6cdc29bd0dcba1e172045778
 context_files: []
@@ -15,7 +15,7 @@ risk: low
 model: null
 budget_usd: 3.0
 max_turns: 60
-attempts: 1
+attempts: 0
 max_attempts: 3
 branch: null
 pr: null
@@ -29,4 +29,7 @@ target: T0074
 lens: numerics
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: capacity_backoff
+  summary: 'API Error: Can''t reach the API server — check your internet or DNS (ENOTFOUND)'
+  at: '2026-10-05T21:26:21+00:00'

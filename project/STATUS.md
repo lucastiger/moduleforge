@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-05T09:30:54+00:00 from repository state — do not edit_
+_generated 2026-10-05T14:24:53+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -15,7 +15,6 @@ cancelled: 19, done: 51, failed: 3, todo: 9
 
 
 ## Recent events
-- 2026-10-05T07:32:15+00:00 run_started {"run": "T0071-builder-20261005T003215-ff71", "task": "T0071", "role": "builder", "session": "1b44fcc0-0839-493c-ba85-c54ea72e5423"}
 - 2026-10-05T07:32:15+00:00 run_started {"run": "T0074-builder-20261005T003215-4c55", "task": "T0074", "role": "builder", "session": "177e1f8d-208a-44bc-be0e-fc2d5d09b7d1"}
 - 2026-10-05T08:13:38+00:00 run_finished {"run": "T0074-builder-20261005T003215-4c55", "status": "completed", "cost": 4.0163486, "subtype": "success", "report": "structured_output"}
 - 2026-10-05T08:18:52+00:00 verified {"task": "T0074"}
@@ -30,3 +29,4 @@ cancelled: 19, done: 51, failed: 3, todo: 9
 - 2026-10-05T09:08:53+00:00 run_started {"run": "T0071-builder-20261005T020853-f29c", "task": "T0071", "role": "builder", "session": "1b44fcc0-0839-493c-ba85-c54ea72e5423"}
 - 2026-10-05T09:30:52+00:00 run_finished {"run": "T0071-builder-20261005T020853-f29c", "status": "completed", "cost": 4.8149814, "subtype": "success", "report": "structured_output"}
 - 2026-10-05T09:30:53+00:00 task_failed_attempt {"task": "T0071", "signal": "dod_failed", "action": "repair"}
+- 2026-10-05T14:24:51+00:00 sleep_detected {"gap_s": 301, "runs_extended": 0}

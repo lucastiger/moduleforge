@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-05T22:25:46+00:00 from repository state — do not edit_
+_generated 2026-10-05T22:28:00+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -8,17 +8,14 @@ _generated 2026-10-05T22:25:46+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $191.99/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $194.08/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 52, failed: 3, review: 1, running: 1, todo: 8
+cancelled: 19, done: 52, failed: 3, review: 1, todo: 9
 
 - T0074 `review` builder/implement: L2 layout path: Layout -> exact-kernel loop_inductance with a precorrected-FFT wire-to-grid operator (l2_layout.py) (attempt 2)
-- T0084 `running` critic/review: Review T0074 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-05T20:42:58+00:00 capacity_backoff {"task": "T0083", "minutes": 30}
-- 2026-10-05T20:45:56+00:00 run_finished {"run": "T0071-builder-20261005T123730-4cd6", "status": "error", "cost": 4.4823088, "subtype": "success", "report": "missing"}
 - 2026-10-05T20:45:56+00:00 capacity_backoff {"task": "T0071", "minutes": 30}
 - 2026-10-05T21:16:30+00:00 run_started {"run": "T0083-critic-20261005T141630-b236", "task": "T0083", "role": "critic", "session": "d03ea4a5-0b25-48f1-9417-534ffe47643b"}
 - 2026-10-05T21:16:32+00:00 run_started {"run": "T0084-critic-20261005T141632-3572", "task": "T0084", "role": "critic", "session": "059b7c94-3791-49ba-9741-690235760e69"}
@@ -32,3 +29,5 @@ cancelled: 19, done: 52, failed: 3, review: 1, running: 1, todo: 8
 - 2026-10-05T22:24:58+00:00 run_started {"run": "T0071-builder-20261005T152458-2677", "task": "T0071", "role": "builder", "session": "c69be6f3-293a-4647-a0e8-34ba160afd79"}
 - 2026-10-05T22:25:44+00:00 run_finished {"run": "T0071-builder-20261005T152458-2677", "status": "error", "cost": 0.106092, "subtype": "success", "report": "missing"}
 - 2026-10-05T22:25:44+00:00 capacity_backoff {"task": "T0071", "minutes": 30}
+- 2026-10-05T22:27:58+00:00 run_finished {"run": "T0084-critic-20261005T145645-f522", "status": "error", "cost": 2.0909398, "subtype": "success", "report": "missing"}
+- 2026-10-05T22:27:58+00:00 capacity_backoff {"task": "T0084", "minutes": 30}

@@ -3,7 +3,7 @@ objective: O001
 title: Review T0074 (numerics)
 type: review
 agent: critic
-status: todo
+status: running
 depends_on: []
 description: 7ccc4aae2e5aed6b6cdc29bd0dcba1e172045778
 context_files: []
@@ -15,12 +15,13 @@ risk: low
 model: null
 budget_usd: 3.0
 max_turns: 60
-attempts: 0
+attempts: 1
 max_attempts: 3
 branch: null
 pr: null
 runs:
 - T0084-critic-20261005T141632-3572
+- T0084-critic-20261005T145645-f522
 created_by: orchestrator
 created_at: '2026-10-05T20:26:33+00:00'
 protected_approved: false

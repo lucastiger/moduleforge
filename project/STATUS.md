@@ -1,8 +1,7 @@
 # ModuleForge status
-_generated 2026-10-04T23:42:44+00:00 from repository state — do not edit_
+_generated 2026-10-05T00:25:25+00:00 from repository state — do not edit_
 
-## Founder inbox (3 open)
-- **I0030** [budget_increase] [O001] O001: +$50 to finish L2 (E001 and layout path) and to design and run E002/E003
+## Founder inbox (2 open)
 - **I0031** [decision] [O001] Confirm two amendments to D0003 for the L2 rebuild (iterative solve with a rigorous bound; FastHenry optional)
 - **I0032** [plan_approval] [O001] approve initial plan (3 tasks)
 
@@ -10,7 +9,7 @@ _generated 2026-10-04T23:42:44+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $149.53/$195 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $149.53/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
 cancelled: 19, done: 45, failed: 3, proposed: 3, todo: 2
@@ -20,7 +19,6 @@ cancelled: 19, done: 45, failed: 3, proposed: 3, todo: 2
 - T0072 `proposed` none/experiment: Run E001: L2 reference vs closed-form partial inductances (attempt 0)
 
 ## Recent events
-- 2026-10-04T21:59:14+00:00 inbox_resolved {"id": "I0028", "status": "approved", "note": "usd=56.51"}
 - 2026-10-04T22:00:32+00:00 run_started {"run": "T0067-scientist-20261004T150032-01ba", "task": "T0067", "role": "scientist", "session": "7bf99934-9660-46d7-baaf-8c2045505570"}
 - 2026-10-04T23:25:25+00:00 run_finished {"run": "T0067-scientist-20261004T150032-01ba", "status": "completed", "cost": 6.7698348, "subtype": "success", "report": "structured_output"}
 - 2026-10-04T23:25:31+00:00 verified {"task": "T0067"}
@@ -35,3 +33,4 @@ cancelled: 19, done: 45, failed: 3, proposed: 3, todo: 2
 - 2026-10-04T23:42:44+00:00 inbox_opened {"id": "I0031", "kind": "decision", "subject": "[O001] Confirm two amendments to D0003 for the L2 rebuild (iterative solve with a rigorous bound; FastHenry opti
 - 2026-10-04T23:42:44+00:00 inbox_opened {"id": "I0032", "kind": "plan_approval", "subject": "[O001] approve initial plan (3 tasks)"}
 - 2026-10-04T23:42:44+00:00 plan_applied {"objective": "O001", "created": ["T0070", "T0071", "T0072"], "dropped": 5}
+- 2026-10-05T00:25:13+00:00 inbox_resolved {"id": "I0030", "status": "approved", "note": "usd=95.42"}

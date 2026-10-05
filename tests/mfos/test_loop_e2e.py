@@ -329,3 +329,29 @@ def test_report_from_text_accepts_only_a_whole_json_object():
     assert report_from_text('The config is {"a": 1}.') is None
     assert report_from_text("[1, 2]") is None
     assert report_from_text("") is None
+
+
+def test_a_plans_own_cancellations_free_room_for_its_tasks(sandbox):
+    """O001, 2026-10-04: replan T0069 cancelled five permanently blocked tasks and proposed eight, but the
+    open-task limit was applied before the cancellations, so five of the eight were silently dropped."""
+    from mfos import models as m
+    s = Store()
+    o = Orchestrator(s)
+    blocked = [f"T90{i:02d}" for i in range(8)]
+    for tid in blocked:
+        s.save_task(m.Task(id=tid, objective="O000", title=f"blocked {tid}", type="implement", agent="builder",
+                           status="todo"))
+    plan = m.Task(id="T9100", objective="O000", title="replan", type="plan", agent="planner", status="running")
+    s.save_task(plan)
+    specs = [{"local_id": f"n{i}", "title": f"new {i}", "type": "implement", "agent": "builder",
+              "description": "x", "depends_on": [f"n{i - 1}"] if i else []} for i in range(7)]
+    out = {"assessment": "replan", "create_tasks": specs,
+           "cancel_tasks": [{"id": tid, "reason": "blocked for good"} for tid in blocked[:5]]}
+    o._on_plan(plan, None, out)
+    s = Store()
+    assert all(s.task(tid).status == "cancelled" for tid in blocked[:5])
+    created = [t for t in s.tasks("O000") if t.created_by == "planner:T9100"]
+    assert len(created) == 7  # 10 open allowed: 3 still-blocked + 7 new
+    assert s.task("T9100").history[-1]["dropped_for_limits"] == 0
+    by_title = {t.title: t for t in created}
+    assert by_title["new 3"].depends_on == [by_title["new 2"].id]

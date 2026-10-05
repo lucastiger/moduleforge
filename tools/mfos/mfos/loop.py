@@ -266,6 +266,14 @@ class Orchestrator:
         obj = self.s.objective(oid)
         st = self.s.objective_state(oid)
         limits = self.pol.get("planning", {})
+        # The plan's own cancellations free room first: counting them as still open dropped 5 of T0069's 8 tasks.
+        for c in plan.cancel_tasks:
+            if self.s.task_path(c.id).exists():
+                x = self.s.task(c.id)
+                if x.status not in TERMINAL and x.objective == oid:
+                    x.status = "cancelled"
+                    x.history.append({"outcome": "cancelled", "summary": c.reason})
+                    self.s.save_task(x)
         open_now = [x for x in self.s.tasks(oid) if x.status not in TERMINAL and x.type != "plan"]
         room = max(0, min(limits.get("max_new_tasks", 8), limits.get("max_open_tasks", 10) - len(open_now)))
         idmap: dict[str, str] = {}
@@ -289,13 +297,6 @@ class Orchestrator:
             self.s.save_task(task)
             created.append(tid)
         dropped = len(plan.create_tasks) - len(created)
-        for c in plan.cancel_tasks:
-            if self.s.task_path(c.id).exists():
-                x = self.s.task(c.id)
-                if x.status not in TERMINAL and x.objective == oid:
-                    x.status = "cancelled"
-                    x.history.append({"outcome": "cancelled", "summary": c.reason})
-                    self.s.save_task(x)
         for fr in plan.founder_requests:
             self.s.add_inbox(kind=fr.kind, subject=f"[{oid}] {fr.subject}", summary=fr.summary,
                              options=fr.options, recommendation=fr.recommendation, refs=[oid, t.id])

@@ -1,0 +1,15 @@
+id: I0034
+kind: protected_change
+subject: 'T0070: merge needs founder approval'
+summary: 'L2 core in src: exact-kernel round wires, FFT plane, bounded GMRES; E001''s C1 and B2 converge
+  under the frozen rule
+
+  Risk high; 4 files. PR: None'
+refs:
+- T0070
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-05T04:31:58+00:00'
+resolved_at: null

@@ -1,0 +1,63 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "Refinement-0 values (the DoD default) carry discretisation errors far larger than solver_tol; mid-band R(f) is mesh-dominated",
+      "detail": "solver_tol (~2e-5) bounds only solver and kernel errors. The mesh error at refinement 0 is much larger. On the test layout, L(20 MHz) is 6.257 nH at refinement 0 and 5.746 nH at refinement 1 (-8.2%). The docstring reports -3.2% for the DoD layout. At refinement 0 the top-Cu thickness layers are [3.3, 146.7, 146.7, 3.3] um because they are graded to the 100 MHz skin depth. Between 5 and 20 MHz most of the current therefore sits in a layer 5-20x thicker than the skin depth, or is forced into the 3.3 um layer. DoD layout: R = 24 -> 110 -> 158 mOhm at 5/20/80 MHz, a 4.5x step for a 4x frequency step, where skin-effect scaling predicts about 2x. Test layout: R ratio 2.55 at refinement 0 vs 2.15 at refinement 1. The docstring discloses this ('Refinement-0 values are NOT accurate', 'R converges more slowly than L') and defers convergence to T0075. The DoD assertions (1-100 nH, monotone L) are plausibility checks only. The claim holds as an implementation claim. Absolute L at refinement 0, and R(f) at any coarse refinement, should not be used as reference values.",
+      "evidence": "tiny_layout, ref 0: L = [6.628, 6.442, 6.257, 6.168] nH, R = [3.94, 8.73, 22.3, 31.0] mOhm at 1/5/20/80 MHz. Ref 1: L = [6.131, 5.878, 5.746, 5.662] nH, R = [4.19, 8.76, 18.8, 34.7] mOhm. DoD layout: L = [12.641, 11.649, 11.122] nH, R = [24.5, 109.6, 157.9] mOhm, solver_tol 2.19e-5.",
+      "suggested_check": "Before any downstream use, T0075 should report the L and R refinement sequences (0-2+) on the DoD layout and check whether rankings are stable at refinement 0."
+    },
+    {
+      "severity": "minor",
+      "title": "segment_mutual loses accuracy near the PARALLEL_SIN switch, and this kernel error is not counted in solver_tol",
+      "detail": "D0004 (i) requires kernel errors to be counted in solver_tol. The general (non-parallel) closed form cancels badly just above sin = 1e-6. Below 1e-6, the parallel substitution has an O(sin) geometric error. Neither is bounded or added to solver_tol. The DoD layout has no segment pairs in the inaccurate band (0 pairs with 1e-6 <= sin < 1e-4 at refinements 0 and 1), so its result is unaffected. Other geometries, such as slightly perturbed parallel wires, could reach it.",
+      "evidence": "Filaments 2 mm long, 0.2 mm apart, compared with scipy dblquad at rel 1e-12. Relative error 3.5e-5 at sin=1e-6, 6.0e-6 at 2e-6, 4.8e-9 at 1e-5, <=1e-11 at sin>=1e-3, and 5e-7 at 3e-7 (parallel path). Touching bent segments: <=1.8e-7.",
+      "suggested_check": "Raise the switch, or add a series expansion in sin, and add a stated kernel bound for pairs with sin < 1e-4."
+    },
+    {
+      "severity": "minor",
+      "title": "solver_tol is relative to |Z|, not to L = Im Z / omega",
+      "detail": "tol_parts are normalised by max|Z_ii|. When R is comparable to or larger than omega*L (low frequencies), the relative error of the reported L can exceed solver_tol by |Z|/Im Z. At the DoD frequencies omega*L >> R, so this does not matter there. Consumers who read solver_tol as an L tolerance at sub-MHz frequencies would be misled.",
+      "evidence": "solve_system: zref = max|diag Z|; L_H = Im(z)/(2 pi f).",
+      "suggested_check": "Report an L-relative bound, solver_tol*|Z|/Im Z, in meta."
+    },
+    {
+      "severity": "note",
+      "title": "Die short ignores DieShort.net",
+      "detail": "build_layout_system picks the short's anchor as the nearest masked top-Cu cell of any net to the die centre, then uses that cell's label. DieShort.net is never used. If a die centre lies within half a cell of another net's trace, the die would short to the wrong net and the mesh would not report it. Generated layouts ran correctly (seeds 7, 3, 11, 5).",
+      "evidence": "l2_layout.py:1291-1297, _nearest_cell(top_mask, ...) with no net filter.",
+      "suggested_check": "Restrict the mask to top_lab == nets.index(d.net)+1."
+    },
+    {
+      "severity": "note",
+      "title": "Layout-level L has no independent oracle in the tests",
+      "detail": "Kernels, the pFFT operator vs the dense operator, the DC-resistance mapping, the strip vs Hoer-Love, and C1 vs l2.solve (0.5%) are all tested independently. The only test on a generated layout is a 1-100 nH range check, so a layout-level L error of tens of percent from the mapping (port cells, landing cells, die shorts) would pass, except where it also changes the DC resistance. Backside Cu and baseplate are separate floating slabs with no solder bond; this is a model choice not stated in the docstring, and probably second-order at MHz.",
+      "evidence": "test_generated_two_die_half_bridge_between_1_and_100_nH asserts only 1e-9 < L < 1e-7 and solver_tol < 1e-3.",
+      "suggested_check": "Compare against an independent solver on a simple layout with traces, dies and wires."
+    },
+    {
+      "severity": "note",
+      "title": "Stated cost numbers are not reproducible on this host",
+      "detail": "The docstring says the DoD call takes ~40 s and wall 33 s for one frequency. Here the 3-frequency DoD call took 103 s, 44 s of it building the wire-grid operator. Hardware-dependent and not a correctness issue.",
+      "evidence": "meta wall_s = 103.2, mesh_params.wire_grid_build_s = 44.0",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran the full DoD: pytest tests/unit/solvers (52 passed, 475 s); ruff on solvers and tests (clean); the DoD loop_inductance one-liner passed: L = [12.641, 11.649, 11.122] nH, solver_tol 2.19e-5, 56,712 unknowns, GMRES iterations [108, 120, 134]; grep for network fetch calls returned no matches.",
+    "Compared segment_mutual with scipy dblquad of the Neumann integral (my own harness) for near-parallel filaments, sin 3e-7 to 1e-1, and for touching bent segments at 5 angles. Errors were <=3.5e-5, worst just above PARALLEL_SIN; touching segments <=1.8e-7.",
+    "Counted segment-pair angles in the DoD filament set: 0 pairs in the inaccurate band 1e-6 <= sin < 1e-4 (refinements 0 and 1).",
+    "Checked symmetry and positive-definiteness of the DoD wire block Lww at refinements 0 and 1: min eigenvalues 3.6e-10 and 1.8e-10 H. Segment length/rho ~ 9, so rod_self's series is valid.",
+    "Hand re-derivation of joint_correction (collinear rod-vs-filament mutual difference K4*<d>) and of the 4-point disc rule's exactness (degree <=3): both correct.",
+    "Robustness on unseen generated layouts (seed/dies 3/3, 11/2, 5/4) at 20 and 80 MHz: all ran, L 4.7-14.7 nH non-increasing, solver_tol <= 8.4e-5, no stencil-edge or box-intersection errors.",
+    "Refinement and frequency study on the test layout (ref 0 vs 1, 1-80 MHz). Reproduced the docstring's 6.257 / 5.746 nH and showed the 3.3/146.7 um layering behind the mid-band R distortion.",
+    "Read the Layout.to_conductors port and die-short definitions and checked the branch-direction, incidence and coupling sign conventions against them."
+  ],
+  "caveats": [
+    "Refinement-0 L is several percent high: -8.2% (test layout) and -3.2% (DoD) moving to refinement 1. R(f) at coarse refinements is mesh-dominated. solver_tol does not cover either. Treat refinement-0 outputs as screening values until T0075 shows convergence.",
+    "solver_tol is a relative bound on Z, not on L; it understates the L error where omega*L is not much larger than R.",
+    "The kernel cancellation error near sin = 1e-6 is unbounded in solver_tol. It does not occur in the DoD layout but could occur in other geometries.",
+    "Due to the cost budget I did not run refinement >= 1 on the DoD layout or a dense-coupling oracle on a generated layout. The pFFT-vs-dense agreement rests on the author's tests (which I read and judged sound) on smaller geometries."
+  ]
+}

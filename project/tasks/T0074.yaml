@@ -4,7 +4,7 @@ title: 'L2 layout path: Layout -> exact-kernel loop_inductance with a precorrect
   (l2_layout.py)'
 type: implement
 agent: builder
-status: running
+status: review
 depends_on:
 - T0070
 description: 'Restores T0069 plan node n4a, which the open-task-limit bug dropped; the founder asked for
@@ -369,3 +369,98 @@ history:
     were lifted to z_top_cu + 0.5·d on the DoD layout, and the vertical die path is a node merge. Both
     are documented model choices but carry no stated effect on L.'
   at: '2026-10-05T08:46:30+00:00'
+- attempt: 2
+  outcome: agent_finished
+  summary: 'I fixed the blocker and the other review findings in `l2_layout.py` and its tests, committed
+    as 7ccc4aa. All definition-of-done (DoD) commands pass, and so does `mfos gate --fast`. One item is
+    only partly done: the new layout-level test checks resistance, not L (see concerns).
+
+
+    **Blocker: the wire radius term is now counted in `solver_tol`.** Coupling between filaments of different
+    wires, and between a wire and a grid branch near it, now includes the exact first-order correction
+    for the filament''s finite radius instead of using its centre line alone. The correction uses closed-form
+    gradients of the line and box potentials. What remains after the correction has a stated bound, and
+    that bound is counted in `solver_tol`. The 1.5 % term that attempt 1 left out is gone:
+
+    - On the DoD layout the '
+  report:
+    status: completed
+    summary: "I fixed the blocker and the other review findings in `l2_layout.py` and its tests, committed\
+      \ as 7ccc4aa. All definition-of-done (DoD) commands pass, and so does `mfos gate --fast`. One item\
+      \ is only partly done: the new layout-level test checks resistance, not L (see concerns).\n\n**Blocker:\
+      \ the wire radius term is now counted in `solver_tol`.** Coupling between filaments of different\
+      \ wires, and between a wire and a grid branch near it, now includes the exact first-order correction\
+      \ for the filament's finite radius instead of using its centre line alone. The correction uses closed-form\
+      \ gradients of the line and box potentials. What remains after the correction has a stated bound,\
+      \ and that bound is counted in `solver_tol`. The 1.5 % term that attempt 1 left out is gone:\n-\
+      \ On the DoD layout the counted radius terms are 3.6e-6 (wire to grid) and 9e-7 (between wires).\n\
+      - Far-field coupling now samples each filament's cross-section at 4 points instead of its centre\
+      \ line, so its bound is about 1e-9.\n- The interpolation grid's vertical spacing now scales with\
+      \ the cell size, so the interpolation bound no longer grows with refinement.\n- Each stated bound\
+      \ is now applied only to the part of the system it covers.\n\nResult: `solver_tol` is 2.2e-5 on\
+      \ the DoD layout at refinement 0 and 2.0e-5 at refinement 1. A new test checks it stays below 1e-3\
+      \ at every refinement 0–4.\n\n**Other findings:**\n- **Frequency list:** the mesh is now graded\
+      \ to the skin depth at the larger of 100 MHz and the highest requested frequency. L(20 MHz) is 11.6492\
+      \ nH whether asked for alone or with 5 and 80 MHz, and a test checks this.\n- **Discretisation error\
+      \ (stated in the docstring, not in `solver_tol`):** refinement-0 values are not accurate.\n  - Small\
+      \ test layout at 20 MHz: 6.257 / 5.746 / 5.567 nH at refinements 0 / 1 / 2. Extrapolation gives\
+      \ about 5.47 nH, so refinement 0 is about 14 % high.\n  - DoD layout: 11.649 nH at refinement 0\
+      \ and 11.279 nH at refinement 1 (−3.2 %).\n  - The docstring also records the 2.6 % change from\
+      \ mesh grading that review T0082 found.\n- **Port cells:** these are now restricted to the DC+ and\
+      \ DC− nets.\n- **Landing clamp and die shorts:**\n  - Changing the landing gap from 0.25 to 1.0\
+      \ wire diameters moves L by ±0.04 %. At 0.25 the thickest filament's end reaches the copper and\
+      \ the bound correctly becomes infinite.\n  - The vertical path through each die that the ideal short\
+      \ leaves out is 0.003 nH (about 0.03 % of L).\n  - Treating the die footprint as one equipotential\
+      \ node is stated as an assumption, not bounded.\n- **The new pFFT operator:** the docstring now\
+      \ says it is new code, not a reuse of `l2_core`. It is tested against the dense coupling, within\
+      \ its stated bound, at both reduced and production settings.\n\n**Cost** (seed 7, refinement 0,\
+      \ 20 MHz, 10-core laptop):\n\n| Dies per switch | Unknowns | Wall | CPU | Peak memory | GMRES iterations\
+      \ | L |\n|---|---|---|---|---|---|---|\n| 2 | 56,712 | 33 s | 33 s | 0.73 GB | 120 | 11.649 nH |\n\
+      | 6 | 56,880 | 74 s | 72 s | 0.98 GB | 125 | 8.405 nH |\n\nThe DoD call with three frequencies gives\
+      \ L = 12.641 / 11.649 / 11.122 nH in 39 s."
+    checks_run:
+    - cmd: uv run pytest -q tests/unit/solvers
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge/solvers tests/unit/solvers
+      exit_code: 0
+    - cmd: 'uv run python -c "<DoD smoke command verbatim: generate_layouts(1, seed=7, dies_per_switch=2),
+        loop_inductance([5e6, 2e7, 8e7], refinement=0), asserts>"'
+      exit_code: 0
+    - cmd: grep -rnE 'git clone|urlopen|urlretrieve|wget' src/moduleforge/solvers; test $? -eq 1
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    - cmd: uv run pytest -q tests/unit/solvers --durations=8 (intermediate run)
+      exit_code: 0
+    - cmd: uv run pytest -q tests/unit/solvers/test_l2_layout.py -k 'production or pfft_vs_dense'
+      exit_code: 0
+    - cmd: 'uv run python /tmp/diag.py ... (diagnostics: refinement trend, frequency-list independence,
+        landing-gap sensitivity, 2/6-die cost)'
+      exit_code: 0
+    - cmd: uv run pytest -q -x tests/unit/solvers (first try wrapped in `timeout`, which macOS lacks)
+      exit_code: 127
+    files_changed:
+    - src/moduleforge/solvers/l2_layout.py
+    - tests/unit/solvers/test_l2_layout.py
+    concerns:
+    - 'Item (3) is only partly met. The new layout-level test with an independent reference checks the
+      100 Hz loop resistance against a closed form on a strip layout aligned to the grid. That catches
+      errors in net labels, die-short merges, wire-end nodes and port cells (one strip branch is 2.7 %
+      of R). It does not give a closed form for L. A closed-form L for a layout, or a match to `l2.solve`,
+      was not feasible: `l2.solve` cannot represent traces (Bar raises NotImplementedError), and an independent
+      L would need a bar-to-wire mutual kernel written separately in the test.'
+    - 'Filaments of the same wire still use the thin-line mutual (cross-section mesh), as the founder
+      scoped item (1) to inter-wire and wire-to-grid coupling. The equal-area round-rod picture is not
+      consistent inside one wire: the centre disc and the ring discs overlap.'
+    - '`solver_tol` < 1e-3 at refinements 3–4 is shown on a 20 × 16 mm plane with two wires, not on a
+      full layout. A full layout at refinement 4 would be about 1M grid unknowns, too large to run here.
+      The far-field bounds are refinement-invariant by construction.'
+    - Refinement-0 L is still about 3–14 % from convergence (DoD layout −3.2 % to refinement 1; test layout
+      about 14 % high by extrapolation), and R converges more slowly. This is outside `solver_tol` by
+      D0004 and is now stated in the docstring. T0075 has to gate convergence before this path is used
+      as an L2 reference.
+    - If any filament's end disc reaches a copper box (landing gap below the largest filament radius)
+      or two wires' filament cylinders touch, `solver_tol` becomes infinite. This is deliberate, so a
+      bad layout fails loudly rather than reporting a bound that does not hold.
+    - 'TOOL_VERSION is now 0.2.0 and the default mesh grading frequency changed. Values from attempt 1
+      are not comparable: L(20 MHz) on the DoD layout went from 11.573 to 11.649 nH.'

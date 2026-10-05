@@ -553,3 +553,6 @@
 {"ts": "2026-10-05T19:37:06+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 34498}
 {"ts": "2026-10-05T19:37:30+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0071-builder-20261005T123730-4cd6", "task": "T0071", "role": "builder", "session": "a00b6f9c-1ceb-4745-9d83-535c5065b31f"}
 {"ts": "2026-10-05T19:37:30+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0074-builder-20261005T123730-3239", "task": "T0074", "role": "builder", "session": "0cd8580c-0623-4209-ba51-55d0c542ab19"}
+{"ts": "2026-10-05T20:17:13+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0074-builder-20261005T123730-3239", "status": "completed", "cost": 5.284989600000001, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-10-05T20:26:33+00:00", "event": "verified", "actor": "orchestrator", "task": "T0074"}
+{"ts": "2026-10-05T20:26:35+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0083-critic-20261005T132635-ca0c", "task": "T0083", "role": "critic", "session": "030320d9-b27c-47c8-b2a6-52d850f2a119"}

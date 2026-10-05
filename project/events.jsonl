@@ -545,3 +545,4 @@
 {"ts": "2026-10-05T09:30:53+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0071", "signal": "dod_failed", "action": "repair"}
 {"ts": "2026-10-05T14:24:51+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 301, "runs_extended": 0}
 {"ts": "2026-10-05T16:27:00+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 5203, "runs_extended": 0}
+{"ts": "2026-10-05T16:36:48+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 587, "runs_extended": 0}

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-05T16:30:24+00:00 from repository state — do not edit_
+_generated 2026-10-05T16:36:50+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -15,7 +15,6 @@ cancelled: 19, done: 51, failed: 3, todo: 9
 
 
 ## Recent events
-- 2026-10-05T08:13:38+00:00 run_finished {"run": "T0074-builder-20261005T003215-4c55", "status": "completed", "cost": 4.0163486, "subtype": "success", "report": "structured_output"}
 - 2026-10-05T08:18:52+00:00 verified {"task": "T0074"}
 - 2026-10-05T08:18:54+00:00 run_started {"run": "T0081-critic-20261005T011854-03d5", "task": "T0081", "role": "critic", "session": "89290046-37d4-4a31-8823-a3f5624a61a6"}
 - 2026-10-05T08:19:27+00:00 sleep_detected {"gap_s": 350, "runs_extended": 2}
@@ -30,3 +29,4 @@ cancelled: 19, done: 51, failed: 3, todo: 9
 - 2026-10-05T09:30:53+00:00 task_failed_attempt {"task": "T0071", "signal": "dod_failed", "action": "repair"}
 - 2026-10-05T14:24:51+00:00 sleep_detected {"gap_s": 301, "runs_extended": 0}
 - 2026-10-05T16:27:00+00:00 sleep_detected {"gap_s": 5203, "runs_extended": 0}
+- 2026-10-05T16:36:48+00:00 sleep_detected {"gap_s": 587, "runs_extended": 0}

@@ -1,0 +1,67 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "solver_tol leaves out the wire cross-section approximation, which is about 50x larger than the reported bound",
+      "detail": "For inter-wire and wire-to-grid pairs, each filament's finite cross-section is replaced by its centre line. The module computes a stated bound for that error but reports it separately as tol_parts['mesh_cross_section_not_in_tol'] instead of adding it to solver_tol. D0004 (i) requires solver_tol to include stated bounds for 'proxy-filament truncation and the ... wire-to-plane tables'. l2_core counts its analogue, the proxy truncation of the wire cross-section in wire-to-plane and wire-to-wire coupling, in solver_tol. On the DoD layout this bound is 1.4-1.7% at refinement 0 and 0.59-0.85% at refinement 1. The reported solver_tol is 3.5e-4 and 9.4e-4. If the bound were counted, the DoD condition solver_tol < 1e-3 would fail. My own check (bundle-to-bundle mutual of parallel 0.3 mm wires at 0.45-0.6 mm pitch, refinements 0/2/4) suggests the real centre-line effect is small: the bundle mutual is stable to about 1.5e-4 across refinements, against a stated bound of 4-10%. So this is a pessimistic bound being reclassified, not evidence of a hidden large error. Still, calling it 'mesh' rather than an operator approximation is the author's own reading of D0004, and the reported solver_tol is not the quantity D0004 (i) defines.",
+      "evidence": "DoD run: tol_parts stated = 3.3e-4/3.5e-4/2.3e-4, mesh_cross_section_not_in_tol = 0.0151/0.0174/0.0144. Refinement 1: solver_tol = 9.39e-4, mesh part = 0.0059/0.0064/0.0085. l2_layout.py stated_quad(): mesh_part is excluded from tols. l2_core.Stated.proxy is included in Stated.total.",
+      "suggested_check": "Founder decision (ADR amendment to D0004) on whether the filament centre-line bound belongs in solver_tol; if it does, tighten the bound (e.g. use the 2-D mean-value property for round filaments) rather than dropping it."
+    },
+    {
+      "severity": "major",
+      "title": "Refinement-0 L is far from converged: 1.5-6.4% from refinement 1, 40-180x the reported solver_tol",
+      "detail": "On the DoD layout (generate_layouts(1, seed=7, dies_per_switch=2)): refinement 0 gives L = 12.597 / 11.573 / 11.117 nH at 5 / 20 / 80 MHz; refinement 1 gives 11.787 / 11.249 / 10.951 nH, i.e. -6.4% / -2.8% / -1.5%. How much L falls with frequency is mostly a discretization artefact. From 5 to 80 MHz L drops 11.7% at refinement 0, 7.1% at refinement 1, and 0.35% on a coarser mesh (1.7 mm cells, 2 layers per slab). R(f) has the same problem: 25.8 / 105 / 143 mOhm at refinement 0 and 22.1 / 64.2 / 115.9 mOhm at refinement 1, which is not the roughly sqrt(f) scaling expected once skin depth is below the conductor thickness. The module docstring states that lateral cell, layer and filament counts are unbounded model choices, and D0004 does not put discretization into solver_tol, so this limits validity rather than refuting the claim. It does mean the DoD smoke checks (1e-9 < L < 1e-7, L non-increasing) cannot catch errors of several percent. Refinement-0 numbers must not be used as an L2 reference without a convergence study. The mesh is also graded to the skin depth at max(freqs_hz), so from the code L at a given frequency depends on which other frequencies are in the same call (not measured).",
+      "evidence": "My runs: refinement 0 (DoD command) L=[1.2597e-08, 1.1573e-08, 1.1117e-08], R=[0.0258, 0.1051, 0.1427]. Refinement 1 L=[1.1787e-08, 1.1249e-08, 1.0951e-08], R=[0.0221, 0.0642, 0.1159], n=162372, 196 s. Coarse 1.7 mm / 2-layer mesh L=[1.2598e-08, 1.2554e-08] at 5 / 80 MHz.",
+      "suggested_check": "Before any L2-reference use, run refinements 0-2 (or more) on at least one generated layout and report the refinement-rule extrapolation next to solver_tol."
+    },
+    {
+      "severity": "minor",
+      "title": "The claimed reuse of l2_core's compressed wire-to-plane operator does not happen",
+      "detail": "l2_layout never calls core.wire_plane_op or core.WirePlaneOp, l2_core's compressed wire-to-plane operator, which is exact and needs axis-aligned edges whose segment length matches the lattice. Instead it brings in a new precorrected-FFT operator (WireGridPFFT): tensor Lagrange interpolation from a virtual lattice plus exact near-field correction, with its own stated interpolation bound. It reuses only core.plane_table, circulant_fft / circulant_apply, Gauss rules, block_gmres and a_posteriori. The new operator is checked only by this diff's own tests: pfft vs dense within the stated bound with a reduced near box, and solver_tol vs dense LU on a tiny layout. The claim's wording overstates how much of the operator is already validated code.",
+      "evidence": "grep 'core\\.' in l2_layout.py: no wire_plane_op, WirePlaneOp, proxy_rule or coax_tables. Lines 625-858 define WireGridPFFT.",
+      "suggested_check": "Reword the claim, or have an independent review of the WireGridPFFT far-field bound derivation (_bounds)."
+    },
+    {
+      "severity": "minor",
+      "title": "The 7-filament bundle at refinement 0 underestimates straight-wire self-inductance by 0.75%",
+      "detail": "For a 5 mm, 0.3 mm round wire with uniform (DC) current, the filament bundle's series L compared with the rod closed form mu0/2pi [l(ln(2l/r) - 3/4) + 128r/(45pi) - r^2/(4l)] is off by -0.75% (refinement 0), -0.36% (1), -0.28% (2), -0.14% (3) and -0.05% (4). The unit test only asserts 1e-2 at refinement 1. This is cross-section discretization, not counted in solver_tol, and it adds to the refinement-0 bias above.",
+      "evidence": "My scratch run of build_filaments + wire_matrices: rel err [-7.48e-3, -3.63e-3, -2.75e-3, -1.35e-3, -5.0e-4] for refinements 0-4.",
+      "suggested_check": "Tighten test_wire_filament_bundle_vs_rod_closed_form to the actual per-refinement error so regressions show up."
+    },
+    {
+      "severity": "minor",
+      "title": "solver_tol rises with refinement and is already 0.94e-3 at refinement 1",
+      "detail": "The DoD threshold is solver_tol < 1e-3. On the DoD layout solver_tol is 3.5e-4 at refinement 0 and 9.39e-4 at refinement 1, dominated by the stated part scaled by the absolute-operator factor e_l/|Z|. Refinements 2-4 were not run here and may exceed 1e-3, which would make the finer meshes needed for convergence non-compliant.",
+      "evidence": "meta['solver_tol']: 3.515e-4 (refinement 0), 9.394e-4 (refinement 1).",
+      "suggested_check": "Run refinement 2 on the DoD layout and record solver_tol."
+    },
+    {
+      "severity": "note",
+      "title": "Independent checks passed: DoD commands, rotation and translation invariance",
+      "detail": "All DoD commands pass. Rotating the generated layout by 90 degrees (swapping the x- and y-branch code paths) and translating it both leave L unchanged to 2.5e-11 and 1e-12, so there are no orientation or offset bugs in the shared grid, the pFFT stencils or the incidence. Within the thin-filament model, the inter-wire filament mutual is accurate: the bundle mutual converges to the finite-length value, consistent with a hand estimate of the 3-D correction r^2/(2D) of about 1e-3.",
+      "evidence": "",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran `uv run pytest -q tests/unit/solvers`: 39 passed in 137 s.",
+    "Ran `uv run ruff check src/moduleforge/solvers tests/unit/solvers`: all checks passed.",
+    "Ran the DoD smoke command verbatim: passes. L = [12.597, 11.573, 11.117] nH, solver_tol = 3.515e-4, n_unknowns = 56712, wall 60.7 s. Also printed tol_parts: mesh_cross_section_not_in_tol is 1.4-1.7%.",
+    "Forbidden-pattern grep (git clone / urlopen / urlretrieve / wget) over src/moduleforge/solvers: 0 matches in every file.",
+    "Checked which l2_core symbols l2_layout uses: core.wire_plane_op and WirePlaneOp are not used.",
+    "Wire bundle vs rod closed form (Maxwell/Grover uniform-current rod) at refinements 0-4: -0.75% down to -0.05%.",
+    "Two parallel round-wire bundles (d = 0.3 / 0.4 mm, pitch 0.45 / 0.6 mm) at refinements 0, 2, 4: mutual stable to about 1.5e-4, against a stated centre-line bound of 1-10%. The residual offset of about 1e-3 from the axis mutual matches a hand-derived 3-D finite-length correction r^2/(2D).",
+    "Rotation (90 degrees) and translation invariance of loop_inductance on the generated layout (coarse mesh): relative differences 2.5e-11 and 1e-12. My first attempt failed because of an aliasing bug in my own transform script, not the solver; I fixed it and reran.",
+    "Refinement study on the DoD layout, refinement 1 vs 0: L changes by -6.4% / -2.8% / -1.5% at 5 / 20 / 80 MHz. Refinement-1 solver_tol is 9.39e-4.",
+    "Coarse-mesh sensitivity (1.7 mm cells, 2 layers per slab): the 5-to-80 MHz drop in L is 0.35%, against 11.7% at refinement 0.",
+    "Read D0003 / D0004 and E001.yaml: E001's 1e-5 budget does not apply to the layout path, and D0004 (i) defines what solver_tol must include."
+  ],
+  "caveats": [
+    "Within the code's own model (thin-filament bundles, ideal die shorts, landing clamp, fixed mesh per call), loop_inductance is correct to its reported solver_tol: tests against a dense LU, a reciprocity check, a comparison with l2.solve on C1 at 0.5%, and my own invariance checks all agree.",
+    "Refinement-0 values are not converged. Expect errors of several percent, larger at low frequency (6.4% at 5 MHz). The frequency dependence of L and R is dominated by discretization at refinements 0-1.",
+    "solver_tol does not cover discretization error (cells, layers, filament counts) or the filament centre-line approximation of the wire cross-section, which is reported separately at 0.6-1.7%. Whether leaving the latter out matches D0004 (i) needs a founder decision.",
+    "The wire-to-grid coupling is a new precorrected-FFT operator, not l2_core's exact compressed wire-to-plane operator. Its far-field bound is validated only by this diff's own tests.",
+    "I did not run refinements 2-4; whether solver_tol stays below 1e-3 at those levels is untested."
+  ]
+}

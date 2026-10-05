@@ -3,7 +3,7 @@ objective: O001
 title: Review T0074 (physics)
 type: review
 agent: critic
-status: running
+status: done
 depends_on: []
 description: c377ad7bb593e5d72c8b344293674b50da478790
 context_files: []
@@ -29,4 +29,6 @@ target: T0074
 lens: physics
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: review:accept_with_caveats
+  summary: 6 findings

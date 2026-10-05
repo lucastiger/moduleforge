@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-05T08:18:54+00:00 from repository state — do not edit_
+_generated 2026-10-05T08:19:30+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -18,7 +18,6 @@ cancelled: 19, done: 49, failed: 3, review: 1, running: 2, todo: 8
 - T0081 `running` critic/review: Review T0074 (physics) (attempt 1)
 
 ## Recent events
-- 2026-10-05T06:31:19+00:00 run_finished {"run": "T0074-builder-20261004T233046-f7d3", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-05T06:31:19+00:00 capacity_backoff {"task": "T0074", "minutes": 30}
 - 2026-10-05T06:31:19+00:00 run_finished {"run": "T0071-builder-20261004T233046-60a9", "status": "error", "cost": 0.0, "subtype": "success", "report": "missing"}
 - 2026-10-05T06:31:19+00:00 capacity_backoff {"task": "T0071", "minutes": 30}
@@ -33,3 +32,4 @@ cancelled: 19, done: 49, failed: 3, review: 1, running: 2, todo: 8
 - 2026-10-05T08:13:38+00:00 run_finished {"run": "T0074-builder-20261005T003215-4c55", "status": "completed", "cost": 4.0163486, "subtype": "success", "report": "structured_output"}
 - 2026-10-05T08:18:52+00:00 verified {"task": "T0074"}
 - 2026-10-05T08:18:54+00:00 run_started {"run": "T0081-critic-20261005T011854-03d5", "task": "T0081", "role": "critic", "session": "89290046-37d4-4a31-8823-a3f5624a61a6"}
+- 2026-10-05T08:19:27+00:00 sleep_detected {"gap_s": 350, "runs_extended": 2}

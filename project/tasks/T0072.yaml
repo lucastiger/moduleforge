@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E001: L2 reference vs closed-form partial inductances'
 type: experiment
 agent: none
-status: needs_founder
+status: done
 depends_on:
 - T0071
 description: The orchestrator runs the registered E001 spec on merged main after n2 merges. It feeds A1
@@ -36,3 +36,5 @@ history:
   summary: ~2 CPU-h exceeds local limit
   at: '2026-10-06T05:25:50+00:00'
   since: 1791264350.942552
+- outcome: experiment_complete
+  summary: E001-20261006T055428-8f45 on mf-burst-e001-1791265970.us-east1-b.c.moduleforge-burst.internal

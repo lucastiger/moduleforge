@@ -9,7 +9,7 @@ refs:
 - E001
 options: []
 recommendation: ''
-status: open
-response: ''
+status: answered
+response: result E001-20261006T055428-8f45 arrived
 created_at: '2026-10-06T05:25:50+00:00'
-resolved_at: null
+resolved_at: '2026-10-06T06:41:03+00:00'

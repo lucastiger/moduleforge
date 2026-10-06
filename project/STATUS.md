@@ -1,8 +1,8 @@
 # ModuleForge status
-_generated 2026-10-06T06:40:29+00:00 from repository state — do not edit_
+_generated 2026-10-06T06:41:05+00:00 from repository state — do not edit_
 
-## Founder inbox (1 open)
-- **I0037** [decision] E001 needs burst compute (~2 CPU-h)
+## Founder inbox (0 open)
+- nothing needs you
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -11,9 +11,8 @@ _generated 2026-10-06T06:40:29+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $206.63/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 57, failed: 3, needs_founder: 1, running: 1, todo: 6
+cancelled: 19, done: 58, failed: 3, running: 1, todo: 6
 
-- T0072 `needs_founder` none/experiment: Run E001: L2 reference vs closed-form partial inductances (attempt 0)
 - T0075 `running` builder/implement: Layout L2 at E002 scale: measured CPU time, memory and refinement convergence per layout (feasibility gate) (attempt 1)
 
 ## Recent events

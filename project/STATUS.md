@@ -1,22 +1,21 @@
 # ModuleForge status
-_generated 2026-10-06T18:09:18+00:00 from repository state — do not edit_
+_generated 2026-10-06T18:09:52+00:00 from repository state — do not edit_
 
-## Founder inbox (1 open)
-- **I0038** [budget_increase] [O001] O001: +$40 for T0075's final attempt, T0076 (E002/E003 design) and E002
+## Founder inbox (0 open)
+- nothing needs you
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $218.84/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $218.84/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 58, failed: 3, todo: 7
+cancelled: 19, done: 58, failed: 3, running: 1, todo: 6
 
+- T0075 `running` builder/implement: Layout L2 at E002 scale: measured CPU time, memory and refinement convergence per layout (feasibility gate) (attempt 3)
 
 ## Recent events
-- 2026-10-06T05:43:09+00:00 merged {"task": "T0074"}
-- 2026-10-06T05:44:05+00:00 run_started {"run": "T0075-builder-20261005T224405-ddee", "task": "T0075", "role": "builder", "session": "9bad8edb-89d8-4a77-8671-abd2ca2157eb"}
 - 2026-10-06T08:01:29+00:00 run_finished {"run": "T0075-builder-20261005T224405-ddee", "status": "error", "cost": 5.505882400000002, "subtype": "error_max_turns", "report": "missing"}
 - 2026-10-06T08:01:29+00:00 task_failed_attempt {"task": "T0075", "signal": "agent_error", "action": "repair"}
 - 2026-10-06T09:13:50+00:00 run_started {"run": "T0075-builder-20261006T021350-a8d0", "task": "T0075", "role": "builder", "session": "a409d55f-8c1d-4249-86f1-4e79e3de4eb2"}
@@ -30,3 +29,5 @@ cancelled: 19, done: 58, failed: 3, todo: 7
 - 2026-10-06T16:04:50+00:00 sleep_detected {"gap_s": 345, "runs_extended": 0}
 - 2026-10-06T17:51:49+00:00 sleep_detected {"gap_s": 4785, "runs_extended": 0}
 - 2026-10-06T18:09:17+00:00 inbox_opened {"id": "I0038", "kind": "budget_increase", "subject": "[O001] O001: +$40 for T0075's final attempt, T0076 (E002/E003 design) and E002"}
+- 2026-10-06T18:09:21+00:00 inbox_resolved {"id": "I0038", "status": "approved", "note": "usd=66.11"}
+- 2026-10-06T18:09:21+00:00 run_started {"run": "T0075-builder-20261006T110921-d1aa", "task": "T0075", "role": "builder", "session": "d1d705f3-0c65-401d-9365-d920ffc3f8ea"}

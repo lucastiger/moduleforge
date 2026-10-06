@@ -9,7 +9,11 @@ refs:
 - T0074
 options: []
 recommendation: ''
-status: open
-response: ''
+status: approved
+response: 'Founder: approve (follow the founder session''s recommendation). DoD verified; reviews T0083
+  and T0084 accept_with_caveats; attempt-1 blocker fixed (cross-section bound counted in solver_tol).
+  Correctness findings folded into T0075 before it starts: die shorts restricted to their net, near-parallel
+  kernel band bounded, layout-level reference test, narrow-trace and grid-edge paths, convergence only
+  at skin-resolving meshes with R reported separately.'
 created_at: '2026-10-06T01:23:00+00:00'
-resolved_at: null
+resolved_at: '2026-10-06T05:43:07+00:00'

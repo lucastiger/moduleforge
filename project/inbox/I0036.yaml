@@ -9,7 +9,11 @@ refs:
 - T0071
 options: []
 recommendation: ''
-status: open
-response: ''
+status: approved
+response: 'Founder: approve (follow the founder session''s recommendation). Loop DoD verified at ce102da
+  (smoke complete, all sanity checks, max err 8.4e-5, ratio 0.972); T0085 accept, T0086 accept_with_caveats.
+  Follow-ups: low-priority hardening task (tie-shorted port -> error not NaN; real fil_w when no harmonics
+  are coupled; tighten loose test slack); GCP pre-check of C1 at 5/20/80 MHz before the registered E001
+  run.'
 created_at: '2026-10-06T02:55:28+00:00'
-resolved_at: null
+resolved_at: '2026-10-06T05:25:19+00:00'

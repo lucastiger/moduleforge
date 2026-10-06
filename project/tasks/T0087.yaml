@@ -1,0 +1,47 @@
+id: T0087
+objective: O001
+title: 'BACKLOG (after E001): L2 hardening from reviews T0085/T0086 of T0071'
+type: implement
+agent: builder
+status: todo
+depends_on: []
+description: 'Low priority; do not start before E001 (T0072) has run, so the reference solver does not
+  change under it. Findings from project/reviews/T0071/T0085.json and T0086.json:
+
+  (1) A port whose plus and minus nodes are merged by ties gives Z = 0 and solver_tol = NaN with only
+  a RuntimeWarning. l2.solve must raise ValueError for a shorted port, or report a finite bound. Add a
+  test.
+
+  (2) For a round wire with no coupled harmonics (M = 0, e.g. E001 B1), mesh_params still reports fil_w
+  = pi*r/HARMONICS[level], an azimuthal refinement that does not exist. Report the real size, keeping
+  E001''s required mesh keys honest, and document the choice. Bar fil_w/fil_h are nominal mean cell sizes
+  of a fixed grading map; state this in the docstring.
+
+  (3) Tighten tests whose slack exceeds the bound they appear to test: test_distinct_offset_reuse_is_exact
+  allows 1e-13*|ref| (about 1000x the stated bound E); test_bar_hf_current_crowding''s gmres_converged
+  assert is trivially true on the dense path.
+
+  Never weaken a test or tolerance. Do not edit experiments/ or l2_layout.py.'
+context_files: []
+deliverables: []
+touches: []
+definition_of_done: []
+experiment: null
+risk: low
+model: null
+budget_usd: 3.0
+max_turns: 80
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: founder
+created_at: '2026-10-06T05:25:28+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

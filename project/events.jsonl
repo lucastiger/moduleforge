@@ -601,3 +601,7 @@
 {"ts": "2026-10-06T00:49:00+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0071-builder-20261005T174900-02fe", "task": "T0071", "role": "builder", "session": "4656d8cc-322a-43e7-bc03-876f182fbdc3"}
 {"ts": "2026-10-06T01:22:57+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0084-critic-20261005T174900-08d8", "status": "completed", "cost": 2.169726, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-10-06T01:23:00+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0035", "kind": "protected_change", "subject": "T0074: merge needs founder approval"}
+{"ts": "2026-10-06T02:18:11+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0071-builder-20261005T174900-02fe", "status": "completed", "cost": 5.4818458, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-10-06T02:29:26+00:00", "event": "verified", "actor": "orchestrator", "task": "T0071"}
+{"ts": "2026-10-06T02:29:28+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0085-critic-20261005T192928-7ef3", "task": "T0085", "role": "critic", "session": "a1b9d819-4f8e-435e-bd24-e0b2964e3fac"}
+{"ts": "2026-10-06T02:29:29+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0086-critic-20261005T192929-d544", "task": "T0086", "role": "critic", "session": "33b030c1-7876-42d8-8722-d567a8665ff2"}

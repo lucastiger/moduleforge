@@ -4,7 +4,7 @@ title: 'Complete moduleforge.solvers.l2 for E001: exact bars, two-port Z, ties; 
   within 40 min'
 type: implement
 agent: builder
-status: running
+status: review
 depends_on:
 - T0070
 description: 'Completes moduleforge.solvers.l2 for E001 on n1''s core. This is the rest of failed T0022''s
@@ -393,3 +393,148 @@ history:
 - outcome: capacity_backoff
   summary: You've hit your session limit · resets 5:30pm (America/Los_Angeles)
   at: '2026-10-06T00:18:45+00:00'
+- attempt: 2
+  outcome: agent_finished
+  summary: 'T0071 (O001): every definition-of-done check passes on this Mac, and the work is committed
+    as ce102da on the task branch.
+
+
+    **Frozen E001 smoke:** 729 s wall against the 40-minute limit, peak RSS 7.5 GB. Status is complete,
+    every sanity check passes, and max_rel_err_vs_analytic = 8.4e-5 (limit 0.02). All 7 smoke cases converge
+    under the frozen rule at level 4. Other agents'' jobs were running on the machine at the same time
+    (load about 9).
+
+
+    **What was built on the previous attempt''s work:**
+
+    - **Bars:** the exact Hoer-Love kernel, evaluated in double-double once per distinct offset. The cross-section
+    uses one fixed grading map per bar, with the surface cell at skin depth/2 at the finest counts. The
+    bar system uses a dense complex LU only while it fits in 2 GiB; above that it uses GMRES, with '
+  report:
+    status: completed
+    summary: "T0071 (O001): every definition-of-done check passes on this Mac, and the work is committed\
+      \ as ce102da on the task branch.\n\n**Frozen E001 smoke:** 729 s wall against the 40-minute limit,\
+      \ peak RSS 7.5 GB. Status is complete, every sanity check passes, and max_rel_err_vs_analytic =\
+      \ 8.4e-5 (limit 0.02). All 7 smoke cases converge under the frozen rule at level 4. Other agents'\
+      \ jobs were running on the machine at the same time (load about 9).\n\n**What was built on the previous\
+      \ attempt's work:**\n- **Bars:** the exact Hoer-Love kernel, evaluated in double-double once per\
+      \ distinct offset. The cross-section uses one fixed grading map per bar, with the surface cell at\
+      \ skin depth/2 at the finest counts. The bar system uses a dense complex LU only while it fits in\
+      \ 2 GiB; above that it uses GMRES, with L stored once in real float64.\n- **Ports, ties and mesh_meta:**\
+      \ multi-port Z with the contract's sign convention; Tie as an ideal node merge; `l2.mesh_meta` built\
+      \ through the same mesh code path as `solve()`.\n- **R1–R4:**\n  - R1: every mesh parameter refines\
+      \ at the ratio of the segment counts. The mesh_meta check passes for every E001 case at its registered\
+      \ frequencies (worst violation 0.972).\n  - R2: fil_w = π·r/M, and the harmonic cut-off M now grows\
+      \ with the level (7, 9, 12, 16, 21).\n  - R3: the plane tables are evaluated in double-double with\
+      \ a stated rounding bound counted in solver_tol, and `test_plane_table_entries_vs_independent_quadrature`\
+      \ now also covers the 1–7 µm surface layers.\n  - R4: the scipy GMRES flag is recorded per frequency\
+      \ and port in `meta['gmres_info']`, along with `gmres_converged`.\n\n**Changes this session, to\
+      \ make the smoke fit the time limit:**\n1. **Parallel wire edges.** At level 4 the old code stored\
+      \ their coupling as a dense matrix of about 720 MB per pair. B3 has 7 such pairs, and its level\
+      \ 4 had run for more than 15 minutes when I stopped it. A new `FarPair` class stores one block per\
+      \ axial offset (the coupling is block Toeplitz when the segment lengths are equal) and applies it\
+      \ by FFT. It agrees with the dense kernel to 1e-13. B3 level 4 now takes 111 s.\n2. **Proxy order\
+      \ for far couplings.** This is now fixed by its stated truncation bound (P_sel) instead of rising\
+      \ with M. Harmonics above P_sel get zero far-coupling weight; that tail is exactly what the stated\
+      \ truncation bound q^(P+1)/(1−q) counts in solver_tol. Same-wire couplings stay exact for every\
+      \ harmonic. C1 level 4 at 20 MHz now takes 236 s (126 s build, 132 GMRES iterations, 1.0M unknowns,\
+      \ peak 7.7 GB), against 1518 s in T0079.\n\nNew tests: FarPair against the dense kernel (both flow\
+      \ directions, an offset that is not a whole segment, fallback to dense for unequal segment lengths),\
+      \ and harmonics above the proxy order staying inside the reported solver_tol. The required tests\
+      \ in `test_l2_e001_*` are all present:\n- bar self and mutual inductance vs Hoer-Love and an independent\
+      \ quadrature;\n- Im Z12 > 0 for parallel ports pointing the same way;\n- ties vs the explicit parallel\
+      \ formula;\n- reciprocity;\n- exact length scaling;\n- solver_tol vs a dense LU.\n\n**Measured per\
+      \ level on this Mac (seconds, one call each):**\n\n| Case | L1 | L2 | L3 | L4 | L5 |\n|---|---|---|---|---|---|\n\
+      | A1 | 0.2 | 0.4 | 3.7 | 31 | – |\n| A2 | 0.2 | 0.5 | 2.8 | 29 | 35 |\n| A3 | 0.6 | 1.8 | 17 | 41\
+      \ | – |\n| A4 | 1.8 | 6.9 | 31 | 87 | – |\n| B2 | 2.6 | 4.9 | 12.8 | 31 | – |\n| B3 | 1.6 | 3.8\
+      \ | 43 | 111 | – |\n| C1 (20 MHz) | 17 | 43 | 110 | 236 | – |\n\nPeak RSS (process maximum so far,\
+      \ GB):\n\n| Case | L1 | L2 | L3 | L4 | L5 |\n|---|---|---|---|---|---|\n| A1 | 0.13 | 0.29 | 1.26\
+      \ | 3.9 | – |\n| A2 | 0.13 | 0.30 | 1.28 | 6.1 | 8.0 |\n| B2 | 0.42 | 0.66 | 1.5 | 5.9 | – |\n|\
+      \ C1 | 1.7 | 3.0 | 5.3 | 7.7 | – |\n\n**Full-run projection for this Mac (for information only;\
+      \ an estimate, not a measurement):** about 55 min, assuming C1 converges at level 4 at all three\
+      \ frequencies and A2 needs level 5. The basis is solve time scaling with the number of frequencies\
+      \ per call (4 for the bars and B1–B3, 3 for B4, C0 and C1), C1 about 800 s for levels 1–4 at three\
+      \ frequencies, and about 580 s for the scaling solves including C1's two solves at its final level.\
+      \ If C1 needs level 5 at 80 MHz, add roughly 30–60 min; that level's memory would likely exceed\
+      \ this Mac's 16 GB but fits the burst VM. Either way this is far below the 240-minute timeout."
+    checks_run:
+    - cmd: rm -rf /tmp/e001-smoke && /usr/bin/time -l uv run python experiments/runners/e001_reference.py
+        --smoke   (first run, killed by me to run per-case probes instead)
+      exit_code: 144
+    - cmd: uv run python /tmp/t0071_probe.py A1,A3 4   (per-level probe, informational)
+      exit_code: 0
+    - cmd: uv run python /tmp/t0071_probe.py B2,B3,B4,C0 4   (killed by me after B3 level 4 stalled; led
+        to the FarPair fix)
+      exit_code: 144
+    - cmd: uv run python /tmp/t0071_probe.py C1 4   (old code, killed by me to re-time with the fixes)
+      exit_code: 144
+    - cmd: uv run python /tmp/t0071_b3.py B3 4   (stack-dump profiling run, killed by me)
+      exit_code: 144
+    - cmd: mesh_meta DoD check (exact DoD heredoc, saved as /tmp/t0071_dod4.py), before the changes
+      exit_code: 0
+    - cmd: uv run pytest -q tests/unit/solvers/test_l2_core.py -k plane_table_entries
+      exit_code: 0
+    - cmd: uv run python /tmp/t0071_farpair.py   (FarPair vs dense, ad hoc)
+      exit_code: 0
+    - cmd: 'uv run python /tmp/t0071_b3.py B3 4   (after FarPair: 111 s)'
+      exit_code: 0
+    - cmd: uv run python /tmp/t0071_b3.py C1 3   (before and after the proxy-order change)
+      exit_code: 0
+    - cmd: uv run pytest -q tests/unit/solvers/test_l2_core.py -k 'far_pair or harmonics_above'
+      exit_code: 0
+    - cmd: rm -rf /tmp/e001-smoke && /usr/bin/time -l uv run python experiments/runners/e001_reference.py
+        --smoke   (729 s wall, peak RSS 7.5 GB)
+      exit_code: 0
+    - cmd: uv run pytest -q tests/unit/solvers --durations=5   (64 passed)
+      exit_code: 0
+    - cmd: mesh_meta DoD check (exact DoD heredoc, /tmp/t0071_dod4.py), after the changes
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    - cmd: uv run python -c "import json; r=json.load(open('/tmp/e001-smoke/result.json')); assert r['status']=='complete'
+        ...; v <= 0.02"   (max_rel_err 8.39e-05)
+      exit_code: 0
+    - cmd: uv run python /tmp/t0071_probe.py A2,A4 4   (informational)
+      exit_code: 0
+    - cmd: uv run python /tmp/t0071_b3.py C1 4   (236 s, peak 7.7 GB)
+      exit_code: 0
+    - cmd: uv run python /tmp/t0071_probe.py A2 5   (A2 converges at level 5)
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge/solvers tests/unit/solvers   (final code)
+      exit_code: 0
+    - cmd: grep -rnE 'git clone|urlopen|urlretrieve|wget' src/moduleforge/solvers; test $? -eq 1
+      exit_code: 0
+    concerns:
+    - 'Reading of R2: the harmonic cut-off M (reported as fil_w = pi*r/M) now refines with the level,
+      but the proxy order used for couplings between different wire edges and to the plane stays at P_sel,
+      the order its stated truncation bound needs. Harmonics above P_sel get zero far-coupling weight,
+      which is covered by the stated tail q^(P+1)/(1-q) in solver_tol (new unit test). A reviewer should
+      confirm this reading of R2; raising the proxy order with M made C1 and B3 too slow and memory-heavy
+      on this Mac.'
+    - 'A2 is not in the smoke. Under the frozen rule it does not converge at level 4 (rem = inf: changes
+      of about 2-3e-9 relative that are not yet in a steady order; err vs analytic 5e-8) and converges
+      at level 5 (rem 7.4e-9, 35 s, peak 8.0 GB). This was measured in a probe at the smoke''s frequencies,
+      not in the full run.'
+    - A3 and A4 converge at level 4 (rem at most 3.7e-8), so the registered rule should not take them
+      to level 5. If it did, the bar system (37,044 unknowns) would need about 11 GB for the real L plus
+      5.5 GB for the float32 error-bound matrix. That fits the burst VM (251 GB) but not this 16 GB Mac.
+      Toeplitz storage along the bars (the packet's other example) was not implemented; the GMRES-with-real-L
+      option was.
+    - The full-run projection (about 55 min on this Mac, plus 30-60 min if C1 needs level 5) is extrapolated
+      from 1-2 frequency timings, not measured. As the packet instructed, C1 at 5 and 80 MHz was not run,
+      so its convergence and memory at those frequencies are unshown. All timings were taken while other
+      agents' jobs were using the machine (load about 9, heavy swap), so they are noisy.
+    - R3 was handled by evaluating the Hoer-Love corner sums in double-double (new module src/moduleforge/solvers/l2_dd.py,
+      from the previous attempt) with a stated rounding bound counted in solver_tol, rather than by adding
+      the measured float64 error of 4.6e-8 to solver_tol. Thin-layer entries match an independent 70-digit
+      decimal evaluation and the extended quadrature test.
+    - Background wait loops bpdsul5km and bb5krtuiw were stopped at their time limit. Both were waiting
+      on probes I had already killed or superseded and did not affect any check; their measurements were
+      re-taken directly (B3 level 4 at 111 s, C1 level 4 at 236 s).
+    files_changed:
+    - src/moduleforge/solvers/l2.py
+    - src/moduleforge/solvers/l2_core.py
+    - src/moduleforge/solvers/l2_dd.py
+    - tests/unit/solvers/test_l2_core.py
+    - tests/unit/solvers/test_l2_e001_bars.py
+    - tests/unit/solvers/test_l2_e001_ports.py

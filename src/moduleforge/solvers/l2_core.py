@@ -42,8 +42,12 @@ from functools import lru_cache
 import numpy as np
 import scipy.fft as sfft
 import scipy.sparse as sp
+import scipy.linalg as sla
+import scipy.sparse.csgraph  # noqa: F401  (sp.csgraph)
 import scipy.sparse.linalg as spla
 from numpy.polynomial.legendre import leggauss
+
+from moduleforge.solvers import l2_dd as dd
 
 MU0 = 4e-7 * math.pi
 K4 = MU0 / (4 * math.pi)
@@ -51,6 +55,19 @@ COUNTS = {1: 9, 2: 12, 3: 16, 4: 21, 5: 28}  # annuli per wire cross-section; re
 SEGMENTS = {1: 14, 2: 18, 3: 24, 4: 32, 5: 42}  # segments per wire edge (= plane cells per segment axis); ratios 1.286 1.333 1.333 1.3125
 LAYERS = {k: round(0.5 * s) for k, s in SEGMENTS.items()}  # plane thickness layers: 7 9 12 16 21
 MAX_REFINEMENT = 5
+# Refinement schedule (R1/R2).  Every mesh parameter refines at ONE ratio per step, the ratio of the count sequence
+# SEGMENTS (1.2857, 1.3333, 1.3333, 1.3125): segments, plane cells, plane layers, harmonic cut-off M and bar cells are counts
+# proportional to SEGMENTS, and the real-valued surface cells follow 1 / SEGMENTS[level] (``surface_target``, bars:
+# ``bar_fractions``).  The runner's h is the geometric mean of the parameter ratios, so parameters refining at different
+# ratios within a step (the earlier 1.3^-level surface cells and 2M+1 = 11 15 19 25) shift its observed orders; the
+# annulus counts (COUNTS) are the one exception (ratios within 3.7 % of SEGMENTS' at step 1, 1.6 % at step 4).
+HARMONICS = {1: 7, 2: 9, 3: 12, 4: 16, 5: 21}  # azimuthal cut-off M of a coupled round wire (= SEGMENTS / 2); fil_w = pi r / M
+BAR_SEGMENTS = {1: 7, 2: 9, 3: 12, 4: 16, 5: 21}  # bar segments along the length
+BAR_NW = SEGMENTS  # bar cells across the width (14 18 24 32 42).  The 100 Hz inductance error of a bar is set by the coarse
+# middle cells of the graded width; with 9-12 cells (the earlier COUNTS) the width sweep of A1 (ns = nh = 16, nw = 8 .. 24) showed
+# a local order of 1.0 near nw = 10, rising to 1.9 from nw ~ 20 (pre-asymptotic), so the coarsest level starts at 14.
+BAR_NH = {1: 7, 2: 9, 3: 12, 4: 16, 5: 21}  # bar cells across the thickness
+BAR_FINEST = (BAR_NW[MAX_REFINEMENT], BAR_NH[MAX_REFINEMENT])  # counts at which the bar's surface cell is skin depth / 2
 N_NEAR = 4  # plane tables: Hoer-Love box formula for |di|, |dj| <= N_NEAR, Gauss over cross-sections beyond
 NTHREADS = max(1, os.cpu_count() or 1)
 UNIT_ROUNDOFF = 1.1102230246251565e-16
@@ -124,15 +141,44 @@ def hl_f(x, y, z):
     return out
 
 
+def hl_f_abs(x, y, z):
+    """Sum of the absolute values of the terms of ``hl_f`` (the scale of its floating-point cancellation)."""
+    x, y, z = (np.asarray(v, dtype=np.float64) for v in (x, y, z))
+    x2, y2, z2 = x * x, y * y, z * z
+    r = np.sqrt(x2 + y2 + z2)
+    out = (x2 * x2 + y2 * y2 + z2 * z2 + 3 * (x2 * y2 + y2 * z2 + z2 * x2)) * r / 60.0
+
+    def logt(a, b2, c2):
+        rho = np.sqrt(b2 + c2)
+        safe = np.where(rho > 0, rho, 1.0)
+        return np.where(rho > 0, (6 * b2 * c2 + b2 * b2 + c2 * c2) * np.abs(a) * np.abs(np.arcsinh(a / safe)), 0.0) / 24.0
+
+    def tant(a, b, c, c2):
+        den = c * r
+        safe = np.where(den != 0, den, 1.0)
+        return np.where(den != 0, np.abs(a * b * c) * c2 * np.abs(np.arctan(a * b / safe)), 0.0) / 6.0
+
+    return out + logt(x, y2, z2) + logt(y, x2, z2) + logt(z, x2, y2) + tant(x, y, z, z2) + tant(x, z, y, y2) + tant(z, y, x, x2)
+
+
+DD_FACTOR = 200.0  # stated: |double-double hl_f - exact| <= DD_FACTOR u^2 hl_f_abs, u^2 = 2^-106 (measured <= 10 u^2 vs 70-digit Decimal)
+LATTICE = 2.0 ** -56  # m; mesh nodes are snapped to this lattice so that every coordinate difference is exact in float64
+
+
+def snap(v):
+    """Round coordinates (|v| < 0.03 m) to the exact lattice LATTICE (moves a node by <= 7e-18 m)."""
+    return np.round(np.asarray(v, dtype=np.float64) / LATTICE) * LATTICE
+
+
 def hl_box(lo1, hi1, lo2, hi2, axis: int):
     """Mutual partial inductance (H) of parallel boxes (rows of (m, 3) arrays) carrying uniform current along ``axis``,
     per unit current in each [HL]."""
     tot = 0.0
     for (s0, i0), (s1, i1), (s2, i2) in itertools.product(*[[(1, 0), (-1, 1), (-1, 2), (1, 3)]] * 3):
         u = []
-        for dd, ii in zip(range(3), (i0, i1, i2), strict=True):
-            u.append([hi2[:, dd] - lo1[:, dd], hi2[:, dd] - hi1[:, dd], lo2[:, dd] - lo1[:, dd],
-                      lo2[:, dd] - hi1[:, dd]][ii])
+        for dax, ii in zip(range(3), (i0, i1, i2), strict=True):
+            u.append([hi2[:, dax] - lo1[:, dax], hi2[:, dax] - hi1[:, dax], lo2[:, dax] - lo1[:, dax],
+                      lo2[:, dax] - hi1[:, dax]][ii])
         tot = tot + s0 * s1 * s2 * hl_f(*u)
     tr = [d for d in range(3) if d != axis]
     a1 = (hi1[:, tr[0]] - lo1[:, tr[0]]) * (hi1[:, tr[1]] - lo1[:, tr[1]])
@@ -339,7 +385,8 @@ class EdgeMesh:
 class WireMesh:
     spec: WireSpec
     r: float
-    P: int
+    P: int  # azimuthal harmonic cut-off M (sectors 2M+1)
+    Pp: int
     edges_r: np.ndarray
     areas: np.ndarray
     pts: np.ndarray  # (Q, 2) proxy points
@@ -380,16 +427,53 @@ def graded_fractions(n: int, g: float) -> np.ndarray:
     return xi if g <= 1e-8 else np.expm1(g * xi) / math.expm1(g)
 
 
-def build_wire_mesh(spec: WireSpec, level: int, fmax: float, P: int, node_base: int) -> WireMesh:
+def surface_target(level: int, fmax: float, sigma: float) -> float:
+    """Target size (m) of the first cell at a conducting surface: skin depth / 2 at the call's highest frequency at level
+    1, then proportional to 1 / SEGMENTS[level] (the ratio of every count-defined parameter at each step, R1)."""
+    return 0.5 * skin(fmax, sigma) * SEGMENTS[1] / SEGMENTS[level]
+
+
+BAR_MAP_K = 8  # order of the beta-CDF part of the bar cross-section map (``bar_fractions``)
+
+
+def bar_fractions(n: int, n_fin: int, first_fin: float, k: int = BAR_MAP_K) -> np.ndarray:
+    """n + 1 cumulative fractions of [0, 1] for a bar's transverse direction: x_i = Psi(i / n) with ONE map for every level,
+    Psi(xi) = a xi + (1 - a) I_xi(k, k) (I = regularized incomplete beta function, symmetric about 1/2, I ~ xi^k near the
+    faces; a polynomial, so Psi is C-infinity).  ``a`` is fixed by the finest count: Psi(1 / n_fin) = first_fin (the surface
+    target, skin depth / 2 at the call's highest frequency, as a fraction of the extent); a = 1 (uniform) when the uniform
+    cell 1 / n_fin is already finer.  Geometric similarity of the mesh family (systematic refinement: the same map sampled
+    at h = 1 / n, Roache 1998 ch. 5) is what gives the discretization error an expansion in powers of h; the surface
+    cell is a / n + O(n^-k), i.e. it refines at the ratio of the counts (R1) to within (1 - a) I_(1/n)(k, k) n / a."""
+    from scipy.special import betainc
+
+    xi = np.arange(n + 1) / n
+    i_fin = float(betainc(k, k, 1.0 / n_fin))
+    if first_fin >= 1.0 / n_fin:
+        return xi
+    a = (first_fin - i_fin) / (1.0 / n_fin - i_fin)
+    if not 0.0 < a < 1.0:
+        raise ValueError("surface target too small for the bar map")
+    fr = a * xi + (1.0 - a) * betainc(k, k, xi)
+    fr[0], fr[-1] = 0.0, 1.0
+    return fr
+
+
+def build_wire_mesh(spec: WireSpec, level: int, fmax: float, P: int, node_base: int, M: int | None = None) -> WireMesh:
+    """``P``: proxy order of the far coupling; ``M``: azimuthal harmonic cut-off of the cross-section basis (default P)."""
     r = spec.diameter / 2
     c, nseg = COUNTS[level], SEGMENTS[level]
-    g = grading_rate(0.5 * skin(fmax, spec.sigma) / r, COUNTS[1])
+    M = P if M is None else M
+    g = grading_rate(surface_target(level, fmax, spec.sigma) / r, c)
     fr = graded_fractions(c, g)
     edges_r = r * (1.0 - fr[::-1])
     edges_r[0], edges_r[-1] = 0.0, r
     ann = [(edges_r[i], edges_r[i + 1]) for i in range(c)]
     areas = np.array([math.pi * (b * b - a * a) for a, b in ann])
     pts, W = proxy_rule(r, ann, P)
+    if M < P:
+        W = W[:2 * M + 1]
+    elif M > P:
+        W = np.concatenate([W, np.zeros((2 * (M - P), W.shape[1], W.shape[2]))], axis=0)  # no source above P
     edges, node = [], node_base
     vertex_node = [node_base]
     p = np.asarray(spec.points, float)
@@ -402,13 +486,13 @@ def build_wire_mesh(spec: WireSpec, level: int, fmax: float, P: int, node_base: 
         edges.append(EdgeMesh(p0=p[e], p1=p[e + 1], ax=ax, sgn=float(np.sign(d[ax])), n=nseg, hs=length / nseg, node0=node))
         node += nseg
         vertex_node.append(node)
-    return WireMesh(spec=spec, r=r, P=P, edges_r=edges_r, areas=areas, pts=pts, W=W, edges=edges,
+    return WireMesh(spec=spec, r=r, P=M, Pp=P, edges_r=edges_r, areas=areas, pts=pts, W=W, edges=edges,
                     node_base=node_base, n_nodes=node - node_base + 1, vertex_node=vertex_node)
 
 
 def _layer_edges(spec: PlaneSpec, level: int, fmax: float) -> list[tuple[float, float]]:
     n = LAYERS[level]
-    g = grading_rate(0.5 * skin(fmax, spec.sigma) / spec.thickness, LAYERS[1])
+    g = grading_rate(surface_target(level, fmax, spec.sigma) / spec.thickness, n)
     depth = spec.thickness * graded_fractions(n, g)
     return [(spec.z_top - depth[i + 1], spec.z_top - depth[i]) for i in range(n)]
 
@@ -440,10 +524,17 @@ def build_plane_mesh(spec: PlaneSpec, wires: list[WireMesh], level: int, fmax: f
 
 # ---------------------------------------------------------------------------------------------- plane tables
 def plane_table(lay_a, lay_b, ax_al: float, a_tr: float, n1: int, n2: int, near: int = N_NEAR):
+    """(T, stated relative quadrature bound) of ``plane_table_full``; the float64 cancellation bound is returned there."""
+    T, quad, _ = plane_table_full(lay_a, lay_b, ax_al, a_tr, n1, n2, near)
+    return T, quad
+
+
+def plane_table_full(lay_a, lay_b, ax_al: float, a_tr: float, n1: int, n2: int, near: int = N_NEAR):
     """T[a, b, di, dj] = mutual partial inductance (H) of two axis-parallel branches (axial length ax_al, lateral band
     a_tr) in layers lay_a[a], lay_b[b] at lattice offset (di axial, dj lateral), di in [0, n1), dj in [0, n2), computed
     once per distinct (offset, layer pair).  Hoer-Love [HL] for di, dj <= near; beyond, exact in the axial direction and
-    Gauss over both cross-sections.  Returns (T, stated relative quadrature bound)."""
+    Gauss over both cross-sections.  Returns (T, stated relative quadrature bound, stated relative float64 rounding bound
+    of the Hoer-Love corner sums: max over near entries of the ``hl_block`` bound / |entry|, R3)."""
     na, nb = len(lay_a), len(lay_b)
     di, dj = np.meshgrid(np.arange(n1), np.arange(n2), indexing="ij")
     di, dj = di.ravel(), dj.ravel()
@@ -459,6 +550,7 @@ def plane_table(lay_a, lay_b, ax_al: float, a_tr: float, n1: int, n2: int, near:
     wt = np.concatenate([wn * (a_tr + tn), wp_ * (a_tr - tp_)]) / (a_tr * a_tr)
     T = np.zeros((na, nb, n1, n2))
     bound = gauss_bound(ny_ord, 1.0 + dmin / h_y)
+    rel_round = 0.0
 
     def one(ab):
         la, lb = ab
@@ -481,19 +573,44 @@ def plane_table(lay_a, lay_b, ax_al: float, a_tr: float, n1: int, n2: int, near:
         val = np.einsum("ftz,t,z->f", f, wt, wz) * K4
         out = np.zeros(di.size)
         out[fi] = val
-        if ni.size:
-            lo1 = np.tile([0.0, 0.0, z1[0]], (ni.size, 1))
-            hi1 = np.tile([ax_al, a_tr, z1[1]], (ni.size, 1))
-            lo2 = np.stack([di[ni] * ax_al, dj[ni] * a_tr, np.full(ni.size, z2[0])], 1)
-            hi2 = lo2 + np.array([ax_al, a_tr, z2[1] - z2[0]])
-            out[ni] = hl_box(lo1, hi1, lo2, hi2, 0)
         return la, lb, out.reshape(n1, n2), gauss_bound(nz, 1.0 + dmin / hz)
 
     res = _pmap(one, [(a, b) for a in range(na) for b in range(nb)])
     for la, lb, v, bz in res:
         T[la, lb] = v
         bound += bz
-    return T, bound
+    if ni.size:  # near entries: exact Hoer-Love in double-double, all layer pairs in one Toeplitz block (R3)
+        nxb, nyb = min(near, n1 - 1) + 1, min(near, n2 - 1) + 1
+        na_nodes, ia = _layer_nodes(lay_a)
+        nb_nodes, ib = _layer_nodes(lay_b)
+        L, E = hl_block(snap([0.0, ax_al]), snap([0.0, a_tr]), na_nodes, snap(np.arange(nxb + 1) * ax_al),
+                        snap(np.arange(nyb + 1) * a_tr), nb_nodes)
+        L = L.reshape(nxb, nyb, nb, na)  # (di, dj, layer cell of B, layer cell of A), cells ascending in z
+        E = E.reshape(nxb, nyb, nb, na).astype(np.float64)
+        ker = np.zeros((na, nb, n1, n2))
+        # entries beyond ``near`` in either index keep the Gauss values
+        for la in range(na):
+            for lb in range(nb):
+                blk = L[:, :, ib[lb], ia[la]]
+                ker[la, lb, :nxb, :nyb] = blk
+                rel_round = max(rel_round, float(np.max(E[:, :, ib[lb], ia[la]] / np.abs(blk))))
+        mask = np.zeros((n1, n2), bool)
+        mask[:nxb, :nyb] = True
+        T = np.where(mask[None, None], ker, T)
+    return T, bound, rel_round
+
+
+def _layer_nodes(lay):
+    """Ascending node coordinates of contiguous layers [(lo, hi), ...] (any order) and the cell index of every layer."""
+    lo = np.array([x[0] for x in lay], float)
+    hi = np.array([x[1] for x in lay], float)
+    order = np.argsort(lo)
+    if not np.array_equal(hi[order][:-1], lo[order][1:]):
+        raise NotImplementedError("plane layers must be contiguous")
+    nodes = np.concatenate([lo[order], hi[order][-1:]])
+    cell = np.empty(len(lay), int)
+    cell[order] = np.arange(len(lay))
+    return nodes, cell
 
 
 def circulant_fft(T: np.ndarray) -> np.ndarray:
@@ -687,6 +804,74 @@ def select_P(specs: list[WireSpec], plane: PlaneSpec | None) -> tuple[int, float
 
 
 # ---------------------------------------------------------------------------------------------- the linear system
+class FarPair:
+    """Proxy-filament coupling K of two parallel wire edges a, b (rows: a's (segment, proxy) in flow order, columns: b's):
+    K4 x the exact filament integral [G] ch. 7 (``System._far``).  With equal segment lengths an entry depends on the
+    axial offset t = s - s' of the ascending segment indices only (block Toeplitz), so one (Qa, Qb) block per offset is
+    stored (kernel evaluations and memory O((na + nb) Qa Qb) instead of O(na nb Qa Qb)) and K x, K^T x are applied by FFT
+    along the edge: circular embedding of length N >= na + nb - 1, so no offset aliases and the product is exact up to
+    float64 rounding (circulant diagonalisation, e.g. Golub & Van Loan, Matrix Computations 4th ed. sec. 4.8).  K^T in
+    Fourier space is conj(K^)^T because the blocks are real.  Unequal segment lengths keep the dense matrix."""
+
+    def __init__(self, wa, ea, wb, eb):
+        self.na, self.nb = ea.n, eb.n
+        self.rev_a, self.rev_b = ea.sgn < 0, eb.sgn < 0
+        self.toeplitz = abs(ea.hs - eb.hs) <= 4.0 * UNIT_ROUNDOFF * max(ea.hs, eb.hs)
+        if not self.toeplitz:
+            self.K = System._far(wa, ea, wb, eb)
+            return
+        ax = ea.ax
+        t1, t2 = (ax + 1) % 3, (ax + 2) % 3
+        pa = np.stack([ea.p0[t1] + wa.pts[:, 0], ea.p0[t2] + wa.pts[:, 1]], 1)
+        pb = np.stack([eb.p0[t1] + wb.pts[:, 0], eb.p0[t2] + wb.pts[:, 1]], 1)
+        d = np.hypot(pa[:, None, 0] - pb[None, :, 0], pa[:, None, 1] - pb[None, :, 1])  # (Qa, Qb)
+        hs = ea.hs
+        u = (min(ea.p0[ax], ea.p1[ax]) - min(eb.p0[ax], eb.p1[ax])) + hs * np.arange(-(self.nb - 1), self.na)
+        T = K4 * fil_F(u[:, None, None], u[:, None, None] + hs, 0.0, hs, d[None])  # T[t + nb - 1], t = s - s'
+        self.N = sfft.next_fast_len(self.na + self.nb - 1)
+        Tc = np.zeros((self.N,) + d.shape)
+        Tc[:self.na] = T[self.nb - 1:]
+        if self.nb > 1:
+            Tc[self.N - (self.nb - 1):] = T[:self.nb - 1]
+        self.Th = sfft.fft(Tc, axis=0, workers=NTHREADS)  # (N, Qa, Qb) complex
+
+    def dense(self) -> np.ndarray:
+        """The full matrix (tests): (na Qa, nb Qb), rows / columns in flow order."""
+        if not self.toeplitz:
+            return self.K
+        qa, qb = self.Th.shape[1:]
+        out = np.empty((self.na * qa, self.nb * qb))
+        for j in range(self.nb):
+            for c in range(qb):
+                x = np.zeros((self.nb, qb))
+                x[j, c] = 1.0
+                out[:, j * qb + c] = self.apply(x).reshape(-1)
+        return out
+
+    def _conv(self, X, rev_in, rev_out, n_out, transpose):
+        Xa = X[::-1] if rev_in else X
+        Xh = sfft.fft(Xa, n=self.N, axis=0, workers=NTHREADS)
+        if transpose:  # conj(Th)^T Xh = conj(Th^T conj(Xh)), without a conjugated copy of Th
+            Yh = np.conj(np.matmul(self.Th.transpose(0, 2, 1), np.conj(Xh)[:, :, None])[:, :, 0])
+        else:
+            Yh = np.matmul(self.Th, Xh[:, :, None])[:, :, 0]
+        Y = sfft.ifft(Yh, axis=0, workers=NTHREADS)[:n_out]
+        Y = Y if np.iscomplexobj(X) else Y.real
+        return Y[::-1] if rev_out else Y
+
+    def apply(self, X: np.ndarray) -> np.ndarray:
+        """K X for X (nb, Qb) in b's flow order -> (na, Qa) in a's flow order."""
+        if not self.toeplitz:
+            return (self.K @ X.reshape(-1)).reshape(self.na, -1)
+        return self._conv(X, self.rev_b, self.rev_a, self.na, False)
+
+    def apply_t(self, X: np.ndarray) -> np.ndarray:
+        """K^T X for X (na, Qa) in a's flow order -> (nb, Qb) in b's flow order."""
+        if not self.toeplitz:
+            return (self.K.T @ X.reshape(-1)).reshape(self.nb, -1)
+        return self._conv(X, self.rev_a, self.rev_b, self.nb, True)
+
+
 class System:
     """Unknowns: wire modes (per edge an array (nsig, n, nr)), plane x-branch currents (nl, nx-1, ny), plane y-branch
     currents (nl, ny-1, nx).  M = R + j w L with L assembled from coaxial blocks, proxy pairs, the compressed
@@ -735,7 +920,7 @@ class System:
                 wb, eb = self.edges[j]
                 if ea.ax != eb.ax:
                     continue
-                self.pairs.append((i, j, self._far(wa, ea, wb, eb), ea.sgn * eb.sgn))
+                self.pairs.append((i, j, FarPair(wa, ea, wb, eb), ea.sgn * eb.sgn))
 
     @staticmethod
     def _proxy_lines(wm: WireMesh, e: EdgeMesh):
@@ -746,9 +931,10 @@ class System:
             zs = zs[::-1]
         return zs, np.stack([e.p0[t1] + wm.pts[:, 0], e.p0[t2] + wm.pts[:, 1]], 1)
 
-    def _far(self, wa, ea, wb, eb):
-        z1, p1 = self._proxy_lines(wa, ea)
-        z2, p2 = self._proxy_lines(wb, eb)
+    @staticmethod
+    def _far(wa, ea, wb, eb):
+        z1, p1 = System._proxy_lines(wa, ea)
+        z2, p2 = System._proxy_lines(wb, eb)
         d = np.hypot(p1[:, None, 0] - p2[None, :, 0], p1[:, None, 1] - p2[None, :, 1])
         K = K4 * fil_F(z1[:, None, None, None], z1[:, None, None, None] + ea.hs,
                        z2[None, None, :, None], z2[None, None, :, None] + eb.hs, d[None, :, None, :])
@@ -769,9 +955,9 @@ class System:
         self.tabs = []
         bound = 0.0
         for a_al, a_tr, n1, n2 in ((pm.ax, pm.ay, nx - 1, ny), (pm.ay, pm.ax, ny - 1, nx)):
-            T, b = plane_table(pm.layers, pm.layers, a_al, a_tr, n1, n2)
+            T, b, rb = plane_table_full(pm.layers, pm.layers, a_al, a_tr, n1, n2)
             self.tabs.append((T[:, :, 0, 0].copy(), circulant_fft(T)))
-            bound = max(bound, b)
+            bound = max(bound, b + rb)  # quadrature + float64 cancellation (R3), both counted in solver_tol
         self.stated.plane = bound
         wpb = 0.0
         for i, (wm, e) in enumerate(self.edges):
@@ -813,8 +999,8 @@ class System:
             sgn.append(1.0 if absolute else e.sgn)
         for i, j, K, sg in self.pairs:
             s = 1.0 if absolute else sg
-            Qo[i] += s * (K @ Pq[j].reshape(-1)).reshape(Qo[i].shape)
-            Qo[j] += s * (K.T @ Pq[i].reshape(-1)).reshape(Qo[j].shape)
+            Qo[i] += s * K.apply(Pq[j])  # K >= 0 entrywise (Neumann integrals of 1/R), so |K| = K for absolute
+            Qo[j] += s * K.apply_t(Pq[i])
         if self.plane is not None:
             nl = len(self.plane.layers)
             Xp = [x[self.off_px:self.off_py].reshape(self.shape_x), x[self.off_py:self.n].reshape(self.shape_y)]
@@ -863,13 +1049,16 @@ class System:
         C = sp.csr_matrix((np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))), shape=(self.n, nn))
         grounds = [wm.node_base for wm in self.wires] + ([self.n_wnodes] if self.plane is not None else [])
         keep = np.setdiff1d(np.arange(nn), grounds)
+        self.n_nodes_full = nn
         return C, keep, nn
 
 
 # ---------------------------------------------------------------------------------------------- solve driver
 def block_gmres(apply_M: Callable, apply_prec: Callable, Cr, rhs_d: np.ndarray, n: int, tol: float, restart: int = 100,
                 maxit: int = 5):
-    """GMRES on the saddle system [[M, -C], [C^T, 0]] [x; phi] = [0; d] with a user preconditioner; returns (x, iters)."""
+    """GMRES on the saddle system [[M, -C], [C^T, 0]] [x; phi] = [0; d] with a user preconditioner; returns (x, iters, info)
+    where info is scipy's convergence flag (0 converged).  The reported error bound never relies on convergence: it is
+    computed a posteriori from the returned x (``a_posteriori``)."""
     nk = Cr.shape[1]
 
     def amul(v):
@@ -880,9 +1069,9 @@ def block_gmres(apply_M: Callable, apply_prec: Callable, Cr, rhs_d: np.ndarray, 
     Pm = spla.LinearOperator((n + nk, n + nk), matvec=apply_prec, dtype=complex)
     rhs = np.concatenate([np.zeros(n, complex), rhs_d.astype(complex)])
     its = [0]
-    sol, _ = spla.gmres(A, rhs, M=Pm, rtol=tol, atol=0.0, restart=restart, maxiter=maxit,
-                        callback=lambda _r: its.__setitem__(0, its[0] + 1), callback_type="pr_norm")
-    return sol[:n], its[0]
+    sol, info = spla.gmres(A, rhs, M=Pm, rtol=tol, atol=0.0, restart=restart, maxiter=maxit,
+                           callback=lambda _r: its.__setitem__(0, its[0] + 1), callback_type="pr_norm")
+    return sol[:n], its[0], int(info)  # info: scipy's flag (0 = converged, > 0 = iteration limit); recorded by the caller
 
 
 def a_posteriori(apply_M: Callable, Cr, X: np.ndarray, D: np.ndarray, r_min: float):
@@ -907,7 +1096,7 @@ class Preconditioner:
     branch's layer block (zero lateral offset), with the nodal Schur complement S = C^T M_b^-1 C (wire m = 0 blocks
     exact, plane branches by their total layer admittance) factorised sparse."""
 
-    def __init__(self, sys_: System, w: float, Cr, keep, nn):
+    def __init__(self, sys_: System, w: float, Cr, keep, nn, nmap=None):
         self.s, self.w, self.Cr = sys_, w, Cr
         nsig = 2 * sys_.P + 1
         self.inv = []
@@ -944,7 +1133,10 @@ class Preconditioner:
                 rows += [p, q, p, q]
                 cols += [p, q, q, p]
                 vals += [np.full(p.size, ysum), np.full(p.size, ysum), np.full(p.size, -ysum), np.full(p.size, -ysum)]
-        S = sp.coo_matrix((np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))), shape=(nn, nn)).tocsr()
+        S = sp.coo_matrix((np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))),
+                          shape=(sys_.n_nodes_full, sys_.n_nodes_full)).tocsr()
+        if nmap is not None:  # ties: ideal merges of nodes
+            S = (nmap.T @ S @ nmap).tocsr()
         self.Slu = spla.splu(S[keep][:, keep].tocsc())
         self.nsig = nsig
 
@@ -978,31 +1170,67 @@ class SolveOut:
     parts: dict = field(default_factory=dict)
     iters: list = field(default_factory=list)
     n: int = 0
+    gmres_info: list = field(default_factory=list)  # per frequency, per port: scipy gmres flag (0 = converged)
 
 
 DENSE_MAX = 2500
 
 
-def solve_system(sys_: System, port_nodes: list[tuple[int, int]], freqs, tol: float = 1e-11,
-                 dense: bool | None = None) -> SolveOut:
-    """Impedance matrices Z[f, i, j] = V_i / I_j (other ports open) and the reported forward-error bound."""
-    C, keep, nn = sys_.incidence()
+def merge_nodes(C, nn: int, ties: list[tuple[int, int]], port_nodes: list[tuple[int, int]]):
+    """Apply ideal ties (zero-impedance connections: the two nodes become one) and pick one reference node per connected
+    component of the merged network.  Returns (C' (branches x nn'), keep, node map matrix (nn x nn'), merged port nodes)."""
+    parent = np.arange(nn)
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for a, b in ties:
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[max(ra, rb)] = min(ra, rb)
+    rep = np.array([find(i) for i in range(nn)])
+    uniq, newid = np.unique(rep, return_inverse=True)
+    nn2 = uniq.size
+    nmap = sp.csr_matrix((np.ones(nn), (np.arange(nn), newid)), shape=(nn, nn2))
+    C2 = (C @ nmap).tocsr()
+    A = abs(C2.T @ C2)
+    ncomp, lab = sp.csgraph.connected_components(A, directed=False)
+    grounds = np.array([int(np.where(lab == c)[0][0]) for c in range(ncomp)])
+    keep = np.setdiff1d(np.arange(nn2), grounds)
+    pn = [(int(newid[a]), int(newid[b])) for a, b in port_nodes]
+    return C2, keep, nmap, pn, lab
+
+
+def solve_system(sys_, port_nodes: list[tuple[int, int]], freqs, tol: float = 1e-11,
+                 dense: bool | None = None, ties: list[tuple[int, int]] | None = None) -> SolveOut:
+    """Impedance matrices Z[f, i, j] = V_i / I_j (other ports open; I_j enters at plus_j, leaves at minus_j) and the
+    reported forward-error bound.  ``ties``: pairs of nodes joined by an ideal connection."""
+    C, _, nn = sys_.incidence()
+    C, keep, nmap, port_nodes, lab = merge_nodes(C, nn, list(ties or []), port_nodes)
     Cr = C[:, keep].tocsc()
     pos = {int(k): i for i, k in enumerate(keep)}
     npt = len(port_nodes)
     D = np.zeros((len(keep), npt))
+    inj = np.zeros((int(lab.max()) + 1, npt))
     for j, (a, b) in enumerate(port_nodes):
+        inj[lab[a], j] += 1.0
+        inj[lab[b], j] -= 1.0
         if a in pos:
             D[pos[a], j] += 1.0
         if b in pos:
             D[pos[b], j] -= 1.0
+    if inj.size and np.abs(inj).max() > 0:
+        raise ValueError("a port injects net current into a conductor group that is not connected to its return terminal")
     n, R = sys_.n, sys_.R
     rmin = float(R.min())
     if dense is None:
-        dense = sys_.plane is None and n + Cr.shape[1] <= DENSE_MAX
+        dense = getattr(sys_, "dense_ok", sys_.plane is None and n + Cr.shape[1] <= DENSE_MAX)
     if dense:
-        Ld = np.stack([sys_.lmul(np.eye(n)[:, i]).real for i in range(n)], 1)
-    zs, tols, iters, parts = [], [], [], []
+        Ld = sys_.dense_L() if hasattr(sys_, "dense_L") else np.stack([sys_.lmul(np.eye(n)[:, i]).real for i in range(n)], 1)
+    zs, tols, iters, parts, infos = [], [], [], [], []
     for f in freqs:
         w = 2 * math.pi * f
 
@@ -1010,22 +1238,25 @@ def solve_system(sys_: System, port_nodes: list[tuple[int, int]], freqs, tol: fl
             return R * v + 1j * w * sys_.lmul(v)
 
         if dense:
-            Md = 1j * w * Ld + np.diag(R)
-            A = np.zeros((n + Cr.shape[1], n + Cr.shape[1]), complex)
-            A[:n, :n] = Md
-            A[:n, n:] = -Cr.toarray()
-            A[n:, :n] = Cr.T.toarray()
-            sol = np.linalg.solve(A, np.concatenate([np.zeros((n, npt)), D]))
-            X = sol[:n]
+            Md = (1j * w) * Ld
+            Md[np.diag_indices(n)] += R
+            lu = sla.lu_factor(Md, overwrite_a=True, check_finite=False)
+            Y = sla.lu_solve(lu, Cr.toarray().astype(complex), check_finite=False)  # M^-1 C
+            del lu, Md
+            phi = np.linalg.solve(Cr.T @ Y, D.astype(complex))  # (C^T M^-1 C) phi = d
+            X = Y @ phi
             iters.append(0)
+            infos.append([0] * npt)
         else:
-            pre = Preconditioner(sys_, w, Cr, keep, nn)
+            pre = (BarPreconditioner if isinstance(sys_, BarSystem) else Preconditioner)(sys_, w, Cr, keep, nn, nmap)
             X = np.zeros((n, npt), complex)
-            it = 0
+            it, inf = 0, []
             for j in range(npt):
-                X[:, j], k = block_gmres(apply_M, pre, Cr, D[:, j], n, tol)
+                X[:, j], k, info = block_gmres(apply_M, pre, Cr, D[:, j], n, tol)
                 it += k
+                inf.append(info)
             iters.append(it)
+            infos.append(inf)
         Xt, MX, Z, resid = a_posteriori(apply_M, Cr, X, D, rmin)
         xa = np.abs(Xt)
         Lx = np.stack([sys_.lmul(xa[:, j], absolute=True).real for j in range(npt)], 1)
@@ -1035,69 +1266,433 @@ def solve_system(sys_: System, port_nodes: list[tuple[int, int]], freqs, tol: fl
         stated = sys_.stated.total * e_l
         kern = np.zeros((npt, npt))
         nsig = 2 * sys_.P + 1
-        for k, (wm, e) in enumerate(sys_.edges):
+        for k, (wm, e) in enumerate(getattr(sys_, "edges", [])):
             nr = len(wm.edges_r) - 1
             v = xa[e.off:e.off + nsig * e.n * nr].reshape(nsig, e.n, nr, npt).sum(axis=1)  # (nsig, nr, npt)
             kern += w * np.einsum("gai,gab,gbj->ij", v, sys_.kern_err[k], v)
+        if hasattr(sys_, "abs_error"):  # entrywise stated rounding bounds of the tables (bars, R3)
+            kern += w * sys_.abs_error(xa)
         stated = stated + kern
         zref = float(np.max(np.abs(np.diag(Z))))
         parts.append(dict(resid=float(resid.max() / zref), round=float(rnd.max() / zref),
                           stated=float(stated.max() / zref)))
         tols.append(parts[-1]["resid"] + parts[-1]["round"] + parts[-1]["stated"])
         zs.append(Z)
-    return SolveOut(z=np.array(zs), solver_tol=float(max(tols)), parts=parts, iters=iters, n=n)
+    return SolveOut(z=np.array(zs), solver_tol=float(max(tols)), parts=parts, iters=iters, n=n, gmres_info=infos)
 
 
-def mesh_digest(wires: list[WireMesh], plane: PlaneMesh | None, level: int, freqs_max: float) -> str:
-    """sha256 of the mesh actually built (annulus edges, segment geometry, proxy order, plane lattice and layers)."""
+# ---------------------------------------------------------------------------------------------- bars
+@dataclass
+class BarSpec:
+    name: str
+    start: np.ndarray
+    end: np.ndarray
+    width: float
+    thickness: float
+    sigma: float
+    width_dir: np.ndarray | None = None
+
+
+@dataclass
+class BarMesh:
+    spec: BarSpec
+    ax: int  # length axis (absolute)
+    t: tuple[int, int]  # the two transverse axes, ascending; cell index = i_t1 * n_t2 + i_t2
+    nodes: dict  # absolute axis -> node coordinates (m): axial uniform, transverse graded from both faces
+    ns: int
+    hs: float
+    area: np.ndarray  # (nc,) cell cross-section areas
+    first: float  # surface-cell size actually realised (smaller of the two transverse directions)
+    node_base: int
+    vertex_node: list[int]  # node of the start / end face (geometric node index ns when the bar runs towards -axis)
+
+    @property
+    def nc(self) -> int:
+        return self.area.size
+
+    @property
+    def n(self) -> int:
+        return self.ns * self.nc
+
+
+def build_bar_mesh(spec: BarSpec, level: int, fmax: float, node_base: int) -> BarMesh:
+    """Axis-aligned rectangular bar: ns equal segments x (nw x nh) cells graded from all four faces by one fixed map
+    (``bar_fractions``: skin depth / 2 at the finest counts BAR_FINEST, the same map at every level).  Each cell carries a uniform current density
+    along the axis (PEEC box); the cells of one segment share its two end nodes (equipotential cross-sections)."""
+    st, en = np.asarray(spec.start, float), np.asarray(spec.end, float)
+    d = en - st
+    length = float(np.abs(d).max())
+    ax = int(np.argmax(np.abs(d)))
+    if length <= 0 or np.count_nonzero(np.abs(d) > 1e-12 * length) != 1:
+        raise NotImplementedError("only axis-parallel bars of positive length are supported")
+    if spec.width_dir is None:
+        wv = np.cross([0.0, 0.0, 1.0], np.eye(3)[ax])
+        if np.linalg.norm(wv) < 1e-12:
+            raise ValueError("width_dir is required for a bar along z")
+    else:
+        wv = np.asarray(spec.width_dir, float)
+    wd = int(np.argmax(np.abs(wv)))
+    if wd == ax or np.count_nonzero(np.abs(wv) > 1e-12 * np.abs(wv).max()) != 1:
+        raise NotImplementedError("width_dir must be an axis perpendicular to the bar")
+    td = 3 - ax - wd
+    ns, nw, nh = BAR_SEGMENTS[level], BAR_NW[level], BAR_NH[level]
+    nodes, cells, firsts = {}, {}, []
+    lo = float(min(st[ax], en[ax]))
+    nodes[ax] = snap(lo + length * np.arange(ns + 1) / ns)
+    for axis, ext, n, nfin in ((wd, spec.width, nw, BAR_FINEST[0]), (td, spec.thickness, nh, BAR_FINEST[1])):
+        fr = bar_fractions(n, nfin, 0.5 * skin(fmax, spec.sigma) / ext)
+        nodes[axis] = snap(float(st[axis]) - 0.5 * ext + ext * fr)
+        cells[axis] = np.diff(nodes[axis])
+        firsts.append(float(cells[axis][0]))
+    t1, t2 = sorted((wd, td))
+    area = np.outer(cells[t1], cells[t2]).ravel()
+    vn = [node_base + (0 if en[ax] > st[ax] else ns), node_base + (ns if en[ax] > st[ax] else 0)]
+    return BarMesh(spec=spec, ax=ax, t=(t1, t2), nodes=nodes, ns=ns, hs=length / ns, area=area, first=min(firsts),
+                   node_base=node_base, vertex_node=vn)
+
+
+def _uniq(Dh: np.ndarray, Dl: np.ndarray):
+    """Distinct |D| (exact double-double offsets; nodes lie on the snap lattice, so equal offsets are bit-equal) and the index
+    map of D onto them: the distinct-offset (Toeplitz) reuse."""
+    s = np.where(Dh < 0, -1.0, 1.0)
+    key = np.stack([(Dh * s).ravel(), (Dl * s).ravel()], 1)
+    uk, inv = np.unique(key, axis=0, return_inverse=True)
+    return (uk[:, 0].copy(), uk[:, 1].copy()), inv.reshape(Dh.shape)
+
+
+def _sl(axis, s):
+    return (slice(None),) * axis + (s,)
+
+
+def _mixed(H, ab: int, aa: int, absolute: bool):
+    """Corner combination of box 2 (axis ab, node pairs j, j+1) x box 1 (axis aa, i, i+1): signed (Hoer-Love pattern
+    +H[j+1,i] - H[j+1,i+1] - H[j,i] + H[j,i+1], double-double for H = (hi, lo)) or, for the rounding bound, the sum of the
+    absolute values (float64)."""
+    if absolute:
+        hb1, hb0 = H[_sl(ab, slice(1, None))], H[_sl(ab, slice(None, -1))]
+
+        def da(X):
+            return X[_sl(aa, slice(None, -1))] + X[_sl(aa, slice(1, None))]
+        return da(hb1) + da(hb0)
+
+    def dsub(X):
+        return dd.sub((X[0][_sl(aa, slice(None, -1))], X[1][_sl(aa, slice(None, -1))]),
+                      (X[0][_sl(aa, slice(1, None))], X[1][_sl(aa, slice(1, None))]))
+
+    h1 = (H[0][_sl(ab, slice(1, None))], H[1][_sl(ab, slice(1, None))])
+    h0 = (H[0][_sl(ab, slice(None, -1))], H[1][_sl(ab, slice(None, -1))])
+    return dd.sub(dsub(h1), dsub(h0))
+
+
+def hl_block(xa, ya, za, xb, yb, zb):
+    """Mutual partial inductances (H) between every (x-segment, y-cell, z-cell) box of A (columns) and of B (rows) from the
+    node coordinates of the two box grids (axis 0 = current direction), exact Hoer-Love [HL] for uniform axial current
+    densities, and the entrywise stated rounding bound (float32).  Rows / columns are ordered (x-segment, y-cell, z-cell).
+
+    The corner function is evaluated in double-double (``l2_dd``) once per distinct exact offset (distinct |coordinate
+    difference| per axis) and the boxes are combined by mixed differences along each axis (cell pair = difference of grid
+    node pairs), so the 64-term cancellation of thin boxes costs no accuracy (R3).  Bound: DD_FACTOR u^2 x (sum of the
+    |terms|) K4 / (a1 a2) + u |entry| (the final rounding to float64)."""
+    gu = [dd.dd_diff(np.asarray(nb, float)[:, None], np.asarray(na, float)[None, :]) for na, nb in
+          ((xa, xb), (ya, yb), (za, zb))]
+    ((ux, ix), (uy, iy), (uz, iz)) = (_uniq(*g) for g in gu)
+    nx, ny, nz = ux[0].size, uy[0].size, uz[0].size
+    Fh, Fl, Fa = np.empty((nx, ny, nz)), np.empty((nx, ny, nz)), np.empty((nx, ny, nz))
+    uyd = (uy[0][:, None], uy[1][:, None])
+    uzd = (uz[0][None, :], uz[1][None, :])
+    for i in range(nx):
+        fh, fl = dd.hl_f((ux[0][i], ux[1][i]), uyd, uzd)
+        Fh[i], Fl[i] = fh, fl
+        Fa[i] = hl_f_abs(ux[0][i], uy[0][:, None], uz[0][None, :])
+    na_, nb_ = [(len(np.asarray(v)) - 1) for v in (xa, ya, za)], [(len(np.asarray(v)) - 1) for v in (xb, yb, zb)]
+    ca = np.outer(np.diff(ya), np.diff(za)).ravel()
+    cb = np.outer(np.diff(yb), np.diff(zb)).ravel()
+    K = []
+    for src, absolute in (((Fh, Fl), False), (Fa, True)):
+        if absolute:
+            H = src[:, iy[:, :, None, None], iz[None, None, :, :]]  # (ux, PyB, QyA, PzB, QzA)
+        else:
+            H = tuple(a[:, iy[:, :, None, None], iz[None, None, :, :]] for a in src)
+        H = _mixed(H, 1, 2, absolute)
+        H = _mixed(H, 3, 4, absolute)
+        K.append(tuple(np.ascontiguousarray(a) for a in H) if not absolute else np.ascontiguousarray(H))
+    fac = K4 / (cb[:, None] * ca[None, :])  # (ncB, ncA)
+    ncb, nca = cb.size, ca.size
+    nsa, nsb = na_[0], nb_[0]
+    Lblk = np.empty((nsb * ncb, nsa * nca))
+    Eblk = np.empty((nsb * ncb, nsa * nca), dtype=np.float32)
+    n1b, n2b, n1a, n2a = nb_[1], nb_[2], na_[1], na_[2]
+    Kh, Kl = K[0]
+    Ka = K[1]
+    for sb in range(nsb):
+        r1, r0 = ix[sb + 1], ix[sb]
+        c0, c1 = slice(None, -1), slice(1, None)
+        t = dd.sub(dd.sub((Kh[r1[c0]], Kl[r1[c0]]), (Kh[r1[c1]], Kl[r1[c1]])),
+                   dd.sub((Kh[r0[c0]], Kl[r0[c0]]), (Kh[r0[c1]], Kl[r0[c1]])))
+        v = (t[0] + t[1]).transpose(1, 3, 0, 2, 4).reshape(ncb, nsa, nca) * fac[:, None, :]
+        Lblk[sb * ncb:(sb + 1) * ncb] = v.reshape(ncb, nsa * nca)
+        w = (Ka[r1[c0]] + Ka[r1[c1]] + Ka[r0[c0]] + Ka[r0[c1]]).transpose(1, 3, 0, 2, 4).reshape(ncb, nsa, nca) * fac[:, None, :]
+        w = DD_FACTOR * dd.U2 * w + UNIT_ROUNDOFF * np.abs(v)
+        Eblk[sb * ncb:(sb + 1) * ncb] = (w * (1.0 + 1e-6)).reshape(ncb, nsa * nca)
+    del n1b, n2b, n1a, n2a
+    return Lblk, Eblk
+
+
+def bar_block(A: BarMesh, B: BarMesh):
+    """``hl_block`` of two bars of the same axis (rows: B, columns: A)."""
+    ax, (t1, t2) = A.ax, A.t
+    return hl_block(A.nodes[ax], A.nodes[t1], A.nodes[t2], B.nodes[ax], B.nodes[t1], B.nodes[t2])
+
+
+BAR_DENSE_BYTES = 2 * 2**30  # dense complex LU of a bar system only while its matrix (16 n^2 bytes) is <= 2 GiB (n <= 11585)
+
+
+class BarSystem:
+    """Unknowns: one uniform-current-density box per (segment, cell) of every bar, ordered (bar, segment, cell).  L is
+    stored once, dense and real (float64; every pair exact, ``bar_block``).  The solve is a dense complex LU while that
+    matrix fits in BAR_DENSE_BYTES, otherwise GMRES (``BarPreconditioner``) under the a-posteriori bound of D0004 (i): the
+    matrix-vector product applies the real L to the real and imaginary parts, so no complex copy of L is ever formed.
+    Bars on different axes are exactly decoupled (orthogonal Neumann integrals vanish)."""
+
+    def __init__(self, bars: list[BarMesh], sigma_check: bool = True):
+        self.bars, self.plane, self.P, self.edges = bars, None, 0, []
+        self.stated = Stated()
+        self.off = np.concatenate([[0], np.cumsum([b.n for b in bars])]).astype(int)
+        self.n = int(self.off[-1])
+        self.n_wnodes = sum(b.ns + 1 for b in bars)
+        self.L = np.zeros((self.n, self.n))
+        self.E = np.zeros((self.n, self.n), dtype=np.float32)
+        for i, a in enumerate(bars):
+            for j in range(i + 1):
+                b = bars[j]
+                if a.ax != b.ax:
+                    continue
+                Lb, Eb = bar_block(a, b)  # rows of b (box 2), columns of a (box 1)
+                self.L[self.off[j]:self.off[j + 1], self.off[i]:self.off[i + 1]] = Lb
+                self.E[self.off[j]:self.off[j + 1], self.off[i]:self.off[i + 1]] = Eb
+                if i != j:
+                    self.L[self.off[i]:self.off[i + 1], self.off[j]:self.off[j + 1]] = Lb.T
+                    self.E[self.off[i]:self.off[i + 1], self.off[j]:self.off[j + 1]] = Eb.T
+        self.R = np.concatenate([np.tile(b.hs / (b.spec.sigma * b.area), b.ns) for b in bars])
+
+    @property
+    def dense_ok(self) -> bool:
+        return 16 * self.n * self.n <= BAR_DENSE_BYTES
+
+    def dense_L(self) -> np.ndarray:
+        return self.L
+
+    def lmul(self, x: np.ndarray, absolute: bool = False) -> np.ndarray:
+        if not absolute:
+            if not np.iscomplexobj(x):
+                return self.L @ x
+            y = self.L @ np.stack([x.real, x.imag], axis=-1)  # real GEMM, (n, ..., 2)
+            return y[..., 0] + 1j * y[..., 1]
+        out = np.empty(self.n, dtype=complex if np.iscomplexobj(x) else float)
+        for i in range(0, self.n, 1024):
+            out[i:i + 1024] = np.abs(self.L[i:i + 1024]) @ x
+        return out
+
+    def abs_error(self, xa: np.ndarray) -> np.ndarray:
+        """x^T E x (E: entrywise stated rounding bounds of L) for the non-negative columns of xa."""
+        y = np.empty_like(xa)
+        for i in range(0, self.n, 1024):
+            y[i:i + 1024] = self.E[i:i + 1024].astype(np.float64) @ xa
+        return xa.T @ y
+
+    def incidence(self):
+        rows, cols, vals = [], [], []
+        for b, o in zip(self.bars, self.off[:-1], strict=True):
+            s, c = np.meshgrid(np.arange(b.ns), np.arange(b.nc), indexing="ij")
+            idx = (o + s * b.nc + c).ravel()
+            rows += [idx, idx]
+            cols += [(b.node_base + s).ravel(), (b.node_base + s + 1).ravel()]
+            vals += [np.ones(idx.size), -np.ones(idx.size)]
+        nn = self.n_wnodes
+        C = sp.csr_matrix((np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))), shape=(self.n, nn))
+        self.n_nodes_full = nn
+        return C, np.arange(nn), nn
+
+
+class BarPreconditioner:
+    """Block preconditioner of the bar saddle system: per bar, the inverse of one segment's (cell x cell) block
+    R_s + j w L_ss (the segments of a bar are translates, so their self blocks agree; segment 0's is used for all), and the
+    nodal Schur complement S = C^T M_b^-1 C (each segment a branch of admittance 1^T M_s^-1 1 between its two nodes)
+    factorised sparse.  It only steers GMRES; the reported bound is a posteriori (``a_posteriori``)."""
+
+    def __init__(self, sys_: BarSystem, w: float, Cr, keep, nn, nmap=None):
+        self.s, self.Cr = sys_, Cr
+        self.inv = []
+        rows, cols, vals = [], [], []
+        for b, o in zip(sys_.bars, sys_.off[:-1], strict=True):
+            nc = b.nc
+            Ms = 1j * w * sys_.L[o:o + nc, o:o + nc] + np.diag(sys_.R[o:o + nc])
+            Mi = np.linalg.inv(Ms)
+            self.inv.append(Mi)
+            y = Mi.sum()
+            p = b.node_base + np.arange(b.ns)
+            q = p + 1
+            rows += [p, q, p, q]
+            cols += [p, q, q, p]
+            vals += [np.full(p.size, y), np.full(p.size, y), np.full(p.size, -y), np.full(p.size, -y)]
+        S = sp.coo_matrix((np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))), shape=(nn, nn)).tocsr()
+        if nmap is not None:
+            S = (nmap.T @ S @ nmap).tocsr()
+        self.Slu = spla.splu(S[keep][:, keep].tocsc())
+
+    def minv(self, v: np.ndarray) -> np.ndarray:
+        out = np.empty_like(v)
+        for b, o, Mi in zip(self.s.bars, self.s.off[:-1], self.inv, strict=True):
+            out[o:o + b.n] = (v[o:o + b.n].reshape(b.ns, b.nc) @ Mi.T).reshape(-1)
+        return out
+
+    def __call__(self, v: np.ndarray) -> np.ndarray:
+        n = self.s.n
+        f, g = v[:n], v[n:]
+        mf = self.minv(f)
+        phi = self.Slu.solve(g - self.Cr.T @ mf)
+        return np.concatenate([self.minv(f + self.Cr @ phi), phi])
+
+
+# ---------------------------------------------------------------------------------------------- the case driver
+def mesh_digest(wires: list[WireMesh], plane: PlaneMesh | None, level: int, freqs_max: float,
+                bars: list[BarMesh] | None = None) -> str:
+    """sha256 of the mesh actually built (annulus edges, segment geometry, proxy order, plane lattice and layers, bar grids)."""
     h = hashlib.sha256()
     h.update(f"L{level}:{freqs_max!r}".encode())
     for wm in wires:
         h.update(wm.edges_r.tobytes())
-        h.update(f"{wm.P}:{wm.spec.sigma!r}".encode())
+        h.update(f"{wm.P}:{wm.Pp}:{wm.spec.sigma!r}".encode())
         for e in wm.edges:
             h.update(np.concatenate([e.p0, e.p1, [e.hs, e.n]]).astype(np.float64).tobytes())
+    for bm in bars or []:
+        h.update(f"{bm.ax}:{bm.t}:{bm.ns}:{bm.spec.sigma!r}".encode())
+        for a in sorted(bm.nodes):
+            h.update(np.asarray(bm.nodes[a], np.float64).tobytes())
     if plane is not None:
         h.update(f"{plane.nx}:{plane.ny}:{plane.ax!r}:{plane.ay!r}:{plane.spec.sigma!r}".encode())
         h.update(np.array(plane.layers).tobytes())
     return h.hexdigest()
 
 
-def solve_case(specs: list[WireSpec], plane: PlaneSpec | None, ports: list[tuple[tuple[int, int], tuple[int, int]]],
-               freqs, level: int, P: int | None = None, gmres_tol: float = 1e-11, dense: bool | None = None):
-    """One mesh for the call (graded to the skin depth at max(freqs)); ports = ((wire, vertex), (wire, vertex)).
-    Returns (SolveOut, meta dict with mesh_params, n_filaments, mesh_hash, timings)."""
+def peak_rss_mb() -> float:
+    import resource
+    import sys
+    r = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return r / 2**20 if sys.platform == "darwin" else r / 2**10
+
+
+@dataclass
+class Meshes:
+    wires: list
+    bars: list
+    plane: PlaneMesh | None
+    P: int
+    M: int
+    eps_proxy: float
+    level: int
+    fmax: float
+    vertex_node: list  # per spec (input order): node of every vertex (wires: polyline vertices; bars: [start, end])
+
+    @property
+    def n_unknowns(self) -> int:
+        n = sum((2 * wm.P + 1) * e.n * (len(wm.edges_r) - 1) for wm in self.wires for e in wm.edges)
+        n += sum(b.n for b in self.bars)
+        if self.plane is not None:
+            nl, nx, ny = len(self.plane.layers), self.plane.nx, self.plane.ny
+            n += nl * ((nx - 1) * ny + (ny - 1) * nx)
+        return int(n)
+
+    def mesh_params(self) -> dict:
+        mp = {}
+        for wm in self.wires:
+            c = len(wm.edges_r) - 1
+            mp.update({f"seg:{wm.spec.name}": min(e.hs for e in wm.edges),
+                       f"fil_w:{wm.spec.name}": math.pi * wm.r / HARMONICS[self.level],
+                       f"fil_h:{wm.spec.name}": wm.r / c, f"surf:{wm.spec.name}": float(wm.edges_r[-1] - wm.edges_r[-2])})
+        for bm in self.bars:
+            nm = bm.spec.name
+            mp.update({f"seg:{nm}": bm.hs, f"fil_w:{nm}": bm.spec.width / BAR_NW[self.level],
+                       f"fil_h:{nm}": bm.spec.thickness / BAR_NH[self.level], f"surf:{nm}": bm.first})
+        if self.plane is not None:
+            mp.update({f"{k}:{self.plane.spec.name}": v for k, v in self.plane.mp.items()})
+        return mp
+
+    def summary(self, nfreq: int) -> dict:
+        digest = mesh_digest(self.wires, self.plane, self.level, self.fmax, self.bars)
+        return dict(mesh_params=self.mesh_params(), n_filaments=self.n_unknowns, mesh_hash=[digest] * nfreq)
+
+
+def build_meshes(specs: list, plane: PlaneSpec | None, freqs, level: int, P: int | None = None,
+                 harm: int | None = None) -> Meshes:
+    """The one mesh of a call (graded to the skin depth at max(freqs)): shared by ``solve_case`` and ``mesh_meta``."""
     if not 1 <= level <= MAX_REFINEMENT:
         raise ValueError(f"refinement level must be in 1..{MAX_REFINEMENT}")
-    t0 = time.perf_counter()
-    fmax = float(max(freqs))
-    P_sel, eps_proxy = select_P(specs, plane)
+    freqs = [float(f) for f in freqs]
+    if not freqs or min(freqs) <= 0:
+        raise ValueError("freqs_hz must be non-empty and positive")
+    fmax = max(freqs)
+    wspecs = [s for s in specs if isinstance(s, WireSpec)]
+    bspecs = [s for s in specs if isinstance(s, BarSpec)]
+    if bspecs and (wspecs or plane is not None):
+        raise NotImplementedError("bars together with round wires or planes are not implemented (E001 solves them separately)")
+    P_sel, eps_proxy = select_P(wspecs, plane) if wspecs else (0, 0.0)
     if P is None:
-        P = P_sel
-    elif P_sel:
-        eps_proxy = max(2.0 * proxy_truncation_bound(s.diameter / 2, d, P) for s, d in _coupled_distances(specs, plane))
-    wires, base = [], 0
+        if P_sel == 0:
+            Pp, M = 0, 0  # no coupled pair: the current of every edge is axisymmetric (exactly, by symmetry)
+        else:
+            # The harmonic cut-off M of the current basis (the azimuthal resolution reported as fil_w, R2) refines with the
+            # level; the proxy order Pp of the FAR couplings (other edges, plane) is a quadrature parameter fixed by its
+            # stated truncation bound: harmonics m > Pp get zero far-coupling weight (``build_wire_mesh``), which is the
+            # tail sum_{m > Pp} q^m = q^(Pp+1) / (1 - q) that ``proxy_truncation_bound`` states and solver_tol counts.
+            # Coaxial (same-edge) couplings stay exact for every m <= M.  Raising Pp with M would cost ~Pp^2 in proxies
+            # (wire-plane tables, far pairs) for no accuracy the bound does not already give.
+            M = HARMONICS[level] if harm is None else harm
+            Pp = P_sel
+    else:
+        Pp, M = P, (P if harm is None else harm)
+        if P_sel:
+            eps_proxy = max(2.0 * proxy_truncation_bound(s.diameter / 2, d, P) for s, d in _coupled_distances(wspecs, plane))
+    wires, bars, base, vnodes = [], [], 0, []
     for s in specs:
-        wm = build_wire_mesh(s, level, fmax, P, base)
-        wires.append(wm)
-        base += wm.n_nodes
+        if isinstance(s, WireSpec):
+            wm = build_wire_mesh(s, level, fmax, Pp, base, M)
+            wires.append(wm)
+            vnodes.append(list(wm.vertex_node))
+            base += wm.n_nodes
+        else:
+            bm = build_bar_mesh(s, level, fmax, base)
+            bars.append(bm)
+            vnodes.append(list(bm.vertex_node))
+            base += bm.ns + 1
     pm = build_plane_mesh(plane, wires, level, fmax) if plane is not None else None
-    stated = Stated(proxy=eps_proxy)
-    sys_ = System(wires, pm, stated)
+    return Meshes(wires, bars, pm, Pp, M, eps_proxy, level, fmax, vnodes)
+
+
+def mesh_summary(specs: list, plane: PlaneSpec | None, freqs, level: int, P: int | None = None, harm: int | None = None) -> dict:
+    """mesh_params, n_filaments and mesh_hash that ``solve_case`` reports for the same arguments, without solving."""
+    return build_meshes(specs, plane, freqs, level, P, harm).summary(len(list(freqs)))
+
+
+def solve_case(specs: list, plane: PlaneSpec | None, ports: list[tuple[tuple[int, int], tuple[int, int]]],
+               freqs, level: int, P: int | None = None, gmres_tol: float = 1e-11, dense: bool | None = None,
+               ties: list[tuple[tuple[int, int], tuple[int, int]]] = (), harm: int | None = None):
+    """One mesh for the call; ports / ties = ((spec index, vertex), (spec index, vertex)) into ``specs`` (WireSpec or
+    BarSpec).  Returns (SolveOut, meta dict with mesh_params, n_filaments, mesh_hash, timings, gmres_info, peak RSS)."""
+    t0 = time.perf_counter()
+    mesh = build_meshes(specs, plane, freqs, level, P, harm)
+    stated = Stated(proxy=mesh.eps_proxy)
+    sys_ = BarSystem(mesh.bars) if mesh.bars else System(mesh.wires, mesh.plane, stated)
+    if sys_.n != mesh.n_unknowns:
+        raise AssertionError("unknown count of the system differs from the mesh summary")
     t1 = time.perf_counter()
-    pn = [(wires[a[0]].vertex_node[a[1]], wires[b[0]].vertex_node[b[1]]) for a, b in ports]
-    out = solve_system(sys_, pn, list(freqs), tol=gmres_tol, dense=dense)
-    mp = {}
-    for wm in wires:
-        e0 = wm.edges[0]
-        c = len(wm.edges_r) - 1
-        mp.update({f"seg:{wm.spec.name}": min(e.hs for e in wm.edges), f"fil_w:{wm.spec.name}": math.pi * wm.r / c,
-                   f"fil_h:{wm.spec.name}": wm.r / c, f"surf:{wm.spec.name}": float(wm.edges_r[-1] - wm.edges_r[-2])})
-        del e0
-    if pm is not None:
-        mp.update({f"{k}:{pm.spec.name}": v for k, v in pm.mp.items()})
-    digest = mesh_digest(wires, pm, level, fmax)
-    meta = dict(mesh_params=mp, n_filaments=int(sys_.n), mesh_hash=[digest] * len(freqs), solver_tol=out.solver_tol,
-                P=P, stated=vars(stated), tol_parts=out.parts, gmres_iters=out.iters, build_s=t1 - t0,
-                wall_s=time.perf_counter() - t0)
+    vn = mesh.vertex_node
+    pn = [(vn[a[0]][a[1]], vn[b[0]][b[1]]) for a, b in ports]
+    tn = [(vn[a[0]][a[1]], vn[b[0]][b[1]]) for a, b in ties]
+    out = solve_system(sys_, pn, [float(f) for f in freqs], tol=gmres_tol, dense=dense, ties=tn)
+    meta = mesh.summary(len(list(freqs)))
+    meta.update(solver_tol=out.solver_tol, P=mesh.P, harmonics=mesh.M, stated=vars(sys_.stated), tol_parts=out.parts,
+                gmres_iters=out.iters, gmres_info=out.gmres_info,
+                gmres_converged=all(i == 0 for row in out.gmres_info for i in row), build_s=t1 - t0,
+                wall_s=time.perf_counter() - t0, peak_rss_mb=peak_rss_mb())
     return out, meta

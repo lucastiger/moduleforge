@@ -8,6 +8,7 @@ mean distance <d> = 128 r / (45 pi) and <d^2> = r^2 of a uniform disc (Maxwell/W
 """
 from __future__ import annotations
 
+import itertools
 import math
 
 import numpy as np
@@ -83,14 +84,20 @@ def test_hoer_love_box_vs_tensor_gauss():
     assert core.hl_box(lo1, hi1, lo2, hi2, 0)[0] == pytest.approx(ref, rel=1e-9)
 
 
+_THICK = ([(0.3e-3, 0.4e-3), (0.0, 0.3e-3)], 0.5e-3, 0.3e-3)
+# R3 (review T0080): the 1-7 um graded surface layers of real plane meshes (C1-like), where the float64 Hoer-Love corner
+# sum cancels like (cell / thickness)^4; the entries must still match the independent quadrature to 1e-9.
+_THIN = ([(6e-6, 7e-6), (4e-6, 6e-6), (1e-6, 4e-6), (0.0, 1e-6)], 0.35e-3, 0.28e-3)
+
+
+@pytest.mark.parametrize("stack", [_THICK, _THIN], ids=["0.1-0.3mm", "1-7um"])
 @pytest.mark.parametrize("di,dj", [(1, 2), (2, 3), (6, 1), (3, 7), (9, 9)])
-def test_plane_table_entries_vs_independent_quadrature(di, dj):
+def test_plane_table_entries_vs_independent_quadrature(di, dj, stack):
     """Near (Hoer-Love) and far (Gauss) table entries vs a tensor Gauss of the filament formula (<= 1e-9)."""
-    lay = [(0.3e-3, 0.4e-3), (0.0, 0.3e-3)]
-    ax, ay = 0.5e-3, 0.3e-3
+    lay, ax, ay = stack
     T, bound = core.plane_table(lay, lay, ax, ay, 12, 12)
     assert bound < 1e-9
-    for la, lb in ((0, 0), (0, 1), (1, 1)):
+    for la, lb in itertools.combinations_with_replacement(range(len(lay)), 2):
         lo1, hi1 = [0.0, 0.0, lay[la][0]], [ax, ay, lay[la][1]]
         lo2, hi2 = [di * ax, dj * ay, lay[lb][0]], [di * ax + ax, dj * ay + ay, lay[lb][1]]
         ref = _box_gauss(lo1, hi1, lo2, hi2)
@@ -161,6 +168,47 @@ def test_proxy_order_convergence_and_stated_bound(tiny):
     assert err[3] > err[5] > err[7]
     for P in (3, 5, 7):
         assert err[P] <= tols[P] * abs(zs[9])
+
+
+def test_harmonics_above_proxy_order_within_stated_bound(tiny):
+    """Current basis with M = 9 harmonics, far couplings (plane) at proxy order P = 3, 5, 7: harmonics m > P get zero
+    far weight, and that truncation stays inside the reported solver_tol (the stated tail q^(P+1) / (1 - q))."""
+    lp, pl = loop_case()
+    zs, tols = {}, {}
+    for P in (3, 5, 7, 9):
+        out, meta = core.solve_case([core.WireSpec("loop", np.asarray(lp.points), lp.diameter, lp.sigma)],
+                                    core.PlaneSpec("gnd", pl.x_min, pl.y_min, pl.x_max, pl.y_max, 0.0, pl.thickness,
+                                                   pl.sigma), [((0, 0), (0, 4))], [2e7], 1, P=P, harm=9)
+        assert meta["harmonics"] == 9 and meta["P"] == P
+        zs[P], tols[P] = out.z[0, 0, 0], meta["solver_tol"]
+    for P in (3, 5, 7):
+        assert 0 < abs(zs[P] - zs[9]) <= tols[P] * abs(zs[9])
+
+
+@pytest.mark.parametrize("len_a,len_b,off,rev_a,rev_b", [(10, 10, 0.0, False, False), (10, 10, 3.3, True, False),
+                                                         (10, 10, -2.0, True, True), (10, 7.5, 2.0, False, True)])
+def test_far_pair_toeplitz_fft_equals_dense_kernel(len_a, len_b, off, rev_a, rev_b):
+    """FarPair (one block per axial offset, FFT along the edge) reproduces the dense proxy-filament matrix of [G] ch. 7
+    (System._far) for K x and K^T x, for either flow direction and an axial offset that is not a multiple of the
+    segment; unequal segment lengths fall back to the dense matrix."""
+    def edge(name, x0, ln, y, rev, base):
+        pts = np.array([[x0, y, 0.0], [x0 + ln, y, 0.0]])[::-1 if rev else 1] * 1e-3
+        wm = core.build_wire_mesh(core.WireSpec(name, pts, 0.3e-3, SIG_CU), 1, 1e6, 5, base)
+        return wm, wm.edges[0]
+
+    wa, ea = edge("a", off, len_a, 0.0, rev_a, 0)
+    wb, eb = edge("b", 0.0, len_b, 1.5, rev_b, 100)
+    fp = core.FarPair(wa, ea, wb, eb)
+    assert fp.toeplitz == (len_a == len_b)
+    K = core.System._far(wa, ea, wb, eb)
+    assert np.all(K > 0)  # Neumann integrals of 1/R: |K| = K (used by the absolute products of the bounds)
+    rng = np.random.default_rng(3)
+    xb = rng.standard_normal((eb.n, K.shape[1] // eb.n)) + 1j * rng.standard_normal((eb.n, K.shape[1] // eb.n))
+    xa = rng.standard_normal((ea.n, K.shape[0] // ea.n))
+    y_ref, z_ref = K @ xb.reshape(-1), K.T @ xa.reshape(-1)
+    assert np.abs(fp.apply(xb).reshape(-1) - y_ref).max() <= 1e-13 * np.abs(y_ref).max()
+    assert np.abs(fp.apply_t(xa).reshape(-1) - z_ref).max() <= 1e-13 * np.abs(z_ref).max()
+    assert not np.iscomplexobj(fp.apply_t(xa))
 
 
 # ------------------------------------------------------------------------------------------------ operators
@@ -305,9 +353,106 @@ def test_B1_dc_closed_form():
 
 
 def test_unsupported_scope_raises():
+    """Bars and ties are implemented since T0071; what is still out of scope must raise, not silently mis-solve."""
     w = wire("w", [(0, 0, 0), (10, 0, 0)])
     bar = l2.Bar("b", (0, 0, 0), (1e-2, 0, 0), 1e-3, 1e-3, SIG_CU)
-    with pytest.raises(NotImplementedError):
-        l2.solve([bar], [], [], [1e6], 1)
-    with pytest.raises(NotImplementedError):
-        l2.solve([w], [], [port("p", w)], [1e6], 1, ties=[l2.Tie(l2.Terminal("w", 0), l2.Terminal("w", 1))])
+    with pytest.raises(NotImplementedError):  # bars mixed with round wires
+        l2.solve([bar, w], [], [port("p", w)], [1e6], 1)
+    inclined = l2.Bar("i", (0, 0, 0), (1e-2, 1e-2, 0), 1e-3, 1e-3, SIG_CU)
+    with pytest.raises(NotImplementedError):  # inclined bar
+        l2.solve([inclined], [], [], [1e6], 1)
+
+
+_PI2 = "1.5707963267948966192313216916397514420985846996875529104874722961"
+
+
+def _dec_atan(t):
+    """arctan of a non-negative Decimal: reciprocal for t > 1, three halvings, Maclaurin series (60-digit context)."""
+    from decimal import Decimal
+    big = t > 1
+    if big:
+        t = 1 / t
+    for _ in range(3):
+        t = t / (1 + (1 + t * t).sqrt())
+    s, p, t2 = Decimal(0), t, t * t
+    for j in range(70):
+        s += (-1) ** j * p / (2 * j + 1)
+        p *= t2
+    return Decimal(_PI2) - 8 * s if big else 8 * s
+
+
+def _dec_hl_f(x, y, z):
+    """Independent 70-digit evaluation of the Hoer-Love function [HL eq. 14] with Python decimals (no numpy, no l2_dd)."""
+    from decimal import Decimal
+    x, y, z = (abs(Decimal(float(v))) for v in (x, y, z))
+    x2, y2, z2 = x * x, y * y, z * z
+    r = (x2 + y2 + z2).sqrt()
+    out = (x2 * x2 + y2 * y2 + z2 * z2 - 3 * (x2 * y2 + y2 * z2 + z2 * x2)) * r / 60
+
+    def logt(a, b2, c2):
+        if b2 + c2 == 0 or a == 0:
+            return Decimal(0)
+        return (6 * b2 * c2 - b2 * b2 - c2 * c2) * a * ((a + r) / (b2 + c2).sqrt()).ln() / 24
+
+    def tant(a, b, c, c2):
+        if c == 0 or a == 0 or b == 0:
+            return Decimal(0)
+        return a * b * c * c2 * _dec_atan(a * b / (c * r)) / 6
+
+    out += logt(x, y2, z2) + logt(y, x2, z2) + logt(z, x2, y2)
+    return out - tant(x, y, z, z2) - tant(x, z, y, y2) - tant(z, y, x, x2)
+
+
+def _dec_box(lo1, hi1, lo2, hi2):
+    """Hoer-Love 64-corner sum in 70-digit decimals, divided by the transverse areas, times K4."""
+    from decimal import Decimal, getcontext
+    getcontext().prec = 70
+    tot = Decimal(0)
+    for s0, i0 in ((1, 0), (-1, 1), (-1, 2), (1, 3)):
+        for s1, i1 in ((1, 0), (-1, 1), (-1, 2), (1, 3)):
+            for s2, i2 in ((1, 0), (-1, 1), (-1, 2), (1, 3)):
+                u = []
+                for d, ii in zip(range(3), (i0, i1, i2), strict=True):
+                    D = Decimal
+                    u.append([D(hi2[d]) - D(lo1[d]), D(hi2[d]) - D(hi1[d]), D(lo2[d]) - D(lo1[d]),
+                              D(lo2[d]) - D(hi1[d])][ii])
+                tot += s0 * s1 * s2 * _dec_hl_f(*u)
+    a1 = (Decimal(hi1[1]) - Decimal(lo1[1])) * (Decimal(hi1[2]) - Decimal(lo1[2]))
+    a2 = (Decimal(hi2[1]) - Decimal(lo2[1])) * (Decimal(hi2[2]) - Decimal(lo2[2]))
+    return float(Decimal(core.K4) * tot / (a1 * a2))
+
+
+def test_dd_hoer_love_function_vs_decimal():
+    """l2_dd.hl_f agrees with a 70-digit decimal evaluation to ~1e-30 relative, also for thin / zero arguments."""
+    from decimal import Decimal, getcontext
+    from moduleforge.solvers import l2_dd as dd
+    getcontext().prec = 70
+    pts = [(0.3, 0.7, 1.1), (1e-3, 2e-6, 3e-5), (2.9e-3, 7.4e-6, 7.4e-6), (0.0, 1e-3, 2e-3), (5e-3, 0.0, 0.0),
+           (1e-3, 1e-3, 1e-3), (2e-3, 1.0000001e-3, 1e-6), (-2e-3, 1e-3, -3e-4)]
+    for p in pts:
+        h, lo = dd.hl_f(*(dd.dd(np.array([v])) for v in p))
+        ref = _dec_hl_f(*p)
+        got = Decimal(float(h[0])) + Decimal(float(lo[0]))
+        assert abs(got - ref) <= Decimal("1e-29") * abs(ref) + Decimal("1e-60")
+
+
+@pytest.mark.parametrize("di,dj", [(0, 0), (0, 1), (1, 1), (1, 2), (3, 1), (4, 4)])
+def test_plane_table_thin_layers_rounding_bound_vs_decimal(di, dj):
+    """R3: on the 1-7 um surface layers of real meshes the 64-term Hoer-Love corner sum cancels like (length/thickness)^4
+    in float64 (measured 1.8e-7 here).  plane_table_full evaluates it in double-double: every near entry matches an
+    independent 70-digit decimal evaluation, within the stated rounding bound (and ~1e-13 in practice)."""
+    um = 1e-6
+    lay = [(6 * um, 7 * um), (4 * um, 6 * um), (1 * um, 4 * um), (0.0, 1 * um)]
+    ax, ay = 0.35e-3, 0.28e-3
+    T, quad, rnd = core.plane_table_full(lay, lay, ax, ay, 8, 8)
+    assert quad < 1e-9 and 0.0 < rnd < 1e-12
+    for la in range(len(lay)):
+        for lb in range(len(lay)):
+            lo1, hi1 = [0.0, 0.0, lay[la][0]], [ax, ay, lay[la][1]]
+            x0, y0 = core.snap(di * ax), core.snap(dj * ay)
+            lo2 = [float(x0), float(y0), lay[lb][0]]
+            hi2 = [float(core.snap((di + 1) * ax)), float(core.snap((dj + 1) * ay)), lay[lb][1]]
+            lo1[:2] = [0.0, 0.0]
+            hi1[:2] = [float(core.snap(ax)), float(core.snap(ay))]
+            ref = _dec_box(lo1, hi1, lo2, hi2)
+            assert abs(T[la, lb, di, dj] - ref) <= (1e-13 + rnd) * abs(ref)

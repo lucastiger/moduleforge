@@ -1,0 +1,15 @@
+id: I0037
+kind: decision
+subject: E001 needs burst compute (~2 CPU-h)
+summary: 'Run it on an ephemeral VM: `scripts/burst_gcp.sh E001` (Google Cloud) or `scripts/burst.sh E001`.
+  Results copied back into experiments/results/ are picked up automatically (provenance records the host).
+  To run it here instead: `uv run mfos exp run E001`.'
+refs:
+- T0072
+- E001
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-06T05:25:50+00:00'
+resolved_at: null

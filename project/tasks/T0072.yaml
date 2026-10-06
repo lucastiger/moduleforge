@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E001: L2 reference vs closed-form partial inductances'
 type: experiment
 agent: none
-status: todo
+status: needs_founder
 depends_on:
 - T0071
 description: The orchestrator runs the registered E001 spec on merged main after n2 merges. It feeds A1
@@ -31,4 +31,8 @@ target: null
 lens: null
 trigger: null
 rationale: A required experiment that validates the reference before any comparison uses it (F1).
-history: []
+history:
+- outcome: awaiting_burst
+  summary: ~2 CPU-h exceeds local limit
+  at: '2026-10-06T05:25:50+00:00'
+  since: 1791264350.942552

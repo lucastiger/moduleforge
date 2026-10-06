@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-06T15:48:00+00:00 from repository state — do not edit_
+_generated 2026-10-06T15:59:07+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -15,7 +15,6 @@ cancelled: 19, done: 58, failed: 3, todo: 7
 
 
 ## Recent events
-- 2026-10-06T05:25:50+00:00 merged {"task": "T0071"}
 - 2026-10-06T05:25:50+00:00 inbox_opened {"id": "I0037", "kind": "decision", "subject": "E001 needs burst compute (~2 CPU-h)"}
 - 2026-10-06T05:25:50+00:00 burst_requested {"task": "T0072", "experiment": "E001", "cpu_hours": 2.0}
 - 2026-10-06T05:43:07+00:00 inbox_resolved {"id": "I0035", "status": "approved", "note": "Founder: approve (follow the founder session's recommendation). DoD verified; reviews T0083 and T0084 accept_with
@@ -30,3 +29,4 @@ cancelled: 19, done: 58, failed: 3, todo: 7
 - 2026-10-06T14:41:07+00:00 sleep_detected {"gap_s": 2769, "runs_extended": 0}
 - 2026-10-06T15:06:41+00:00 sleep_detected {"gap_s": 409, "runs_extended": 0}
 - 2026-10-06T15:47:58+00:00 sleep_detected {"gap_s": 2477, "runs_extended": 0}
+- 2026-10-06T15:59:05+00:00 sleep_detected {"gap_s": 342, "runs_extended": 0}

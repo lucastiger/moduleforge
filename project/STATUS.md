@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-06T11:00:15+00:00 from repository state — do not edit_
+_generated 2026-10-06T14:41:08+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -15,7 +15,6 @@ cancelled: 19, done: 58, failed: 3, todo: 7
 
 
 ## Recent events
-- 2026-10-06T02:55:28+00:00 inbox_opened {"id": "I0036", "kind": "protected_change", "subject": "T0071: merge needs founder approval"}
 - 2026-10-06T05:25:19+00:00 inbox_resolved {"id": "I0036", "status": "approved", "note": "Founder: approve (follow the founder session's recommendation). Loop DoD verified at ce102da (smoke complete, all
 - 2026-10-06T05:25:28+00:00 task_added {"task": "T0087"}
 - 2026-10-06T05:25:50+00:00 merged {"task": "T0071"}
@@ -30,3 +29,4 @@ cancelled: 19, done: 58, failed: 3, todo: 7
 - 2026-10-06T09:45:19+00:00 loop_started {"pid": 29502}
 - 2026-10-06T11:00:14+00:00 run_finished {"run": "T0075-builder-20261006T021350-a8d0", "status": "completed", "cost": 6.6986642000000005, "subtype": "success", "report": "structured_output"}
 - 2026-10-06T11:00:14+00:00 task_failed_attempt {"task": "T0075", "signal": "dod_failed", "action": "repair"}
+- 2026-10-06T14:41:07+00:00 sleep_detected {"gap_s": 2769, "runs_extended": 0}

@@ -1,0 +1,15 @@
+id: I0036
+kind: protected_change
+subject: 'T0071: merge needs founder approval'
+summary: 'Complete moduleforge.solvers.l2 for E001: exact bars, two-port Z, ties; frozen E001 smoke passes
+  within 40 min
+
+  Risk high; 6 files. PR: None'
+refs:
+- T0071
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-06T02:55:28+00:00'
+resolved_at: null

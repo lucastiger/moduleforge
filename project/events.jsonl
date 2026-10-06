@@ -635,3 +635,4 @@
 {"ts": "2026-10-06T19:48:07+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0075-builder-20261006T110921-d1aa", "status": "completed", "cost": 5.5324468, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-10-06T19:48:07+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0075", "signal": "attempts_exhausted", "action": "founder"}
 {"ts": "2026-10-06T19:48:07+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0039", "kind": "decision", "subject": "T0075 stuck: agent reported blocked"}
+{"ts": "2026-10-06T23:51:04+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 1361, "runs_extended": 0}

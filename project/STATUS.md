@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-06T19:48:08+00:00 from repository state — do not edit_
+_generated 2026-10-06T23:51:13+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0039** [decision] T0075 stuck: agent reported blocked
@@ -16,7 +16,6 @@ cancelled: 19, done: 58, failed: 3, needs_founder: 1, todo: 6
 - T0075 `needs_founder` builder/implement: Layout L2 at E002 scale: measured CPU time, memory and refinement convergence per layout (feasibility gate) (attempt 3)
 
 ## Recent events
-- 2026-10-06T09:45:19+00:00 loop_started {"pid": 29502}
 - 2026-10-06T11:00:14+00:00 run_finished {"run": "T0075-builder-20261006T021350-a8d0", "status": "completed", "cost": 6.6986642000000005, "subtype": "success", "report": "structured_output"}
 - 2026-10-06T11:00:14+00:00 task_failed_attempt {"task": "T0075", "signal": "dod_failed", "action": "repair"}
 - 2026-10-06T14:41:07+00:00 sleep_detected {"gap_s": 2769, "runs_extended": 0}
@@ -31,3 +30,4 @@ cancelled: 19, done: 58, failed: 3, needs_founder: 1, todo: 6
 - 2026-10-06T19:48:07+00:00 run_finished {"run": "T0075-builder-20261006T110921-d1aa", "status": "completed", "cost": 5.5324468, "subtype": "success", "report": "structured_output"}
 - 2026-10-06T19:48:07+00:00 task_failed_attempt {"task": "T0075", "signal": "attempts_exhausted", "action": "founder"}
 - 2026-10-06T19:48:07+00:00 inbox_opened {"id": "I0039", "kind": "decision", "subject": "T0075 stuck: agent reported blocked"}
+- 2026-10-06T23:51:04+00:00 sleep_detected {"gap_s": 1361, "runs_extended": 0}

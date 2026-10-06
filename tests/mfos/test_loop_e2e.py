@@ -381,3 +381,29 @@ def test_a_repair_packet_carries_every_review_finding(sandbox):
                history=[{"attempt": 1, "outcome": "review_rejected", "summary": "rejected",
                          "failure_output": findings[:4000]}])
     assert "[blocker] solver_tol leaves out the cross-section bound" in _history(t)
+
+
+def test_a_branch_that_breaks_with_newer_main_is_not_merged(sandbox):
+    """2026-10-06: T0074 was verified against T0070's core while T0071 changed a return value in it; both merged and
+    9 tests failed on main. When main's code has moved, the merge takes it into the branch and re-runs the fast gate."""
+    import subprocess
+    pol = sandbox / ".mfos" / "policy.toml"
+    pol.write_text(pol.read_text().replace("level = 3", "level = 2"))
+    setup_objective()
+    s = _tick_until(lambda s: any(i.kind == "protected_change" for i in s.inbox("open")))
+    item = next(i for i in s.inbox("open") if i.kind == "protected_change")
+    build = s.task(item.refs[0])
+    # main gains code that is fine alone but fails once the task's canary (harmonic(1) == 1.0) is present
+    init = sandbox / "src" / "moduleforge" / "__init__.py"
+    init.write_text(init.read_text() + "\nimport importlib.util as _u\nif _u.find_spec('moduleforge.canary'):\n"
+                    "    from .canary import harmonic as _h\n    assert _h(1) == 2.0, 'semantic conflict'\n")
+    subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qam", "main moves"], cwd=sandbox,
+                   check=True)
+    assert cli(["approve", item.id]) == 0
+    Orchestrator(Store()).tick()
+    t = Store().task(build.id)
+    failed = [h for h in t.history if h.get("outcome") == "dod_failed"]
+    assert t.status != "done" and failed, t.history  # sent back for repair (level 2 redispatches it at once)
+    assert "fast gate fails once current main is merged" in failed[-1]["summary"]
+    assert "semantic conflict" in failed[-1]["failure_output"]
+    assert not (sandbox / "src" / "moduleforge" / "canary.py").exists()  # main untouched

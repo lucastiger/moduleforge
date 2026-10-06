@@ -450,6 +450,20 @@ class Orchestrator:
         if t.pr and self.git.mode == "github":
             state = self.git.pr_state(t.pr)
         else:
+            # A branch verified against an older main can still break main: T0074, built beside T0071 on T0070's
+            # core, merged after T0071 changed a return value and failed 9 tests on main (2026-10-06). So when main's
+            # code has moved, take it into the branch and re-run the fast gate on the combination first.
+            if self.git.mode == "local" and self.git.main_code_moved(path):
+                ok, out = self.git.update_from_main(path)
+                if not ok:
+                    self._fail(t, "dod_failed", "merge conflict with main",
+                               "Bring the branch up to date with main and resolve conflicts.\n" + out)
+                    return
+                passed, text = gates.summarize(gates.run_gate(self.s, path, "fast"))
+                if not passed:
+                    self._fail(t, "dod_failed", "the fast gate fails once current main is merged into the branch",
+                               "main changed after this task was verified; make the branch work with it.\n" + text)
+                    return
             self._commit_state(f"before merging {t.id}")
             body = f"Task {t.id} for {t.objective}\n\n{t.description[:3000]}\n\nDefinition of done verified by mfos."
             state, pr = self.git.integrate(t, path, body, auto)

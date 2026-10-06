@@ -110,6 +110,25 @@ class GitOps:
     def head(self, path: Optional[Path] = None) -> str:
         return self.s.git("rev-parse", "HEAD", cwd=path)
 
+    STATE_PATHS = ("project/", "experiments/specs/", "experiments/results/", "experiments/drafts/")
+
+    def main_code_moved(self, path: Path) -> bool:
+        """Whether main changed anything but orchestrator state since this branch last took it in."""
+        base = self.s.git("merge-base", self.main, "HEAD", cwd=path, check=False)
+        if not base:
+            return True
+        out = self.s.git("diff", "--name-only", base, self.main, cwd=path, check=False)
+        return any(f and not f.startswith(self.STATE_PATHS) for f in out.splitlines())
+
+    def update_from_main(self, path: Path) -> tuple[bool, str]:
+        """Merge current main into the task branch; on a conflict, abort and return the output."""
+        r = subprocess.run(["git", "merge", "--no-edit", self.main], cwd=path, capture_output=True, text=True,
+                           env=self.s.git_env)
+        if r.returncode != 0:
+            subprocess.run(["git", "merge", "--abort"], cwd=path, capture_output=True, env=self.s.git_env)
+            return False, (r.stdout + r.stderr)[-2000:]
+        return True, ""
+
     # ------------------------------------------------------------------ policy checks
     def scope_violations(self, role: str, files: list[str], approved_protected: bool = False) -> list[str]:
         pol = self.s.policy

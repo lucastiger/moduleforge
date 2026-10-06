@@ -624,3 +624,4 @@
 {"ts": "2026-10-06T11:00:14+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0075-builder-20261006T021350-a8d0", "status": "completed", "cost": 6.6986642000000005, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-10-06T11:00:14+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0075", "signal": "dod_failed", "action": "repair"}
 {"ts": "2026-10-06T14:41:07+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 2769, "runs_extended": 0}
+{"ts": "2026-10-06T15:06:41+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 409, "runs_extended": 0}

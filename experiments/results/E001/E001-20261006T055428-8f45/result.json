@@ -1,0 +1,253 @@
+{
+  "experiment_id": "E001",
+  "run_id": "E001-20261006T055428-8f45",
+  "status": "complete",
+  "seed": null,
+  "config": {
+    "f_lf_hz": 100.0,
+    "freqs_hf_hz": [
+      5000000.0,
+      20000000.0,
+      80000000.0
+    ],
+    "sigma_cu": 58000000.0,
+    "sigma_al": 37700000.0,
+    "plane_margin_mm": 15.0,
+    "refinement_start": 1,
+    "refinement_max": 5,
+    "refinement_min_levels": 4,
+    "refinement_ratio_min": 1.25,
+    "refinement_ratio_max": 2.2,
+    "refinement_ratio_spread": 1.1,
+    "order_min": 1.0,
+    "order_max": 2.0,
+    "steady_tol": 0.1,
+    "conv_tol": 0.01,
+    "solver_err_budget": 0.00001,
+    "recip_tol": 0.001,
+    "monotone_tol": 0.001,
+    "scaling_tol": 0.01,
+    "scaling_cases": [
+      "A1",
+      "B2",
+      "C1"
+    ],
+    "tol_published": 1e-9,
+    "tol_independent": 1e-6,
+    "tol_truncation": 0.001,
+    "smoke_cases": [
+      "A1",
+      "A3",
+      "B2",
+      "B3",
+      "B4",
+      "C0",
+      "C1"
+    ],
+    "cases": [
+      "A1",
+      "A2",
+      "A3",
+      "A4",
+      "B1",
+      "B2",
+      "B3",
+      "B4",
+      "C0",
+      "C1"
+    ]
+  },
+  "provenance": {
+    "git_commit": "6cc5821d798f936323b3d7ae5b42a378eb0e9600",
+    "git_dirty": false,
+    "git_branch": "HEAD",
+    "spec_hash": "sha256:1c60eaaf3ee5121dae83c1ebd092b41968cd34bf9546ea00604f241fb95b0b5c",
+    "lock_hash": "4d231621bdeed59452bca941b571b16fdf51a476777308aef7e08ec0274f5e5b",
+    "python": "3.12.3",
+    "platform": "Linux-7.0.0-1011-gcp-x86_64-with-glibc2.39",
+    "host": "mf-burst-e001-1791265970.us-east1-b.c.moduleforge-burst.internal",
+    "packages": {
+      "numpy": "2.5.3",
+      "scipy": "1.18.1",
+      "jax": "0.11.2",
+      "pydantic": "2.13.5",
+      "shapely": "2.1.2"
+    },
+    "tools": {},
+    "started": "2026-10-06T05:54:30+00:00",
+    "finished": "2026-10-06T06:40:06+00:00"
+  },
+  "metrics": {
+    "max_rel_err_vs_analytic": {
+      "value": 0.0001329408580513237,
+      "ci": null,
+      "level": 0.0,
+      "n": 32,
+      "unit": ""
+    },
+    "max_rel_err_band_lo": {
+      "value": 0.0,
+      "ci": null,
+      "level": 0.0,
+      "n": 32,
+      "unit": ""
+    },
+    "max_rel_err_band_hi": {
+      "value": 0.0018508971707803322,
+      "ci": null,
+      "level": 0.0,
+      "n": 32,
+      "unit": ""
+    },
+    "max_rel_err_hf": {
+      "value": 0.0001329408580513237,
+      "ci": null,
+      "level": 0.0,
+      "n": 21,
+      "unit": ""
+    },
+    "max_rel_err_lf": {
+      "value": 9.780558009820224e-7,
+      "ci": null,
+      "level": 0.0,
+      "n": 11,
+      "unit": ""
+    },
+    "analytic_value_span": {
+      "value": 7.050339656485312,
+      "ci": null,
+      "level": 0.0,
+      "n": 32,
+      "unit": ""
+    },
+    "n_geometry_classes": {
+      "value": 7.0,
+      "ci": null,
+      "level": 0.0,
+      "n": 32,
+      "unit": ""
+    }
+  },
+  "sanity": [
+    {
+      "name": "closed_forms_published_values",
+      "passed": true,
+      "value": 0.7066487098806548,
+      "threshold": 1.0,
+      "detail": "ber_bei(1) vs exact series: 3.458e-13 (tol 1e-10); ber_bei(2) vs exact series: 3.169e-13 (tol 1e-10); ber_bei(5) vs exact series: 5.858e-13 (tol 1e-10); GMD square = 0.44705 a [G]: 1.888e-06 (tol 2e-05); GMD thin strip -> e^-1.5 w [G]: 1.046e-05 (tol 1e-04); L_int(DC) = mu0/8pi: 5.977e-10 (tol 1e-09); R(DC) = 1/(sigma pi r^2): 4.596e-14 (tol 1e-09); Z_int HF limit r/delta=39: 9.254e-03 (tol 3e-02); Z_int HF limit r/delta=386: 9.173e-04 (tol 3e-03); <d> uniform = 128 r/(45 pi) [MW]: 4.872e-07 (tol 1e-06); <d^2>, <d^4> uniform = r^2, 5r^4/3: 2.220e-16 (tol 1e-09); <d> surface -> 4r/pi, r/delta=386: 1.827e-03 (tol 3e-03); int J dA = I (current profile normalisation): 3.073e-14 (tol 1e-09); chi(DC) = j (r/delta)^2/4: 4.961e-07 (tol 1e-06); chi -> 1 (perfect conductor), r/delta=386: 3.663e-03 (tol 5e-03)"
+    },
+    {
+      "name": "closed_forms_independent_check",
+      "passed": true,
+      "value": 0.5779332930021909,
+      "threshold": 1.0,
+      "detail": "J0/J1 series vs Hankel |z|=30: 3.794e-13 (tol 1e-09); J0/J1 series vs Hankel |z|=34: 3.399e-13 (tol 1e-09); HL self vs GMD formula l=100w: 1.449e-04 (tol 2e-03); HL self vs GMD formula l=300w: 3.993e-05 (tol 5e-04); HL mutual vs Gauss-Legendre 6D: 4.219e-15 (tol 1e-06); HL mutual symmetric: 1.510e-14 (tol 1e-09); filament mutual vs quadrature: 1.332e-15 (tol 1e-09); HL thin-bar limit -> filament: 2.086e-06 (tol 1e-04); rect loop: partial sum vs Grover closed form (r=1um): 6.240e-05 (tol 2e-04); Bessel Z_int vs reaction integral @5 MHz: 4.715e-12 (tol 1e-06); Bessel Z_int vs reaction integral @80 MHz: 9.674e-13 (tol 1e-06); wire self vs tube PEEC l=1.5mm @100 Hz: 7.781e-09 (tol 4e-03); self-term correction removes the filament-at-r error l=1.5mm @100 Hz: 7.781e-09 (tol 4e-04); wire self vs tube PEEC l=1.5mm @5e+06 Hz: 2.681e-04 (tol 4e-03); self-term correction removes the filament-at-r error l=1.5mm @5e+06 Hz: 2.681e-04 (tol 5e-04); wire self vs tube PEEC l=1.5mm @2e+07 Hz: 2.872e-04 (tol 5e-03); self-term correction removes the filament-at-r error l=1.5mm @2e+07 Hz: 2.872e-04 (tol 8e-04); wire self vs tube PEEC l=1.5mm @8e+07 Hz: 3.027e-04 (tol 5e-03); self-term correction removes the filament-at-r error l=1.5mm @8e+07 Hz: 3.027e-04 (tol 1e-03); wire self vs tube PEEC l=5mm @100 Hz: 3.784e-09 (tol 3e-04); self-term correction removes the filament-at-r error l=5mm @100 Hz: 3.784e-09 (tol 2e-05); wire self vs tube PEEC l=5mm @5e+06 Hz: 1.392e-05 (tol 3e-04); self-term correction removes the filament-at-r error l=5mm @5e+06 Hz: 1.392e-05 (tol 3e-05); wire self vs tube PEEC l=5mm @2e+07 Hz: 1.562e-05 (tol 3e-04); self-term correction removes the filament-at-r error l=5mm @2e+07 Hz: 1.562e-05 (tol 5e-05); wire self vs tube PEEC l=5mm @8e+07 Hz: 1.705e-05 (tol 3e-04); self-term correction removes the filament-at-r error l=5mm @8e+07 Hz: 1.705e-05 (tol 6e-05); wire self vs tube PEEC l=10mm @100 Hz: 1.588e-09 (tol 5e-05); self-term correction removes the filament-at-r error l=10mm @100 Hz: 1.588e-09 (tol 5e-06); wire self vs tube PEEC l=10mm @5e+06 Hz: 4.935e-07 (tol 6e-05); self-term correction removes the filament-at-r error l=10mm @5e+06 Hz: 4.935e-07 (tol 7e-06); wire self vs tube PEEC l=10mm @2e+07 Hz: 1.116e-06 (tol 6e-05); self-term correction removes the filament-at-r error l=10mm @2e+07 Hz: 1.116e-06 (tol 1e-05); wire self vs tube PEEC l=10mm @8e+07 Hz: 1.690e-06 (tol 6e-05); self-term correction removes the filament-at-r error l=10mm @8e+07 Hz: 1.690e-06 (tol 1e-05); proximity dipole vs exact two-wire line (PEC): 1.778e-02 (tol 3e-02); B3 M12 cross-section average @100 Hz (shift 3.9e-04): 2.642e-15 (tol 6e-15); B3 M12 cross-section average @8e+07 Hz (shift 7.3e-04): 8.437e-15 (tol 3e-14); C1 image term cross-section average @20 MHz (shift 5.6e-04): 3.704e-15 (tol 1e-14)"
+    },
+    {
+      "name": "image_plane_independent",
+      "passed": true,
+      "value": 0.056233348767028,
+      "threshold": 1.0,
+      "detail": "loop image term @5 MHz: 2.220e-16 (tol 1e-06); loop image term @20 MHz: 1.332e-15 (tol 1e-06); loop image term @80 MHz: 1.332e-15 (tol 1e-06); u image term @20 MHz: 1.110e-15 (tol 1e-06); per-length plane term vs PEC strip BEM @5 MHz: 2.003e-05 (tol 4e-04); per-length plane term vs PEC strip BEM @20 MHz: 1.991e-05 (tol 4e-04); per-length plane term vs PEC strip BEM @80 MHz: 1.984e-05 (tol 4e-04)"
+    },
+    {
+      "name": "wheeler_recession_independent",
+      "passed": true,
+      "value": 0.502338567519131,
+      "threshold": 1.0,
+      "detail": "Wheeler vs Carson @0.5 MHz (delta/2h=0.047): 1.009e-03 (tol 2e-03); Wheeler vs Carson @5 MHz (delta/2h=0.015): 1.068e-04 (tol 2e-04); Wheeler vs Carson @20 MHz (delta/2h=0.007): 2.711e-05 (tol 5e-05); Wheeler vs Carson @80 MHz (delta/2h=0.004): 6.856e-06 (tol 1e-05)"
+    },
+    {
+      "name": "tied_branch_independent",
+      "passed": true,
+      "value": 0.00008306031834307986,
+      "threshold": 1.0,
+      "detail": "B4 @5 MHz: 2.192e-17 (tol 1e-10); B4 @20 MHz: 1.111e-17 (tol 1e-10); B4 @80 MHz: 2.220e-16 (tol 1e-10); asymmetric @5 MHz: 1.136e-16 (tol 1e-10); asymmetric @20 MHz: 6.078e-18 (tol 1e-10); asymmetric @80 MHz: 0.000e+00 (tol 1e-10); split bar (0.7 + 2.3 mm, tied) vs unsplit Hoer-Love @1 Hz: 3.309e-12 (tol 4e-08)"
+    },
+    {
+      "name": "analytic_length_scaling",
+      "passed": true,
+      "value": 0.0,
+      "threshold": 1.0,
+      "detail": "A1: 0.000e+00 (tol 1e-09); A2: 0.000e+00 (tol 1e-09); A3: 0.000e+00 (tol 1e-09); A4: 0.000e+00 (tol 1e-09); B1: 0.000e+00 (tol 1e-09); B2: 0.000e+00 (tol 1e-09); B3: 0.000e+00 (tol 1e-09); B4: 0.000e+00 (tol 1e-09); C0: 0.000e+00 (tol 1e-09); C1: 0.000e+00 (tol 1e-09)"
+    },
+    {
+      "name": "regime_valid",
+      "passed": true,
+      "value": 0.4925721828659103,
+      "threshold": 1.0,
+      "detail": "A1:b LF skin deficit: 2.820e-05 (tol 1e-04); A2:b LF skin deficit: 1.365e-06 (tol 1e-04); A3:b1 LF skin deficit: 2.820e-05 (tol 1e-04); A3:b2 LF skin deficit: 2.820e-05 (tol 1e-04); A4:b1 LF skin deficit: 2.820e-05 (tol 1e-04); A4:b2 LF skin deficit: 5.710e-06 (tol 1e-04); C1 delta/t_plane @5 MHz: 9.851e-02 (tol 2e-01); C1 (delta/2h)^2 @5 MHz: 2.184e-04 (tol 1e-03); C1 delta/t_plane @20 MHz: 4.926e-02 (tol 2e-01); C1 (delta/2h)^2 @20 MHz: 5.459e-05 (tol 1e-03); C1 delta/t_plane @80 MHz: 2.463e-02 (tol 2e-01); C1 (delta/2h)^2 @80 MHz: 1.365e-05 (tol 1e-03)"
+    },
+    {
+      "name": "plane_truncation_bound",
+      "passed": true,
+      "value": 0.013755594455215528,
+      "threshold": 1.0,
+      "detail": "C1 2-D truncation estimate: 1.376e-05 (tol 1e-03); BEM vs infinite plane (W=400h): 2.377e-08 (tol 2e-04)"
+    },
+    {
+      "name": "refinement_rule_validated",
+      "passed": true,
+      "value": 0.0,
+      "threshold": 0.0,
+      "detail": "frozen synthetic generator (not the L2 data; note sec. 4.4): false convergences 0 (must be 0); power = accurate (true < conv_tol/10) same-sign sequences declared converged, noise-free min over p 1.000 (>= 0.9), per p {\"1\": 1.0, \"1.5\": 1.0, \"2\": 1.0}; at the noise floor 2 x solver_err_budget (2e-05) with values perturbed by +-solver_err_budget (noisy) or exact (floor), founder DoD distribution (gates, min 0.935 >= 0.9): {\"noisy p=1\": \"400/400 (1.000, lcb95 0.993)\", \"noisy p=1.5\": \"396/400 (0.990, lcb95 0.977)\", \"noisy p=2\": \"381/400 (0.953, lcb95 0.931)\", \"floor p=1\": \"400/400 (1.000, lcb95 0.993)\", \"floor p=1.5\": \"399/400 (0.998, lcb95 0.988)\", \"floor p=2\": \"374/400 (0.935, lcb95 0.911)\"}; same at-budget test on this self-check's broad generator (reported only, does not gate; note sec. 4.4): {\"noisy p=1\": \"272/400 (0.680, lcb95 0.639)\", \"noisy p=1.5\": \"225/400 (0.562, lcb95 0.520)\", \"noisy p=2\": \"110/400 (0.275, lcb95 0.238)\", \"floor p=1\": \"303/400 (0.757, lcb95 0.720)\", \"floor p=1.5\": \"264/400 (0.660, lcb95 0.619)\", \"floor p=2\": \"147/400 (0.367, lcb95 0.327)\"}; per-value coverage min over families 1.0000 (>= 0.95), pooled 1.0000 of 1284, one-sided 95 % Clopper-Pearson lower bound 0.9977 (generator-conditional; not a confidence level of any metric); clean geometric est/true in [1.250, 1.250] (within [1, 3]); per family (false conv, converged, coverage): {\"opp+0.5\": [0, 63, 1.0], \"opp+0.5+noise\": [0, 71, 1.0], \"opp+1\": [0, 42, 1.0], \"opp+1+noise\": [0, 54, 1.0], \"opp+2\": [0, 70, 1.0], \"opp+2+noise\": [0, 56, 1.0], \"same+0.5\": [0, 125, 1.0], \"same+0.5+noise\": [0, 99, 1.0], \"same+1\": [0, 137, 1.0], \"same+1+noise\": [0, 104, 1.0], \"three\": [0, 62, 1.0], \"three+noise\": [0, 65, 1.0], \"geometric\": [0, 174, 1.0], \"geometric+noise\": [0, 162, 1.0]}"
+    },
+    {
+      "name": "l2_converged",
+      "passed": true,
+      "value": 0.0003230678598222712,
+      "threshold": 0.01,
+      "detail": "{\"A1\": 1.1485108551145882e-08, \"A2\": 8.487352385972107e-09, \"A3\": 3.1240420959539015e-08, \"A4\": 3.9758647264818216e-08, \"B1\": 0.00010071674716425102, \"B2\": 0.00010512767031740804, \"B3\": 0.00019086249971866052, \"B4\": 8.434769126912365e-05, \"C0\": 0.00012623351440809436, \"C1\": 0.0003230678598222712}"
+    },
+    {
+      "name": "l2_solver_tolerance",
+      "passed": true,
+      "value": 0.43750625436254365,
+      "threshold": 1.0,
+      "detail": "meta['solver_tol'] / required (solver_err_budget / amplification): {\"A1\": 1.846900030601925e-05, \"A2\": 3.8676784467183975e-05, \"A3\": 0.00010871031970359573, \"A4\": 0.00012948730788922284, \"B1\": 0.0023140393768121973, \"B2\": 0.02906884617761605, \"B3\": 0.43750625436254365, \"B4\": 0.0002296263219576765, \"C0\": 3.632866215715307e-05, \"C1\": 0.07919728058855435}"
+    },
+    {
+      "name": "l2_one_mesh_per_solve",
+      "passed": true,
+      "value": 0.0,
+      "threshold": 0.0,
+      "detail": "violations of meta['mesh_hash'] (one equal hash per frequency, new per level) and meta['n_filaments'] (positive int, increasing): {\"A1\": 0, \"A2\": 0, \"A3\": 0, \"A4\": 0, \"B1\": 0, \"B2\": 0, \"B3\": 0, \"B4\": 0, \"C0\": 0, \"C1\": 0}"
+    },
+    {
+      "name": "l2_constant_refinement_ratio",
+      "passed": true,
+      "value": 0.9722222222222221,
+      "threshold": 1.0,
+      "detail": "worst of min ratio shortfall and ratio spread over refinement_ratio_spread, over every meta['mesh_params'] entry and step (<= 1 passes): {\"A1\": 0.9722222222222221, \"A2\": 0.9722222222222221, \"A3\": 0.9722222222222221, \"A4\": 0.9722222222222221, \"B1\": 0.9722222222222221, \"B2\": 0.9722222222222221, \"B3\": 0.9722222222222221, \"B4\": 0.9722222222222221, \"C0\": 0.9722222222222221, \"C1\": 0.9722222222222221}"
+    },
+    {
+      "name": "reciprocity",
+      "passed": true,
+      "value": 8.726932296636084e-16,
+      "threshold": 0.001,
+      "detail": "{\"A3\": 8.726932296636084e-16, \"A4\": 5.927415340364001e-16, \"B3\": 3.2723455432366213e-16}"
+    },
+    {
+      "name": "l_monotone_in_frequency",
+      "passed": true,
+      "value": -0.0017455423115915576,
+      "threshold": 0.001,
+      "detail": "{\"A1\": -0.0017455423115915576, \"A2\": -0.0025465083140640368, \"A3\": -0.0022088909733247062, \"A4\": -0.002185326318933249, \"B1\": -0.007552562420536031, \"B2\": -0.008838615757550974, \"B3\": -0.008962564660765043, \"B4\": -0.006497484457471059, \"C0\": -0.009599409099444185, \"C1\": -0.013727190635399313}"
+    },
+    {
+      "name": "length_scaling",
+      "passed": true,
+      "value": 9.547918011776346e-15,
+      "threshold": 0.01,
+      "detail": "{\"A1\": 3.3306690738754696e-15, \"B2\": 5.440092820663267e-15, \"C1\": 9.547918011776346e-15}"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "e001_rows.json",
+      "sha256": "ba8e14c83c0f684783e99b093a4220961d3a2666d35766ef5a56f761ed6fb94d",
+      "bytes": 43791
+    }
+  ],
+  "notes": ""
+}

@@ -4,7 +4,7 @@ title: 'L2 layout path: Layout -> exact-kernel loop_inductance with a precorrect
   (l2_layout.py)'
 type: implement
 agent: builder
-status: merge
+status: done
 depends_on:
 - T0070
 description: 'Restores T0069 plan node n4a, which the open-task-limit bug dropped; the founder asked for

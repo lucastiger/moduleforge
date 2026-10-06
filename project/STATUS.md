@@ -1,8 +1,7 @@
 # ModuleForge status
-_generated 2026-10-06T05:43:01+00:00 from repository state — do not edit_
+_generated 2026-10-06T05:43:10+00:00 from repository state — do not edit_
 
-## Founder inbox (2 open)
-- **I0035** [protected_change] T0074: merge needs founder approval
+## Founder inbox (1 open)
 - **I0037** [decision] E001 needs burst compute (~2 CPU-h)
 
 ## Objectives
@@ -12,14 +11,11 @@ _generated 2026-10-06T05:43:01+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $206.63/$245 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 56, failed: 3, needs_founder: 2, todo: 7
+cancelled: 19, done: 57, failed: 3, needs_founder: 1, todo: 7
 
 - T0072 `needs_founder` none/experiment: Run E001: L2 reference vs closed-form partial inductances (attempt 0)
-- T0074 `needs_founder` builder/implement: L2 layout path: Layout -> exact-kernel loop_inductance with a precorrected-FFT wire-to-grid operator (l2_layout.py) (attempt 2)
 
 ## Recent events
-- 2026-10-06T01:22:57+00:00 run_finished {"run": "T0084-critic-20261005T174900-08d8", "status": "completed", "cost": 2.169726, "subtype": "success", "report": "structured_output"}
-- 2026-10-06T01:23:00+00:00 inbox_opened {"id": "I0035", "kind": "protected_change", "subject": "T0074: merge needs founder approval"}
 - 2026-10-06T02:18:11+00:00 run_finished {"run": "T0071-builder-20261005T174900-02fe", "status": "completed", "cost": 5.4818458, "subtype": "success", "report": "structured_output"}
 - 2026-10-06T02:29:26+00:00 verified {"task": "T0071"}
 - 2026-10-06T02:29:28+00:00 run_started {"run": "T0085-critic-20261005T192928-7ef3", "task": "T0085", "role": "critic", "session": "a1b9d819-4f8e-435e-bd24-e0b2964e3fac"}
@@ -33,3 +29,5 @@ cancelled: 19, done: 56, failed: 3, needs_founder: 2, todo: 7
 - 2026-10-06T05:25:50+00:00 merged {"task": "T0071"}
 - 2026-10-06T05:25:50+00:00 inbox_opened {"id": "I0037", "kind": "decision", "subject": "E001 needs burst compute (~2 CPU-h)"}
 - 2026-10-06T05:25:50+00:00 burst_requested {"task": "T0072", "experiment": "E001", "cpu_hours": 2.0}
+- 2026-10-06T05:43:07+00:00 inbox_resolved {"id": "I0035", "status": "approved", "note": "Founder: approve (follow the founder session's recommendation). DoD verified; reviews T0083 and T0084 accept_with
+- 2026-10-06T05:43:09+00:00 merged {"task": "T0074"}

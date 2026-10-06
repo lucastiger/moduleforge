@@ -1,0 +1,15 @@
+id: I0035
+kind: protected_change
+subject: 'T0074: merge needs founder approval'
+summary: 'L2 layout path: Layout -> exact-kernel loop_inductance with a precorrected-FFT wire-to-grid
+  operator (l2_layout.py)
+
+  Risk high; 2 files. PR: None'
+refs:
+- T0074
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-06T01:23:00+00:00'
+resolved_at: null

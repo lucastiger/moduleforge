@@ -1,0 +1,32 @@
+{
+ "case": "C1",
+ "freqs": [
+  5000000.0,
+  20000000.0,
+  80000000.0
+ ],
+ "cmp_freqs": [
+  5000000.0,
+  20000000.0,
+  80000000.0
+ ],
+ "stopped_at_level": 4,
+ "refinement_max": 5,
+ "conv_tol": 0.01,
+ "rule_rem_rel": {
+  "(0, 0, 0)": 0.00025651065692875363,
+  "(1, 0, 0)": 0.0002670279703132839,
+  "(2, 0, 0)": 0.0003230678598222712
+ },
+ "converged": true,
+ "tol_ratio": 0.07919728058855435,
+ "ratio_violation": 0.9722222222222221,
+ "mesh_violations": 0,
+ "max_rel_err_at_stop": 3.112330880091298e-05,
+ "total_s": 1028.4162549972534,
+ "final_level_s": 661.1354224681854,
+ "peak_rss_gb_process": 19.625518798828125,
+ "host": "mf-burst-cmd-1791264669.us-east1-b.c.moduleforge-burst.internal",
+ "platform": "Linux-7.0.0-1011-gcp-x86_64-with-glibc2.39",
+ "commit": "b4f59812ab6948b5523c9346c83f212a8cee759d"
+}

@@ -63,9 +63,22 @@ WORK="$(mktemp -d)"
 git bundle create -q "$WORK/mf.bundle" "$REF"
 SPOT=()
 [ "${MF_GCP_SPOT:-0}" = 1 ] && SPOT=(--provisioning-model=SPOT --instance-termination-action=DELETE)
-gcloud compute instances create "$NAME" --zone "$ZONE" --machine-type "$TYPE" \
-  --image-family ubuntu-2404-lts-amd64 --image-project ubuntu-os-cloud \
-  --boot-disk-size 200GB --boot-disk-type pd-balanced ${SPOT[@]+"${SPOT[@]}"} --quiet > /dev/null
+# A zone can run out of a machine type (ZONE_RESOURCE_POOL_EXHAUSTED for n2-highmem-32 in us-central1-a,
+# 2026-10-06). The CPU quota is regional, so try the region's other zones before giving up; any other error stops.
+ZONES="$ZONE $(gcloud compute zones list --filter="region:$REGION AND status:UP" --format='value(name)' | grep -vx "$ZONE" | tr '\n' ' ')"
+CREATED=""
+for Z in $ZONES; do
+  if ERR="$(gcloud compute instances create "$NAME" --zone "$Z" --machine-type "$TYPE" \
+      --image-family ubuntu-2404-lts-amd64 --image-project ubuntu-os-cloud \
+      --boot-disk-size 200GB --boot-disk-type pd-balanced ${SPOT[@]+"${SPOT[@]}"} --quiet 2>&1 > /dev/null)"; then
+    ZONE="$Z"; CREATED=1; break
+  fi
+  if echo "$ERR" | grep -qE "ZONE_RESOURCE_POOL_EXHAUSTED|resource_availability|does not have enough resources"; then
+    echo "$TYPE is unavailable in $Z; trying the next zone" >&2; continue
+  fi
+  echo "$ERR" >&2; exit 1
+done
+[ -n "$CREATED" ] || { echo "$TYPE is unavailable in every zone of $REGION: retry later or pass another type/zone" >&2; exit 1; }
 trap 'echo "deleting $NAME"; gcloud compute instances delete "$NAME" --zone "$ZONE" --quiet > /dev/null 2>&1 || echo "DELETE FAILED: remove $NAME by hand" >&2' EXIT
 echo "$NAME ($TYPE, $ZONE)"
 for _ in $(seq 1 60); do

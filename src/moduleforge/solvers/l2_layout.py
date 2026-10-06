@@ -1189,7 +1189,7 @@ def solve_system(sys_: LayoutSystem, port_nodes, freqs, tol: float = GMRES_TOL, 
             X = np.zeros((n, npt), complex)
             it = 0
             for j in range(npt):
-                X[:, j], k = core.block_gmres(apply_M, pre, Cr, D[:, j], n, tol)
+                X[:, j], k, info = core.block_gmres(apply_M, pre, Cr, D[:, j], n, tol)
                 it += k
             iters.append(it)
         Xt, MX, Z, resid = core.a_posteriori(apply_M, Cr, X, D, rmin)

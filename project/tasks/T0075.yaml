@@ -4,7 +4,7 @@ title: 'Layout L2 at E002 scale: measured CPU time, memory and refinement conver
   gate)'
 type: implement
 agent: builder
-status: todo
+status: running
 depends_on:
 - T0074
 description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; restoration requested
@@ -51,7 +51,46 @@ description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; 
 
   If the gates cannot be met, stop and report blocked with the measurements; the founder then decides
   (multi-fidelity search or more compute). Do not coarsen the model until the check passes. Never use
-  a sealed seed.'
+  a sealed seed.
+
+
+  Founder amendment (2026-10-06), from reviews T0083 and T0084 of T0074 (project/reviews/T0074/T0083.json,
+  T0084.json). It supersedes the refinement-0 gates above.
+
+  (1) Refinement 0 cannot be E002''s level. Its top-Cu thickness layers (3.3 and 146.7 um, graded to 100
+  MHz) do not resolve the 15-30 um skin depth at 5-20 MHz, and its L is 3-14 % off. Pick the level E002
+  will use, k_star: the lowest refinement whose thickness layers resolve the skin depth at the comparison
+  frequency (20 MHz). Record k_star and the layer thicknesses in cost.json. The gates apply at k_star:
+
+  - cost: <= 2400 CPU-s and <= 12 GB per solve at k_star;
+
+  - convergence: |L(k_star+1) - L(k_star)| / L(k_star+1) < 1 % at 20 MHz on every measured layout, and
+  the change from k_star-1 to k_star must be larger in magnitude and of the same sign, i.e. contracting
+  with no turning point. A change below 1e-4 counts as converged.
+
+  Report R''s convergence separately; it is not gated. --quick now runs seed 7 at 2 dies per switch at
+  k_star-1, k_star and k_star+1, and at 6 dies at k_star. Full mode adds the dev seeds at k_star and k_star+1
+  wherever they fit; say where they did not.
+
+  (2) Correctness fixes in l2_layout.py before measuring; E002''s reference values depend on them. Add
+  a test for each.
+
+  - Die shorts use DieShort.net, so they connect only that net''s cells.
+
+  - segment_mutual''s near-parallel band around PARALLEL_SIN gets an accurate evaluation, or a stated
+  bound counted in solver_tol. The general form cancels just above sin = 1e-6; the parallel substitution
+  has an O(sin) error below it.
+
+  - _nearest_cell handles a trace narrower than one cell.
+
+  - WireGridPFFT does not raise for wire nodes near the grid edge when no far branch exists.
+
+  (3) Add a layout-level test with an independent reference, so a mapping error of more than a few percent
+  (port cells, landing cells, die shorts) fails. Examples: a two-trace hairpin layout whose loop L is
+  known to <= 1 %, or the equivalent conductor model solved through l2.solve.
+
+  (4) solver_tol is relative to max|Z_ii|. Also report it relative to L = Im Z / omega at each frequency,
+  so it can be read as an L tolerance.'
 context_files:
 - src/moduleforge/solvers/l2_layout.py
 - src/moduleforge/solvers/l2_core.py
@@ -62,6 +101,8 @@ context_files:
 - src/moduleforge/generate/halfbridge.py
 - benchmarks/l1_timing.py
 - .mfos/policy.toml
+- project/reviews/T0074/T0083.json
+- project/reviews/T0074/T0084.json
 deliverables:
 - benchmarks/l2_layout_cost.py
 - research/notes/o001-l2-layout-cost.md
@@ -75,12 +116,16 @@ definition_of_done:
 - cmd: rm -rf /tmp/l2cost && uv run python benchmarks/l2_layout_cost.py --quick --out /tmp/l2cost
   exists: null
   timeout_s: 5400
-- cmd: uv run python -c "import json, math; r=json.load(open('/tmp/l2cost/cost.json')); rows=r['solves'];
-    assert rows and {x['dies_per_switch'] for x in rows} >= {2, 6}, rows; assert all(math.isfinite(x['L_H'])
-    and 1e-9 < x['L_H'] < 1e-7 for x in rows), rows; bad=[x for x in rows if x['refinement'] == 0 and
-    (x['cpu_s'] > 2400 or x['peak_rss_gb'] > 12)]; assert not bad, bad; conv=r['convergence']; assert
-    conv and all(abs(c['rel_change']) < 0.01 for c in conv), conv; print([(x['dies_per_switch'], x['refinement'],
-    round(x['cpu_s']), x['peak_rss_gb']) for x in rows], conv)"
+- cmd: 'uv run python -c "import json, math; r=json.load(open(''/tmp/l2cost/cost.json'')); rows=r[''solves''];
+    k=r[''k_star'']; assert isinstance(k, int) and k >= 0, k; assert rows and {x[''dies_per_switch'']
+    for x in rows if x[''refinement''] == k} >= {2, 6}, rows; assert all(math.isfinite(x[''L_H'']) and
+    1e-9 < x[''L_H''] < 1e-7 for x in rows), rows; assert any(x[''refinement''] == k + 1 for x in rows),
+    ''no solve at k_star+1''; bad=[x for x in rows if x[''refinement''] == k and (x[''cpu_s''] > 2400
+    or x[''peak_rss_gb''] > 12)]; assert not bad, bad; conv=r[''convergence'']; assert conv, conv; ok=lambda
+    c: abs(c[''rel_change'']) < 1e-4 or (abs(c[''rel_change'']) < 0.01 and (c.get(''prev_change'') is
+    None or (abs(c[''rel_change'']) < abs(c[''prev_change'']) and c[''rel_change''] * c[''prev_change'']
+    > 0))); assert all(ok(c) for c in conv), conv; print(''k_star'', k, [(x[''dies_per_switch''], x[''refinement''],
+    round(x[''cpu_s'']), x[''peak_rss_gb'']) for x in rows], conv)"'
   exists: null
   timeout_s: 120
 - cmd: null
@@ -95,13 +140,14 @@ definition_of_done:
 experiment: null
 risk: high
 model: null
-budget_usd: 6.0
+budget_usd: 8.0
 max_turns: 100
-attempts: 0
+attempts: 1
 max_attempts: 3
-branch: null
+branch: task/T0075-layout-l2-at-e002-scale-measured-cpu-tim
 pr: null
-runs: []
+runs:
+- T0075-builder-20261005T224405-ddee
 created_by: planner:T0073
 created_at: '2026-10-05T00:31:24+00:00'
 protected_approved: false

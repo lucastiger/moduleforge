@@ -629,3 +629,4 @@
 {"ts": "2026-10-06T15:59:05+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 342, "runs_extended": 0}
 {"ts": "2026-10-06T16:04:50+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 345, "runs_extended": 0}
 {"ts": "2026-10-06T17:51:49+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 4785, "runs_extended": 0}
+{"ts": "2026-10-06T18:09:17+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0038", "kind": "budget_increase", "subject": "[O001] O001: +$40 for T0075's final attempt, T0076 (E002/E003 design) and E002"}

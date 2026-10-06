@@ -1,0 +1,16 @@
+id: I0038
+kind: budget_increase
+subject: '[O001] O001: +$40 for T0075''s final attempt, T0076 (E002/E003 design) and E002'
+summary: 'Founder decision 2026-10-06 in the founder session: option 1 for T0075 (partial-cell trace weighting,
+  last attempt) plus +$40, bringing the total O001 increase to the originally approved $120. Cap 244.95
+  -> 284.95.'
+refs:
+- O001
+options:
+- approve
+- reject
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-06T18:09:17+00:00'
+resolved_at: null

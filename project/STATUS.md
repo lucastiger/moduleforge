@@ -1,8 +1,8 @@
 # ModuleForge status
-_generated 2026-10-06T17:58:28+00:00 from repository state — do not edit_
+_generated 2026-10-06T18:09:18+00:00 from repository state — do not edit_
 
-## Founder inbox (0 open)
-- nothing needs you
+## Founder inbox (1 open)
+- **I0038** [budget_increase] [O001] O001: +$40 for T0075's final attempt, T0076 (E002/E003 design) and E002
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -15,7 +15,6 @@ cancelled: 19, done: 58, failed: 3, todo: 7
 
 
 ## Recent events
-- 2026-10-06T05:43:07+00:00 inbox_resolved {"id": "I0035", "status": "approved", "note": "Founder: approve (follow the founder session's recommendation). DoD verified; reviews T0083 and T0084 accept_with
 - 2026-10-06T05:43:09+00:00 merged {"task": "T0074"}
 - 2026-10-06T05:44:05+00:00 run_started {"run": "T0075-builder-20261005T224405-ddee", "task": "T0075", "role": "builder", "session": "9bad8edb-89d8-4a77-8671-abd2ca2157eb"}
 - 2026-10-06T08:01:29+00:00 run_finished {"run": "T0075-builder-20261005T224405-ddee", "status": "error", "cost": 5.505882400000002, "subtype": "error_max_turns", "report": "missing"}
@@ -30,3 +29,4 @@ cancelled: 19, done: 58, failed: 3, todo: 7
 - 2026-10-06T15:59:05+00:00 sleep_detected {"gap_s": 342, "runs_extended": 0}
 - 2026-10-06T16:04:50+00:00 sleep_detected {"gap_s": 345, "runs_extended": 0}
 - 2026-10-06T17:51:49+00:00 sleep_detected {"gap_s": 4785, "runs_extended": 0}
+- 2026-10-06T18:09:17+00:00 inbox_opened {"id": "I0038", "kind": "budget_increase", "subject": "[O001] O001: +$40 for T0075's final attempt, T0076 (E002/E003 design) and E002"}

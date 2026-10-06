@@ -4,7 +4,7 @@ title: 'Layout L2 at E002 scale: measured CPU time, memory and refinement conver
   gate)'
 type: implement
 agent: builder
-status: running
+status: todo
 depends_on:
 - T0074
 description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; restoration requested
@@ -164,3 +164,185 @@ history:
   summary: agent ended with error_max_turns
   failure_output: ''
   at: '2026-10-06T08:01:29+00:00'
+- attempt: 2
+  outcome: agent_finished
+  summary: 'Blocked: E002''s level k_star = 3 passes the cost gate but fails the convergence gate. From
+    refinement 3 to 4, L changes by −2.28 %; the 2→3 step was −0.54 %, so the sequence is not contracting
+    (the gate needs < 1 % and a shrinking step). Per the packet, the founder decides what happens next.
+    I did not coarsen anything.
+
+
+    Measurements (seed 7, 20 MHz, one fresh process per solve, 10-core 16 GB laptop shared with other
+    jobs):
+
+
+    | dies/switch | ref | L (nH) | CPU-s | peak RSS (GB) | GMRES iterations |
+
+    |---|---|---|---|---|---|
+
+    | 2 | 0 | 11.616 | 26 | 0.74 | 126 |
+
+    | 2 | 1 | 11.131 | 124 | 1.3 | 156 |
+
+    | 2 | 2 | 11.070 | 400 | 1.9 | 188 |
+
+    | 2 | 3 (k*) | 11.011 | 627 | 5.0 | 292 |
+
+    | 2 | 4 | 10.766 | 2076 | 9.6 | 399 |
+
+    | 6 | 3 (k*) | 7.823 | 820 | 5.7 | 269 |
+
+
+    - solver_tol is about 2e-5 throughout, '
+  report:
+    status: blocked
+    summary: "Blocked: E002's level k_star = 3 passes the cost gate but fails the convergence gate. From\
+      \ refinement 3 to 4, L changes by −2.28 %; the 2→3 step was −0.54 %, so the sequence is not contracting\
+      \ (the gate needs < 1 % and a shrinking step). Per the packet, the founder decides what happens\
+      \ next. I did not coarsen anything.\n\nMeasurements (seed 7, 20 MHz, one fresh process per solve,\
+      \ 10-core 16 GB laptop shared with other jobs):\n\n| dies/switch | ref | L (nH) | CPU-s | peak RSS\
+      \ (GB) | GMRES iterations |\n|---|---|---|---|---|---|\n| 2 | 0 | 11.616 | 26 | 0.74 | 126 |\n|\
+      \ 2 | 1 | 11.131 | 124 | 1.3 | 156 |\n| 2 | 2 | 11.070 | 400 | 1.9 | 188 |\n| 2 | 3 (k*) | 11.011\
+      \ | 627 | 5.0 | 292 |\n| 2 | 4 | 10.766 | 2076 | 9.6 | 399 |\n| 6 | 3 (k*) | 7.823 | 820 | 5.7 |\
+      \ 269 |\n\n- solver_tol is about 2e-5 throughout, and the same relative to L.\n- R does not converge:\
+      \ 110 → 65 → 37 → 36 → 39 mΩ. It is not gated.\n\n**How k_star was chosen.** I cut the 300 µm top-Cu\
+      \ slab into each level's layers and compared the resulting 1-D internal impedance at 20 MHz with\
+      \ the exact slab value. The two functions (`layered_surface_impedance`, `slab_surface_impedance`)\
+      \ are unit-tested against the DC and thick-skin limits. Error by level: 161 %, 8.3 %, 6.7 %, 1.6\
+      \ %, 1.5 %. Refinement 3 is the first within 2 %. It is also the first where every layer in the\
+      \ first skin depth is under 2δ thick.\n\n**Likely cause of the failure.** This is an inference from\
+      \ one check, not a proof. Traces are meshed as the cells whose centre lies inside a trace rectangle,\
+      \ and those areas jump around between levels. DC+ area error is 0, +5.8 %, 0, −4.2 %, 0 % at refinements\
+      \ 0–4. Trace edges appear to sit on a 0.25 mm grid, which the 0.7 and 0.35 mm cells don't align\
+      \ with. The −2.28 % step has the sign wider traces would give. The options I list for you all change\
+      \ the model or the refinement ladder, so I didn't implement any:\n1. Cell sizes that divide 0.25\
+      \ mm.\n2. Partial-cell weighting of trace edge cells.\n3. Snapping the grid to each layout's trace\
+      \ edges.\n\n**What changed in `l2_layout.py`:**\n- **Speed-up:** the exact near-field wire-to-grid\
+      \ integrals now evaluate each shared box corner once instead of 8 times per box, summed in the original\
+      \ order, so values are bit-identical. At refinement 3 (2 dies) the wire-grid build fell from 489\
+      \ to 109 s and the total from 1294 to 627 CPU-s.\n- **Correctness fixes, each with a test** (most\
+      \ came from attempt 1; I kept them):\n  - Die shorts connect only their own net (`DieShort.bottom_net`;\
+      \ the class has no `.net` field).\n  - `segment_mutual` evaluates the near-parallel band accurately;\
+      \ a 1e-7 bound for that band is counted in solver_tol.\n  - A trace narrower than one cell no longer\
+      \ crashes.\n  - `WireGridPFFT` raises near the grid edge only when far branches exist.\n- **Layout-level\
+      \ independent test** (item 3): a strip layout's loop L matches a hand-summed Hoer-Love + Neumann\
+      \ reference within 1.5 %.\n- **solver_tol relative to L** (item 4): reported as `solver_tol_rel_L`\
+      \ in meta.\n\n**Benchmark** (`benchmarks/l2_layout_cost.py`): `--quick` and full mode both work.\
+      \ cost.json records k_star, the layer thicknesses of every level, all solves, a `not_fitted` list,\
+      \ and L and R convergence. Full mode, the dev seeds across families at k_star and k_star+1, was\
+      \ not run, so convergence is shown on one layout only. The quick run took about 55 min wall.\n\n\
+      **The note** is at `docs/notes/o001-l2-layout-cost.md`, not `research/notes/`. The write-scope hook\
+      \ refused the packet's path. It has the tables, cost per layout versus dies and refinement, GMRES\
+      \ growth, and projected E002 cost: about 0.20 n + 0.69 m CPU-h for n layouts plus m layouts checked\
+      \ one level up, i.e. 19–32 CPU-h for n = 60–90 with m = 10–20."
+    checks_run:
+    - cmd: uv run pytest -q -x tests/unit/solvers  (attempt-1 state, before my changes)
+      exit_code: 0
+    - cmd: uv run python benchmarks/l2_layout_cost.py --child 7 2 {0,1,2,3} /tmp/t75m/...  (per-refinement
+        measurement runs, old near-field code)
+      exit_code: 0
+    - cmd: uv run pytest -q tests/unit/solvers/test_l2_layout.py -k slab_surface
+      exit_code: 0
+    - cmd: 'uv run pytest -q tests/unit/solvers/test_l2_layout.py -k "corner_lattice or pfft or dense_lu"  (first
+        lattice version: pfft-vs-dense off by 2e-13, fixed by bit-identical corner order, tolerance untouched)'
+      exit_code: 1
+    - cmd: uv run pytest -q tests/unit/solvers/test_l2_layout.py -k "corner_lattice or pfft_vs_dense"
+      exit_code: 0
+    - cmd: rm -rf /tmp/l2cost && uv run python benchmarks/l2_layout_cost.py --quick --out /tmp/l2cost
+      exit_code: 1
+    - cmd: uv run python -c "<DoD cost.json assertions>"  (fails only on the convergence assertion)
+      exit_code: 1
+    - cmd: test -f research/notes/o001-l2-layout-cost.md  (write blocked by scope hook; note is at docs/notes/o001-l2-layout-cost.md)
+      exit_code: 1
+    - cmd: uv run pytest -q tests/unit/solvers  (111 passed; run before the final docstring/docs-only
+        commit)
+      exit_code: 0
+    - cmd: uv run ruff check benchmarks/l2_layout_cost.py src/moduleforge/solvers tests/unit/solvers
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    files_changed:
+    - src/moduleforge/solvers/l2_layout.py
+    - benchmarks/l2_layout_cost.py
+    - tests/unit/solvers/test_l2_layout.py
+    - docs/notes/o001-l2-layout-cost.md
+    concerns:
+    - 'Convergence gate not met at k_star = 3 on seed 7 / 2 dies: L goes 11.070 → 11.011 → 10.766 nH at
+      refinements 2, 3, 4 (−0.54 %, then −2.28 %). The quick DoD command therefore exits 1, and so does
+      the cost.json convergence assertion. Founder decision needed: multi-fidelity search, more compute,
+      or a mesh change (ladder aligned to the 0.25 mm design grid, partial-cell trace weighting, or a
+      per-layout snapped grid).'
+    - 'Suspected cause, an inference from one check: the cell-centre trace mask. Trace-area errors are
+      non-monotone across levels (DC+ 0, +5.8, 0, −4.2, 0 % at refinements 0–4), and the sign of the 3→4
+      step matches wider traces. Not separately proven, because wire filaments, cell size and layers also
+      change between levels.'
+    - 'Packet conflict: research/notes/o001-l2-layout-cost.md is outside the builder write scope, and
+      the hook refused it. The note is at docs/notes/o001-l2-layout-cost.md and needs moving by a role
+      allowed to write research/notes.'
+    - k_star's definition (top-Cu 1-D surface impedance within 2 % at 20 MHz) is my operationalisation
+      of 'resolve the skin depth'. The backside-Cu layering at k_star is still about 8 % off in surface
+      impedance, and R is far from converged; do not use R_ohm as a reference value.
+    - Full mode (dev seeds 3, 11, 5 across families at k_star and k_star+1) was not run within budget.
+      Convergence and cost are measured on seed 7 only, and the refinement-4 cost for 6 dies is an estimate
+      (about 2500 CPU-s, 11-12 GB, near this 16 GB host's limit).
+    - Timings come from a shared laptop with concurrent jobs. CPU-s should be robust; wall times and RSS
+      are noisy.
+    - Most correctness fixes and their tests (die-short net, near-parallel band, sub-cell trace, grid-edge
+      stencil, the layout-level oracle, solver_tol_rel_L, bilinear wire-foot contacts) came from attempt
+      1's WIP commit. I reviewed and kept them; the bilinear contacts are a modelling change beyond the
+      packet's list.
+- attempt: 2
+  outcome: dod_failed
+  summary: agent reported blocked
+  failure_output: 'Blocked: E002''s level k_star = 3 passes the cost gate but fails the convergence gate.
+    From refinement 3 to 4, L changes by −2.28 %; the 2→3 step was −0.54 %, so the sequence is not contracting
+    (the gate needs < 1 % and a shrinking step). Per the packet, the founder decides what happens next.
+    I did not coarsen anything.
+
+
+    Measurements (seed 7, 20 MHz, one fresh process per solve, 10-core 16 GB laptop shared with other
+    jobs):
+
+
+    | dies/switch | ref | L (nH) | CPU-s | peak RSS (GB) | GMRES iterations |
+
+    |---|---|---|---|---|---|
+
+    | 2 | 0 | 11.616 | 26 | 0.74 | 126 |
+
+    | 2 | 1 | 11.131 | 124 | 1.3 | 156 |
+
+    | 2 | 2 | 11.070 | 400 | 1.9 | 188 |
+
+    | 2 | 3 (k*) | 11.011 | 627 | 5.0 | 292 |
+
+    | 2 | 4 | 10.766 | 2076 | 9.6 | 399 |
+
+    | 6 | 3 (k*) | 7.823 | 820 | 5.7 | 269 |
+
+
+    - solver_tol is about 2e-5 throughout, and the same relative to L.
+
+    - R does not converge: 110 → 65 → 37 → 36 → 39 mΩ. It is not gated.
+
+
+    **How k_star was chosen.** I cut the 300 µm top-Cu slab into each level''s layers and compared the
+    resulting 1-D internal impedance at 20 MHz with the exact slab value. The two functions (`layered_surface_impedance`,
+    `slab_surface_impedance`) are unit-tested against the DC and thick-skin limits. Error by level: 161
+    %, 8.3 %, 6.7 %, 1.6 %, 1.5 %. Refinement 3 is the first within 2 %. It is also the first where every
+    layer in the first skin depth is under 2δ thick.
+
+
+    **Likely cause of the failure.** This is an inference from one check, not a proof. Traces are meshed
+    as the cells whose centre lies inside a trace rectangle, and those areas jump around between levels.
+    DC+ area error is 0, +5.8 %, 0, −4.2 %, 0 % at refinements 0–4. Trace edges appear to sit on a 0.25
+    mm grid, which the 0.7 and 0.35 mm cells don''t align with. The −2.28 % step has the sign wider traces
+    would give. The options I list for you all change the model or the refinement ladder, so I didn''t
+    implement any:
+
+    1. Cell sizes that divide 0.25 mm.
+
+    2. Partial-cell weighting of trace edge cells.
+
+    3. Snapping the grid to each layout'''
+  at: '2026-10-06T11:00:14+00:00'

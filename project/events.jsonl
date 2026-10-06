@@ -621,3 +621,5 @@
 {"ts": "2026-10-06T08:01:29+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0075", "signal": "agent_error", "action": "repair"}
 {"ts": "2026-10-06T09:13:50+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0075-builder-20261006T021350-a8d0", "task": "T0075", "role": "builder", "session": "a409d55f-8c1d-4249-86f1-4e79e3de4eb2"}
 {"ts": "2026-10-06T09:45:19+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 29502}
+{"ts": "2026-10-06T11:00:14+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0075-builder-20261006T021350-a8d0", "status": "completed", "cost": 6.6986642000000005, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-10-06T11:00:14+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0075", "signal": "dod_failed", "action": "repair"}

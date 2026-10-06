@@ -1,0 +1,53 @@
+{
+  "verdict": "accept",
+  "findings": [
+    {
+      "severity": "minor",
+      "title": "A port shorted by ties returns Z = 0 with a NaN solver_tol (only a RuntimeWarning)",
+      "detail": "If ties merge a port's plus and minus nodes (for example a0 tied to b0 and b0 tied to a1, with the port running a0 to a1), the zero-impedance port makes zref = max|diag Z| = 0. The division in solve_system then gives NaN for solver_tol, with no ValueError. No E001 case does this, but a reference solver should refuse the input or report a finite bound.",
+      "evidence": "With warnings promoted to errors, l2.solve([a,b],[],[Port('p',T('a',0),T('a',1))],[1e6],1,ties=[Tie(T('a',0),T('b',0)),Tie(T('b',0),T('a',1))]) raised 'RuntimeWarning invalid value encountered in scalar divide'.",
+      "suggested_check": "Raise ValueError in merge_nodes when a port's merged plus and minus nodes are the same node."
+    },
+    {
+      "severity": "note",
+      "title": "Bar fil_w / fil_h in mesh_params are nominal mean cell sizes, not the real graded cells",
+      "detail": "For bars, mesh_params reports fil_w = width/BAR_NW[level] and fil_h = thickness/BAR_NH[level]. These refine at exactly the count ratio by construction. The graded cells really differ (surface about \u03b4/2, the middle much coarser). Only surf: is a measured size. This is acceptable under the stated geometric-similarity argument (one fixed map sampled at h = 1/n). It does mean the constant-ratio check (0.972 for every case) is mostly met by construction rather than by measurement.",
+      "evidence": "build_bar_mesh / Meshes.mesh_params in l2_core.py; the DoD ratio script gives a worst violation of 0.9722 for all 10 cases at every stopping level.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "The mesh depends on the highest frequency in the call, so the same LF value differs slightly between calls",
+      "detail": "At 100 Hz, a bar solved alone (uniform mesh) and the same bar solved together with 20 MHz (graded mesh) differ by about 4\u20137e-8 relative in Z. This matches the documented 'one mesh per call graded to max(freqs)' contract. It is far below every E001 tolerance and not a defect, but cross-call comparisons should use the same frequency set.",
+      "evidence": "Tie and parallel identities hold to about 1e-15 at 20 MHz (same mesh) but only to 4\u20137e-8 at 100 Hz, where the reference 3-port included 20 MHz.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "Bar HF resistance is not converged at coarse levels (not compared by E001)",
+      "detail": "For the A4 geometry at 80 MHz, R11 changes by 5 % from level 1 to level 2 (7.41 to 7.81 m\u03a9), while L11 changes by only 1.4e-4. E001 compares inductance only (bars at LF, HF solves only for monotonicity), so this does not affect the claim. HF bar resistance from levels 1\u20132 should not be used as reference values.",
+      "evidence": "A frequency sweep from 100 Hz to 80 MHz at levels 1 and 2 (output above).",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran `uv run pytest -q tests/unit/solvers`: 64 passed in 182 s.",
+    "Ran `uv run ruff check src/moduleforge/solvers tests/unit/solvers`: all checks passed.",
+    "Ran the DoD refinement-ratio and one-mesh script (inline, same code). Worst ratio violation was 0.9722 for all 10 cases A1\u2013C1 at every stopping level, with 0 mesh violations. n_filaments rises at every level (A3 goes 1372 to 37044, C1 goes 83k to 2.27M).",
+    "Ran `uv run python experiments/runners/e001_reference.py --smoke`: exit 0, with result.json written about 1252 s (about 21 min) after launch on a machine also running my checks. The DoD assertion passed: status complete, all 15 sanity checks passed, max_rel_err_vs_analytic = 8.39e-5 (\u2264 0.02). Per row: A1 L11 1e-7, A3 L11 5e-7, A3 M12 <1e-7, B2 5.1e-5, B3 L11 8.4e-5, B3 M12 3.0e-5, B4 (tied) 5.3e-5, C0 2.8e-5, C1 6.5e-5. Reciprocity was 9e-15 and length scaling 7e-16.",
+    "Checked bar DC self-inductance against an integral the solver does not use: the exact equal-filament Neumann formula 2K4[l asinh(l/d) - sqrt(l\u00b2+d\u00b2) + d] reduced to a 2-D triangle-weighted integral over the cross-section and evaluated by scipy dblquad (rel 1e-11). For A1 (20\u00d73\u00d70.3 mm) and A2 (10\u00d71\u00d71 mm), l2.solve at 1 Hz agrees to 4e-12\u20131.2e-11 at levels 1 and 2. At 100 Hz the deviation is 1.2e-7, consistent with f\u00b2 skin scaling.",
+    "Checked individual thin graded cells of hl_block (A1 at level 3, graded to 80 MHz, surface cell 6.5 \u00b5m against a 1.67 mm segment, aspect ratio about 260). Seven separated cell-pair mutuals matched a 24\u00d724\u00d724\u00d724 tensor Gauss of the filament integral to 0\u20132e-15. Three cell self-terms matched the dblquad reduction to \u22642.2e-16. The 'exact' claim holds.",
+    "Checked ties and ports against closed-form network algebra applied to the solver's own 3-port Z (level 1, 100 Hz and 20 MHz). The 3-way parallel tie matched 1/(1\u1d40Z\u207b\u00b91) to 7e-16 at 20 MHz. A tie at one end only matched Z11 to 2e-15. The antiparallel tie matched (Z11Z22 - Z12\u00b2)/(Z11+Z22+2Z12) to 7e-16. The residual 4\u20137e-8 at 100 Hz comes from mesh differences between calls.",
+    "Checked a bar defined end to start (start x > end x): Z12 flips sign exactly (ratio -1) and Z22 is unchanged.",
+    "Ran a passivity and monotonicity sweep on A4 geometry over 11 frequencies from 100 Hz to 80 MHz at levels 1 and 2. L11 decreases and R11 increases at every step. The minimum eigenvalue of sym(Re Z) is greater than 0 and that of Im Z/\u03c9 is greater than 0 at every frequency.",
+    "Compared the GMRES and dense LU paths for three bars with ties, a reversed bar and a port across two tied bars. They agree to 1.7e-15 and 3.8e-15, inside the reported solver_tol of 1.08e-12. gmres_info is [0,0] and reciprocity 3e-16.",
+    "Read the l2_dd.py imports: only fractions and numpy, no network access."
+  ],
+  "caveats": [
+    "The DoD grep for network calls (`git clone|urlopen|urlretrieve|wget`) could not be run because shell permissions blocked it. I relied on reading the imports of the new file l2_dd.py; the orchestrator's own run of that check is authoritative.",
+    "The 21-minute smoke time comes from the output file's birth time on this machine while my checks ran at the same time. Timing on other hardware was not measured.",
+    "Only the smoke and the DoD mesh script were run, not the full registered E001 run. The full run's runtime and memory were not checked: A3/A4 at level 4 hold a dense float64 L of about 2.1 GB plus a float32 bound matrix of about 1.1 GB, and level 5 would need about 16.5 GB. Level 5 is not expected for bars because they converge by level 4 at LF.",
+    "The scope is E001 geometry. Bars together with round wires or a plane, inclined bars, and more than one plane raise NotImplementedError, as the module docstring states.",
+    "My bar physics checks covered DC/LF inductance, kernel exactness, passivity and monotonicity. HF bar values were not compared with an independent reference."
+  ]
+}

@@ -607,3 +607,4 @@
 {"ts": "2026-10-06T02:29:29+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0086-critic-20261005T192929-d544", "task": "T0086", "role": "critic", "session": "33b030c1-7876-42d8-8722-d567a8665ff2"}
 {"ts": "2026-10-06T02:30:01+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 710, "runs_extended": 2}
 {"ts": "2026-10-06T02:52:34+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0086-critic-20261005T192929-d544", "status": "completed", "cost": 2.4296952000000003, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-10-06T02:55:26+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0085-critic-20261005T192928-7ef3", "status": "completed", "cost": 2.472209, "subtype": "success", "report": "structured_output"}

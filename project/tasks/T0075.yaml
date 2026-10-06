@@ -4,7 +4,7 @@ title: 'Layout L2 at E002 scale: measured CPU time, memory and refinement conver
   gate)'
 type: implement
 agent: builder
-status: running
+status: needs_founder
 depends_on:
 - T0074
 description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; restoration requested
@@ -374,3 +374,235 @@ history:
 
     3. Snapping the grid to each layout'''
   at: '2026-10-06T11:00:14+00:00'
+- attempt: 3
+  outcome: agent_finished
+  summary: 'Blocked: every net''s area is now exact at every refinement, but the convergence gate still
+    fails at k_star. The cost gate passes. I did not change the gates or coarsen anything.
+
+
+    **What I built.** Each cell of the shared grid now carries the exact fraction of its area covered
+    by its net (top Cu) or by the plane (backside Cu, baseplate).
+
+    - A branch''s resistance is weighted by the fill fractions of its two end cells; the preconditioner
+    gets a separate block for each partial branch.
+
+    - The CELL ladder, the uniform grid and the FFT operators are unchanged.
+
+    - A partial cell''s inductance still uses its full cell box.
+
+
+    **Area test.** Per-net area error is at most 4e-16 at refinements 0-4 on seed 7 and seed 11, against
+    the shapely polygon areas (limit 1e-12). Other new tests:
+
+    - a sub-cell-wide stri'
+  report:
+    status: blocked
+    summary: 'Blocked: every net''s area is now exact at every refinement, but the convergence gate still
+      fails at k_star. The cost gate passes. I did not change the gates or coarsen anything.
+
+
+      **What I built.** Each cell of the shared grid now carries the exact fraction of its area covered
+      by its net (top Cu) or by the plane (backside Cu, baseplate).
+
+      - A branch''s resistance is weighted by the fill fractions of its two end cells; the preconditioner
+      gets a separate block for each partial branch.
+
+      - The CELL ladder, the uniform grid and the FFT operators are unchanged.
+
+      - A partial cell''s inductance still uses its full cell box.
+
+
+      **Area test.** Per-net area error is at most 4e-16 at refinements 0-4 on seed 7 and seed 11, against
+      the shapely polygon areas (limit 1e-12). Other new tests:
+
+      - a sub-cell-wide strip has the closed-form DC resistance of its exact width;
+
+      - a cell holding copper of two nets raises an error;
+
+      - the die-short test was re-shaped because its old geometry put two nets in one cell.
+
+
+      **Quick run** (seed 7, 20 MHz, fresh process per solve). k_star is still 3: the weighting does not
+      change the thickness layers.
+
+
+      | dies/switch | refinement | L (nH) | CPU-s | peak RSS (GB) | GMRES iterations |
+
+      |---|---|---|---|---|---|
+
+      | 2 | 2 | 10.707 | 141 | 2.6 | 189 |
+
+      | 2 | 3 (k*) | 10.573 | 498 | 4.3 | 294 |
+
+      | 2 | 4 | 10.767 | 1684 | 9.5 | 399 |
+
+      | 6 | 3 (k*) | 7.527 | 597 | 5.7 | 269 |
+
+
+      - solver_tol is about 1.7e-5 to 2.1e-5, and the same relative to L.
+
+      - The change from 3 to 4 is +1.80 % after −1.27 % from 2 to 3: a turning point, so the gate fails.
+
+      - Refinements 0 and 1 (measured in-process, outside the quick set) give 10.750 and 10.592 nH.
+
+      - R is not gated and does not converge either (99 → 64 → 37 → 36 → 39 mΩ).
+
+
+      **Separating the 3→4 step** (two extra solves at refinement 3, each taking one component from refinement
+      4):
+
+      - the thickness layers move L by −0.04 %;
+
+      - the wire filaments move L by +0.02 %;
+
+      - the remaining +1.82 % comes from the lateral grid.
+
+
+      **Likely cause** (an inference from a correlation, not proven). L alternates: refinements 1 and
+      3 are low, 0, 2 and 4 are high. Because partial cells keep their full box for inductance, DC+ acts
+      as if it were 5.8 % wider than its copper at refinements 1 and 3, and exactly its copper width at
+      0, 2 and 4. Backside-Cu partial cells also appear only at 1 and 3. Against the old cell-centre mask,
+      L changes by −7.5 / −4.8 / −3.3 / −4.0 / +0.007 % at refinements 0-4. So exact conducting area does
+      not make the inductive geometry the same at every level.
+
+
+      **Options for you** (none implemented):
+
+      1. Partial cells whose current sits at the true copper centroid, by sharing it with the inner neighbour''s
+      box. This keeps the FFT. My untested estimate is that it removes most but not necessarily all of
+      the alternation, because the spread of the current still differs. It needs about a 1 h quick re-run.
+
+      2. A cell ladder aligned with the 0.1 mm design grid (1.0 / 0.5 / 0.25 / 0.125 mm).
+
+      3. Multi-fidelity search or more compute.
+
+
+      **Projected E002 cost** (2-die costs; valid only if convergence were met): CPU-h ≈ 0.15·n + 0.51·m,
+      where n is the number of layouts at k_star and m the number also checked at k_star±1. That is 40
+      CPU-h for n = m = 60.
+
+
+      **Not done:**
+
+      - Full mode (dev seeds 3, 11, 5) was not run, so every convergence number comes from one layout.
+
+      - My quick run exited 1, because the script exits 1 when a gate fails. After that run I changed
+      only the docstring and TOOL_VERSION (now 0.3.0), so the numbers stand.
+
+
+      The note is at docs/notes/o001-l2-layout-cost.md. The measured cost.json plus the separation solves
+      are in docs/notes/o001-l2-layout-cost.json.'
+    checks_run:
+    - cmd: rm -rf /tmp/l2cost && uv run python benchmarks/l2_layout_cost.py --quick --out /tmp/l2cost
+      exit_code: 1
+    - cmd: uv run python -c "<DoD cost.json check on /tmp/l2cost/cost.json>"
+      exit_code: 1
+    - cmd: test -f docs/notes/o001-l2-layout-cost.md
+      exit_code: 0
+    - cmd: uv run pytest -q tests/unit/solvers
+      exit_code: 0
+    - cmd: uv run ruff check benchmarks/l2_layout_cost.py src/moduleforge/solvers tests/unit/solvers
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    - cmd: 'uv run python benchmarks/l2_layout_cost.py --child 7 2 3 /tmp/l2sep/layers4.json --mix ''{"layers":
+        4}'''
+      exit_code: 0
+    - cmd: 'uv run python benchmarks/l2_layout_cost.py --child 7 2 3 /tmp/l2sep/wires4.json --mix ''{"wires":
+        4}'''
+      exit_code: 0
+    - cmd: uv run python benchmarks/l2_layout_cost.py --child 7 2 2 /tmp/l2A/r2.json (exploratory)
+      exit_code: 0
+    - cmd: uv run python benchmarks/l2_layout_cost.py --child 7 2 3 /tmp/l2A/r3.json (exploratory)
+      exit_code: 0
+    concerns:
+    - 'Convergence gate fails at k_star=3 with exact per-net areas: 3->4 is +1.80 % after -1.27 % from
+      2->3 (turning point). Founder decision needed; the packet says not to change the gates and not to
+      coarsen.'
+    - 'A fill-fraction conductance makes the conducting area exact, but the inductive footprint of the
+      partial cells (full cell boxes) still alternates between levels: DC+ is +5.8 % wider than its copper
+      at refinements 1 and 3, 0 % at 0, 2 and 4. This is an inference from a correlation plus the separation
+      solves, not a proof.'
+    - The weighting changes L at refinements 0-3 by -3 % to -7.5 % against the old cell-centre mask (TOOL_VERSION
+      bumped to 0.3.0). Values from 0.2.0 are not comparable.
+    - Full mode (dev seeds 3, 11, 5) was not run. All convergence data come from seed 7 with 2 dies per
+      switch.
+    - The benchmark exits 1 when a gate fails, so DoD command 1 fails as well as the cost.json check.
+    - 'CPU-s on the shared 10-core laptop varies by about 25 % with load and P/E-core placement: refinement
+      3 took 498 CPU-s here and 627 in attempt 2.'
+    - A cell holding copper of two nets now raises ValueError. Generated layouts never hit this (net gaps
+      ≥ 1.5 mm, cells ≤ 1 mm), but hand-made layouts with sub-cell net gaps are refused. The attempt-2
+      die-short test geometry was changed for this reason; it still tests that a short merges only its
+      own net.
+    files_changed:
+    - src/moduleforge/solvers/l2_layout.py
+    - tests/unit/solvers/test_l2_layout.py
+    - benchmarks/l2_layout_cost.py
+    - docs/notes/o001-l2-layout-cost.md
+    - docs/notes/o001-l2-layout-cost.json
+- attempt: 3
+  outcome: attempts_exhausted
+  summary: agent reported blocked
+  failure_output: 'Blocked: every net''s area is now exact at every refinement, but the convergence gate
+    still fails at k_star. The cost gate passes. I did not change the gates or coarsen anything.
+
+
+    **What I built.** Each cell of the shared grid now carries the exact fraction of its area covered
+    by its net (top Cu) or by the plane (backside Cu, baseplate).
+
+    - A branch''s resistance is weighted by the fill fractions of its two end cells; the preconditioner
+    gets a separate block for each partial branch.
+
+    - The CELL ladder, the uniform grid and the FFT operators are unchanged.
+
+    - A partial cell''s inductance still uses its full cell box.
+
+
+    **Area test.** Per-net area error is at most 4e-16 at refinements 0-4 on seed 7 and seed 11, against
+    the shapely polygon areas (limit 1e-12). Other new tests:
+
+    - a sub-cell-wide strip has the closed-form DC resistance of its exact width;
+
+    - a cell holding copper of two nets raises an error;
+
+    - the die-short test was re-shaped because its old geometry put two nets in one cell.
+
+
+    **Quick run** (seed 7, 20 MHz, fresh process per solve). k_star is still 3: the weighting does not
+    change the thickness layers.
+
+
+    | dies/switch | refinement | L (nH) | CPU-s | peak RSS (GB) | GMRES iterations |
+
+    |---|---|---|---|---|---|
+
+    | 2 | 2 | 10.707 | 141 | 2.6 | 189 |
+
+    | 2 | 3 (k*) | 10.573 | 498 | 4.3 | 294 |
+
+    | 2 | 4 | 10.767 | 1684 | 9.5 | 399 |
+
+    | 6 | 3 (k*) | 7.527 | 597 | 5.7 | 269 |
+
+
+    - solver_tol is about 1.7e-5 to 2.1e-5, and the same relative to L.
+
+    - The change from 3 to 4 is +1.80 % after −1.27 % from 2 to 3: a turning point, so the gate fails.
+
+    - Refinements 0 and 1 (measured in-process, outside the quick set) give 10.750 and 10.592 nH.
+
+    - R is not gated and does not converge either (99 → 64 → 37 → 36 → 39 mΩ).
+
+
+    **Separating the 3→4 step** (two extra solves at refinement 3, each taking one component from refinement
+    4):
+
+    - the thickness layers move L by −0.04 %;
+
+    - the wire filaments move L by +0.02 %;
+
+    - the remaining +1.82 % comes from the lateral grid.
+
+
+    **Likely cause** (an infere'
+  at: '2026-10-06T19:48:07+00:00'

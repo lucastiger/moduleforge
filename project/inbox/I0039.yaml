@@ -1,0 +1,70 @@
+id: I0039
+kind: decision
+subject: 'T0075 stuck: agent reported blocked'
+summary: 'Class: planning. requires a founder decision
+
+
+  er, the uniform grid and the FFT operators are unchanged.
+
+  - A partial cell''s inductance still uses its full cell box.
+
+
+  **Area test.** Per-net area error is at most 4e-16 at refinements 0-4 on seed 7 and seed 11, against
+  the shapely polygon areas (limit 1e-12). Other new tests:
+
+  - a sub-cell-wide strip has the closed-form DC resistance of its exact width;
+
+  - a cell holding copper of two nets raises an error;
+
+  - the die-short test was re-shaped because its old geometry put two nets in one cell.
+
+
+  **Quick run** (seed 7, 20 MHz, fresh process per solve). k_star is still 3: the weighting does not change
+  the thickness layers.
+
+
+  | dies/switch | refinement | L (nH) | CPU-s | peak RSS (GB) | GMRES iterations |
+
+  |---|---|---|---|---|---|
+
+  | 2 | 2 | 10.707 | 141 | 2.6 | 189 |
+
+  | 2 | 3 (k*) | 10.573 | 498 | 4.3 | 294 |
+
+  | 2 | 4 | 10.767 | 1684 | 9.5 | 399 |
+
+  | 6 | 3 (k*) | 7.527 | 597 | 5.7 | 269 |
+
+
+  - solver_tol is about 1.7e-5 to 2.1e-5, and the same relative to L.
+
+  - The change from 3 to 4 is +1.80 % after −1.27 % from 2 to 3: a turning point, so the gate fails.
+
+  - Refinements 0 and 1 (measured in-process, outside the quick set) give 10.750 and 10.592 nH.
+
+  - R is not gated and does not converge either (99 → 64 → 37 → 36 → 39 mΩ).
+
+
+  **Separating the 3→4 step** (two extra solves at refinement 3, each taking one component from refinement
+  4):
+
+  - the thickness layers move L by −0.04 %;
+
+  - the wire filaments move L by +0.02 %;
+
+  - the remaining +1.82 % comes from the lateral grid.
+
+
+  **Likely cause** (an infere'
+refs:
+- T0075
+- O001
+options:
+- re-scope
+- cancel
+- give guidance
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-06T19:48:07+00:00'
+resolved_at: null

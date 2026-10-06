@@ -90,7 +90,34 @@ description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; 
   known to <= 1 %, or the equivalent conductor model solved through l2.solve.
 
   (4) solver_tol is relative to max|Z_ii|. Also report it relative to L = Im Z / omega at each frequency,
-  so it can be read as an L tolerance.'
+  so it can be read as an L tolerance.
+
+
+  Founder decision (2026-10-06) on attempt 2''s blocked report. This is the last attempt.
+
+  The refinement sequence did not measure one geometry. Traces are meshed as the cells whose centre lies
+  inside a trace, so the conducting area changes from level to level: DC+ error 0, +5.8, 0, -4.2, 0 %
+  at refinements 0-4. It is zero exactly at the 1.0, 0.5 and 0.25 mm cells and non-zero at 0.7 and 0.35
+  mm. The generator rounds dimensions to 0.1 mm, so no affordable uniform ladder divides every layout''s
+  edges. Until every level represents the same conductors, the convergence result cannot be interpreted.
+
+  (1) Implement partial-cell weighting of trace edge cells for top Cu and backside Cu: each cell carries
+  the exact fraction of its area covered by its net, e.g. as a fill-fraction conductance. A geometric
+  partial cell is acceptable if it keeps the FFT structure. The represented area of every net must be
+  exact at every refinement. Add a test: per-net area relative error <= 1e-12 at refinements 0-4 on seed
+  7 and on one other generated layout. Keep the CELL ladder, the uniform shared grid and the FFT operators.
+
+  (2) Re-run --quick (seed 7, 2 dies: k_star-1, k_star, k_star+1; 6 dies: k_star) and apply the gates
+  unchanged. Re-derive k_star if the weighting changes it.
+
+  (3) If convergence still fails with exact areas, report blocked with the measurements. Separate the
+  remaining contributions (wire filaments, thickness layers) as far as one or two extra solves allow.
+  Do not change the gates, and do not coarsen.
+
+  (4) The note belongs in docs/notes/o001-l2-layout-cost.md, since research/notes is outside the builder''s
+  write scope; the definition of done now checks that path. Keep attempt 2''s speed-up and correctness
+  fixes. Describe the bilinear wire-foot contacts, a model change beyond the earlier packet, in the note
+  and the module docstring.'
 context_files:
 - src/moduleforge/solvers/l2_layout.py
 - src/moduleforge/solvers/l2_core.py
@@ -105,13 +132,13 @@ context_files:
 - project/reviews/T0074/T0084.json
 deliverables:
 - benchmarks/l2_layout_cost.py
-- research/notes/o001-l2-layout-cost.md
+- docs/notes/o001-l2-layout-cost.md
 - src/moduleforge/solvers/l2_layout.py
 touches:
 - src/moduleforge/solvers/l2_layout.py
 - tests/unit/solvers/test_l2_layout*.py
 - benchmarks/l2_layout_cost.py
-- research/notes/o001-l2-layout-cost.md
+- docs/notes/o001-l2-layout-cost.md
 definition_of_done:
 - cmd: rm -rf /tmp/l2cost && uv run python benchmarks/l2_layout_cost.py --quick --out /tmp/l2cost
   exists: null
@@ -129,7 +156,7 @@ definition_of_done:
   exists: null
   timeout_s: 120
 - cmd: null
-  exists: research/notes/o001-l2-layout-cost.md
+  exists: docs/notes/o001-l2-layout-cost.md
   timeout_s: 60
 - cmd: uv run pytest -q tests/unit/solvers
   exists: null

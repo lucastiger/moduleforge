@@ -1,0 +1,56 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "Smoke pass and the 40-minute bound not reproduced at this commit",
+      "detail": "My own `e001_reference.py --smoke` run did not finish while I was watching. It was slowed by my other checks running alongside it (a single level-4 bar solve took 104 s). The only smoke result on disk, /tmp/e001-smoke/result.json, is not from the commit under review: it records branch task/T0071-\u2026, commit ce102dab, git_dirty false and a 7-minute wall time, with status complete, all sanity checks passing and max_rel_err_vs_analytic 8.4e-5. That supports the claim but does not prove it for snapshot 7584419. Also, my run did not first do `rm -rf /tmp/e001-smoke`.",
+      "evidence": "result.json provenance: git_commit ce102dab30ad\u2026, started 02:20:08, finished 02:27:29; the current HEAD is 7584419 ('review snapshot').",
+      "suggested_check": "Let the orchestrator's DoD run (rm -rf, then --smoke, then the assertions) decide this on an otherwise idle machine and record the wall time."
+    },
+    {
+      "severity": "minor",
+      "title": "Reported fil_w for an uncoupled round wire is not a real mesh size",
+      "detail": "When no wire pair is coupled (for example E001 B1, a single straight wire), build_meshes sets M = 0, so only the axisymmetric mode exists at every level. mesh_params still reports fil_w = \u03c0 r / HARMONICS[level], which shrinks from 67 to 52 to 39 \u00b5m. The runner's refinement-ratio check and its h sequence therefore see an azimuthal refinement that does not exist. This is harmless for the value, because m = 0 is exact by symmetry, but the reported mesh parameter is fictitious. B1 is not a smoke case.",
+      "evidence": "mesh_meta for a 10 mm, 0.3 mm-diameter wire gives n_filaments 126/216/384 = segments \u00d7 annuli \u00d7 1, with fil_w 67.32/52.36/39.27 \u00b5m.",
+      "suggested_check": "Report fil_w from the realised M, or document that M = 0 means azimuthally exact."
+    },
+    {
+      "severity": "minor",
+      "title": "Bar HF resistance not converged at level 4",
+      "detail": "The bar mesh only reaches \u03b4/2 at the finest counts (level 5). For A1 graded to 80 MHz, Re Z changes by about 2.5 % from level 3 to 4, and Im Z/\u03c9 changes by less than 1e-4. E001 compares only bar L at 100 Hz, where the current is uniform and the comparison is close to a kernel self-consistency test, so this does not affect the claim. It does limit any use of bar R or HF bar values.",
+      "evidence": "A1 at 80 MHz, levels 1\u20134: R = 8.83, 9.30, 9.74, 9.98 m\u03a9; L = 11.4889, 11.4877, 11.4865, 11.4859 nH. At 100 Hz, L = 12.170765 nH at every level.",
+      "suggested_check": "If bar R at HF is ever compared, require level 5 or a separate convergence study."
+    },
+    {
+      "severity": "note",
+      "title": "Some new tests are looser than the bounds they appear to test",
+      "detail": "test_distinct_offset_reuse_is_exact accepts |L \u2212 Decimal| \u2264 E + 1e-13\u00b7|ref|. The 1e-13 slack is about 1000 times the stated bound E (\u2248 u\u00b7|L|), so the test does not show that E bounds the error. test_bar_hf_current_crowding's `gmres_converged` assert is trivially true on the dense path. The core tests do check the double-double kernel against 70-digit Decimal to 1e-29, so the kernel itself is covered.",
+      "evidence": "tests/unit/solvers/test_l2_e001_bars.py lines 138 and 162",
+      "suggested_check": "Tighten that assertion to `abs(L - ref) <= E`."
+    },
+    {
+      "severity": "note",
+      "title": "Memory at level 5 for two-bar cases",
+      "detail": "A3 and A4 at level 5 have 37,044 unknowns. The dense real L (11 GB) plus the float32 bound matrix E (5.5 GB) are stored in full even on the GMRES path. The smoke caps refinement at level 4, and the previous full-mode data show A3 converged by level 4, but the full E001 run would fail on a 16 GB machine if level 5 were ever needed.",
+      "evidence": "mesh_meta n_filaments for A3: [1372, 2916, 6912, 16384, 37044]; BarSystem allocates self.L (n\u00d7n float64) and self.E (n\u00d7n float32) unconditionally.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran `uv run pytest -q tests/unit/solvers`: 64 passed in 182 s.",
+    "Ran `uv run ruff check src/moduleforge/solvers tests/unit/solvers`: all checks passed.",
+    "Ran the packet's refinement-ratio and mesh-hash script on every registered case (A1\u2013C1, levels 1\u20135): worst ratio violation 0.972 (\u2264 1), zero mesh violations; n_filaments recorded per level.",
+    "Bar orientation: a reversed bar gives identical self Z (difference 0). An antiparallel second bar gives Z12 = \u2212Z12(parallel) exactly. The A3 geometry rotated to lie along y differs by 6e-16 relative; along z with width_dir = x it differs by 0.",
+    "Ties against network algebra: three bars tied in parallel (4 ties, chained union-find) vs 1/(1\u1d40 Z\u207b\u00b9 1) from the separately solved 3-port Z: relative error 1.3e-15 at 100 Hz and 2.2e-16 at 20 MHz. Moving the port to other tied terminals changes Z by 9e-19.",
+    "Convergence study of A1 (20\u00d73\u00d70.3 mm Cu) at levels 1\u20134 for 100 Hz, 20 MHz and 80 MHz: L at 100 Hz is constant to 7 digits; HF L converges to below 1e-4; HF R is still moving about 2.5 % per level.",
+    "Code reading: harmonic ordering of proxy weights (\u03c3 = 0, 2m\u22121, 2m) is consistent with the W truncation and padding for M \u2260 Pp. The dense Schur-complement solve (C\u1d40M\u207b\u00b9C \u03c6 = d) is algebraically equal to the saddle system. The float32 storage of the bound E has a 1e-6 margin that covers float32 rounding and is far above float32 underflow. The double-double log, atan and sqrt routines and the 64-corner mixed differences follow the standard Dekker/Knuth constructions.",
+    "A grep for network-fetch calls in src/moduleforge/solvers could not be run (the shell command was denied). By reading the source, l2.py, l2_core.py and l2_dd.py import only numpy, scipy, stdlib and l2_dd, with no network calls."
+  ],
+  "caveats": [
+    "Whether the smoke passes, and does so within 40 minutes, at commit 7584419 was not confirmed by my own run. The only result file is from commit ce102dab on the task branch (7-minute wall time, all sanity checks passing, max_rel_err 8.4e-5). The orchestrator's DoD run must decide this.",
+    "The E001 bar cases compare only L at 100 Hz, where the current is uniform. That comparison mostly checks that the Hoer-Love sub-box sums add up to the whole box, not discretization accuracy. Bar R at HF and bar L above 20 MHz are not validated by E001 and were not converged in my level 1\u20134 study.",
+    "The scope stated in l2.py excludes bars combined with wires or a plane, and inclined bars (both raise NotImplementedError). 'Complete for E001' holds only because E001 solves bars separately.",
+    "Running level 5 for multi-bar cases needs about 17 GB of RAM for the dense L and E matrices."
+  ]
+}

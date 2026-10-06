@@ -1,0 +1,50 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "Refinement-0 L(f) and R(f) carry mesh errors orders of magnitude larger than the reported solver_tol",
+      "detail": "solver_tol (~2e-5) only bounds the solve of the discrete model, as D0004 (i) allows. It does not bound the discretisation error. At refinement 0, the default the DoD uses, the top-Cu thickness mesh graded to 100 MHz has 4 layers: two of 3.3 um and two of ~147 um. That cannot represent a 15-30 um skin depth at 5-20 MHz. The author's own numbers show the size of the error: the tiny layout comes out ~14 % high at refinement 0, the DoD layout drops 3.2 % from refinement 0 to 1, and the grading choice alone moves L by 2.6 %. My DoD run is consistent with a mesh-dominated frequency dependence: L falls 8.5 % from 5 to 20 MHz, and R rises 4.5x for a 4x increase in frequency, then only 1.44x from 20 to 80 MHz. This is disclosed in the module docstring and is outside the claim's DoD. It does mean refinement-0 values are not accurate to anything like solver_tol, and R_ohm is less trustworthy than L.",
+      "evidence": "DoD run: L = [12.641, 11.649, 11.122] nH, R = [0.0245, 0.1096, 0.1579] Ohm at 5/20/80 MHz, solver_tol = 2.19e-5. graded_layers(\u2026, n=4, fmax=1e8, two_sided=True) gives a first-layer fraction of 0.5*6.6um/150um \u2248 0.022 per half, i.e. 3.3 um and 146.7 um.",
+      "suggested_check": "Before using absolute values or R, gate them on the T0075 refinement study, or report a discretisation-error estimate (ref 0 vs ref 1) in meta."
+    },
+    {
+      "severity": "minor",
+      "title": "Docstring cost figures not reproduced",
+      "detail": "The docstring says the DoD call takes ~40 s and the 2-die case runs in 33 s wall. On this machine the DoD call took 153.6 s, 92 s of it building the wire-grid operator. The difference may be the machine, but the cost figures should not be relied on.",
+      "evidence": "meta['wall_s']=153.6, mesh_params['wire_grid_build_s']=92.2, n_near_pairs=1,896,888",
+      "suggested_check": "State the hardware and the measurement conditions next to the cost figures, or drop them from the docstring."
+    },
+    {
+      "severity": "note",
+      "title": "The stated wire-grid bound dominates solver_tol and is ~180x conservative",
+      "detail": "wire_grid_operator contributes 1.46e-5 to 1.74e-5 of the 2.2e-5 solver_tol. With production parameters, on a two-slab grid that includes a thick baseplate-like slab, the worst observed far-field error per pair was 2.3e-8 against a stated bound of 4.3e-6. The bound is valid but loose. On generated layouts solver_tol is 1.6e-5 to 6.5e-5, which is above E001's 1e-5 budget, so this path cannot be held to E001's l2_solver_tolerance as it stands. A small derivation slip: the relative far-field bound uses the factor Df/Ds where (Df + box diagonal)/Ds is correct, which understates it by ~8 %. The measured margin makes this immaterial.",
+      "evidence": "Scratch run: far pairs 54,600, max relative error 2.34e-8, stated bound 4.30e-6, ratio 0.0054; near pairs agree with WireGridDense to 2.2e-15 of max|K|; row check 2.8e-4 (must be <= 1).",
+      "suggested_check": "Optional: put the box diagonal into fac and tighten the bound if the 1e-5 budget ever applies to this path."
+    },
+    {
+      "severity": "note",
+      "title": "Untested robustness paths in the Layout\u2192grid mapping",
+      "detail": "WireGridPFFT raises ValueError whenever a wire node lies within ~4 cells of the grid edge, even if no far branch exists. _nearest_cell calls argmin on an empty array if a trace is narrower than one cell and has no cell centres. Neither path is tested. Four generated layouts across all three families ran cleanly, so I found no counterexample in the generator's output.",
+      "evidence": "l2_layout.py lines 789-790 (unconditional stencil check) and 1232-1237 (_nearest_cell).",
+      "suggested_check": "Add one test with a sub-cell-wide trace and one with a wire near the baseplate edge."
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran the full DoD python command myself: it passes, with L = [12.64, 11.65, 11.12] nH (non-increasing), solver_tol = 2.19e-5, tool_version and n_unknowns = 56,712 present; inspected tol_parts, stated and mesh_params.",
+    "uv run ruff check src/moduleforge/solvers tests/unit/solvers: all checks passed.",
+    "uv run pytest tests/unit/solvers: 51 passed. I deselected only test_generated_two_die_half_bridge, whose assertions (L(20 MHz) between 1 and 100 nH, solver_tol < 1e-3) my DoD run covers directly with 11.65 nH and 2.2e-5.",
+    "Read the grep step of the DoD statically: l2_layout.py imports no network or clone utilities (only hashlib, math, time, dataclasses, pathlib, numpy, scipy and shapely), so the grep should exit 1. A run combining it with ruff was denied, and I did not re-run it separately.",
+    "segment_mutual for touching, non-collinear segments (shared end point; 5\u00b0, 90\u00b0, 175\u00b0 bends) vs scipy dblquad of the Neumann integral: relative error \u2264 2.4e-13. This case is not covered by the author's tests.",
+    "Production-parameter pFFT wire-grid operator vs WireGridDense on a new two-slab grid (thin two-sided top slab plus a 3 mm baseplate-like slab, 0.25 mm cells, 7,800 far branches): far-field error per pair \u2264 2.3e-8 vs stated 4.3e-6; near pairs agree to round-off.",
+    "Hand re-derivation of the a-posteriori bound in l2_core.a_posteriori (Z~-Z = e^T rho, ||e|| \u2264 ||rho||/r_min from Re M = R on null(C^T)), of the Bernstein-ellipse lower bound rho \u2265 1 + dist/(half length), of the far-box distance \u2265 near\u00b7a > Df = (near-1)\u00b7a, of the joint_correction bookkeeping (net single <d> term), and of the slab integral \u03c0(1/h0 \u2212 1/h1); all consistent.",
+    "Generality: loop_inductance on three other generated layouts (seed 11: u_shaped with 12 dies, side_by_side with 4, interleaved with 8) at 20/80 MHz, refinement 0: all finite, non-increasing, 5.1-10.5 nH, solver_tol 1.6e-5 to 6.5e-5.",
+    "Checked D0004: it requires solver_tol to cover the a-posteriori, rounding and stated quadrature/compression bounds, plus a test that the bound \u2265 true error against a dense LU. test_reported_solver_tol_bounds_true_error_vs_dense_lu provides that test with a dense-coupling oracle."
+  ],
+  "caveats": [
+    "Accuracy of loop_inductance at refinement 0 is limited by discretisation, not by solver_tol. Expect errors from a few percent up to ~14 % in L (by the author's own convergence data), and larger in R. solver_tol is valid only as a bound on the solve of the discrete model.",
+    "The precorrected-FFT far field is barely used at refinement 0 on module-sized layouts, because the 18-cell near box covers most of the grid. Its correctness rests on the operator tests and my two-slab check, not on the DoD layout.",
+    "I did not test refinements \u2265 1 on full generated layouts, so I have not verified the cost and memory claims there. The near-pair count grows quickly as cells get finer.",
+    "Bash was intermittently denied, and writing scratch files was not allowed, so all scratch checks ran inline with python -c. One exploratory background run was abandoned because it was too slow."
+  ]
+}

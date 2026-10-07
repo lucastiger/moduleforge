@@ -64,7 +64,12 @@ options:
 - cancel
 - give guidance
 recommendation: ''
-status: open
-response: ''
+status: answered
+response: 'Founder (2026-10-06): give guidance. T0075 stays parked. Founder-session diagnostic first (GCP,
+  ~$3, not evidence): pure lateral refinement (0.5/0.25/0.125 mm, layers and wires held at k_star) of
+  the generator''s u_shaped 2-die layout with every feature on the 0.5 mm grid, plus the same layout on
+  the original ladder. Pre-set rule: smooth contraction with exact geometry -> re-scope T0075 into a feature-consistent
+  discretization (snapped generator + aligned ladder, or sub-cell-exact features); not smooth -> founder
+  decides between conformal pFFT meshing and a measured-uncertainty reference.'
 created_at: '2026-10-06T19:48:07+00:00'
-resolved_at: null
+resolved_at: '2026-10-07T00:33:43+00:00'

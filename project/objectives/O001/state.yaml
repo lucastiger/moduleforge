@@ -1,4 +1,4 @@
-status: active
+status: needs_founder
 approved_by: founder
 approved_at: '2026-09-29T21:47:40+00:00'
 criteria_hash: sha256:d12d77462acca9647d13f7a7092953f9d7aa450fde02ede714f7cca52ac2ad61
@@ -8,7 +8,7 @@ evaluated_runs: {}
 pending_evaluation: null
 replans: 4
 max_replans: 3
-needs_replan: false
+needs_replan: true
 spent_usd: 224.3698
 budget_override_usd: 284.9474
 log:
@@ -26,3 +26,9 @@ log:
 - diagnosis:T0032 of T0029 (implementation)
 - diagnosis:T0067 of T0022 (implementation)
 - 'founder approved I0031: Founder (2026-10-04): confirm (i) and (ii); recorded as D0004 (project/decisions/D0004-l2-iterative-solve-fasthenry-optional.md)'
+- 'founder answered I0039: Founder (2026-10-06): give guidance. T0075 stays parked. Founder-session diagnostic
+  first (GCP, ~$3, not evidence): pure lateral refinement (0.5/0.25/0.125 mm, layers and wires held at
+  k_star) of the generator''s u_shaped 2-die layout with every feature on the 0.5 mm grid, plus the same
+  layout on the original ladder. Pre-set rule: smooth contraction with exact geometry -> re-scope T0075
+  into a feature-consistent discretization (snapped generator + aligned ladder, or sub-cell-exact features);
+  not smooth -> founder decides between conformal pFFT meshing and a measured-uncertainty reference.'

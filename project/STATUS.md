@@ -1,14 +1,14 @@
 # ModuleForge status
-_generated 2026-10-07T00:28:18+00:00 from repository state — do not edit_
+_generated 2026-10-07T00:34:14+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
-- **I0039** [decision] T0075 stuck: agent reported blocked
+- **I0040** [decision] [O001] replan limit reached
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $224.37/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | needs_founder | - | 0/3 | $224.37/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
 cancelled: 19, done: 58, failed: 3, needs_founder: 1, todo: 6
@@ -16,8 +16,6 @@ cancelled: 19, done: 58, failed: 3, needs_founder: 1, todo: 6
 - T0075 `needs_founder` builder/implement: Layout L2 at E002 scale: measured CPU time, memory and refinement convergence per layout (feasibility gate) (attempt 3)
 
 ## Recent events
-- 2026-10-06T11:00:14+00:00 task_failed_attempt {"task": "T0075", "signal": "dod_failed", "action": "repair"}
-- 2026-10-06T14:41:07+00:00 sleep_detected {"gap_s": 2769, "runs_extended": 0}
 - 2026-10-06T15:06:41+00:00 sleep_detected {"gap_s": 409, "runs_extended": 0}
 - 2026-10-06T15:47:58+00:00 sleep_detected {"gap_s": 2477, "runs_extended": 0}
 - 2026-10-06T15:59:05+00:00 sleep_detected {"gap_s": 342, "runs_extended": 0}
@@ -31,3 +29,5 @@ cancelled: 19, done: 58, failed: 3, needs_founder: 1, todo: 6
 - 2026-10-06T19:48:07+00:00 inbox_opened {"id": "I0039", "kind": "decision", "subject": "T0075 stuck: agent reported blocked"}
 - 2026-10-06T23:51:04+00:00 sleep_detected {"gap_s": 1361, "runs_extended": 0}
 - 2026-10-07T00:28:16+00:00 sleep_detected {"gap_s": 2232, "runs_extended": 0}
+- 2026-10-07T00:33:43+00:00 inbox_resolved {"id": "I0039", "status": "answered", "note": "Founder (2026-10-06): give guidance. T0075 stays parked. Founder-session diagnostic first (GCP, ~$3, not evidence
+- 2026-10-07T00:34:13+00:00 inbox_opened {"id": "I0040", "kind": "decision", "subject": "[O001] replan limit reached"}

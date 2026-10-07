@@ -4,7 +4,7 @@ title: 'Layout L2 on grid-aligned layouts: snapped generator, aligned lateral la
   cost at k_star (feasibility gate)'
 type: implement
 agent: builder
-status: todo
+status: running
 depends_on:
 - T0074
 description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; restoration requested
@@ -171,7 +171,28 @@ description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; 
   converged) is applied to the VM run before E002''s design (T0076) starts. The DoD''s cost.json check
   below therefore no longer requires a k_star+1 solve.
 
-  (6) Update docs/notes/o001-l2-layout-cost.md with the diagnostic, the new ladder and the cost per layout.'
+  (6) Update docs/notes/o001-l2-layout-cost.md with the diagnostic, the new ladder and the cost per layout.
+
+
+  FOUNDER AMENDMENT for the final attempt (5 of 5; 2026-10-07). It supersedes item (5)''s local scope.
+
+  - Attempt 4 timed out at the old 150-minute limit. Its work is committed as cc730eb8: snapped generator,
+  nested 0.5/0.25/0.125 mm ladder, ValueError off the lattice, GMRES cap 100 x 40, benchmark --vm and
+  --sensitivity. Uncommitted edits to l2_layout.py and the note are in the worktree. Read them first and
+  build on them; do not re-implement.
+
+  - This run''s wall limit is 240 minutes. Commit as you go: after each working change and after each
+  measurement, so a timeout loses nothing.
+
+  - Local scope (this Mac, --quick, which the DoD runs): seed 7 at 2 dies at k_star-1 (0.5 mm) and k_star
+  (0.25 mm), and 6 dies at k_star. Three solves. The cost gate at k_star is unchanged.
+
+  - The two sensitivity solves (+2 layers; finer wire edges) and the second-family layout move to the
+  --vm run, which the founder runs on the burst VM after merge. Make sure --vm includes them and writes
+  everything to cost.json.
+
+  - Run --quick once, in the background, and poll it; do not block on it in the foreground. Then write
+  the note with its numbers and report. Do not start the 0.125 mm level on this Mac.'
 context_files:
 - src/moduleforge/solvers/l2_layout.py
 - src/moduleforge/solvers/l2_core.py
@@ -225,7 +246,8 @@ risk: high
 model: null
 budget_usd: 8.0
 max_turns: 150
-attempts: 4
+wall_minutes: 240
+attempts: 5
 max_attempts: 5
 branch: task/T0075-layout-l2-at-e002-scale-measured-cpu-tim
 pr: null
@@ -234,6 +256,7 @@ runs:
 - T0075-builder-20261006T021350-a8d0
 - T0075-builder-20261006T110921-d1aa
 - T0075-builder-20261006T225540-ea88
+- T0075-builder-20261007T140856-27e1
 created_by: planner:T0073
 created_at: '2026-10-05T00:31:24+00:00'
 protected_approved: false

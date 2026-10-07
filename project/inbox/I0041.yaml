@@ -6,7 +6,8 @@ refs:
 - O001
 options: []
 recommendation: ''
-status: open
-response: ''
+status: answered
+response: 'Founder (2026-10-07): no replan. The I0039 re-scope was applied directly to T0075 (grid-aligned
+  layout L2); T0076 waits on the founder-run VM convergence gate.'
 created_at: '2026-10-07T05:55:50+00:00'
-resolved_at: null
+resolved_at: '2026-10-07T21:08:43+00:00'

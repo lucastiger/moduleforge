@@ -9,7 +9,7 @@ pending_evaluation: null
 replans: 4
 max_replans: 3
 needs_replan: false
-spent_usd: 224.3698
+spent_usd: 231.293
 budget_override_usd: 284.9474
 log:
 - 'founder answered I0003: (b): use the provisioned binary (MF_FASTHENRY_BIN, then PATH); no auto-build.
@@ -38,3 +38,7 @@ log:
   after a diagnostic) was applied directly: T0075 re-scoped to grid-aligned layout L2 (snapped generator,
   aligned lateral ladder) on the evidence in research/l2_layout_diag, with 2 more attempts; T0076 now
   waits on a founder-run VM convergence gate. O001 set back to active with needs_replan cleared.'
+- 'founder (2026-10-07): backfilled T0075-builder-20261006T225540-ea88 (killed at its wall limit, recorded
+  $0) from its transcript: $6.92'
+- 'founder answered I0041: Founder (2026-10-07): no replan. The I0039 re-scope was applied directly to
+  T0075 (grid-aligned layout L2); T0076 waits on the founder-run VM convergence gate. (no replan)'

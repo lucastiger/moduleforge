@@ -23,7 +23,6 @@ import sys
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
@@ -207,7 +206,7 @@ class AgentRunner:
             self.s.event("run_interrupted", run=rec.run_id, cost=rec.cost_usd)
             return rec
         rec.finished = now()
-        rec.cost_usd = float(data.get("total_cost_usd") or 0.0)
+        rec.cost_usd = self._net_of_session(rec, float(data.get("total_cost_usd") or 0.0))
         rec.num_turns = int(data.get("num_turns") or 0)
         rec.is_error = bool(data.get("is_error"))
         rec.subtype = str(data.get("subtype", ""))
@@ -224,15 +223,12 @@ class AgentRunner:
         return rec
 
     @staticmethod
-    def transcript_cost(session_id: str, started: str) -> Optional[float]:
-        """Cost of a run that ended without its JSON result (timeout, crash): the CLI's last 'cost-state' line in the
-        session transcript written by a process that started with this run. Earlier lines of a resumed session belong
-        to earlier runs. A killed T0075 run recorded $0 although its transcript showed $6.92 (2026-10-07)."""
+    def transcript_cost(session_id: str) -> Optional[float]:
+        """The session's cost so far from the CLI's last 'cost-state' line in its transcript, for a run that ended
+        without its JSON result (timeout, crash). A killed T0075 run recorded $0 although its transcript showed $6.92
+        (2026-10-07). Like the CLI's total_cost_usd, it is cumulative over the session: a resumed run carries the
+        earlier runs' cost forward (T0071, 2026-10-05: $4.48 at the interruption, $4.81 after the resume)."""
         base = Path(os.environ.get("CLAUDE_CONFIG_DIR") or Path.home() / ".claude") / "projects"
-        try:
-            t0 = datetime.fromisoformat(started).timestamp() * 1000.0
-        except ValueError:
-            return None
         cost = None
         for f in base.glob(f"*/{session_id}.jsonl"):
             for line in f.read_text(errors="replace").splitlines():
@@ -242,14 +238,27 @@ class AgentRunner:
                     d = json.loads(line)
                 except ValueError:
                     continue
-                if d.get("type") == "cost-state" and float(d.get("startTime") or 0.0) >= t0 - 60_000.0:
+                if d.get("type") == "cost-state":
                     cost = float(d.get("totalCostUSD") or 0.0)
         return cost
 
+    def _net_of_session(self, rec: RunRecord, session_total: float) -> float:
+        """This run's own cost: the session's cumulative total minus what earlier runs of the session were billed."""
+        prior = 0.0
+        for p in self.runs_dir.glob("*/record.json"):
+            try:
+                other = json.loads(p.read_text())
+            except ValueError:
+                continue
+            if other.get("session_id") == rec.session_id and other.get("run_id") != rec.run_id \
+                    and other.get("status") != "running":
+                prior += float(other.get("cost_usd") or 0.0)
+        return max(0.0, round(session_total - prior, 6))
+
     def _bill_from_transcript(self, rec: RunRecord) -> None:
-        cost = self.transcript_cost(rec.session_id, rec.started)
-        rec.cost_usd = cost or 0.0
-        rec.extra["cost_source"] = "transcript" if cost is not None else "unknown"
+        total = self.transcript_cost(rec.session_id)
+        rec.cost_usd = self._net_of_session(rec, total) if total is not None else 0.0
+        rec.extra["cost_source"] = "transcript" if total is not None else "unknown"
 
     @staticmethod
     def _kill(pid: Optional[int]) -> None:

@@ -645,3 +645,4 @@
 {"ts": "2026-10-07T05:55:50+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0041", "kind": "decision", "subject": "[O001] replan limit reached"}
 {"ts": "2026-10-07T08:25:55+00:00", "event": "run_timeout", "actor": "orchestrator", "run": "T0075-builder-20261006T225540-ea88"}
 {"ts": "2026-10-07T08:25:55+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0075", "signal": "agent_error", "action": "repair"}
+{"ts": "2026-10-07T14:39:16+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 2733, "runs_extended": 0}

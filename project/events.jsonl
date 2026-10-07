@@ -647,3 +647,4 @@
 {"ts": "2026-10-07T08:25:55+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0075", "signal": "agent_error", "action": "repair"}
 {"ts": "2026-10-07T14:39:16+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 2733, "runs_extended": 0}
 {"ts": "2026-10-07T19:16:23+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 5185, "runs_extended": 0}
+{"ts": "2026-10-07T19:45:42+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 1759, "runs_extended": 0}

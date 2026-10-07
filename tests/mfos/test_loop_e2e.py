@@ -407,3 +407,43 @@ def test_a_branch_that_breaks_with_newer_main_is_not_merged(sandbox):
     assert "fast gate fails once current main is merged" in failed[-1]["summary"]
     assert "semantic conflict" in failed[-1]["failure_output"]
     assert not (sandbox / "src" / "moduleforge" / "canary.py").exists()  # main untouched
+
+
+def test_a_decision_can_be_resolved_without_a_replan(sandbox):
+    """O001, 2026-10-07: past its replan limit, every answered decision set needs_replan, the loop re-parked the
+    objective and opened another "replan limit reached" item, so the inbox could never reactivate it."""
+    setup_objective()
+    s = Store()
+    st = s.objective_state("O000")
+    st.replans, st.max_replans, st.needs_replan, st.status = 9, 3, True, "needs_founder"
+    s.save_objective_state("O000", st)
+    item = s.add_inbox(kind="decision", subject="[O000] replan limit reached", summary="x", refs=["O000"])
+    assert cli(["answer", item.id, "carry on as decided", "--no-replan"]) == 0
+    st = Store().objective_state("O000")
+    assert st.status == "active" and not st.needs_replan and "(no replan)" in st.log[-1]
+    Orchestrator(Store()).tick()
+    assert Store().objective_state("O000").status == "active"
+    assert not [i for i in Store().inbox("open") if "replan limit" in i.subject]
+    other = Store().add_inbox(kind="decision", subject="[O000] q", summary="x", refs=["O000"])
+    assert cli(["approve", other.id]) == 0 and Store().objective_state("O000").needs_replan  # default unchanged
+
+
+def test_a_task_carries_its_own_wall_limit(sandbox, monkeypatch):
+    """T0075 (2026-10-07) needs ~4 h per run for its own solves; other agents keep the policy's limit."""
+    from mfos import models as m
+    from mfos.agents import RunRecord
+    from mfos.store import now
+    s = Store()
+    o = Orchestrator(s)
+    seen = {}
+
+    def fake_start(**kw):
+        seen.update(kw)
+        return RunRecord(run_id="r", task_id=kw["task"].id, role=kw["role"], session_id="x", cwd=".", started=now())
+    monkeypatch.setattr(o.runner, "start", fake_start)
+    for tid, wall in (("T9300", 240), ("T9301", None)):
+        t = m.Task(id=tid, objective="O000", title="x", type="implement", agent="builder", description="x",
+                   status="todo", wall_minutes=wall)
+        s.save_task(t)
+        o._start_agent(t)
+        assert seen["wall_minutes"] == wall

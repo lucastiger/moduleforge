@@ -42,3 +42,24 @@ def test_killing_a_timed_out_agent_survives_its_unreaped_leader():
     p = subprocess.Popen(["sleep", "60"], start_new_session=True)
     AgentRunner._kill(p.pid)
     assert p.wait(timeout=10) != 0
+
+
+def test_a_killed_run_is_billed_from_its_session_transcript(tmp_path, monkeypatch):
+    """2026-10-07: a T0075 run killed at its wall limit recorded $0; the CLI's transcript held its cost ($6.92).
+    Only cost-state lines written by a process that started with this run count (a resumed session has earlier ones)."""
+    import json
+    from datetime import datetime
+
+    from mfos.agents import AgentRunner
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path / "cfg"))
+    d = tmp_path / "cfg" / "projects" / "-Users-x-wt-T0075"
+    d.mkdir(parents=True)
+    started = "2026-10-07T05:55:40+00:00"
+    t0 = datetime.fromisoformat(started).timestamp() * 1000
+    lines = [{"type": "cost-state", "sessionId": "s1", "totalCostUSD": 3.0, "startTime": t0 - 3_600_000},
+             {"type": "assistant", "message": {"usage": {}}},
+             {"type": "cost-state", "sessionId": "s1", "totalCostUSD": 6.9232076, "startTime": t0 + 500}]
+    (d / "s1.jsonl").write_text("\n".join(json.dumps(x) for x in lines) + "\nnot json\n")
+    assert AgentRunner.transcript_cost("s1", started) == 6.9232076
+    assert AgentRunner.transcript_cost("s1", "2026-10-07T09:00:00+00:00") is None  # only an earlier run's cost
+    assert AgentRunner.transcript_cost("missing", started) is None

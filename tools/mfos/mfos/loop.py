@@ -851,7 +851,7 @@ class Orchestrator:
             rel = packets.work_packet(self.s, t, cwd, run_key)
         rec = self.runner.start(task=t, role=role, cwd=cwd, packet_rel=rel, schema=packets.schema_for(role),
                                 budget_usd=t.budget_usd, max_turns=t.max_turns, model=model, resume_session=resume,
-                                settings_file=settings)
+                                settings_file=settings, wall_minutes=t.wall_minutes)
         t.status = "running"
         t.runs.append(rec.run_id)
         self.s.save_task(t)

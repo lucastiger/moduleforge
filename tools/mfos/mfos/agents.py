@@ -23,6 +23,7 @@ import sys
 import time
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
@@ -192,16 +193,18 @@ class AgentRunner:
             if time.time() > rec.deadline:
                 self._kill(rec.pid)
                 rec.status, rec.finished = "timeout", now()
+                self._bill_from_transcript(rec)
                 self.save(rec)
-                self.s.event("run_timeout", run=rec.run_id)
+                self.s.event("run_timeout", run=rec.run_id, cost=rec.cost_usd)
             return rec
         out = self.runs_dir / rec.run_id / "stdout.json"
         try:
             data = json.loads(out.read_text())
         except Exception:
             rec.status, rec.finished = "interrupted", now()
+            self._bill_from_transcript(rec)
             self.save(rec)
-            self.s.event("run_interrupted", run=rec.run_id)
+            self.s.event("run_interrupted", run=rec.run_id, cost=rec.cost_usd)
             return rec
         rec.finished = now()
         rec.cost_usd = float(data.get("total_cost_usd") or 0.0)
@@ -219,6 +222,34 @@ class AgentRunner:
         self.s.event("run_finished", run=rec.run_id, status=rec.status, cost=rec.cost_usd, subtype=rec.subtype,
                      report=rec.extra.get("report_source", "structured_output"))
         return rec
+
+    @staticmethod
+    def transcript_cost(session_id: str, started: str) -> Optional[float]:
+        """Cost of a run that ended without its JSON result (timeout, crash): the CLI's last 'cost-state' line in the
+        session transcript written by a process that started with this run. Earlier lines of a resumed session belong
+        to earlier runs. A killed T0075 run recorded $0 although its transcript showed $6.92 (2026-10-07)."""
+        base = Path(os.environ.get("CLAUDE_CONFIG_DIR") or Path.home() / ".claude") / "projects"
+        try:
+            t0 = datetime.fromisoformat(started).timestamp() * 1000.0
+        except ValueError:
+            return None
+        cost = None
+        for f in base.glob(f"*/{session_id}.jsonl"):
+            for line in f.read_text(errors="replace").splitlines():
+                if '"cost-state"' not in line:
+                    continue
+                try:
+                    d = json.loads(line)
+                except ValueError:
+                    continue
+                if d.get("type") == "cost-state" and float(d.get("startTime") or 0.0) >= t0 - 60_000.0:
+                    cost = float(d.get("totalCostUSD") or 0.0)
+        return cost
+
+    def _bill_from_transcript(self, rec: RunRecord) -> None:
+        cost = self.transcript_cost(rec.session_id, rec.started)
+        rec.cost_usd = cost or 0.0
+        rec.extra["cost_source"] = "transcript" if cost is not None else "unknown"
 
     @staticmethod
     def _kill(pid: Optional[int]) -> None:

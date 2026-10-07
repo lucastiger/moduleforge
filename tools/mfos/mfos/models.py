@@ -140,6 +140,7 @@ class Task(_Strict):
     model: Optional[str] = None
     budget_usd: float = 3.0
     max_turns: int = 80
+    wall_minutes: Optional[int] = None  # this task's run wall-clock limit; None = policy limits.run_wall_minutes
     attempts: int = 0
     max_attempts: int = 3
     branch: Optional[str] = None

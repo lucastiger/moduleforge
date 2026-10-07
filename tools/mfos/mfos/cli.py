@@ -72,7 +72,7 @@ def cmd_objective(a: argparse.Namespace) -> int:
 
 
 # ------------------------------------------------------------------ inbox
-def _resolve(s: Store, iid: str, status: str, note: str) -> int:
+def _resolve(s: Store, iid: str, status: str, note: str, replan: bool = True) -> int:
     p = s.project / "inbox" / f"{iid}.yaml"
     item = s.read_yaml(p, m.InboxItem)
     if item.status != "open":
@@ -115,9 +115,12 @@ def _resolve(s: Store, iid: str, status: str, note: str) -> int:
         for ref in item.refs:
             if ref.startswith("O") and (s.objective_dir(ref) / "objective.yaml").exists():
                 st = s.objective_state(ref)
-                st.log.append(f"founder {status} {iid}: {note}")
-                st.needs_replan = True
-                if st.status == "needs_founder" and approved:
+                st.log.append(f"founder {status} {iid}: {note}" + ("" if replan else " (no replan)"))
+                # --no-replan: the founder resolves the decision and declines a replan. Without it, past the replan
+                # limit every answered decision re-parked the objective with a new "replan limit reached" item, so it
+                # could not be reactivated through the inbox at all (O001, 2026-10-07).
+                st.needs_replan = replan
+                if st.status == "needs_founder" and (approved or not replan):
                     st.status = "active"
                 s.save_objective_state(ref, st)
     s.save_inbox(item)
@@ -139,15 +142,15 @@ def cmd_inbox(a: argparse.Namespace) -> int:
 
 
 def cmd_approve(a: argparse.Namespace) -> int:
-    return _resolve(_store(), a.id, "approved", a.note or "")
+    return _resolve(_store(), a.id, "approved", a.note or "", replan=not a.no_replan)
 
 
 def cmd_reject(a: argparse.Namespace) -> int:
-    return _resolve(_store(), a.id, "rejected", a.note)
+    return _resolve(_store(), a.id, "rejected", a.note, replan=not a.no_replan)
 
 
 def cmd_answer(a: argparse.Namespace) -> int:
-    return _resolve(_store(), a.id, "answered", a.text)
+    return _resolve(_store(), a.id, "answered", a.text, replan=not a.no_replan)
 
 
 # ------------------------------------------------------------------ tasks
@@ -400,6 +403,9 @@ def _parser() -> argparse.ArgumentParser:
     an = cmd("answer", cmd_answer, "answer an inbox question")
     an.add_argument("id")
     an.add_argument("text")
+    for p_ in (ap, rj, an):
+        p_.add_argument("--no-replan", action="store_true",
+                        help="resolve a decision without asking the planner to replan the objective")
 
     t = cmd("task", cmd_task, "add, list, show, start, retry, cancel tasks")
     t.add_argument("action", choices=["add", "list", "show", "start", "retry", "cancel"])

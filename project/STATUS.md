@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-07T19:45:44+00:00 from repository state — do not edit_
+_generated 2026-10-07T19:55:00+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0041** [decision] [O001] replan limit reached
@@ -15,7 +15,6 @@ cancelled: 19, done: 58, failed: 3, todo: 7
 
 
 ## Recent events
-- 2026-10-06T19:48:07+00:00 task_failed_attempt {"task": "T0075", "signal": "attempts_exhausted", "action": "founder"}
 - 2026-10-06T19:48:07+00:00 inbox_opened {"id": "I0039", "kind": "decision", "subject": "T0075 stuck: agent reported blocked"}
 - 2026-10-06T23:51:04+00:00 sleep_detected {"gap_s": 1361, "runs_extended": 0}
 - 2026-10-07T00:28:16+00:00 sleep_detected {"gap_s": 2232, "runs_extended": 0}
@@ -30,3 +29,4 @@ cancelled: 19, done: 58, failed: 3, todo: 7
 - 2026-10-07T14:39:16+00:00 sleep_detected {"gap_s": 2733, "runs_extended": 0}
 - 2026-10-07T19:16:23+00:00 sleep_detected {"gap_s": 5185, "runs_extended": 0}
 - 2026-10-07T19:45:42+00:00 sleep_detected {"gap_s": 1759, "runs_extended": 0}
+- 2026-10-07T19:54:58+00:00 sleep_detected {"gap_s": 522, "runs_extended": 0}

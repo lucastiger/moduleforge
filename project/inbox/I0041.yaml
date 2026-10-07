@@ -1,0 +1,12 @@
+id: I0041
+kind: decision
+subject: '[O001] replan limit reached'
+summary: The objective has been replanned too many times without resolution.
+refs:
+- O001
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-07T05:55:50+00:00'
+resolved_at: null

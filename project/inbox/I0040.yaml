@@ -6,7 +6,10 @@ refs:
 - O001
 options: []
 recommendation: ''
-status: open
-response: ''
+status: answered
+response: 'Founder (2026-10-07): no replan. The I0039 decision (go with the best option after a diagnostic)
+  was applied directly: T0075 re-scoped to grid-aligned layout L2 (snapped generator, aligned lateral
+  ladder) on the evidence in research/l2_layout_diag, with 2 more attempts; T0076 now waits on a founder-run
+  VM convergence gate. O001 set back to active with needs_replan cleared.'
 created_at: '2026-10-07T00:34:13+00:00'
-resolved_at: null
+resolved_at: '2026-10-07T05:55:45+00:00'

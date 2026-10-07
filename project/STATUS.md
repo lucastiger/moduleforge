@@ -1,8 +1,8 @@
 # ModuleForge status
-_generated 2026-10-07T05:55:17+00:00 from repository state — do not edit_
+_generated 2026-10-07T05:55:51+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
-- **I0040** [decision] [O001] replan limit reached
+- **I0041** [decision] [O001] replan limit reached
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -11,14 +11,11 @@ _generated 2026-10-07T05:55:17+00:00 from repository state — do not edit_
 | O001 | needs_founder | - | 0/3 | $224.37/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 58, failed: 3, todo: 7
+cancelled: 19, done: 58, failed: 3, running: 1, todo: 6
 
+- T0075 `running` builder/implement: Layout L2 on grid-aligned layouts: snapped generator, aligned lateral ladder, fine-level GMRES, cost at k_star (feasibility gate) (attempt 4)
 
 ## Recent events
-- 2026-10-06T15:06:41+00:00 sleep_detected {"gap_s": 409, "runs_extended": 0}
-- 2026-10-06T15:47:58+00:00 sleep_detected {"gap_s": 2477, "runs_extended": 0}
-- 2026-10-06T15:59:05+00:00 sleep_detected {"gap_s": 342, "runs_extended": 0}
-- 2026-10-06T16:04:50+00:00 sleep_detected {"gap_s": 345, "runs_extended": 0}
 - 2026-10-06T17:51:49+00:00 sleep_detected {"gap_s": 4785, "runs_extended": 0}
 - 2026-10-06T18:09:17+00:00 inbox_opened {"id": "I0038", "kind": "budget_increase", "subject": "[O001] O001: +$40 for T0075's final attempt, T0076 (E002/E003 design) and E002"}
 - 2026-10-06T18:09:21+00:00 inbox_resolved {"id": "I0038", "status": "approved", "note": "usd=66.11"}
@@ -30,3 +27,7 @@ cancelled: 19, done: 58, failed: 3, todo: 7
 - 2026-10-07T00:28:16+00:00 sleep_detected {"gap_s": 2232, "runs_extended": 0}
 - 2026-10-07T00:33:43+00:00 inbox_resolved {"id": "I0039", "status": "answered", "note": "Founder (2026-10-06): give guidance. T0075 stays parked. Founder-session diagnostic first (GCP, ~$3, not evidence
 - 2026-10-07T00:34:13+00:00 inbox_opened {"id": "I0040", "kind": "decision", "subject": "[O001] replan limit reached"}
+- 2026-10-07T05:55:40+00:00 objective_resumed {"objective": "O001", "reason": "I0039 re-scope applied directly to T0075"}
+- 2026-10-07T05:55:40+00:00 run_started {"run": "T0075-builder-20261006T225540-ea88", "task": "T0075", "role": "builder", "session": "c000e0e6-48fa-4e64-9fbc-d05614a8d677"}
+- 2026-10-07T05:55:45+00:00 inbox_resolved {"id": "I0040", "status": "answered", "note": "Founder (2026-10-07): no replan. The I0039 decision (go with the best option after a diagnostic) was applied dire
+- 2026-10-07T05:55:50+00:00 inbox_opened {"id": "I0041", "kind": "decision", "subject": "[O001] replan limit reached"}

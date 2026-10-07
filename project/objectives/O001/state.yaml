@@ -32,3 +32,9 @@ log:
   layout on the original ladder. Pre-set rule: smooth contraction with exact geometry -> re-scope T0075
   into a feature-consistent discretization (snapped generator + aligned ladder, or sub-cell-exact features);
   not smooth -> founder decides between conformal pFFT meshing and a measured-uncertainty reference.'
+- 'founder (2026-10-07): I0039 re-scope applied directly to T0075 (grid-aligned layout L2, research/l2_layout_diag);
+  no planner replan needed'
+- 'founder answered I0040: Founder (2026-10-07): no replan. The I0039 decision (go with the best option
+  after a diagnostic) was applied directly: T0075 re-scoped to grid-aligned layout L2 (snapped generator,
+  aligned lateral ladder) on the evidence in research/l2_layout_diag, with 2 more attempts; T0076 now
+  waits on a founder-run VM convergence gate. O001 set back to active with needs_replan cleared.'

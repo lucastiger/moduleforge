@@ -4,7 +4,7 @@ title: 'Layout L2 on grid-aligned layouts: snapped generator, aligned lateral la
   cost at k_star (feasibility gate)'
 type: implement
 agent: builder
-status: todo
+status: running
 depends_on:
 - T0074
 description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; restoration requested
@@ -225,7 +225,7 @@ risk: high
 model: null
 budget_usd: 8.0
 max_turns: 150
-attempts: 3
+attempts: 4
 max_attempts: 5
 branch: task/T0075-layout-l2-at-e002-scale-measured-cpu-tim
 pr: null
@@ -233,6 +233,7 @@ runs:
 - T0075-builder-20261005T224405-ddee
 - T0075-builder-20261006T021350-a8d0
 - T0075-builder-20261006T110921-d1aa
+- T0075-builder-20261006T225540-ea88
 created_by: planner:T0073
 created_at: '2026-10-05T00:31:24+00:00'
 protected_approved: false

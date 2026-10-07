@@ -4,7 +4,7 @@ title: 'Layout L2 on grid-aligned layouts: snapped generator, aligned lateral la
   cost at k_star (feasibility gate)'
 type: implement
 agent: builder
-status: running
+status: todo
 depends_on:
 - T0074
 description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; restoration requested
@@ -663,3 +663,8 @@ history:
 
     **Likely cause** (an infere'
   at: '2026-10-06T19:48:07+00:00'
+- attempt: 4
+  outcome: agent_error
+  summary: run timeout
+  failure_output: ''
+  at: '2026-10-07T08:25:55+00:00'

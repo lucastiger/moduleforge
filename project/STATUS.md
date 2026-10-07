@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-07T05:55:51+00:00 from repository state — do not edit_
+_generated 2026-10-07T08:25:58+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0041** [decision] [O001] replan limit reached
@@ -11,13 +11,10 @@ _generated 2026-10-07T05:55:51+00:00 from repository state — do not edit_
 | O001 | needs_founder | - | 0/3 | $224.37/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 58, failed: 3, running: 1, todo: 6
+cancelled: 19, done: 58, failed: 3, todo: 7
 
-- T0075 `running` builder/implement: Layout L2 on grid-aligned layouts: snapped generator, aligned lateral ladder, fine-level GMRES, cost at k_star (feasibility gate) (attempt 4)
 
 ## Recent events
-- 2026-10-06T17:51:49+00:00 sleep_detected {"gap_s": 4785, "runs_extended": 0}
-- 2026-10-06T18:09:17+00:00 inbox_opened {"id": "I0038", "kind": "budget_increase", "subject": "[O001] O001: +$40 for T0075's final attempt, T0076 (E002/E003 design) and E002"}
 - 2026-10-06T18:09:21+00:00 inbox_resolved {"id": "I0038", "status": "approved", "note": "usd=66.11"}
 - 2026-10-06T18:09:21+00:00 run_started {"run": "T0075-builder-20261006T110921-d1aa", "task": "T0075", "role": "builder", "session": "d1d705f3-0c65-401d-9365-d920ffc3f8ea"}
 - 2026-10-06T19:48:07+00:00 run_finished {"run": "T0075-builder-20261006T110921-d1aa", "status": "completed", "cost": 5.5324468, "subtype": "success", "report": "structured_output"}
@@ -31,3 +28,5 @@ cancelled: 19, done: 58, failed: 3, running: 1, todo: 6
 - 2026-10-07T05:55:40+00:00 run_started {"run": "T0075-builder-20261006T225540-ea88", "task": "T0075", "role": "builder", "session": "c000e0e6-48fa-4e64-9fbc-d05614a8d677"}
 - 2026-10-07T05:55:45+00:00 inbox_resolved {"id": "I0040", "status": "answered", "note": "Founder (2026-10-07): no replan. The I0039 decision (go with the best option after a diagnostic) was applied dire
 - 2026-10-07T05:55:50+00:00 inbox_opened {"id": "I0041", "kind": "decision", "subject": "[O001] replan limit reached"}
+- 2026-10-07T08:25:55+00:00 run_timeout {"run": "T0075-builder-20261006T225540-ea88"}
+- 2026-10-07T08:25:55+00:00 task_failed_attempt {"task": "T0075", "signal": "agent_error", "action": "repair"}

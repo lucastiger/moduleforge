@@ -4,7 +4,7 @@ title: 'Layout L2 on grid-aligned layouts: snapped generator, aligned lateral la
   cost at k_star (feasibility gate)'
 type: implement
 agent: builder
-status: running
+status: review
 depends_on:
 - T0074
 description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; restoration requested
@@ -691,3 +691,129 @@ history:
   summary: run timeout
   failure_output: ''
   at: '2026-10-07T08:25:55+00:00'
+- attempt: 5
+  outcome: agent_finished
+  summary: 'Every DoD check passes. The quick run exits 0 with k_star = 1 (0.25 mm cells), and the cost
+    gate is met at k_star. The convergence gate is not measured: it needs the 0.125 mm level, which the
+    founder runs with `--vm` after merge.
+
+
+    **Quick run** (the DoD command; seed 7, 20 MHz, fresh process per solve, 10-core 16 GB laptop):
+
+
+    | dies/switch | cell | L (nH) | CPU-s | peak RSS (GB) | GMRES iterations | solver_tol |
+
+    |---|---|---|---|---|---|---|
+
+    | 2 | 0.5 mm (k*−1) | 11.1150 | 180 | 2.28 | 133 | 1.8e-5 |
+
+    | 2 | 0.25 mm (k*) | 11.0292 | 1162 | 7.69 | 238 | 1.7e-5 |
+
+    | 6 | 0.25 mm (k*) | 8.0069 | 2011 | 8.92 | 249 | 2.0e-5 |
+
+
+    - Every solve has GMRES flag 0 and per-net area error 2.6e-16.
+
+    - The lateral step from 0.5 to 0.25 mm is −0.78 %.
+
+
+    **Built on attempt 4 (commit cc730eb8).** I kept its snappe'
+  report:
+    status: completed
+    summary: 'Every DoD check passes. The quick run exits 0 with k_star = 1 (0.25 mm cells), and the cost
+      gate is met at k_star. The convergence gate is not measured: it needs the 0.125 mm level, which
+      the founder runs with `--vm` after merge.
+
+
+      **Quick run** (the DoD command; seed 7, 20 MHz, fresh process per solve, 10-core 16 GB laptop):
+
+
+      | dies/switch | cell | L (nH) | CPU-s | peak RSS (GB) | GMRES iterations | solver_tol |
+
+      |---|---|---|---|---|---|---|
+
+      | 2 | 0.5 mm (k*−1) | 11.1150 | 180 | 2.28 | 133 | 1.8e-5 |
+
+      | 2 | 0.25 mm (k*) | 11.0292 | 1162 | 7.69 | 238 | 1.7e-5 |
+
+      | 6 | 0.25 mm (k*) | 8.0069 | 2011 | 8.92 | 249 | 2.0e-5 |
+
+
+      - Every solve has GMRES flag 0 and per-net area error 2.6e-16.
+
+      - The lateral step from 0.5 to 0.25 mm is −0.78 %.
+
+
+      **Built on attempt 4 (commit cc730eb8).** I kept its snapped generator, nested ladder, off-lattice
+      ValueError, GMRES cap of 100 × 40 and the correctness fixes, and changed only these:
+
+      - **Uncommitted GMRES_TOL change kept and measured.** It is the GMRES stopping rule, 1e-9 → 1e-7.
+      solver_tol is still the rigorous D0004 a-posteriori bound, and its residual term is quadratic in
+      the residual. That term rose from about 4e-15 to 0.3-2e-9, at most about 1e-4 of the stated bounds.
+      L is unchanged to the 5 digits attempt 4 recorded. Iterations fell 40 % and CPU-s fell 12-28 %.
+
+      - **`--quick` is now the founder''s three solves.** The seed-11 layout and both sensitivity solves
+      are in `--vm`.
+
+      - **`--vm` order fixed.** All three 0.125 mm solves now start first; before, `--jobs 3` started
+      one layout''s three levels.
+
+      - **Child CPU split.** Each child solve now records user and system CPU time separately (`cpu_user_s`,
+      `cpu_sys_s`), checked with one 0.5 mm child run.
+
+
+      **Note and docstring.** `docs/notes/o001-l2-layout-cost.md` now has the results, both measurement
+      tables (this run and attempt 4), the sensitivity, cost per layout vs dies and refinement, GMRES
+      growth, the E002 CPU-h projection and VM instructions. The projection is CPU-h ≈ 0.44·n + 3·m for
+      n layouts at k* plus m at k*+1; the k*+1 cost is extrapolated. The module docstring''s cost paragraph
+      is updated. `docs/notes/o001-l2-layout-cost.json` held stale attempt-3 data; I replaced it with
+      this run''s cost.json.
+
+
+      No tests changed in this attempt. Attempt 4''s test changes are listed in the note.'
+    checks_run:
+    - cmd: uv run ruff check benchmarks/l2_layout_cost.py src/moduleforge/solvers tests/unit/solvers (first
+        run, before the quick run)
+      exit_code: 0
+    - cmd: uv run pytest -q tests/unit/solvers -x -p no:cacheprovider --durations=15 (before the quick
+        run; 114 passed)
+      exit_code: 0
+    - cmd: rm -rf /tmp/l2cost && uv run python benchmarks/l2_layout_cost.py --quick --out /tmp/l2cost
+      exit_code: 0
+    - cmd: uv run python -c "<DoD cost.json assertion from the packet>" (printed k_star 1 [(2, 0, 180,
+        2.278, 1.111e-08), (2, 1, 1162, 7.692, 1.103e-08), (6, 1, 2011, 8.918, 8.007e-09)])
+      exit_code: 0
+    - cmd: uv run python benchmarks/l2_layout_cost.py --child 7 2 0 /tmp/t0075_child_r0.json (validates
+        cpu_user_s/cpu_sys_s fields)
+      exit_code: 0
+    - cmd: uv run ruff check benchmarks/l2_layout_cost.py src/moduleforge/solvers tests/unit/solvers
+      exit_code: 0
+    - cmd: test -f docs/notes/o001-l2-layout-cost.md
+      exit_code: 0
+    - cmd: uv run pytest -q tests/unit/solvers (final; 114 passed)
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    files_changed:
+    - benchmarks/l2_layout_cost.py
+    - src/moduleforge/solvers/l2_layout.py
+    - docs/notes/o001-l2-layout-cost.md
+    - docs/notes/o001-l2-layout-cost.json
+    concerns:
+    - The convergence gate (k_star to k_star+1 < 1 %, contracting) is unmeasured for generated layouts.
+      It needs the 0.125 mm level (~35 GB), which by founder decision runs on the burst VM via `--vm`
+      (11 solves including both sensitivity solves and seeds 11/2 and 3/6). The roughly −0.5 to −0.7 %
+      estimate in the note is an extrapolation from the founder diagnostic, not a measurement.
+    - The 6-die CPU margin at k_star is about 16 % (2011 of 2400 CPU-s). This run had 8.8 GB of swap in
+      use and 801 s of system CPU time over the whole run. Attempt 4 measured the same solve at 2286 CPU-s
+      with GMRES_TOL 1e-9. A re-run under heavier memory pressure could get close to the gate.
+    - GMRES_TOL went from 1e-9 to 1e-7 (attempt 4's uncommitted edit, kept and measured). It is a stopping
+      rule, not a test tolerance. solver_tol is still the rigorous D0004 bound and still includes the
+      residual term, now 0.3-2e-9 against stated bounds of about 1.8e-5. The founder may still want to
+      confirm this reading of 'solver_tol stays as D0004 defines it'.
+    - 'Peak RSS reads low under macOS memory pressure: the 0.5 mm solve was 2.28 GB in the quick run and
+      3.58 GB standalone. The 12 GB gate is better read against attempt 4''s 9.28 GB for 6 dies.'
+    - The finer-wire-filament sensitivity has never been measured on the current ladder. The +2-layers
+      sensitivity (−0.043 %) is from attempt 4 at GMRES_TOL 1e-9. Both are in `--vm`.
+    - 'Tests changed by the generator change (attempt 4, listed in the note): none of the existing generator
+      tests pin values. One test was added: test_every_trace_edge_and_die_footprint_on_the_design_grid.'

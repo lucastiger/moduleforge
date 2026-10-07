@@ -1,0 +1,33 @@
+id: T0088
+objective: O001
+title: Review T0075 (physics)
+type: review
+agent: critic
+status: running
+depends_on: []
+description: cdd8cffc8f29ac7f59542e4f6eb984f285c55fd9
+context_files: []
+deliverables: []
+touches: []
+definition_of_done: []
+experiment: null
+risk: low
+model: null
+budget_usd: 3.0
+max_turns: 60
+wall_minutes: null
+attempts: 1
+max_attempts: 3
+branch: null
+pr: null
+runs:
+- T0088-critic-20261007T165808-dae1
+created_by: orchestrator
+created_at: '2026-10-07T23:58:06+00:00'
+protected_approved: false
+approval: null
+target: T0075
+lens: physics
+trigger: null
+rationale: ''
+history: []

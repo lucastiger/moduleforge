@@ -654,3 +654,7 @@
 {"ts": "2026-10-07T21:08:38+00:00", "event": "cost_backfilled", "actor": "orchestrator", "run": "T0075-builder-20261006T225540-ea88", "task": "T0075", "cost": 6.923208, "source": "transcript"}
 {"ts": "2026-10-07T21:08:43+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0041", "status": "answered", "note": "Founder (2026-10-07): no replan. The I0039 re-scope was applied directly to T0075 (grid-aligned layout L2); T0076 waits on the founder-run VM convergence gate."}
 {"ts": "2026-10-07T21:08:56+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0075-builder-20261007T140856-27e1", "task": "T0075", "role": "builder", "session": "e9d91e4c-3e18-4ef8-9b97-d1cb6fd576e0"}
+{"ts": "2026-10-07T22:52:00+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0075-builder-20261007T140856-27e1", "status": "completed", "cost": 3.042035, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-10-07T23:58:06+00:00", "event": "verified", "actor": "orchestrator", "task": "T0075"}
+{"ts": "2026-10-07T23:58:08+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0088-critic-20261007T165808-dae1", "task": "T0088", "role": "critic", "session": "c2615a41-8955-4472-a923-0ac9e88ca188"}
+{"ts": "2026-10-07T23:58:08+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0089-critic-20261007T165808-5e5c", "task": "T0089", "role": "critic", "session": "0c98cc1a-997e-4734-80a5-65a497b2f588"}

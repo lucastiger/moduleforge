@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-07T23:58:08+00:00 from repository state — do not edit_
+_generated 2026-10-07T23:58:43+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -18,7 +18,6 @@ cancelled: 19, done: 58, failed: 3, review: 1, running: 2, todo: 6
 - T0089 `running` critic/review: Review T0075 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-07T08:25:55+00:00 run_timeout {"run": "T0075-builder-20261006T225540-ea88"}
 - 2026-10-07T08:25:55+00:00 task_failed_attempt {"task": "T0075", "signal": "agent_error", "action": "repair"}
 - 2026-10-07T14:39:16+00:00 sleep_detected {"gap_s": 2733, "runs_extended": 0}
 - 2026-10-07T19:16:23+00:00 sleep_detected {"gap_s": 5185, "runs_extended": 0}
@@ -33,3 +32,4 @@ cancelled: 19, done: 58, failed: 3, review: 1, running: 2, todo: 6
 - 2026-10-07T23:58:06+00:00 verified {"task": "T0075"}
 - 2026-10-07T23:58:08+00:00 run_started {"run": "T0088-critic-20261007T165808-dae1", "task": "T0088", "role": "critic", "session": "c2615a41-8955-4472-a923-0ac9e88ca188"}
 - 2026-10-07T23:58:08+00:00 run_started {"run": "T0089-critic-20261007T165808-5e5c", "task": "T0089", "role": "critic", "session": "0c98cc1a-997e-4734-80a5-65a497b2f588"}
+- 2026-10-07T23:58:41+00:00 sleep_detected {"gap_s": 4002, "runs_extended": 2}

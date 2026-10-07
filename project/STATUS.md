@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-07T19:55:00+00:00 from repository state — do not edit_
+_generated 2026-10-07T21:02:09+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0041** [decision] [O001] replan limit reached
@@ -8,7 +8,7 @@ _generated 2026-10-07T19:55:00+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | needs_founder | - | 0/3 | $224.37/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $224.37/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
 cancelled: 19, done: 58, failed: 3, todo: 7

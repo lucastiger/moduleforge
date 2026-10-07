@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-07T14:39:24+00:00 from repository state — do not edit_
+_generated 2026-10-07T19:16:24+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0041** [decision] [O001] replan limit reached
@@ -15,7 +15,6 @@ cancelled: 19, done: 58, failed: 3, todo: 7
 
 
 ## Recent events
-- 2026-10-06T18:09:21+00:00 run_started {"run": "T0075-builder-20261006T110921-d1aa", "task": "T0075", "role": "builder", "session": "d1d705f3-0c65-401d-9365-d920ffc3f8ea"}
 - 2026-10-06T19:48:07+00:00 run_finished {"run": "T0075-builder-20261006T110921-d1aa", "status": "completed", "cost": 5.5324468, "subtype": "success", "report": "structured_output"}
 - 2026-10-06T19:48:07+00:00 task_failed_attempt {"task": "T0075", "signal": "attempts_exhausted", "action": "founder"}
 - 2026-10-06T19:48:07+00:00 inbox_opened {"id": "I0039", "kind": "decision", "subject": "T0075 stuck: agent reported blocked"}
@@ -30,3 +29,4 @@ cancelled: 19, done: 58, failed: 3, todo: 7
 - 2026-10-07T08:25:55+00:00 run_timeout {"run": "T0075-builder-20261006T225540-ea88"}
 - 2026-10-07T08:25:55+00:00 task_failed_attempt {"task": "T0075", "signal": "agent_error", "action": "repair"}
 - 2026-10-07T14:39:16+00:00 sleep_detected {"gap_s": 2733, "runs_extended": 0}
+- 2026-10-07T19:16:23+00:00 sleep_detected {"gap_s": 5185, "runs_extended": 0}

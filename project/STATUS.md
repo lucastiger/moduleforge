@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-07T21:05:23+00:00 from repository state — do not edit_
+_generated 2026-10-07T21:08:34+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0041** [decision] [O001] replan limit reached
@@ -15,7 +15,6 @@ cancelled: 19, done: 58, failed: 3, todo: 7
 
 
 ## Recent events
-- 2026-10-06T23:51:04+00:00 sleep_detected {"gap_s": 1361, "runs_extended": 0}
 - 2026-10-07T00:28:16+00:00 sleep_detected {"gap_s": 2232, "runs_extended": 0}
 - 2026-10-07T00:33:43+00:00 inbox_resolved {"id": "I0039", "status": "answered", "note": "Founder (2026-10-06): give guidance. T0075 stays parked. Founder-session diagnostic first (GCP, ~$3, not evidence
 - 2026-10-07T00:34:13+00:00 inbox_opened {"id": "I0040", "kind": "decision", "subject": "[O001] replan limit reached"}
@@ -30,3 +29,4 @@ cancelled: 19, done: 58, failed: 3, todo: 7
 - 2026-10-07T19:45:42+00:00 sleep_detected {"gap_s": 1759, "runs_extended": 0}
 - 2026-10-07T19:54:58+00:00 sleep_detected {"gap_s": 522, "runs_extended": 0}
 - 2026-10-07T21:05:21+00:00 loop_started {"pid": 98351}
+- 2026-10-07T21:08:33+00:00 loop_started {"pid": 3607}

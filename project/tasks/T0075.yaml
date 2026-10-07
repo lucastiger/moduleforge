@@ -1,10 +1,10 @@
 id: T0075
 objective: O001
-title: 'Layout L2 at E002 scale: measured CPU time, memory and refinement convergence per layout (feasibility
-  gate)'
+title: 'Layout L2 on grid-aligned layouts: snapped generator, aligned lateral ladder, fine-level GMRES,
+  cost at k_star (feasibility gate)'
 type: implement
 agent: builder
-status: needs_founder
+status: todo
 depends_on:
 - T0074
 description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; restoration requested
@@ -117,7 +117,61 @@ description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; 
   (4) The note belongs in docs/notes/o001-l2-layout-cost.md, since research/notes is outside the builder''s
   write scope; the definition of done now checks that path. Keep attempt 2''s speed-up and correctness
   fixes. Describe the bilinear wire-foot contacts, a model change beyond the earlier packet, in the note
-  and the module docstring.'
+  and the module docstring.
+
+
+  FOUNDER RE-SCOPE (2026-10-07, inbox I0039). It replaces the partial-cell approach of attempt 3. Read
+  research/l2_layout_diag/summary.json and research/scripts/l2_layout_lateral_diag.py.
+
+  Evidence: a founder diagnostic on a GCP n2-highmem-32, not evidence for E002. It used the generator''s
+  own u_shaped 2-die layout with every free parameter on the 0.5 mm grid. With thickness layers and wire
+  filaments held at k_star, pure lateral refinement converges smoothly: 0.5 / 0.25 / 0.125 mm cells give
+  12.8885 / 12.7662 / 12.6915 nH, i.e. -0.96 % then -0.59 % (contraction 0.61, observed order about 0.7).
+  The same layout at the non-aligned 0.7 and 0.35 mm cells, with partial-cell weighting, gives 11.787
+  and 12.193 nH, 5-9 % low. Partial cells, with their full-box inductive footprint, are the error source,
+  not a fix. The generator also places dies at continuous x positions, so die footprints never align with
+  any cell.
+
+  Required:
+
+  (1) Generator. Snap every free geometric parameter in src/moduleforge/generate/halfbridge.py to a 0.5
+  mm design grid: die size s, gaps g and dg, extensions e, and the die-row start xs (snap the row start,
+  not the centre). Then all trace edges and die footprints lie on that grid; the housing constants already
+  do. Keep the families, the die counts and DRC validity, and document the change in the module docstring.
+  Update tests that pin generated values only where the generator change forces it, and list them in the
+  report.
+
+  (2) Lateral ladder. Nested cells that divide the design grid, e.g. CELL = (0.5, 0.25, 0.125) mm. The
+  lattice origin and extent must keep every feature on cell boundaries; the baseplate box -8..78 x -8..48
+  mm already does. Hold thickness layers and wire filaments at the resolving counts (attempt 3''s index
+  3: top 10, back 6, base 6) at every lateral level. At k_star, report their sensitivity with one extra
+  solve each (+2 layers; the next finer wire edges). Required |change| < 0.2 %; attempt 3 measured -0.04
+  % and +0.02 %.
+
+  (3) l2_layout raises ValueError when a layout''s features are not on the lattice at the requested refinement,
+  instead of weighting partial cells. Keep the exact per-net area test as the alignment check. Keep attempts
+  1-3''s correctness fixes, speed-ups, the layout-level reference test and solver_tol_rel_L.
+
+  (4) GMRES at the finest level. At 0.125 mm the solve hit its 500-iteration cap (restart 100 x 5) and
+  reported solver_tol 1.2e-3. Make it converge, via the cap, the restart or the preconditioner, so solver_tol
+  < 1e-3 at every level.
+
+  (5) What runs where. The k_star+1 level (0.125 mm) needs about 35 GB and about 3 h, and does not fit
+  this 16 GB Mac.
+
+  - On this Mac (the DoD''s --quick run): seed 7 at 2 dies, plus one layout of another family, at k_star-1
+  (0.5 mm) and k_star (0.25 mm); and 6 dies at k_star. The cost gate at k_star is unchanged: <= 2400 CPU-s
+  and <= 12 GB per solve.
+
+  - Add a --vm mode to benchmarks/l2_layout_cost.py. It runs k_star-1, k_star and k_star+1 for 3 dev layouts
+  across families (2 and 6 dies), in parallel with a --jobs option, and writes cost.json. The founder
+  runs it on the burst VM after this task merges.
+
+  - The convergence gate (< 1 % from k_star to k_star+1, contracting, a change below 1e-4 counting as
+  converged) is applied to the VM run before E002''s design (T0076) starts. The DoD''s cost.json check
+  below therefore no longer requires a k_star+1 solve.
+
+  (6) Update docs/notes/o001-l2-layout-cost.md with the diagnostic, the new ladder and the cost per layout.'
 context_files:
 - src/moduleforge/solvers/l2_layout.py
 - src/moduleforge/solvers/l2_core.py
@@ -130,6 +184,8 @@ context_files:
 - .mfos/policy.toml
 - project/reviews/T0074/T0083.json
 - project/reviews/T0074/T0084.json
+- research/l2_layout_diag/summary.json
+- research/scripts/l2_layout_lateral_diag.py
 deliverables:
 - benchmarks/l2_layout_cost.py
 - docs/notes/o001-l2-layout-cost.md
@@ -139,20 +195,20 @@ touches:
 - tests/unit/solvers/test_l2_layout*.py
 - benchmarks/l2_layout_cost.py
 - docs/notes/o001-l2-layout-cost.md
+- src/moduleforge/generate/halfbridge.py
+- tests/unit/**
+- tests/regression/**
 definition_of_done:
 - cmd: rm -rf /tmp/l2cost && uv run python benchmarks/l2_layout_cost.py --quick --out /tmp/l2cost
   exists: null
   timeout_s: 5400
-- cmd: 'uv run python -c "import json, math; r=json.load(open(''/tmp/l2cost/cost.json'')); rows=r[''solves''];
-    k=r[''k_star'']; assert isinstance(k, int) and k >= 0, k; assert rows and {x[''dies_per_switch'']
-    for x in rows if x[''refinement''] == k} >= {2, 6}, rows; assert all(math.isfinite(x[''L_H'']) and
-    1e-9 < x[''L_H''] < 1e-7 for x in rows), rows; assert any(x[''refinement''] == k + 1 for x in rows),
-    ''no solve at k_star+1''; bad=[x for x in rows if x[''refinement''] == k and (x[''cpu_s''] > 2400
-    or x[''peak_rss_gb''] > 12)]; assert not bad, bad; conv=r[''convergence'']; assert conv, conv; ok=lambda
-    c: abs(c[''rel_change'']) < 1e-4 or (abs(c[''rel_change'']) < 0.01 and (c.get(''prev_change'') is
-    None or (abs(c[''rel_change'']) < abs(c[''prev_change'']) and c[''rel_change''] * c[''prev_change'']
-    > 0))); assert all(ok(c) for c in conv), conv; print(''k_star'', k, [(x[''dies_per_switch''], x[''refinement''],
-    round(x[''cpu_s'']), x[''peak_rss_gb'']) for x in rows], conv)"'
+- cmd: uv run python -c "import json, math; r=json.load(open('/tmp/l2cost/cost.json')); rows=r['solves'];
+    k=r['k_star']; assert isinstance(k, int) and k >= 1, k; assert {x['dies_per_switch'] for x in rows
+    if x['refinement'] == k} >= {2, 6}, rows; assert any(x['refinement'] == k - 1 for x in rows), 'no
+    solve at k_star-1'; assert all(math.isfinite(x['L_H']) and 1e-9 < x['L_H'] < 1e-7 for x in rows),
+    rows; bad=[x for x in rows if x['refinement'] == k and (x['cpu_s'] > 2400 or x['peak_rss_gb'] > 12)];
+    assert not bad, bad; assert all(x['solver_tol'] < 1e-3 for x in rows), rows; print('k_star', k, [(x['dies_per_switch'],
+    x['refinement'], round(x['cpu_s']), x['peak_rss_gb'], x['L_H']) for x in rows])"
   exists: null
   timeout_s: 120
 - cmd: null
@@ -170,7 +226,7 @@ model: null
 budget_usd: 8.0
 max_turns: 150
 attempts: 3
-max_attempts: 3
+max_attempts: 5
 branch: task/T0075-layout-l2-at-e002-scale-measured-cpu-tim
 pr: null
 runs:

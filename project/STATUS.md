@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-07T00:34:14+00:00 from repository state — do not edit_
+_generated 2026-10-07T05:55:17+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0040** [decision] [O001] replan limit reached
@@ -11,9 +11,8 @@ _generated 2026-10-07T00:34:14+00:00 from repository state — do not edit_
 | O001 | needs_founder | - | 0/3 | $224.37/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 58, failed: 3, needs_founder: 1, todo: 6
+cancelled: 19, done: 58, failed: 3, todo: 7
 
-- T0075 `needs_founder` builder/implement: Layout L2 at E002 scale: measured CPU time, memory and refinement convergence per layout (feasibility gate) (attempt 3)
 
 ## Recent events
 - 2026-10-06T15:06:41+00:00 sleep_detected {"gap_s": 409, "runs_extended": 0}

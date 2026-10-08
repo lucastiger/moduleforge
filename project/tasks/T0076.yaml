@@ -65,7 +65,25 @@ description: 'Restores T0069 plan node n5 (dropped by the open-task-limit bug; r
   The layout L2 converges slowly (observed order about 0.7). The founder diagnostic (research/l2_layout_diag)
   puts L(k_star) about 1.5 % above the extrapolated value. Report this bias, estimated per checked layout
   from k_star-1, k_star and k_star+1, and carry it into the MAPE analysis: e.g. a sensitivity of every
-  metric to L2 at k_star vs k_star+1, or a stated bias bound. Do not treat it as zero.'
+  metric to L2 at k_star vs k_star+1, or a stated bias bound. Do not treat it as zero.
+
+
+  Founder note 2 (2026-10-08), from reviews T0088, T0089, T0091 and T0092 of T0075 (project/reviews/T0075/):
+
+  - Use the burst-VM run''s measurements (research/l2_layout_vm/cost.json, clean Linux CPU and RSS), not
+  the Mac DoD numbers. Those were taken under memory pressure: RSS reads low and CPU varied 1.57x. The
+  k_star+1 (0.125 mm) cost is about 3-5 CPU-h per layout; size the k_star+1 subset m from the VM data.
+
+  - L at k_star sits about 1.2-1.9 % above its lateral limit, with a family-dependent offset of about
+  0.7 points. Rankings of layouts whose L2 values differ by less than about 1 % are therefore not resolved
+  at k_star. E002''s analysis must say how near-ties are handled, and show the metrics'' sensitivity to
+  using L2 at k_star versus k_star+1 on the checked subset.
+
+  - R is not converged: the backside-Cu layers miss the skin-depth criterion, and R moved +8.2 % under
+  ''+2 layers''. Do not use R2 as a reference; E002 compares loop inductance only.
+
+  - T0075 snapped the generator to a 0.5 mm design grid, so the population differs from before. Check
+  sample diversity (failure mode F2, CV of L2 >= 0.3) on the snapped generator.'
 context_files:
 - project/tasks/T0024.yaml
 - project/objectives/O001/objective.yaml
@@ -85,6 +103,9 @@ context_files:
 - .mfos/policy.toml
 - .claude/skills/mf-evidence/SKILL.md
 - research/l2_layout_diag/summary.json
+- project/reviews/T0075/T0091.json
+- project/reviews/T0075/T0092.json
+- research/l2_layout_vm/cost.json
 deliverables:
 - experiments/drafts/E002.yaml
 - experiments/drafts/E003.yaml
@@ -141,6 +162,7 @@ risk: high
 model: null
 budget_usd: 7.0
 max_turns: 90
+wall_minutes: null
 attempts: 0
 max_attempts: 3
 branch: null

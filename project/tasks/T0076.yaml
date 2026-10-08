@@ -4,86 +4,65 @@ title: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timi
   the measured L2 layout cost
 type: design_experiment
 agent: scientist
-status: todo
+status: running
 depends_on:
 - T0075
-description: 'Restores T0069 plan node n5 (dropped by the open-task-limit bug; restoration requested by
-  the founder on I0032). It re-issues T0024, which was blocked by failed T0022. Draft experiments/drafts/E002.yaml,
-  experiments/drafts/E003.yaml, experiments/runners/e002_ranking.py and experiments/runners/e003_timing.py.
-  Write research/notes/o001-e002-e003-design.md with the rationale and a power analysis.
-
-
-  Everything in T0024''s description (project/tasks/T0024.yaml) still applies:
-
-  - sealed seed;
-
-  - strata over all families and 2-6 dies per switch;
-
-  - metrics and bootstrap CIs with a fixed bootstrap seed;
-
-  - the top-decile rounding rule declared in advance;
-
-  - secondary Spearman at 5 and 80 MHz (F4), and residual correlations with loop area, plane distance
-  and die count (F3);
-
-  - sanity checks l2_converged, sample_diverse, all_drc_valid, l2_reference_valid and all_finite;
-
-  - exclusions declared in advance;
-
-  - E003 thread pinning, n_evals, warm-up and recorded CPU model;
-
-  - the founder context on L1''s die-count-correlated mesh bias.
-
-
-  Changes:
-
-  (1) L2 is moduleforge.solvers.l2_layout.loop_inductance. l2_reference_valid re-solves E001''s C1 in
-  the run with moduleforge.solvers.l2 and must agree within 2 %.
-
-  (2) Size n from the measured layout cost in research/notes/o001-l2-layout-cost.md and benchmarks/l2_layout_cost.py,
-  not from T0067''s estimate, and from the CPU-h O001 has left. State cpu_hours_est and timeout_min honestly.
-  Above 6 CPU-h the run goes to burst compute. Under D0004 the in-house L2 needs no FastHenry binary,
-  only uv sync. Provenance is tool_version plus the solver-source sha256.
-
-  (3) If no n makes A2/K1 and A4/K2 decidable within the objective''s compute budget, say so in the note
-  and stop with status blocked; the founder decides.
-
-  (4) --smoke uses <= 4 layouts at 2 dies per switch from an unsealed dev seed, with the l2_converged
-  refinement solve on one layout only. It is a pipeline check only. Never use it to change n, strata,
-  metrics or thresholds.
-
-  Do not write under src/.
-
-
-  Founder note (2026-10-07, I0039 and T0075''s re-scope). This task starts only after the founder''s burst-VM
-  run of benchmarks/l2_layout_cost.py --vm has passed the convergence gate: < 1 % from k_star (0.25 mm)
-  to k_star+1 (0.125 mm) and contracting, on 3 dev layouts.
-
-  Design E002 on the grid-snapped generator (0.5 mm design grid) with L2 at k_star, run on burst compute.
-  Use the measured VM cost per layout to size n and the k_star+1 check subset.
-
-  The layout L2 converges slowly (observed order about 0.7). The founder diagnostic (research/l2_layout_diag)
-  puts L(k_star) about 1.5 % above the extrapolated value. Report this bias, estimated per checked layout
-  from k_star-1, k_star and k_star+1, and carry it into the MAPE analysis: e.g. a sensitivity of every
-  metric to L2 at k_star vs k_star+1, or a stated bias bound. Do not treat it as zero.
-
-
-  Founder note 2 (2026-10-08), from reviews T0088, T0089, T0091 and T0092 of T0075 (project/reviews/T0075/):
-
-  - Use the burst-VM run''s measurements (research/l2_layout_vm/cost.json, clean Linux CPU and RSS), not
-  the Mac DoD numbers. Those were taken under memory pressure: RSS reads low and CPU varied 1.57x. The
-  k_star+1 (0.125 mm) cost is about 3-5 CPU-h per layout; size the k_star+1 subset m from the VM data.
-
-  - L at k_star sits about 1.2-1.9 % above its lateral limit, with a family-dependent offset of about
-  0.7 points. Rankings of layouts whose L2 values differ by less than about 1 % are therefore not resolved
-  at k_star. E002''s analysis must say how near-ties are handled, and show the metrics'' sensitivity to
-  using L2 at k_star versus k_star+1 on the checked subset.
-
-  - R is not converged: the backside-Cu layers miss the skin-depth criterion, and R moved +8.2 % under
-  ''+2 layers''. Do not use R2 as a reference; E002 compares loop inductance only.
-
-  - T0075 snapped the generator to a 0.5 mm design grid, so the population differs from before. Check
-  sample diversity (failure mode F2, CV of L2 >= 0.3) on the snapped generator.'
+description: "Restores T0069 plan node n5 (dropped by the open-task-limit bug; restoration requested by\
+  \ the founder on I0032). It re-issues T0024, which was blocked by failed T0022. Draft experiments/drafts/E002.yaml,\
+  \ experiments/drafts/E003.yaml, experiments/runners/e002_ranking.py and experiments/runners/e003_timing.py.\
+  \ Write research/notes/o001-e002-e003-design.md with the rationale and a power analysis.\n\nEverything\
+  \ in T0024's description (project/tasks/T0024.yaml) still applies:\n- sealed seed;\n- strata over all\
+  \ families and 2-6 dies per switch;\n- metrics and bootstrap CIs with a fixed bootstrap seed;\n- the\
+  \ top-decile rounding rule declared in advance;\n- secondary Spearman at 5 and 80 MHz (F4), and residual\
+  \ correlations with loop area, plane distance and die count (F3);\n- sanity checks l2_converged, sample_diverse,\
+  \ all_drc_valid, l2_reference_valid and all_finite;\n- exclusions declared in advance;\n- E003 thread\
+  \ pinning, n_evals, warm-up and recorded CPU model;\n- the founder context on L1's die-count-correlated\
+  \ mesh bias.\n\nChanges:\n(1) L2 is moduleforge.solvers.l2_layout.loop_inductance. l2_reference_valid\
+  \ re-solves E001's C1 in the run with moduleforge.solvers.l2 and must agree within 2 %.\n(2) Size n\
+  \ from the measured layout cost in research/notes/o001-l2-layout-cost.md and benchmarks/l2_layout_cost.py,\
+  \ not from T0067's estimate, and from the CPU-h O001 has left. State cpu_hours_est and timeout_min honestly.\
+  \ Above 6 CPU-h the run goes to burst compute. Under D0004 the in-house L2 needs no FastHenry binary,\
+  \ only uv sync. Provenance is tool_version plus the solver-source sha256.\n(3) If no n makes A2/K1 and\
+  \ A4/K2 decidable within the objective's compute budget, say so in the note and stop with status blocked;\
+  \ the founder decides.\n(4) --smoke uses <= 4 layouts at 2 dies per switch from an unsealed dev seed,\
+  \ with the l2_converged refinement solve on one layout only. It is a pipeline check only. Never use\
+  \ it to change n, strata, metrics or thresholds.\nDo not write under src/.\n\nFounder note (2026-10-07,\
+  \ I0039 and T0075's re-scope). This task starts only after the founder's burst-VM run of benchmarks/l2_layout_cost.py\
+  \ --vm has passed the convergence gate: < 1 % from k_star (0.25 mm) to k_star+1 (0.125 mm) and contracting,\
+  \ on 3 dev layouts.\nDesign E002 on the grid-snapped generator (0.5 mm design grid) with L2 at k_star,\
+  \ run on burst compute. Use the measured VM cost per layout to size n and the k_star+1 check subset.\n\
+  The layout L2 converges slowly (observed order about 0.7). The founder diagnostic (research/l2_layout_diag)\
+  \ puts L(k_star) about 1.5 % above the extrapolated value. Report this bias, estimated per checked layout\
+  \ from k_star-1, k_star and k_star+1, and carry it into the MAPE analysis: e.g. a sensitivity of every\
+  \ metric to L2 at k_star vs k_star+1, or a stated bias bound. Do not treat it as zero.\n\nFounder note\
+  \ 2 (2026-10-08), from reviews T0088, T0089, T0091 and T0092 of T0075 (project/reviews/T0075/):\n- Use\
+  \ the burst-VM run's measurements (research/l2_layout_vm/cost.json, clean Linux CPU and RSS), not the\
+  \ Mac DoD numbers. Those were taken under memory pressure: RSS reads low and CPU varied 1.57x. The k_star+1\
+  \ (0.125 mm) cost is about 3-5 CPU-h per layout; size the k_star+1 subset m from the VM data.\n- L at\
+  \ k_star sits about 1.2-1.9 % above its lateral limit, with a family-dependent offset of about 0.7 points.\
+  \ Rankings of layouts whose L2 values differ by less than about 1 % are therefore not resolved at k_star.\
+  \ E002's analysis must say how near-ties are handled, and show the metrics' sensitivity to using L2\
+  \ at k_star versus k_star+1 on the checked subset.\n- R is not converged: the backside-Cu layers miss\
+  \ the skin-depth criterion, and R moved +8.2 % under '+2 layers'. Do not use R2 as a reference; E002\
+  \ compares loop inductance only.\n- T0075 snapped the generator to a 0.5 mm design grid, so the population\
+  \ differs from before. Check sample diversity (failure mode F2, CV of L2 >= 0.3) on the snapped generator.\n\
+  \nFounder note 3 (2026-10-08): THE CONVERGENCE GATE PASSED. This task may start. Read research/l2_layout_vm/cost.json\
+  \ and the commit message of b2114993.\n- Steps from k_star (0.25 mm) to k_star+1 (0.125 mm): -0.49 %\
+  \ (seed 7 / 2 dies, interleaved), -0.73 % (seed 11 / 2 dies, u_shaped), -0.71 % (seed 3 / 6 dies, side_by_side).\
+  \ Each is smaller than the previous step and of the same sign; contraction is about 0.61 per halving.\n\
+  - Implied bias at k_star, from the measured steps: |d2|/(1-r) is about 1.3 / 1.9 / 1.8 %.\n- Sensitivity\
+  \ at k_star: +2 layers -0.04 %, layers x2 graded to 20 MHz -0.18 %, finer wires +0.02 %.\n- solver_tol:\
+  \ 1.4-5.0e-5 at k_star. At k_star+1 it is 1.1-1.6e-3 (stated plane-table and wire-grid bounds), so k_star+1\
+  \ values carry about a 0.15 % bound. Use them only for the bias and convergence check subset.\n- Cost\
+  \ on the burst VM (n2-highmem-32; 8 threads per solve, 4 solves at once):\n  - k_star: 26-41 min wall,\
+  \ 1.0-1.45 CPU-h, RSS 8.5-11.9 GB per layout;\n  - k_star+1: 3.1-3.7 h wall, 8.7-9.3 CPU-h, RSS 35-37\
+  \ GB per layout.\n  The benchmark's 2400 CPU-s gate was calibrated on the Mac and does not apply to\
+  \ VM accounting.\n- Compute envelope. O001's objective lists 60 CPU-h, informational and not enforced.\
+  \ Present E002 at TWO envelopes, each with its sample size n at k_star, check subset m at k_star+1,\
+  \ power for A2/A3/A5 (rho lower CI >= 0.85, point >= 0.90, top-decile recall), projected CPU-h and VM-hours,\
+  \ and the registered cpu_hours_est:\n  (a) <= 60 CPU-h, and\n  (b) <= 180 CPU-h (about 15-20 VM-hours,\
+  \ about $30-40).\n  The founder chooses at registration. E002 runs on burst compute (add it to policy\
+  \ compute.burst_experiments at registration, as for E001)."
 context_files:
 - project/tasks/T0024.yaml
 - project/objectives/O001/objective.yaml
@@ -163,11 +142,12 @@ model: null
 budget_usd: 7.0
 max_turns: 90
 wall_minutes: null
-attempts: 0
+attempts: 1
 max_attempts: 3
-branch: null
+branch: task/T0076-design-e002-l1-vs-l2-ranking-sealed-seed
 pr: null
-runs: []
+runs:
+- T0076-scientist-20261008T021638-e9bb
 created_by: planner:T0073
 created_at: '2026-10-05T00:31:24+00:00'
 protected_approved: false

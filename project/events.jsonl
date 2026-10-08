@@ -676,3 +676,4 @@
 {"ts": "2026-10-08T05:06:18+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0042", "status": "approved", "note": "Founder: approve (founder session's recommendation). Loop DoD verified on merge commit ac590646 (quick benchmark, cost gate at k_star = 0.25 mm); T0091 and T0092 accept_with_caveats. Caveats go to the founder's extended GCP run (convergence gate on 3 layouts incl. seed 3/6 dies, wire-filament sensitivity, a stronger thickness variant, clean Linux CPU/RSS), a T0076 note, and a backlog task."}
 {"ts": "2026-10-08T05:06:41+00:00", "event": "merged", "actor": "orchestrator", "task": "T0075"}
 {"ts": "2026-10-08T05:15:28+00:00", "event": "task_added", "actor": "founder", "task": "T0093"}
+{"ts": "2026-10-08T09:16:38+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0076-scientist-20261008T021638-e9bb", "task": "T0076", "role": "scientist", "session": "a22b2423-18cb-44bb-83f0-2a8b6ab02444"}

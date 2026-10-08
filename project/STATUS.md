@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-08T05:15:36+00:00 from repository state — do not edit_
+_generated 2026-10-08T09:16:42+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -11,11 +11,11 @@ _generated 2026-10-08T05:15:36+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $241.70/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 20, done: 63, failed: 3, todo: 7
+cancelled: 20, done: 63, failed: 3, running: 1, todo: 6
 
+- T0076 `running` scientist/design_experiment: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timing) + runners, sized from the measured L2 layout cost (attempt 1)
 
 ## Recent events
-- 2026-10-08T00:03:39+00:00 task_failed_attempt {"task": "T0075", "signal": "dod_failed", "action": "diagnose"}
 - 2026-10-08T00:03:39+00:00 investigation_spawned {"task": "T0090", "about": "T0075", "cls": "implementation"}
 - 2026-10-08T02:08:32+00:00 loop_started {"pid": 30941}
 - 2026-10-08T02:16:24+00:00 run_started {"run": "T0075-builder-20261007T191624-59c2", "task": "T0075", "role": "builder", "session": "87a1f5c0-40c7-452b-b588-fb8ef59d9e33"}
@@ -30,3 +30,4 @@ cancelled: 20, done: 63, failed: 3, todo: 7
 - 2026-10-08T05:06:18+00:00 inbox_resolved {"id": "I0042", "status": "approved", "note": "Founder: approve (founder session's recommendation). Loop DoD verified on merge commit ac590646 (quick benchmark,
 - 2026-10-08T05:06:41+00:00 merged {"task": "T0075"}
 - 2026-10-08T05:15:28+00:00 task_added {"task": "T0093"}
+- 2026-10-08T09:16:38+00:00 run_started {"run": "T0076-scientist-20261008T021638-e9bb", "task": "T0076", "role": "scientist", "session": "a22b2423-18cb-44bb-83f0-2a8b6ab02444"}

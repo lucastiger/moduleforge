@@ -9,7 +9,10 @@ refs:
 - T0075
 options: []
 recommendation: ''
-status: open
-response: ''
+status: approved
+response: 'Founder: approve (founder session''s recommendation). Loop DoD verified on merge commit ac590646
+  (quick benchmark, cost gate at k_star = 0.25 mm); T0091 and T0092 accept_with_caveats. Caveats go to
+  the founder''s extended GCP run (convergence gate on 3 layouts incl. seed 3/6 dies, wire-filament sensitivity,
+  a stronger thickness variant, clean Linux CPU/RSS), a T0076 note, and a backlog task.'
 created_at: '2026-10-08T04:24:01+00:00'
-resolved_at: null
+resolved_at: '2026-10-08T05:06:18+00:00'

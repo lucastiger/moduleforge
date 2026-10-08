@@ -1,8 +1,8 @@
 # ModuleForge status
-_generated 2026-10-08T04:24:02+00:00 from repository state — do not edit_
+_generated 2026-10-08T05:06:35+00:00 from repository state — do not edit_
 
-## Founder inbox (1 open)
-- **I0042** [protected_change] T0075: merge needs founder approval
+## Founder inbox (0 open)
+- nothing needs you
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -11,12 +11,11 @@ _generated 2026-10-08T04:24:02+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $241.70/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 20, done: 62, failed: 3, needs_founder: 1, todo: 6
+cancelled: 20, done: 62, failed: 3, merge: 1, todo: 6
 
-- T0075 `needs_founder` builder/implement: Layout L2 on grid-aligned layouts: snapped generator, aligned lateral ladder, fine-level GMRES, cost at k_star (feasibility gate) (attempt 6)
+- T0075 `merge` builder/implement: Layout L2 on grid-aligned layouts: snapped generator, aligned lateral ladder, fine-level GMRES, cost at k_star (feasibility gate) (attempt 6)
 
 ## Recent events
-- 2026-10-07T23:58:41+00:00 sleep_detected {"gap_s": 4002, "runs_extended": 2}
 - 2026-10-08T00:03:04+00:00 run_finished {"run": "T0089-critic-20261007T165808-5e5c", "status": "completed", "cost": 1.54058, "subtype": "success", "report": "structured_output"}
 - 2026-10-08T00:03:38+00:00 run_finished {"run": "T0088-critic-20261007T165808-dae1", "status": "completed", "cost": 1.786147, "subtype": "success", "report": "structured_output"}
 - 2026-10-08T00:03:39+00:00 task_failed_attempt {"task": "T0075", "signal": "dod_failed", "action": "diagnose"}
@@ -31,3 +30,4 @@ cancelled: 20, done: 62, failed: 3, needs_founder: 1, todo: 6
 - 2026-10-08T04:10:59+00:00 run_finished {"run": "T0091-critic-20261007T210548-136f", "status": "completed", "cost": 2.039056, "subtype": "success", "report": "structured_output"}
 - 2026-10-08T04:23:59+00:00 run_finished {"run": "T0092-critic-20261007T210549-2f84", "status": "completed", "cost": 1.501344, "subtype": "success", "report": "structured_output"}
 - 2026-10-08T04:24:01+00:00 inbox_opened {"id": "I0042", "kind": "protected_change", "subject": "T0075: merge needs founder approval"}
+- 2026-10-08T05:06:18+00:00 inbox_resolved {"id": "I0042", "status": "approved", "note": "Founder: approve (founder session's recommendation). Loop DoD verified on merge commit ac590646 (quick benchmark,

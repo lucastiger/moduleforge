@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-08T00:03:40+00:00 from repository state — do not edit_
+_generated 2026-10-08T02:00:56+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -11,7 +11,7 @@ _generated 2026-10-08T00:03:40+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $237.66/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 60, failed: 4, todo: 7
+cancelled: 20, done: 60, failed: 4, todo: 6
 
 
 ## Recent events

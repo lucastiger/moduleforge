@@ -3,7 +3,7 @@ objective: O001
 title: Diagnose failure of T0075
 type: investigate
 agent: scientist
-status: todo
+status: cancelled
 depends_on: []
 description: 'Task T0075 (''Layout L2 on grid-aligned layouts: snapped generator, aligned lateral ladder,
   fine-level GMRES, cost at k_star (feasibility gate)'') failed with preliminary class `implementation`:

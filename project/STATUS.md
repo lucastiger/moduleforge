@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-08T00:03:05+00:00 from repository state — do not edit_
+_generated 2026-10-08T00:03:40+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -8,18 +8,13 @@ _generated 2026-10-08T00:03:05+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $235.88/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $237.66/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 19, done: 59, failed: 3, review: 1, running: 1, todo: 6
+cancelled: 19, done: 60, failed: 4, todo: 7
 
-- T0075 `review` builder/implement: Layout L2 on grid-aligned layouts: snapped generator, aligned lateral ladder, fine-level GMRES, cost at k_star (feasibility gate) (attempt 5)
-- T0088 `running` critic/review: Review T0075 (physics) (attempt 1)
 
 ## Recent events
-- 2026-10-07T14:39:16+00:00 sleep_detected {"gap_s": 2733, "runs_extended": 0}
-- 2026-10-07T19:16:23+00:00 sleep_detected {"gap_s": 5185, "runs_extended": 0}
-- 2026-10-07T19:45:42+00:00 sleep_detected {"gap_s": 1759, "runs_extended": 0}
 - 2026-10-07T19:54:58+00:00 sleep_detected {"gap_s": 522, "runs_extended": 0}
 - 2026-10-07T21:05:21+00:00 loop_started {"pid": 98351}
 - 2026-10-07T21:08:33+00:00 loop_started {"pid": 3607}
@@ -32,3 +27,6 @@ cancelled: 19, done: 59, failed: 3, review: 1, running: 1, todo: 6
 - 2026-10-07T23:58:08+00:00 run_started {"run": "T0089-critic-20261007T165808-5e5c", "task": "T0089", "role": "critic", "session": "0c98cc1a-997e-4734-80a5-65a497b2f588"}
 - 2026-10-07T23:58:41+00:00 sleep_detected {"gap_s": 4002, "runs_extended": 2}
 - 2026-10-08T00:03:04+00:00 run_finished {"run": "T0089-critic-20261007T165808-5e5c", "status": "completed", "cost": 1.54058, "subtype": "success", "report": "structured_output"}
+- 2026-10-08T00:03:38+00:00 run_finished {"run": "T0088-critic-20261007T165808-dae1", "status": "completed", "cost": 1.786147, "subtype": "success", "report": "structured_output"}
+- 2026-10-08T00:03:39+00:00 task_failed_attempt {"task": "T0075", "signal": "dod_failed", "action": "diagnose"}
+- 2026-10-08T00:03:39+00:00 investigation_spawned {"task": "T0090", "about": "T0075", "cls": "implementation"}

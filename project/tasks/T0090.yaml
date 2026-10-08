@@ -1,0 +1,55 @@
+id: T0090
+objective: O001
+title: Diagnose failure of T0075
+type: investigate
+agent: scientist
+status: todo
+depends_on: []
+description: 'Task T0075 (''Layout L2 on grid-aligned layouts: snapped generator, aligned lateral ladder,
+  fine-level GMRES, cost at k_star (feasibility gate)'') failed with preliminary class `implementation`:
+  merge conflict with main.
+
+  Failure output (tail):
+
+  ```
+
+  Bring the branch up to date with main and resolve conflicts.
+
+  Auto-merging src/moduleforge/solvers/l2_layout.py
+
+  CONFLICT (content): Merge conflict in src/moduleforge/solvers/l2_layout.py
+
+  Automatic merge failed; fix conflicts and then commit the result.
+
+
+  ```
+
+  Determine the true failure class and root cause. Follow skill mf-diagnosis: list at least two alternative
+  explanations, design a discriminating test, run it if cheap, and write your notes to research/diagnoses/T0090.md.'
+context_files:
+- project/tasks/T0075.yaml
+deliverables:
+- research/diagnoses/T0090.md
+touches:
+- research/diagnoses/T0090.md
+definition_of_done: []
+experiment: null
+risk: medium
+model: null
+budget_usd: 5.0
+max_turns: 80
+wall_minutes: null
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: orchestrator
+created_at: '2026-10-08T00:03:39+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

@@ -4,7 +4,7 @@ title: 'Layout L2 on grid-aligned layouts: snapped generator, aligned lateral la
   cost at k_star (feasibility gate)'
 type: implement
 agent: builder
-status: review
+status: failed
 depends_on:
 - T0074
 description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; restoration requested
@@ -817,3 +817,16 @@ history:
       sensitivity (−0.043 %) is from attempt 4 at GMRES_TOL 1e-9. Both are in `--vm`.
     - 'Tests changed by the generator change (attempt 4, listed in the note): none of the existing generator
       tests pin values. One test was added: test_every_trace_edge_and_die_footprint_on_the_design_grid.'
+- attempt: 5
+  outcome: dod_failed
+  summary: merge conflict with main
+  failure_output: 'Bring the branch up to date with main and resolve conflicts.
+
+    Auto-merging src/moduleforge/solvers/l2_layout.py
+
+    CONFLICT (content): Merge conflict in src/moduleforge/solvers/l2_layout.py
+
+    Automatic merge failed; fix conflicts and then commit the result.
+
+    '
+  at: '2026-10-08T00:03:39+00:00'

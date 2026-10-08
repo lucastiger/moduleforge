@@ -1,0 +1,33 @@
+id: T0094
+objective: O001
+title: Review T0076 (physics)
+type: review
+agent: critic
+status: running
+depends_on: []
+description: 09ee20b3caf27d0481e35b74f65e545bf2c43516
+context_files: []
+deliverables: []
+touches: []
+definition_of_done: []
+experiment: null
+risk: low
+model: null
+budget_usd: 3.0
+max_turns: 60
+wall_minutes: null
+attempts: 1
+max_attempts: 3
+branch: null
+pr: null
+runs:
+- T0094-critic-20261008T042129-e982
+created_by: orchestrator
+created_at: '2026-10-08T11:21:26+00:00'
+protected_approved: false
+approval: null
+target: T0076
+lens: physics
+trigger: null
+rationale: ''
+history: []

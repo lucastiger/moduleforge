@@ -4,7 +4,7 @@ title: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timi
   the measured L2 layout cost
 type: design_experiment
 agent: scientist
-status: running
+status: review
 depends_on:
 - T0075
 description: "Restores T0069 plan node n5 (dropped by the open-task-limit bug; restoration requested by\
@@ -158,4 +158,180 @@ trigger: null
 rationale: E002 produces A2-A5 and K1-K3, with the F1/F2 sanity checks and the F3/F4 diagnostics. E003
   produces A6. A power analysis based on measured cost keeps an INCONCLUSIVE verdict from wasting one
   of the 3 evaluations. Sealed seeds address F5.
-history: []
+history:
+- attempt: 1
+  outcome: agent_finished
+  summary: 'I''ve written the E002 and E003 drafts, their two runners and the design note. Every definition-of-done
+    command exits 0, and the work is committed to the task branch as 09ee20b3.
+
+
+    **Commands run and exit codes:**
+
+    - `uv run mfos exp check E002`: 0. `uv run mfos exp check E003`: 0.
+
+    - `uv run ruff check` on both runners: 0.
+
+    - E002 `--smoke` plus the DoD assertion: 0 and 0 (1715 s wall, peak RSS 8.0 GB).
+
+    - E003 `--smoke` plus the DoD assertion: 0 and 0.
+
+    - `uv run mfos gate --fast`: 0 ("all gates passed").
+
+    - Also run: the power simulation `research/scripts/e002_power.py` (0) and a code-path harness `research/scripts/e002_runner_harness.py`
+    (0).
+
+
+    **Choice at registration.** The founder''s note asked for E002 at two compute envelopes; the founder
+    picks one:
+
+    - **(a) ≤ 60 CPU-h:** 30 layouts and one '
+  report:
+    summary: 'I''ve written the E002 and E003 drafts, their two runners and the design note. Every definition-of-done
+      command exits 0, and the work is committed to the task branch as 09ee20b3.
+
+
+      **Commands run and exit codes:**
+
+      - `uv run mfos exp check E002`: 0. `uv run mfos exp check E003`: 0.
+
+      - `uv run ruff check` on both runners: 0.
+
+      - E002 `--smoke` plus the DoD assertion: 0 and 0 (1715 s wall, peak RSS 8.0 GB).
+
+      - E003 `--smoke` plus the DoD assertion: 0 and 0.
+
+      - `uv run mfos gate --fast`: 0 ("all gates passed").
+
+      - Also run: the power simulation `research/scripts/e002_power.py` (0) and a code-path harness `research/scripts/e002_runner_harness.py`
+      (0).
+
+
+      **Choice at registration.** The founder''s note asked for E002 at two compute envelopes; the founder
+      picks one:
+
+      - **(a) ≤ 60 CPU-h:** 30 layouts and one check layout at the finer level (u_shaped, 6 dies). About
+      51 CPU-h and 6.5 VM-hours (~$13). Register cpu_hours_est 52 and timeout_min 600.
+
+      - **(b) ≤ 180 CPU-h:** 90 layouts and three check layouts, one per family. About 158 CPU-h and 18
+      VM-hours (~$35). Register cpu_hours_est 158 and timeout_min 1500. **I recommend (b); the draft carries
+      it.** If (b) must stay under 180 even at the +25 % cost estimate, set `freq_per_stratum: 0` (about
+      143 CPU-h).
+
+
+      The CPU-h estimates use the VM measurements in `research/l2_layout_vm/cost.json`, not the Mac numbers.
+
+
+      **Power** (simulated on a dev-seed pool, never the sealed seed):
+
+      - A2 (lower Spearman bound ≥ 0.85) has ≥ 0.8 probability of passing for a population ρ of about
+      0.96 or more at 30 layouts, and about 0.94 or more at 90.
+
+      - K1 needs ρ ≤ 0.48 at 30 layouts or ≤ 0.64 at 90.
+
+      - A4 (upper MAPE bound ≤ 0.12) has ≥ 0.8 power for MAPE ≲ 0.08 at 30 layouts and ≲ 0.095 at 90.
+      K2 fires reliably at MAPE ≥ 0.25.
+
+      - A5 resolves to 3 layouts at n = 30 and 9 at n = 90.
+
+
+      So both envelopes can decide the criteria when L1 is clearly good or clearly bad, and I did not
+      mark the task blocked.
+
+
+      **Main finding for the founder: A4 will probably sit at its threshold.** On the three unsealed VM
+      dev layouts, L1 reads 7–16 % below L2 at the 0.25 mm level. That gives MAPE ≈ 0.11, or ≈ 0.10 after
+      correcting L2''s known bias, right where A4 has little power at either envelope. Correcting L2''s
+      bias would lower MAPE by about 1.5 points. Refining L1''s mesh moves L1 further from L2. So the
+      gap is not L1''s discretisation; possibly missing physics, though that is speculation from three
+      layouts.
+
+
+      **L2 bias handling.** L2 at the 0.25 mm level is never treated as exact:
+
+      - The bias is estimated per checked layout from three refinement levels, and from the coarser step
+      on 15 more layouts.
+
+      - It feeds three things: metrics against a corrected reference, a rigorous MAPE band for A4, and
+      recall bounds for near-tied layouts.
+
+      - I could not compute a meaningful ρ or MAPE on 1–3 check layouts. Instead the runner reports each
+      checked layout''s error shift between the two levels and whether their order agrees.
+
+
+      **Things you might not expect:**
+
+      - Pooled Spearman is inflated by family clustering: side_by_side layouts sit far apart from the
+      others. The runner reports a within-family ρ as a secondary metric.
+
+      - The plane-distance covariate for F3 varies only through bond-wire height, because the generator
+      uses one fixed substrate stack.
+
+      - At envelope (a) there are no L2 data at 5/80 MHz; only L1''s own frequency stability is reported.
+
+      - The packet cites `research/notes/o001-l2-layout-cost.md`, which does not exist. I used `docs/notes/o001-l2-layout-cost.md`.
+
+
+      The smoke runs and the harness are pipeline checks only. The harness caught one bug before the smoke:
+      a lookup that crashed when a frequency had not been solved at that level. I fixed it. No design
+      parameter was changed after any run.'
+    failure_class: none
+    confidence: 0.8
+    affects_acceptance_criteria: true
+    evidence:
+    - 'VM cost.json (fact): k* 20 MHz 0.99/1.02/1.45 CPU-h, 8.5-11.9 GB; k*+1 8.71/8.84/9.31 CPU-h, 34.8-36.6
+      GB; k*-1 0.21-0.43 CPU-h; steps d1 -0.78/-1.19/-1.15 %, d2 -0.49/-0.73/-0.71 %, contraction 0.61-0.62;
+      GMRES flags 0'
+    - 'Unit cost model: k* c(d) = 1.00 + 0.112(d-2) CPU-h, mean 1.23; extra frequency ~0.50 CPU-h (inference
+      from the GMRES share 38-44 %; 5/80 MHz iterations unmeasured, +-30 %)'
+    - 'Dev L1 vs L2(k*) on the VM layouts (fact, planning only): -16.2 % (seed 3/6 side_by_side), -10.8
+      % (seed 7/2 interleaved), -7.1 % (seed 11/2 u_shaped); L1 at 1 mm moves further from L2'
+    - 'Dev pool (seed 990001, 1500 layouts): L1 CV 0.37; 1.85 % of pairs within 1 %; L1 18 ms/eval default,
+      30-48 s at 0.5 mm (3 freqs)'
+    - 'Power simulation research/e002_design/power.json: P(A2) at population rho 0.944 is 0.50 (n=30)
+      and 0.99 (n=90); P(A4) at MAPE 0.093 is 0.67 / 0.98; at MAPE 0.113 0.10 / 0.18'
+    - 'E002 smoke: status complete, 7/7 sanity passed; C1 max rel err 2.4e-4 vs E001''s closed form (registered
+      sha256 matched); L2 level-1 solve 960 s, 8.0 GB, 275 iterations; total 1715 s wall'
+    - 'E003 smoke: p50 25.0 ms (CI 21.2-29.2), CPU/wall 1.00, both sanity checks pass (contended by the
+      parallel E002 smoke)'
+    - 'Harness, full mode n=30, synthetic L2: every declared metric and sanity check reported; bias model
+      recovered contraction 0.61 and bias 1.8 %; found and fixed an L2 frequency-lookup bug'
+    alternative_explanations:
+    - explanation: The dev L1-L2 gap of 7-16 % is unrepresentative, measured on 3 layouts, and the sealed-sample
+        MAPE could be far from 0.11.
+      how_to_discriminate: Only E002 itself settles this; the design reports MAPE with a bootstrap CI
+        and a reference band. No design change was made on the dev numbers.
+    - explanation: The extra-frequency cost (5/80 MHz) may differ from the GMRES-share estimate if the
+        iteration counts change with frequency.
+      how_to_discriminate: cpu_hours_total and the per-solve gmres_iters in e002_rows.json from the registered
+        run; if needed, a one-layout VM probe at 5/20/80 MHz before registration.
+    discriminating_tests:
+    - 'Before registration (optional, ~2 CPU-h on the VM): one dev layout at k* with freqs [5e6, 2e7,
+      8e7], to pin the extra-frequency cost that sets the margin of envelope (b)'
+    - 'In run: check that the contraction r measured on the sealed check layouts lies within 0.5-0.7;
+      outside that range the bias model and the MAPE band are suspect'
+    - 'In run: compare spearman_rho_within_family with the pooled rho; a large gap means pooled rho overstates
+      search fidelity'
+    recommended_actions:
+    - 'Founder: choose the envelope at registration, (b) recommended; for (a) change only n_layouts 30,
+      freq_per_stratum 0, check_strata [u_shaped:6], cpu_hours_est 52, timeout_min 600'
+    - 'Founder: add E002 to policy compute.burst_experiments; run it with the registered 4 jobs x 8 threads
+      on n2-highmem-32'
+    - 'Founder: decide before the run how an A4 outcome is read when mape_Lloop and the reference band
+      (mape_Lloop_refbound_lo/hi) disagree; the dev data put MAPE near 0.11, where the L2 bias at k* (~1.5
+      points) is decision-relevant'
+    - 'Fix the packet reference: research/notes/o001-l2-layout-cost.md does not exist; the note is docs/notes/o001-l2-layout-cost.md'
+    - E003 runs locally; record that A6's claim is tied to the CPU model the runner records
+    files_written:
+    - experiments/drafts/E002.yaml
+    - experiments/drafts/E003.yaml
+    - experiments/runners/e002_ranking.py
+    - experiments/runners/e003_timing.py
+    - research/notes/o001-e002-e003-design.md
+    - research/scripts/e002_power.py
+    - research/scripts/e002_runner_harness.py
+    - research/e002_design/power.json
+    - research/e002_design/pool_l1.json
+    - research/e002_design/power.log
+    experiment_drafts:
+    - experiments/drafts/E002.yaml
+    - experiments/drafts/E003.yaml

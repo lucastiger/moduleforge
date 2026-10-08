@@ -1,0 +1,64 @@
+{
+  "verdict": "reject",
+  "findings": [
+    {
+      "severity": "blocker",
+      "title": "Envelope (a) and the freq_per_stratum: 0 fallback crash after all L2 compute (IndexError); the run ends with status 'error'",
+      "detail": "The design gives the founder two envelopes to choose from at registration. The YAML header and note \u00a70 say envelope (a) differs ONLY in n_layouts 30, freq_per_stratum 0, check_strata [u_shaped:6], cpu_hours_est and timeout. Note \u00a74 also suggests freq_per_stratum: 0 to keep (b) under 180 CPU-h. checked_config explicitly allows freq_per_stratum 0, and line 679 comments on that case. With freq_per_stratum 0, however, sec_idx is [] and `si = np.array(sec_idx)` is an empty float64 array, so `l2_20[si]` raises IndexError. This happens in the secondary-metric block, after every L2 solve has finished. ExperimentRun.__exit__ then writes status 'error', and the evaluator refuses that evidence. Objective O001 sets budget cpu_hours: 60, so (a) is the only envelope inside the frozen objective budget. After registration, the runner hash is frozen. Choosing (a) as documented would therefore burn ~52 CPU-h of burst compute and one evaluation for nothing. The author's harness only ran freq_per_stratum = 1, so this path was never exercised.",
+      "evidence": "I took research/scripts/e002_runner_harness.py, changed only the config to envelope (a) (n_layouts=30, freq_per_stratum=0, check_strata=['u_shaped:6']) and ran it in memory. Result: `File experiments/runners/e002_ranking.py, line 539, in main: l2s20 = l2_20[si] -> IndexError: arrays used as indices must be of integer (or boolean) type`. /tmp/t0095-e002-harness-a/result.json shows status 'error', even though all 7 sanity checks passed and the primary metrics had already been recorded.",
+      "suggested_check": "Use `si = np.array(sec_idx, dtype=int)` and re-run the harness under both envelopes and with freq_per_stratum 0 before anything is registered."
+    },
+    {
+      "severity": "minor",
+      "title": "The draft carries 158 CPU-h against an objective budget of 60 CPU-h",
+      "detail": "project/objectives/O001/objective.yaml sets budget.cpu_hours: 60. The registered draft (envelope b) sets cpu_hours_est: 158, with a \u00b125 % range up to 198. The note calls this a founder choice, but registering the draft as written exceeds the frozen objective budget. The only in-budget alternative is envelope (a), which crashes (finding above).",
+      "evidence": "objective.yaml `budget: {usd: 120, cpu_hours: 60, wall_days: 21}`; E002.yaml `cpu_hours_est: 158`.",
+      "suggested_check": "Get an explicit founder budget change before registering (b)."
+    },
+    {
+      "severity": "minor",
+      "title": "The l2_converged gate has a thin margin on strata never measured at k*+1, and 'converged' means a small step, not a small error",
+      "detail": "The gate requires |d2| + tol(k*) + tol(k*+1) < 1 %. On the dev VM layouts this sum was 0.84 % (u_shaped:2), 0.88 % (side_by_side:6) and 0.63 % (interleaved:2). The registered check strata interleaved:6 and u_shaped:6 have never been solved at k*+1. A step about 15 % larger than seen so far would invalidate the whole ~158 CPU-h run. Separately, the gate can pass while the extrapolated residual bias of L2 at k* (1.3-1.9 %) is larger than conv_tol. The bias model reports this, but A4 reads the uncorrected mape_Lloop.",
+      "evidence": "cost.json steps: d2 = -0.486 / -0.725 / -0.707 %; solver_tol_rel_L at k*+1 = 1.14-1.64e-3; beta = -d2/(1-r) = 1.3-1.9 %.",
+      "suggested_check": "Have the founder confirm, before registration, that a gate failure on a 6-die check stratum is an acceptable way for the run to end."
+    },
+    {
+      "severity": "minor",
+      "title": "The 'rigorous' MAPE reference band is rigorous only for the 15 layouts that have refinement data",
+      "detail": "[beta_lo, beta_hi] comes from 3 three-level layouts plus 12 two-level layouts, whose contraction is borrowed from at most 3 measurements. The band is then applied to all 90 layouts, 75 of which have no L2 refinement data at all. The YAML does say 'rigorous given the band', but reading A4/K2 as 'reference-robust' from refbound_lo/hi assumes the band carries over to the unmeasured layouts.",
+      "evidence": "e002_ranking.py lines 617-623 and 643-647; E002.yaml metric descriptions for mape_Lloop_refbound_lo/hi.",
+      "suggested_check": "State the transfer assumption explicitly wherever the 'reference-robust' reading is made."
+    },
+    {
+      "severity": "note",
+      "title": "Two lattice sub-checks cannot fail on their own",
+      "detail": "meta['mesh_params']['on_lattice'] is hard-coded True in l2_layout.build_layout_system, so the 'on the lattice' part of l2_solver_ok can never fail. An off-lattice layout raises instead, and that shows up as a failed child in all_finite. Also, all_drc_valid checks the lattice via layout_cell_fill, which does not check die footprints; those are checked only when the system is built. The run is still invalidated through all_finite, so nothing is lost, but the check names overstate what they test.",
+      "evidence": "l2_layout.py line 1872 `on_lattice=True`; layout_cell_fill (lines 1764-1767) does not call check_on_lattice for cm.shorts.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "E003 thread pinning: malformed XLA flag; no core pinning on macOS",
+      "detail": "XLA_FLAGS includes the token 'intra_op_parallelism_threads=1' without a '--' prefix. This is harmless today because L1 is pure numpy, but it would break if JAX were ever imported. On darwin there is no affinity pinning, and P-core vs E-core scheduling is not controlled. The CPU/wall \u2264 1.1 check catches extra threads but not E-core placement, and the recorded CPU model ('Apple M5') does not say which core type ran the loop. A slower core would only inflate the timing, so this is conservative for A6.",
+      "evidence": "e003_timing.py line 759; my smoke run: cpu_model 'Apple M5', CPU/wall 0.999.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "`uv run mfos exp check E002` and `E003` print no PROBLEM lines, so both validate. `uv run ruff check` on both runners: all checks passed.",
+    "Ran the E003 smoke myself: status complete, l1_eval_ms_p50 17.1 ms (CI 14.8-20.5), p90 22.8 ms, cpu_wall_ratio 0.999; both sanity checks passed.",
+    "Ran envelope (a) (n=30, freq_per_stratum=0, check_strata=[u_shaped:6]) through the author's own code-path harness, modified in memory: it fails with IndexError at e002_ranking.py:539 and writes status 'error'.",
+    "Checked the bias extrapolation on a synthetic geometric ladder (q=0.61): beta = -d2/(1-r) = 0.0238188 against the exact 1 - Linf/L_k* = 0.0238188. The k*-1 formula -d1 r/(1-r) gives the same value.",
+    "Checked ape_range against a brute-force grid over beta in [b_lo, b_hi] for 2000 random layouts: the maximum matches exactly, the minimum to within 2e-6 (the grid resolution).",
+    "Tested the top-k recall bootstrap for tie bias from duplicated resamples. With L1 == L2, all 2000 resamples give 1.0; with 3 % noise the CI is [1, 1]. No bias found.",
+    "Read mfos.stats: mape(pred, ref) normalises by the second argument, so L2 is the reference as the runner intends; spearman uses average ranks.",
+    "Read L1 model.py: it discretises each frequency separately, so L1(20 MHz) from a 3-frequency call equals the single-frequency value E003 times. L2 grades its mesh to max(100 MHz, f_max), so 20 MHz on the frequency subset uses the same mesh as the single-frequency solves.",
+    "Recomputed the cost model from research/l2_layout_vm/cost.json: k* cost 0.99-1.45 CPU-h with a slope of 0.111 per die and a balanced mean of 1.23; 90 \u00d7 1.23 = 110.7; k*+1 costs 8.71-9.31; the totals match the note's ~158 (b) and ~51 (a). d1, d2 and r = 0.61-0.62 match the note's table.",
+    "Checked ExperimentRun.__exit__: an exception writes status 'error'; missing sanity checks write 'invalid'."
+  ],
+  "caveats": [
+    "The E002 --smoke DoD command was started (background task bnu5p9u8f) but had not finished (~30 min wall, 8 GB) when my review budget ran out. Its success therefore rests on the author's report and on a full-mode harness run (at freq_per_stratum 1) that I did not repeat for envelope (b).",
+    "I did not have the T0076 task packet, so I could not check whether the founder required both envelopes to be runnable. The blocker relies on the design note and YAML header presenting envelope (a) and the freq_per_stratum: 0 fallback as supported registration options.",
+    "Several shell commands (rm, ls, ps, some compound commands) were denied in this sandbox, so I could not watch the smoke run's progress directly."
+  ]
+}

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-08T11:27:51+00:00 from repository state — do not edit_
+_generated 2026-10-08T11:28:58+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -8,17 +8,13 @@ _generated 2026-10-08T11:27:51+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $249.86/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $252.37/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 20, done: 64, failed: 3, review: 1, running: 1, todo: 6
+cancelled: 20, done: 65, failed: 3, todo: 7
 
-- T0076 `review` scientist/design_experiment: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timing) + runners, sized from the measured L2 layout cost (attempt 1)
-- T0094 `running` critic/review: Review T0076 (physics) (attempt 1)
 
 ## Recent events
-- 2026-10-08T04:05:49+00:00 run_started {"run": "T0092-critic-20261007T210549-2f84", "task": "T0092", "role": "critic", "session": "be8a227f-143c-4ade-a251-ebfb81ab9f19"}
-- 2026-10-08T04:06:21+00:00 sleep_detected {"gap_s": 3935, "runs_extended": 2}
 - 2026-10-08T04:10:59+00:00 run_finished {"run": "T0091-critic-20261007T210548-136f", "status": "completed", "cost": 2.039056, "subtype": "success", "report": "structured_output"}
 - 2026-10-08T04:23:59+00:00 run_finished {"run": "T0092-critic-20261007T210549-2f84", "status": "completed", "cost": 1.501344, "subtype": "success", "report": "structured_output"}
 - 2026-10-08T04:24:01+00:00 inbox_opened {"id": "I0042", "kind": "protected_change", "subject": "T0075: merge needs founder approval"}
@@ -32,3 +28,5 @@ cancelled: 20, done: 64, failed: 3, review: 1, running: 1, todo: 6
 - 2026-10-08T11:21:29+00:00 run_started {"run": "T0095-critic-20261008T042129-bafa", "task": "T0095", "role": "critic", "session": "1135a9d0-050c-43a9-85fb-420963944e67"}
 - 2026-10-08T11:22:01+00:00 sleep_detected {"gap_s": 2696, "runs_extended": 2}
 - 2026-10-08T11:27:49+00:00 run_finished {"run": "T0095-critic-20261008T042129-bafa", "status": "completed", "cost": 2.169244, "subtype": "success", "report": "structured_output"}
+- 2026-10-08T11:28:57+00:00 run_finished {"run": "T0094-critic-20261008T042129-e982", "status": "completed", "cost": 2.512996, "subtype": "success", "report": "structured_output"}
+- 2026-10-08T11:28:57+00:00 task_failed_attempt {"task": "T0076", "signal": "review_rejected", "action": "repair"}

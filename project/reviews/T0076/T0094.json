@@ -1,0 +1,67 @@
+{
+  "verdict": "reject",
+  "findings": [
+    {
+      "severity": "blocker",
+      "title": "Runner crashes in envelope (a) and in the note's freq_per_stratum: 0 fallback, after all burst compute is spent and after the sealed primary metrics are written",
+      "detail": "The E002.yaml header presents envelope (a) as differing ONLY in n_layouts 30, freq_per_stratum 0, check_strata [u_shaped:6], cpu_hours_est 52 and timeout_min 600. Design note \u00a74 also recommends `freq_per_stratum: 0` for (b) if (b) must stay under 180 CPU-h. With freq_per_stratum 0, sec_idx is empty, so `si = np.array(sec_idx)` is a float64 array and `l2_20[si]` raises IndexError (e002_ranking.py line 539). This happens after every L2 solve has finished and after spearman_rho_Lloop, mape_Lloop and top_decile_recall have been computed on the sample. The result.json then has status 'error' and contains the sealed-sample primary values. All compute (~52 CPU-h) is lost, and a rerun would re-evaluate data that has already been seen (F5 hazard; max_evaluations 3). Envelope (a) is also the only option inside O001's frozen budget (cpu_hours: 60). Neither the DoD smoke (sec_idx = [0]) nor the author's harness (n = 30 but freq_per_stratum left at 1) exercises this path.",
+      "evidence": "Reviewer harness: full-mode main(False) at the envelope-(a) config, dev seed 424242, synthetic L2 records, run_tasks monkeypatched. Output: `RAISED IndexError arrays used as indices must be of integer (or boolean) type`, traceback at `l2s20 = l2_20[si]`, status error, all 7 sanity checks passed, primary metrics already reported. Isolated check: `np.array(sorted([])).dtype` is float64, and indexing with it raises IndexError.",
+      "suggested_check": "Use `np.array(sec_idx, dtype=int)` (or guard on len(si)), then rerun the full-mode harness with freq_per_stratum 0 and check_strata of length 1."
+    },
+    {
+      "severity": "minor",
+      "title": "l2_reference_valid validates solvers.l2, not solvers.l2_layout, the solver that produces every E002 reference value",
+      "detail": "The in-run reference check re-solves E001's C1 with moduleforge.solvers.l2 (annulus/harmonic wires, l2.solve). E002's L2 values come from solvers.l2_layout. That module has its own filament-bundle wire model, rod/box corrections, precorrected-FFT wire-grid operator, lattice cell_fill, bilinear contacts and die shorts, and shares only l2_core with l2. A defect specific to l2_layout cannot fail this sanity check. The l2_layout-vs-l2 link on C1 (0.5 %) exists only as a unit test (test_c1_layout_internals_vs_l2_solve_same_refinement), not in-run. Provenance pinning (source_sha256 over l2_layout + l2_core) partly mitigates this.",
+      "evidence": "l2_layout.py docstring and imports (only `from moduleforge.solvers import l2_core as core`); e002_ranking.child() 'c1' branch calls e1.l2_solve(l2, ...); tests/unit/solvers/test_l2_layout.py:265.",
+      "suggested_check": "Add an in-run C1 (or straight-trace DC closed form) solved through the l2_layout path, as the unit test already does."
+    },
+    {
+      "severity": "minor",
+      "title": "The draft's default envelope (b) at 158 CPU-h is 2.6x O001's frozen budget (cpu_hours: 60)",
+      "detail": "The note frames (a) <= 60 and (b) <= 180 as founder choices and recommends (b). It does not state that the objective's own frozen budget is 60 CPU-h, so registering the draft as written needs a budget change on top of the envelope choice. I could not see the T0076 packet to check whether 180 CPU-h was authorised there.",
+      "evidence": "project/objectives/O001/objective.yaml: `budget: {usd: 120, cpu_hours: 60, wall_days: 21}`; E002.yaml `cpu_hours_est: 158`.",
+      "suggested_check": "Founder confirms the budget, or the draft carries (a) once the blocker above is fixed."
+    },
+    {
+      "severity": "minor",
+      "title": "The bias band assumes d1 < 0 for every k*-1 layout",
+      "detail": "b_hi_layout uses r_max and b_lo_layout uses r_min for all k*-1 layouts. That is correct only when -d1 > 0. For a layout whose 0.5 to 0.25 mm step is positive, the extremes swap, and the 'rigorous' band may not contain that layout's own [r_min, r_max] interval. All dev layouts had d1 < 0, so this is an edge case.",
+      "evidence": "e002_ranking.py lines 617-623.",
+      "suggested_check": "Take min/max over both r_min and r_max for each layout."
+    },
+    {
+      "severity": "note",
+      "title": "'l2_converged' passes while the estimated residual bias at k* exceeds its own 1 % tolerance",
+      "detail": "The gate tests the k* to k*+1 step (dev: 0.49-0.73 %), but the geometric extrapolation puts L2(k*) 1.3-1.9 % above its lateral limit. 'Converged' therefore means 'step < 1 %', not 'error < 1 %'. A4 reads the uncorrected mape_Lloop, and the bias inflates it when L1 < L2. The note discloses this and adds l2corr and refbound metrics plus a founder decision point. The 'rigorous' refbound is rigorous only given a band built from 3 three-level layouts, a constant-ratio assumption and an ad hoc 0.5-point margin.",
+      "evidence": "Design note \u00a71 and \u00a70.2; E002.yaml l2_converged and mape_Lloop_refbound descriptions.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "The smoke DoD cannot catch full-mode defects; 'complete' only means every declared sanity check was reported",
+      "detail": "ExperimentRun sets status 'complete' when all declared sanity checks are reported, whether or not they passed and whether or not the runner returned 1. The E002 smoke runs kb = 0 with no k*-1 level and one stratum, so strata selection, d1/contraction, k*-1 bias, F4 and the die correlations are untested by the DoD. Only the author's synthetic harness covers them, and it missed the blocker. Also, check_pairs_concordant_frac (declared) is not emitted when fewer than 2 layouts are checked (envelope a).",
+      "evidence": "tools/mfos/mfos/evidence.py __exit__; e002_ranking.py smoke branch.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran `uv run mfos exp check E002` and `uv run mfos exp check E003`: both pass. Ran `uv run ruff check` on both runners: clean.",
+    "Ran the E003 smoke DoD myself: status complete, single_thread_enforced passed (CPU/wall 0.999), p50 16.8 ms, p90 22.7 ms, 6-die p50 23.3 ms. This matches the note's ~18 ms uncontended figure.",
+    "Reviewer harness, full-mode main(False) at the envelope-(a) config (n 30, freq_per_stratum 0, check_strata [u_shaped:6]) with synthetic L2: reproduced an IndexError crash, status error, with the primary metrics already written.",
+    "Reviewer harness, envelope-(b) config at n = 30 with a per-layout varying synthetic geometric ladder L_k = T(1 + c_i 0.61^k), c_i in [0.021, 0.059]. All sanity checks passed and status was complete. The recovered contraction was 0.6100. The true beta range [0.0127, 0.0349] (computed by hand) lies inside the reported band [0.0077, 0.0392]. mape_Lloop_l2corr 0.089 is about the true MAPE vs T (~0.09) and lies inside the refbound [0.064, 0.115]. This confirms that beta = -d2/(1-r), the k*-1 extrapolation -d1 r/(1-r) and the corrected reference are implemented as derived.",
+    "Re-derived the geometric-ladder bias by hand (L_inf = L_k(1 + d2/(1-r)), hence beta = -d2/(1-r)) and reproduced the note's 1.3/1.9/1.8 % from the cost.json steps.",
+    "Checked ape_range analytically: L1/(L2(1-beta)) is monotone in beta, so the max is at an endpoint and the min is 0 iff the root 1 - L1/L2 lies in the band. The code matches.",
+    "Read mfos.stats: topk_recall defaults to lower_is_better=True (correct for inductance minimisation), mape(pred=L1, ref=L2) uses L2 as reference, and spearman uses average ranks.",
+    "Checked A5/K3 resolution: at n = 90 (k 9, w 18) A5 needs 7/9 and K3 fires at <= 4/9; at n = 30 they are 3/3 and <= 1/3, as stated.",
+    "Spot-checked the K1 power claim with the Fisher-z / Bonett-Wright variance: n = 90, rho = 0.64 gives power ~0.82; n = 30, rho = 0.48 gives ~0.81. Spot-checked P(A4) at MAPE 0.113, n = 90: about 0.19 by normal approximation, vs 0.18 reported.",
+    "Checked the cost arithmetic: 90 x 1.23 + 15 x 2 x 0.5 + 15 x 0.32 + (9.3 + 9.3 + 8.8) + 0.5 = 158 CPU-h, and k* c(d) is consistent with the cost.json values 1.02 / 0.99 / 1.45.",
+    "Checked that L1's image plane is the backside-Cu top face (peec/model.py docstring), so plane_dist_proxy is consistent with L1's physics. The note discloses the fixed-stack limitation for F3.",
+    "Traced the provenance of the L2 reference: l2_layout imports only l2_core; the C1 sanity check runs solvers.l2."
+  ],
+  "caveats": [
+    "I could not run the E002 smoke DoD (`rm -rf /tmp/e002-smoke && ... --smoke`): the session's permission mode denied it. The E002 smoke result is taken from the design note and not reproduced by me. The orchestrator's deterministic checks will run it.",
+    "The T0076 task packet was not available, so I could not verify whether the 180 CPU-h envelope or the packet's 'changes (1)-(4)' authorised the deviations the note describes.",
+    "My harness used synthetic L2 records and L1 fine meshes of 2 and 1 mm only (for speed). It tests code paths and formulas, not the physics of l2_layout.",
+    "Envelope (b) as written in the draft does not hit the blocker. If the founder registers (b) unchanged and never sets freq_per_stratum 0, the runner's full-mode path ran to completion in my harness."
+  ]
+}

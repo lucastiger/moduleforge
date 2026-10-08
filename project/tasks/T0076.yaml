@@ -4,7 +4,7 @@ title: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timi
   the measured L2 layout cost
 type: design_experiment
 agent: scientist
-status: review
+status: todo
 depends_on:
 - T0075
 description: "Restores T0069 plan node n5 (dropped by the open-task-limit bug; restoration requested by\
@@ -335,3 +335,56 @@ history:
     experiment_drafts:
     - experiments/drafts/E002.yaml
     - experiments/drafts/E003.yaml
+- attempt: 1
+  outcome: review_rejected
+  summary: adversarial review rejected the work
+  failure_output: 'heck_pairs_concordant_frac (declared) is not emitted when fewer than 2 layouts are
+    checked (envelope a).
+
+    - [blocker] Envelope (a) and the freq_per_stratum: 0 fallback crash after all L2 compute (IndexError);
+    the run ends with status ''error'': The design gives the founder two envelopes to choose from at registration.
+    The YAML header and note §0 say envelope (a) differs ONLY in n_layouts 30, freq_per_stratum 0, check_strata
+    [u_shaped:6], cpu_hours_est and timeout. Note §4 also suggests freq_per_stratum: 0 to keep (b) under
+    180 CPU-h. checked_config explicitly allows freq_per_stratum 0, and line 679 comments on that case.
+    With freq_per_stratum 0, however, sec_idx is [] and `si = np.array(sec_idx)` is an empty float64 array,
+    so `l2_20[si]` raises IndexError. This happens in the secondary-metric block, after every L2 solve
+    has finished. ExperimentRun.__exit__ then writes status ''error'', and the evaluator refuses that
+    evidence. Objective O001 sets budget cpu_hours: 60, so (a) is the only envelope inside the frozen
+    objective budget. After registration, the runner hash is frozen. Choosing (a) as documented would
+    therefore burn ~52 CPU-h of burst compute and one evaluation for nothing. The author''s harness only
+    ran freq_per_stratum = 1, so this path was never exercised.
+
+    - [minor] The draft carries 158 CPU-h against an objective budget of 60 CPU-h: project/objectives/O001/objective.yaml
+    sets budget.cpu_hours: 60. The registered draft (envelope b) sets cpu_hours_est: 158, with a ±25 %
+    range up to 198. The note calls this a founder choice, but registering the draft as written exceeds
+    the frozen objective budget. The only in-budget alternative is envelope (a), which crashes (finding
+    above).
+
+    - [minor] The l2_converged gate has a thin margin on strata never measured at k*+1, and ''converged''
+    means a small step, not a small error: The gate requires |d2| + tol(k*) + tol(k*+1) < 1 %. On the
+    dev VM layouts this sum was 0.84 % (u_shaped:2), 0.88 % (side_by_side:6) and 0.63 % (interleaved:2).
+    The registered check strata interleaved:6 and u_shaped:6 have never been solved at k*+1. A step about
+    15 % larger than seen so far would invalidate the whole ~158 CPU-h run. Separately, the gate can pass
+    while the extrapolated residual bias of L2 at k* (1.3-1.9 %) is larger than conv_tol. The bias model
+    reports this, but A4 reads the uncorrected mape_Lloop.
+
+    - [minor] The ''rigorous'' MAPE reference band is rigorous only for the 15 layouts that have refinement
+    data: [beta_lo, beta_hi] comes from 3 three-level layouts plus 12 two-level layouts, whose contraction
+    is borrowed from at most 3 measurements. The band is then applied to all 90 layouts, 75 of which have
+    no L2 refinement data at all. The YAML does say ''rigorous given the band'', but reading A4/K2 as
+    ''reference-robust'' from refbound_lo/hi assumes the band carries over to the unmeasured layouts.
+
+    - [note] Two lattice sub-checks cannot fail on their own: meta[''mesh_params''][''on_lattice''] is
+    hard-coded True in l2_layout.build_layout_system, so the ''on the lattice'' part of l2_solver_ok can
+    never fail. An off-lattice layout raises instead, and that shows up as a failed child in all_finite.
+    Also, all_drc_valid checks the lattice via layout_cell_fill, which does not check die footprints;
+    those are checked only when the system is built. The run is still invalidated through all_finite,
+    so nothing is lost, but the check names overstate what they test.
+
+    - [note] E003 thread pinning: malformed XLA flag; no core pinning on macOS: XLA_FLAGS includes the
+    token ''intra_op_parallelism_threads=1'' without a ''--'' prefix. This is harmless today because L1
+    is pure numpy, but it would break if JAX were ever imported. On darwin there is no affinity pinning,
+    and P-core vs E-core scheduling is not controlled. The CPU/wall ≤ 1.1 check catches extra threads
+    but not E-core placement, and the recorded CPU model (''Apple M5'') does not say which core type ran
+    the loop. A slower core would only inflate the timing, so this is conservative for A6.'
+  at: '2026-10-08T11:28:57+00:00'

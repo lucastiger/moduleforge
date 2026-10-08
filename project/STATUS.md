@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-08T11:21:29+00:00 from repository state — do not edit_
+_generated 2026-10-08T11:22:04+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -18,7 +18,6 @@ cancelled: 20, done: 63, failed: 3, review: 1, running: 2, todo: 6
 - T0095 `running` critic/review: Review T0076 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-08T04:05:46+00:00 verified {"task": "T0075"}
 - 2026-10-08T04:05:48+00:00 run_started {"run": "T0091-critic-20261007T210548-136f", "task": "T0091", "role": "critic", "session": "a559c3f8-9ef9-4be8-9ac8-aef6ab821425"}
 - 2026-10-08T04:05:49+00:00 run_started {"run": "T0092-critic-20261007T210549-2f84", "task": "T0092", "role": "critic", "session": "be8a227f-143c-4ade-a251-ebfb81ab9f19"}
 - 2026-10-08T04:06:21+00:00 sleep_detected {"gap_s": 3935, "runs_extended": 2}
@@ -33,3 +32,4 @@ cancelled: 20, done: 63, failed: 3, review: 1, running: 2, todo: 6
 - 2026-10-08T11:21:26+00:00 verified {"task": "T0076"}
 - 2026-10-08T11:21:29+00:00 run_started {"run": "T0094-critic-20261008T042129-e982", "task": "T0094", "role": "critic", "session": "caf931dc-9a5a-4b82-a04c-17f2b04e55cf"}
 - 2026-10-08T11:21:29+00:00 run_started {"run": "T0095-critic-20261008T042129-bafa", "task": "T0095", "role": "critic", "session": "1135a9d0-050c-43a9-85fb-420963944e67"}
+- 2026-10-08T11:22:01+00:00 sleep_detected {"gap_s": 2696, "runs_extended": 2}

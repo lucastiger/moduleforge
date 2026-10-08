@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-08T19:32:15+00:00 from repository state — do not edit_
+_generated 2026-10-08T19:40:53+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -15,7 +15,6 @@ cancelled: 20, done: 65, failed: 3, todo: 7
 
 
 ## Recent events
-- 2026-10-08T11:21:29+00:00 run_started {"run": "T0095-critic-20261008T042129-bafa", "task": "T0095", "role": "critic", "session": "1135a9d0-050c-43a9-85fb-420963944e67"}
 - 2026-10-08T11:22:01+00:00 sleep_detected {"gap_s": 2696, "runs_extended": 2}
 - 2026-10-08T11:27:49+00:00 run_finished {"run": "T0095-critic-20261008T042129-bafa", "status": "completed", "cost": 2.169244, "subtype": "success", "report": "structured_output"}
 - 2026-10-08T11:28:57+00:00 run_finished {"run": "T0094-critic-20261008T042129-e982", "status": "completed", "cost": 2.512996, "subtype": "success", "report": "structured_output"}
@@ -30,3 +29,4 @@ cancelled: 20, done: 65, failed: 3, todo: 7
 - 2026-10-08T17:26:18+00:00 sleep_detected {"gap_s": 1702, "runs_extended": 0}
 - 2026-10-08T18:20:12+00:00 sleep_detected {"gap_s": 452, "runs_extended": 0}
 - 2026-10-08T19:32:13+00:00 sleep_detected {"gap_s": 1543, "runs_extended": 0}
+- 2026-10-08T19:40:52+00:00 sleep_detected {"gap_s": 518, "runs_extended": 0}

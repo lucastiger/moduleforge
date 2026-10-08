@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-08T14:02:46+00:00 from repository state — do not edit_
+_generated 2026-10-08T15:27:17+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -15,7 +15,6 @@ cancelled: 20, done: 65, failed: 3, todo: 7
 
 
 ## Recent events
-- 2026-10-08T04:24:01+00:00 inbox_opened {"id": "I0042", "kind": "protected_change", "subject": "T0075: merge needs founder approval"}
 - 2026-10-08T05:06:18+00:00 inbox_resolved {"id": "I0042", "status": "approved", "note": "Founder: approve (founder session's recommendation). Loop DoD verified on merge commit ac590646 (quick benchmark,
 - 2026-10-08T05:06:41+00:00 merged {"task": "T0075"}
 - 2026-10-08T05:15:28+00:00 task_added {"task": "T0093"}
@@ -30,3 +29,4 @@ cancelled: 20, done: 65, failed: 3, todo: 7
 - 2026-10-08T11:28:57+00:00 task_failed_attempt {"task": "T0076", "signal": "review_rejected", "action": "repair"}
 - 2026-10-08T13:56:30+00:00 sleep_detected {"gap_s": 752, "runs_extended": 0}
 - 2026-10-08T14:02:45+00:00 sleep_detected {"gap_s": 375, "runs_extended": 0}
+- 2026-10-08T15:27:15+00:00 sleep_detected {"gap_s": 1335, "runs_extended": 0}

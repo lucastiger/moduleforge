@@ -1,0 +1,15 @@
+id: I0042
+kind: protected_change
+subject: 'T0075: merge needs founder approval'
+summary: 'Layout L2 on grid-aligned layouts: snapped generator, aligned lateral ladder, fine-level GMRES,
+  cost at k_star (feasibility gate)
+
+  Risk high; 7 files. PR: None'
+refs:
+- T0075
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-08T04:24:01+00:00'
+resolved_at: null

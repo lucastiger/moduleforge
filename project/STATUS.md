@@ -1,24 +1,21 @@
 # ModuleForge status
-_generated 2026-10-08T04:23:58+00:00 from repository state — do not edit_
+_generated 2026-10-08T04:24:02+00:00 from repository state — do not edit_
 
-## Founder inbox (0 open)
-- nothing needs you
+## Founder inbox (1 open)
+- **I0042** [protected_change] T0075: merge needs founder approval
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $240.20/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $241.70/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 20, done: 61, failed: 3, review: 1, running: 1, todo: 6
+cancelled: 20, done: 62, failed: 3, needs_founder: 1, todo: 6
 
-- T0075 `review` builder/implement: Layout L2 on grid-aligned layouts: snapped generator, aligned lateral ladder, fine-level GMRES, cost at k_star (feasibility gate) (attempt 6)
-- T0092 `running` critic/review: Review T0075 (numerics) (attempt 1)
+- T0075 `needs_founder` builder/implement: Layout L2 on grid-aligned layouts: snapped generator, aligned lateral ladder, fine-level GMRES, cost at k_star (feasibility gate) (attempt 6)
 
 ## Recent events
-- 2026-10-07T23:58:08+00:00 run_started {"run": "T0088-critic-20261007T165808-dae1", "task": "T0088", "role": "critic", "session": "c2615a41-8955-4472-a923-0ac9e88ca188"}
-- 2026-10-07T23:58:08+00:00 run_started {"run": "T0089-critic-20261007T165808-5e5c", "task": "T0089", "role": "critic", "session": "0c98cc1a-997e-4734-80a5-65a497b2f588"}
 - 2026-10-07T23:58:41+00:00 sleep_detected {"gap_s": 4002, "runs_extended": 2}
 - 2026-10-08T00:03:04+00:00 run_finished {"run": "T0089-critic-20261007T165808-5e5c", "status": "completed", "cost": 1.54058, "subtype": "success", "report": "structured_output"}
 - 2026-10-08T00:03:38+00:00 run_finished {"run": "T0088-critic-20261007T165808-dae1", "status": "completed", "cost": 1.786147, "subtype": "success", "report": "structured_output"}
@@ -32,3 +29,5 @@ cancelled: 20, done: 61, failed: 3, review: 1, running: 1, todo: 6
 - 2026-10-08T04:05:49+00:00 run_started {"run": "T0092-critic-20261007T210549-2f84", "task": "T0092", "role": "critic", "session": "be8a227f-143c-4ade-a251-ebfb81ab9f19"}
 - 2026-10-08T04:06:21+00:00 sleep_detected {"gap_s": 3935, "runs_extended": 2}
 - 2026-10-08T04:10:59+00:00 run_finished {"run": "T0091-critic-20261007T210548-136f", "status": "completed", "cost": 2.039056, "subtype": "success", "report": "structured_output"}
+- 2026-10-08T04:23:59+00:00 run_finished {"run": "T0092-critic-20261007T210549-2f84", "status": "completed", "cost": 1.501344, "subtype": "success", "report": "structured_output"}
+- 2026-10-08T04:24:01+00:00 inbox_opened {"id": "I0042", "kind": "protected_change", "subject": "T0075: merge needs founder approval"}

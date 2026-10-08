@@ -89,3 +89,23 @@ def test_loop_area_proxy_known_value():
     ls_at_hs = [dataclasses.replace(d, cx=4e-3, cy=0.0) for d in ls]
     tri = dataclasses.replace(lay, dies=hs + ls_at_hs, terminals=terms)
     assert loop_area_proxy(tri) == pytest.approx(6e-6, rel=1e-12)
+
+
+def test_every_trace_edge_and_die_footprint_on_the_design_grid(sixty):
+    """T0075 (founder re-scope I0039): every free parameter is snapped to the 0.5 mm design grid, so every trace polygon
+    vertex and every die footprint edge is a multiple of 0.5 mm (the layout L2 meshes them exactly with cells that divide
+    it); the die-row start may sit anywhere on the grid, not only at X_DIE_MIN."""
+    q = halfbridge.DESIGN_GRID_MM * 1e-3
+
+    def on_grid(v):
+        return abs(v / q - round(v / q)) < 1e-9
+
+    starts = set()
+    for lay in sixty:
+        for t in lay.traces:
+            assert all(on_grid(x) and on_grid(y) for x, y in t.polygon.exterior.coords), (lay.family, t.net)
+        for d in lay.dies:
+            assert all(on_grid(v) for v in (d.cx - d.w / 2, d.cx + d.w / 2, d.cy - d.h / 2, d.cy + d.h / 2)), lay.family
+            assert 4e-3 - 1e-12 <= d.w <= 5.5e-3 + 1e-12 and d.w == d.h
+        starts.add(round(min(d.cx - d.w / 2 for d in lay.dies) * 1e3, 6))
+    assert len(starts) > 5, starts

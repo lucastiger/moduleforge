@@ -3,9 +3,18 @@
 Model (SI, float64; quasi-static PEEC; skin / proximity effect through thickness layers and wire filaments; no image planes):
 
 * Top-Cu traces, backside Cu and baseplate are three *slabs* on ONE shared lateral grid (cell-centred nodes, x- and
-  y-branches).  A slab is a mask of that grid (traces: cells whose centre is inside a trace rectangle, labelled by net;
-  backside / baseplate at their true extent) with graded thickness layers.  Every Cu-to-Cu block is block-Toeplitz and is
-  applied by FFT with ``l2_core.plane_table`` / ``circulant_fft`` (Hoer-Love boxes near, Gauss beyond).
+  y-branches) with graded thickness layers.  Every Cu-to-Cu block is block-Toeplitz and is applied by FFT with
+  ``l2_core.plane_table`` / ``circulant_fft`` (Hoer-Love boxes near, Gauss beyond).
+* Lattice alignment (``cell_fill``, T0075 founder re-scope I0039): every top-Cu rectangle of ``to_conductors()``, the
+  backside-Cu and baseplate outlines and every die footprint must lie on cell boundaries of the requested refinement; a
+  cell is then either full or empty, and the represented area of every net equals its copper area to rounding (test:
+  <= 1e-12 at every refinement).  A layout that is not on the lattice raises ValueError (it is not approximated).  The
+  generator puts every free parameter on its 0.5 mm design grid (``generate.halfbridge.DESIGN_GRID_MM``), the housing
+  constants and the baseplate box -8..78 x -8..48 mm are on it too, and CELL = 0.5 / 0.25 / 0.125 mm divides it, so every
+  generated layout is aligned at every level.  History: before attempt 3 a cell belonged to a trace when its centre was
+  inside (DC+ area -4.2 % at 0.35 mm, exact at 0.25 mm); attempt 3 weighted partial cells by their fill fraction but kept
+  their full inductive box, which read L 5-9 % low at the non-aligned 0.7 / 0.35 mm cells (founder diagnostic I0039,
+  research/l2_layout_diag); both are gone.  A cell holding copper of two nets is refused (ValueError).
 * A bond wire is a bundle of round filaments (centre disc + rings of WIRE_PHI sectors, each a round rod of its
   equivalent radius rho) along the wire polyline (mitred at the vertices).  Segment pairs use the closed-form Neumann
   integral of two straight filaments ([G], ``segment_mutual``).  Filaments of ONE wire are the mesh of its cross-section
@@ -18,21 +27,33 @@ Model (SI, float64; quasi-static PEEC; skin / proximity effect through thickness
   (the shared grid laterally, z-levels of PFFT_DZ_CELLS cells) by the grid's FFT machinery, tensor-Lagrange
   interpolated to nodes = Gauss points x a degree-3 disc rule over each filament section; the near part of that
   projection is replaced by the exact values.  This operator is new here (``l2_core.wire_plane_op`` needs axis-parallel
-  segments matching the lattice); its tests compare it with the dense exact coupling ``WireGridDense``.
-  Memory and time ~ O(wires x near box + grid log grid).
-* Dies are ideal shorts (node merge); port of ``Layout.to_conductors()``, port cells restricted to the DC+ / DC- nets.
+  segments matching the lattice); its tests compare it with the dense exact coupling ``WireGridDense``.  The exact near
+  integrals evaluate the closed-form corner functions once per corner of the branch-box lattice (``BoxLattice``,
+  neighbouring boxes share corners) and sum the 8 corners in ``box_potential``'s order: bit-identical values, ~3-8 x
+  fewer transcendental evaluations.  Memory and time ~ O(wires x near box + grid log grid).
+* Dies are ideal shorts (node merge of the footprint cells of ``DieShort.bottom_net`` only); a wire end on a die joins the
+  die's node.  Bilinear point contacts (``Contact``, a model change made in T0075 attempt 2): a wire foot on a trace and the
+  two port terminals of ``Layout.to_conductors()`` (on the DC+ / DC- nets) inject their current at their true lateral
+  position, split over the four surrounding cell centres with bilinear weights (only cells of the contact's net; weights
+  renormalised to sum 1; the nearest cell of the net if none of the four is).  Snapping a foot to the nearest cell centre
+  moved the injection point by up to half a cell and stepped L by +-5 % under sub-cell shifts of the layout.
 * Solve: GMRES (``l2_core.block_gmres``, block preconditioner; small systems: dense direct) and the rigorous
-  a-posteriori bound of ``l2_core.a_posteriori``.
+  a-posteriori bound of ``l2_core.a_posteriori``.  Restart GMRES_RESTART = 100, at most GMRES_MAXIT = 40 cycles (cap 4000
+  iterations; the former 100 x 5 cap stopped the 0.125 mm solve of the founder diagnostic I0039 at solver_tol 1.2e-3).
 * ``meta['solver_tol']`` (D0004 (i)) = a-posteriori + rounding + STATED bounds (derived, not measured), each applied
   to the block it bounds (``LayoutSystem.stated_parts``): plane tables; wire <-> grid operator (interpolation, Gauss,
   far disc rule); finite-radius remainders of near wire <-> grid and inter-wire pairs; rod-series truncation.
   The test layout reports ~5e-5 (refinement 0) and ~1e-4 (refinement 1); the DoD layout ~2e-5;
-  ``test_solver_tol_usable_at_every_refinement`` checks < 1e-3 at refinements 0-4.
+  ``test_solver_tol_usable_at_every_refinement`` checks < 1e-3 at every refinement (0.5 / 0.25 / 0.125 mm cells).
 
-NOT in solver_tol (discretisation and model choices, D0004; convergence is gated by T0075):
-* Mesh (CELL, LAYERS_*, WIRE_EDGES).  Refinement-0 values are NOT accurate.  24 x 14 mm test layout, 20 MHz: L = 6.257 /
-  5.746 / 5.567 nH at refinement 0 / 1 / 2 (geometric extrapolation ~5.47 nH: refinement 0 ~14 % high, 2 ~2 %).
-  DoD layout (seed 7, 2 dies/switch), 20 MHz: L = 11.649 nH at refinement 0, 11.279 nH at refinement 1 (-3.2 %).  R converges more slowly than L.
+NOT in solver_tol (discretisation and model choices, D0004; convergence measured by T0075, docs/notes/o001-l2-layout-cost.md):
+* Mesh (CELL, LAYERS_*, WIRE_EDGES).  The thickness layers (top Cu 10: Z_s within 1.6 % of the exact slab at 20 MHz,
+  ``layered_surface_impedance`` vs ``slab_surface_impedance``) and the wire filaments are the same at every level; the
+  ladder refines laterally only, on cells that divide the 0.5 mm design grid.  E002's level is K_STAR = 1 (0.25 mm).  Seed
+  7 / 2 dies (interleaved), 20 MHz: L = 11.115 / 11.029 nH at 0.5 / 0.25 mm (-0.78 %); seed 11 / 2 dies (u_shaped) 12.835 /
+  12.683 nH (-1.19 %).  Founder diagnostic I0039 (aligned u_shaped layout): 12.889 / 12.766 / 12.692 nH at 0.5 / 0.25 /
+  0.125 mm (-0.96 %, -0.59 %: contracting).  The k_star -> k_star + 1 gate needs the 0.125 mm level (~35 GB): burst VM,
+  ``benchmarks/l2_layout_cost.py --vm``.  R converges more slowly than L and is not a reference value.
 * Grading frequency: layers are graded to the skin depth at max(F_MESH, max(freqs)), F_MESH = 100 MHz, so L(f) does
   not depend on which other frequencies are requested (<= 100 MHz).  The grading is itself a mesh choice: attempt 1
   graded to max(freqs), and L(20 MHz) of the DoD layout moved 2.6 % between grading at 20 and at 80 MHz (review T0082).
@@ -43,9 +64,11 @@ NOT in solver_tol (discretisation and model choices, D0004; convergence is gated
   zero impedance; as a solid 5.2 x 5.2 x 0.23 mm block its partial self inductance is 0.003 nH per die [HL] (~0.03 %
   of L).  The equipotential footprint (lateral short under the die) is a model assumption and is not bounded.
 
-Cost, seed 7, refinement 0, one frequency (10-core laptop): 2 dies/switch 56,712 unknowns, wall 33 s, CPU 33 s, peak RSS 0.73 GB,
-120 GMRES iterations, L(20 MHz) = 11.649 nH; 6 dies/switch 56,880 unknowns, wall 74 s, CPU 72 s, peak RSS 0.98 GB, 125
-iterations, 8.405 nH.  The DoD call (2 dies, 5 / 20 / 80 MHz) takes ~40 s.
+Cost (benchmarks/l2_layout_cost.py --quick, T0075 attempt 5, one solve per fresh process, 10-core 16 GB laptop; CPU = user
++ sys over all threads, +-25 % with machine load, memory pressure and core placement; GMRES_TOL 1e-7): seed 7 / 2 dies
+0.5 mm 180 CPU-s, 2.3 GB, 133 GMRES iterations; 0.25 mm (k_star) 1162 CPU-s, 7.7 GB, 238 iterations; 6 dies at k_star
+2011 CPU-s, 8.9 GB, 249 iterations.  At GMRES_TOL 1e-9 (attempt 4) the same solves took 216 / 1618 / 2286 CPU-s and 222 /
+399 / 415 iterations with L equal to 5 digits.  See docs/notes/o001-l2-layout-cost.md (sensitivity, projections).
 
 References: [G] Grover, Inductance Calculations (1946) ch. 7 (filament Neumann integrals, line potential); [HL] Hoer & Love,
 J. Res. NBS 69C (1965) 127; [MW] Maxwell / Weaver (round rod); [W] Waldvogel, ZAMP 27 (1976) 867 and Nagaoka (1911)
@@ -57,12 +80,15 @@ from __future__ import annotations
 
 import hashlib
 import math
+import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
 import scipy.sparse as sp
+import scipy.fft as sfft
 import scipy.sparse.linalg as spla
 from scipy.sparse.csgraph import connected_components
 
@@ -70,18 +96,28 @@ from moduleforge.geometry import DC_MINUS, DC_PLUS
 from moduleforge.solvers import l2_core as core
 
 TOOL_NAME = "moduleforge-l2-layout"
-TOOL_VERSION = "0.2.0"
+TOOL_VERSION = "0.3.0"
 MU0 = core.MU0
 K4 = core.K4
-PARALLEL_SIN = 1e-6  # |sin(angle)| below this: treat two segments as parallel (error O(sin) in the geometry)
-MAX_REFINEMENT = 4
+PARALLEL_SIN_EXACT = 1e-12  # |sin(angle)| below this: parallel-filament form (geometry error O(sin), <= 2e-12 relative)
+NEAR_PARALLEL_SIN = 1e-3  # |sin| below this (and above PARALLEL_SIN_EXACT): tilt-family interpolation (``segment_mutual``)
+NEAR_PARALLEL_THETA0 = 1.5e-3  # rad: interpolation nodes at 0, +-1, 2, 3 x this (closed form accurate there)
+PARALLEL_REL = 1e-9  # stated relative bound of the parallel-filament form (dperp floor 1e-9 l for touching collinear pairs)
+NEAR_PARALLEL_REL = 1e-7  # stated relative bound of ``segment_mutual`` in the near-parallel band (counted in solver_tol)
+MAX_REFINEMENT = 2
 
-# per refinement 0..4: lateral cell [m]; thickness layers of top Cu / backside / baseplate; wire annulus edges (units of r)
-CELL = (1.0e-3, 0.7e-3, 0.5e-3, 0.35e-3, 0.25e-3)
-LAYERS_TOP = (4, 6, 8, 10, 12)
-LAYERS_BACK = (3, 4, 5, 6, 7)
-LAYERS_BASE = (3, 4, 5, 6, 7)
-WIRE_EDGES = ((0, .6, 1), (0, .5, .8, 1), (0, .4, .7, .9, 1), (0, .35, .6, .8, .93, 1), (0, .3, .5, .7, .85, .95, 1))
+# Lateral ladder (founder re-scope I0039): nested cells that divide the generator's 0.5 mm design grid, so every feature of
+# a generated layout lies on cell boundaries at every level; the thickness layers and the wire filaments are held at the
+# counts that resolve the 20 MHz skin depth (T0075 attempt 3's level 3: top-Cu Z_s within 1.6 %, benchmarks/l2_layout_cost.py)
+# at every level, so a refinement step is purely lateral.
+# per refinement 0..2: lateral cell [m]; thickness layers of top Cu / backside / baseplate; wire annulus edges (units of r)
+CELL = (0.5e-3, 0.25e-3, 0.125e-3)
+LAYERS_TOP = (10, 10, 10)
+LAYERS_BACK = (6, 6, 6)
+LAYERS_BASE = (6, 6, 6)
+WIRE_EDGES = ((0, .35, .6, .8, .93, 1),) * 3
+K_STAR = 1  # E002's level (0.25 mm cells): the gates of T0075 apply here; k_star - 1 / k_star + 1 measure convergence
+ALIGN_TOL = 1e-9  # a cell's covered fraction must be within this of 0 or 1 (round-off where an edge meets a cell edge)
 WIRE_PHI = 6  # filaments per ring
 LANDING_GAP = 0.5  # wire filaments are kept >= LANDING_GAP * diameter above the top-Cu surface (modelling clamp)
 PFFT_NEAR = 18  # cells: branches within this Chebyshev distance of a wire are coupled exactly
@@ -89,6 +125,7 @@ PFFT_STENCIL = 8  # lateral Lagrange points per axis
 PFFT_STENCIL_Z = 4
 PFFT_DZ = 0.4e-3  # virtual z-level spacing (cap)
 PFFT_DZ_CELLS = 0.4  # virtual z-level spacing in lateral cells
+CHUNK_ELEMS = 4e5  # boxes x Gauss points evaluated at once in ``line_box_integral`` (memory of ~20 temporaries each)
 LINE_TOL = 1e-13  # target of the composite Gauss rule along a segment (stated bound, not measured)
 UNIT_ROUNDOFF = core.UNIT_ROUNDOFF
 F_MESH = 1.0e8  # Hz: thickness layers are graded to the skin depth at max(F_MESH, max(freqs)) (frequency-list independent)
@@ -111,18 +148,14 @@ def _phi(S, T, c, h, h2, sg, sg2):
     return la + lb - at
 
 
-def segment_mutual(p0, p1, q0, q1):
-    """Mutual partial inductance (H) of two straight filaments p0->p1 and q0->q1 (broadcasting (..., 3) arrays) carrying
-    unit current in the direction of travel: K4 cos(eps) int int ds dt / R  (Neumann).  Non-parallel: closed form of
-    Grover (1946); sin(eps) < PARALLEL_SIN: the parallel-filament form (``core.fil_F``), which also covers collinear
-    filaments.  Touching filaments (shared end point) are finite and handled."""
-    p0, p1, q0, q1 = (np.asarray(v, dtype=np.float64) for v in (p0, p1, q0, q1))
+def _mutual_general_or_parallel(p0, p1, q0, q1, par):
+    """Closed form of Grover (1946) for the pairs with ``par`` False, the parallel-filament form (``core.fil_F``; also
+    collinear / touching filaments) where ``par`` is True.  All arguments broadcast; ``par`` is a bool array."""
     u, v, d = p1 - p0, q1 - q0, q0 - p0
     l1, l2 = np.linalg.norm(u, axis=-1), np.linalg.norm(v, axis=-1)
     u, v = u / l1[..., None], v / l2[..., None]
     c = np.sum(u * v, axis=-1)
-    sg2 = 1.0 - c * c
-    par = sg2 < PARALLEL_SIN ** 2
+    sg2 = np.sum(np.cross(u, v) ** 2, axis=-1)  # sin^2 without the cancellation of 1 - c^2
     sg2s = np.where(par, 1.0, sg2)
     sg = np.sqrt(sg2s)
     p = -np.sum(d * u, axis=-1)
@@ -130,7 +163,9 @@ def segment_mutual(p0, p1, q0, q1):
     w = np.sum(d * d, axis=-1)
     s0 = -(p + c * q) / sg2s
     t0 = -(q + c * p) / sg2s
-    h2 = np.maximum(w + p * s0 + q * t0, 0.0)
+    # line distance h = |d . (u x v)| / sin: w + p s0 + q t0 cancels like 1e-16 / sin^2 and gives h ~ 1e-8 l / sin for touching
+    # near-parallel filaments (error 5e-6 at sin = 1.5e-3, review T0083 band), this form has no such cancellation
+    h2 = np.sum(d * np.cross(u, v), axis=-1) ** 2 / sg2s
     h2 = np.where(h2 < 1e-24 * np.maximum(w, 1e-300) + 1e-40, 0.0, h2)  # exact touching (round-off level)
     h = np.sqrt(h2)
     S1, S2, T1, T2 = -s0, l1 - s0, -t0, l2 - t0
@@ -145,6 +180,96 @@ def segment_mutual(p0, p1, q0, q1):
     b2 = b1 + l2
     parv = core.fil_F(0.0, l1, b1, b2, dperp)
     return K4 * c * np.where(par, parv, gen)
+
+
+def segment_sin(p0, p1, q0, q1):
+    """|sin| of the angle between the segments p0->p1 and q0->q1 (cross product: accurate for nearly parallel pairs)."""
+    u, v = p1 - p0, q1 - q0
+    cr = np.linalg.norm(np.cross(u, v), axis=-1)
+    return cr / (np.linalg.norm(u, axis=-1) * np.linalg.norm(v, axis=-1))
+
+
+def _closest_params(p0, p1, q0, q1):
+    """Parameters (s, t) in [0, 1] of the closest points of segments p0-p1 and q0-q1 (Ericson 5.1.9); (s, t) = a closest pair
+    also for parallel segments."""
+    d1, d2, r = p1 - p0, q1 - q0, p0 - q0
+    a, e = np.sum(d1 * d1, -1), np.sum(d2 * d2, -1)
+    b, c, f = np.sum(d1 * d2, -1), np.sum(d1 * r, -1), np.sum(d2 * r, -1)
+    den = a * e - b * b
+    ok = den > 1e-12 * a * e
+    s = np.where(ok, np.clip((b * f - c * e) / np.where(ok, den, 1.0), 0.0, 1.0), 0.0)
+    t = (b * s + f) / e
+    s = np.where(t < 0, np.clip(-c / a, 0, 1), np.where(t > 1, np.clip((b - c) / a, 0, 1), s))
+    t = np.clip(t, 0.0, 1.0)
+    return s, t
+
+
+def _lagrange_at(x, nodes, vals):
+    """Value at x (n,) of the polynomial through (nodes (m,), vals (m, n))."""
+    out = np.zeros_like(x)
+    for k, xk in enumerate(nodes):
+        w = np.ones_like(x)
+        for j, xj in enumerate(nodes):
+            if j != k:
+                w = w * (x - xj) / (xk - xj)
+        out = out + w * vals[k]
+    return out
+
+
+def segment_mutual(p0, p1, q0, q1):
+    """Mutual partial inductance (H) of two straight filaments p0->p1 and q0->q1 (broadcasting (..., 3) arrays) carrying
+    unit current in the direction of travel: K4 cos(eps) int int ds dt / R  (Neumann).
+
+    * |sin eps| >= NEAR_PARALLEL_SIN: closed form of Grover (1946).  Its corner terms cancel like 1e-16 / sin^2 (relative
+      error 4.8e-9 at sin = 1e-5, <= 1e-11 at 1e-3, review T0083).
+    * |sin eps| < PARALLEL_SIN_EXACT: the parallel-filament form (``core.fil_F``; also covers collinear and touching
+      filaments), geometry error O(sin) <= 2e-12 relative.
+    * in between (the near-parallel band): the pair is the member eps of the one-parameter family obtained by tilting q
+      about its point closest to p, M(theta), which is analytic in theta (also for touching filaments, whose pivot is the
+      shared point).  M is evaluated at theta = 0 by the parallel form and at theta = +-1.5, 3, 4.5 mrad by the closed form
+      (accurate there) and interpolated by the degree-6 Lagrange polynomial at the pair's own theta (test: <= 1e-8 relative
+      against adaptive quadrature, ``NEAR_PARALLEL_REL`` is the stated bound counted in solver_tol)."""
+    p0, p1, q0, q1 = (np.asarray(v, dtype=np.float64) for v in np.broadcast_arrays(*(np.asarray(v, dtype=np.float64)
+                                                                                      for v in (p0, p1, q0, q1))))
+    sin = segment_sin(p0, p1, q0, q1)
+    band = (sin < NEAR_PARALLEL_SIN) & (sin >= PARALLEL_SIN_EXACT)
+    par = sin < PARALLEL_SIN_EXACT
+    out = _mutual_general_or_parallel(p0, p1, q0, q1, par | band)
+    out = np.where(band, 0.0, out)
+    if np.any(band):
+        P0, P1, Q0, Q1 = (a[band] for a in (p0, p1, q0, q1))
+        out[band] = _near_parallel_band(P0, P1, Q0, Q1)
+    return out
+
+
+def _near_parallel_band(p0, p1, q0, q1):
+    """``segment_mutual`` of the pairs in the near-parallel band (1-D arrays of pairs): see its docstring."""
+    u, v = p1 - p0, q1 - q0
+    l1, l2 = np.linalg.norm(u, axis=-1), np.linalg.norm(v, axis=-1)
+    u, v = u / l1[:, None], v / l2[:, None]
+    flip = np.sum(u * v, axis=-1) < 0  # antiparallel: reverse q (M changes sign)
+    q0f, q1f = np.where(flip[:, None], q1, q0), np.where(flip[:, None], q0, q1)
+    v = np.where(flip[:, None], -v, v)
+    _, t = _closest_params(p0, p1, q0f, q1f)
+    pivot = q0f + t[:, None] * (q1f - q0f)
+    vperp = v - np.sum(v * u, axis=-1)[:, None] * u
+    n = vperp / np.linalg.norm(vperp, axis=-1)[:, None]
+    eps = np.arctan2(np.linalg.norm(vperp, axis=-1), np.sum(v * u, axis=-1))
+
+    def tilted(theta):
+        vt = np.cos(theta)[:, None] * u + np.sin(theta)[:, None] * n
+        return pivot - (t * l2)[:, None] * vt, pivot + ((1.0 - t) * l2)[:, None] * vt
+
+    nodes = NEAR_PARALLEL_THETA0 * np.arange(-3, 4)
+    vals = []
+    for th in nodes:
+        a0, a1 = tilted(np.full(p0.shape[0], th))
+        if th == 0.0:
+            vals.append(_mutual_general_or_parallel(p0, p1, a0, a1, np.ones(p0.shape[0], bool)))
+        else:
+            vals.append(_mutual_general_or_parallel(p0, p1, a0, a1, np.zeros(p0.shape[0], bool)))
+    m = _lagrange_at(eps, nodes, np.array(vals))
+    return np.where(flip, -m, m)
 
 
 def rod_self(length, rho):
@@ -288,17 +413,94 @@ def box_grad(px, py, pz, lo, hi):
     return np.stack(np.broadcast_arrays(*g), axis=-1)
 
 
-def rod_box_correction(p0, p1, a, lo, hi):
+def _corner_sum(F, corners, grad_form: bool = False):
+    """[[[F]]] of corner values F (ncorner, ...) for boxes whose 8 corners are the rows ``corners`` (8 index arrays, in
+    ``np.ndindex(2, 2, 2)`` order of (x, y, z) = (lo, hi)): the signed sum over the corners (hi minus lo in x, y and z),
+    taken in the corner order and with the arithmetic of ``box_potential`` (tot + s F) or, ``grad_form``, of ``box_grad``
+    (g - s F), so the values are the same to the last bit."""
+    tot = 0.0
+    for (ia, ib, ic), rows in zip(np.ndindex(2, 2, 2), corners, strict=True):
+        s = (-1.0) ** (3 - ia - ib - ic)
+        f = np.take(F, rows, axis=0)
+        tot = tot - s * f if grad_form else tot + s * f
+    return tot
+
+
+@dataclass
+class BoxLattice:
+    """Boxes whose corners lie on a lattice X (nX,) x Y (nY,) x Z (nZ,): box b spans X[ix0[b]]..X[ix0[b]+1], Y[iy0[b]]..
+    Y[iy0[b]+1], Z[iz0[b]]..Z[iz1[b]].  The branch boxes of one direction of the shared grid are such a family, and
+    neighbouring boxes share corners, so a closed-form corner function evaluated once per lattice corner (and differenced)
+    gives every box: ~8 x fewer transcendental evaluations than box by box (``box_potential``, ``box_grad``), same values
+    up to rounding."""
+    X: np.ndarray
+    Y: np.ndarray
+    Z: np.ndarray
+    ix0: np.ndarray
+    iy0: np.ndarray
+    iz0: np.ndarray
+    iz1: np.ndarray
+
+    def lo_hi(self):
+        lo = np.stack([self.X[self.ix0], self.Y[self.iy0], self.Z[self.iz0]], 1)
+        hi = np.stack([self.X[self.ix0 + 1], self.Y[self.iy0 + 1], self.Z[self.iz1]], 1)
+        return lo, hi
+
+    def sub(self, idx):
+        return BoxLattice(self.X, self.Y, self.Z, self.ix0[idx], self.iy0[idx], self.iz0[idx], self.iz1[idx])
+
+    def window(self):
+        """(slices of the corner lattice covering the boxes, the 8 corner index arrays of every box into the flattened
+        window, ``np.ndindex(2, 2, 2)`` order)."""
+        bx0, bx1 = int(self.ix0.min()), int(self.ix0.max()) + 2
+        by0, by1 = int(self.iy0.min()), int(self.iy0.max()) + 2
+        bz0, bz1 = int(self.iz0.min()), int(self.iz1.max()) + 1
+        ny, nz = by1 - by0, bz1 - bz0
+        ix, iy, iz0, iz1 = self.ix0 - bx0, self.iy0 - by0, self.iz0 - bz0, self.iz1 - bz0
+        corners = [((ix + ia) * ny + iy + ib) * nz + (iz1 if ic else iz0) for ia, ib, ic in np.ndindex(2, 2, 2)]
+        return (slice(bx0, bx1), slice(by0, by1), slice(bz0, bz1)), corners
+
+
+def lattice_potential(pts, lat: BoxLattice, chunk_elems: float = 4e5):
+    """``box_potential`` of every box of ``lat`` at the points ``pts`` (np, 3): (nb, np) C-ordered, from corner values of
+    ``_G`` (one evaluation per lattice corner instead of 8 per box)."""
+    (sx, sy, sz), corners = lat.window()
+    X, Y, Z = lat.X[sx], lat.Y[sy], lat.Z[sz]
+    ncor = X.size * Y.size * Z.size
+    step = max(1, int(chunk_elems // max(ncor, 1)))
+    out = np.empty((lat.ix0.size, pts.shape[0]))
+    for s in range(0, pts.shape[0], step):
+        p = pts[s:s + step]
+        G = _G(X[:, None, None, None] - p[None, None, None, :, 0], Y[None, :, None, None] - p[None, None, None, :, 1],
+               Z[None, None, :, None] - p[None, None, None, :, 2])  # (nX, nY, nZ, npc)
+        out[:, s:s + step] = _corner_sum(G.reshape(ncor, -1), corners)
+    return out
+
+
+def lattice_grad(p, lat: BoxLattice):
+    """``box_grad`` of every box of ``lat`` at the point p (3,): (nb, 3), from corner values of ``_H``."""
+    (sx, sy, sz), corners = lat.window()
+    x = (lat.X[sx] - p[0])[:, None, None]
+    y = (lat.Y[sy] - p[1])[None, :, None]
+    z = (lat.Z[sz] - p[2])[None, None, :]
+    x, y, z = np.broadcast_arrays(x, y, z)
+    g = [_corner_sum(_H(a, b, c).ravel(), corners, True) for a, b, c in ((x, y, z), (y, z, x), (z, x, y))]
+    return np.stack(np.broadcast_arrays(*g), axis=-1)
+
+
+def rod_box_correction(p0, p1, a, lo, hi, grad0=None, grad1=None):
     """Finite-radius correction of int_seg ds M_a[phi] (rod of radius a on the axis p0 -> p1, phi = ``box_potential`` of the
     boxes lo..hi (nb, 3), harmonic in the rod) relative to the centre-line integral of ``line_box_integral``: by the identity
     of ``rod_pair_correction``, -(a^2/8) [u.grad phi]_{p0}^{p1} (``box_grad``); stated remainder (a^4/192) sum_ends sup_disc
     |d_u^3 phi| <= (a^4/32) sum_ends B with B >= int_box dV/r^4 for every point of the end disc: B = min(V/D^4, pi (1/h0 -
     1/h1)) (D = point-box distance - a; h0 = vertical gap - a, h1 = h0 + box height: the slab integral of 1/r^4).
     Returns (correction, remainder bound), both (nb,) in the units of the line integral (m^3); an end disc that reaches a
-    box gives an infinite bound."""
+    box gives an infinite bound.  ``grad0`` / ``grad1``: precomputed ``box_grad`` at p0 / p1 (``lattice_grad``)."""
     p0, p1, lo, hi = (np.asarray(v, float) for v in (p0, p1, lo, hi))
     u = (p1 - p0) / np.linalg.norm(p1 - p0)
-    corr = -(a * a / 8.0) * (box_grad(*p1, lo, hi) @ u - box_grad(*p0, lo, hi) @ u)
+    g0 = box_grad(*p0, lo, hi) if grad0 is None else grad0
+    g1 = box_grad(*p1, lo, hi) if grad1 is None else grad1
+    corr = -(a * a / 8.0) * (g1 @ u - g0 @ u)
     vol = np.prod(hi - lo, axis=-1)
     rem = np.zeros(lo.shape[0])
     with np.errstate(all="ignore"):
@@ -321,11 +523,12 @@ def _seg_dist_lb(a, b, lo, hi):
     return np.linalg.norm(gap, axis=-1)
 
 
-def line_box_integral(a, b, lo, hi, tol: float = LINE_TOL, chunk: int = 4096):
+def line_box_integral(a, b, lo, hi, tol: float = LINE_TOL, chunk: int = 4096, lat: BoxLattice | None = None):
     """I[k] = int_a^b ds int_box_k dV' / R  (box potential integrated along the straight segment a -> b), composite Gauss
     with an order and panel count chosen per distance class so that the stated Gauss bound [AT Thm 19.3, assumption
     ``core.ELLIPSE_M``] is <= tol.  Returns (I, bound, d_lb) with bound the largest stated relative bound used and d_lb the
-    per-box lower bound of the distance to the segment."""
+    per-box lower bound of the distance to the segment.  With ``lat`` (the same boxes as a ``BoxLattice``) the box
+    potentials of each distance class come from shared corner values (``lattice_potential``): same rule, same bound."""
     a, b = np.asarray(a, float), np.asarray(b, float)
     lo, hi = np.atleast_2d(lo), np.atleast_2d(hi)
     ell = float(np.linalg.norm(b - a))
@@ -349,8 +552,12 @@ def line_box_integral(a, b, lo, hi, tol: float = LINE_TOL, chunk: int = 4096):
             ws.append(w)
         xs, ws = np.concatenate(xs), np.concatenate(ws) * ell
         pts = a[None, :] + xs[:, None] * (b - a)[None, :]  # (np, 3)
-        for s in range(0, idx.size, chunk):
-            ii = idx[s:s + chunk]
+        if lat is not None:
+            out[idx] = lattice_potential(pts, lat.sub(idx), CHUNK_ELEMS) @ ws
+            continue
+        step = max(32, min(chunk, int(CHUNK_ELEMS // xs.size)))  # bounded temporaries (boxes x Gauss points)
+        for s in range(0, idx.size, step):
+            ii = idx[s:s + step]
             pot = box_potential(pts[None, :, 0], pts[None, :, 1], pts[None, :, 2], lo[ii][:, None, :], hi[ii][:, None, :])
             out[ii] = pot @ ws
     return out, bound, d_lb
@@ -488,7 +695,9 @@ def wire_matrices(fs: FilamentSet):
         corr, rem = rod_pair_correction(fs.seg_p0[sl, None, :], fs.seg_p1[sl, None, :], rho_s[sl, None],
                                         fs.seg_p0[None, :, :], fs.seg_p1[None, :, :], rho_s[None, :])
         m = np.where(inter, m + corr, m)
-        eb = np.where(inter, rem, 0.0)
+        sn = segment_sin(fs.seg_p0[sl, None, :], fs.seg_p1[sl, None, :], fs.seg_p0[None, :, :], fs.seg_p1[None, :, :])
+        kern = np.where(sn >= NEAR_PARALLEL_SIN, 0.0, np.where(sn < PARALLEL_SIN_EXACT, PARALLEL_REL, NEAR_PARALLEL_REL))
+        eb = np.where(inter, rem, 0.0) + kern * np.abs(m)  # + stated kernel bound of the near-parallel / parallel forms
         As = A[sl]
         Lw += As.T @ (A.T @ m.T).T
         La += As.T @ (A.T @ np.abs(m).T).T
@@ -507,6 +716,95 @@ class SlabSpec:
     layers: list  # [(z0, z1)] bottom-up
     sigma: float
     label: np.ndarray | None = None  # (nx, ny) int: branches only join cells of equal label (separate traces)
+
+
+def _overlap_1d(lo: float, hi: float, edges: np.ndarray) -> np.ndarray:
+    """Length of [lo, hi] inside every interval [edges[i], edges[i + 1]]."""
+    return np.maximum(0.0, np.minimum(hi, edges[1:]) - np.maximum(lo, edges[:-1]))
+
+
+def rect_cover(rects, xe: np.ndarray, ye: np.ndarray) -> np.ndarray:
+    """Covered area (m^2) of every cell of the lattice with cell edges xe (nx + 1,), ye (ny + 1,) by DISJOINT axis-aligned
+    rectangles (x0, y0, x1, y1): the overlap of a rectangle with a cell is the product of the two 1-D overlaps, so the sum
+    over rectangles is exact up to rounding (the 1-D overlaps of one rectangle telescope to its side lengths)."""
+    A = np.zeros((xe.size - 1, ye.size - 1))
+    for x0, y0, x1, y1 in rects:
+        ox, oy = _overlap_1d(x0, x1, xe), _overlap_1d(y0, y1, ye)
+        i, j = np.flatnonzero(ox), np.flatnonzero(oy)
+        A[np.ix_(i, j)] += np.outer(ox[i], oy[j])
+    return A
+
+
+def _snap_aligned(F: np.ndarray, what: str, xe: np.ndarray, ye: np.ndarray) -> np.ndarray:
+    """Covered fractions F (nx, ny) of the cells of the lattice with edges xe, ye -> exactly 0 or 1.  A fraction farther than
+    ALIGN_TOL from both means that ``what`` has an edge inside a cell, i.e. it is not on the lattice: ValueError (no partial
+    cells, founder re-scope I0039)."""
+    bad = (F > ALIGN_TOL) & (F < 1.0 - ALIGN_TOL)
+    if np.any(bad):
+        i, j = (int(v[0]) for v in np.nonzero(bad))
+        raise ValueError(f"{what} is not on the lattice: cell ({i}, {j}) at x {xe[i] * 1e3:.4f}..{xe[i + 1] * 1e3:.4f} mm, "
+                         f"y {ye[j] * 1e3:.4f}..{ye[j + 1] * 1e3:.4f} mm is {F[i, j]:.6f} covered; every feature must lie on "
+                         f"cell boundaries (cell {(xe[1] - xe[0]) * 1e3:.4g} x {(ye[1] - ye[0]) * 1e3:.4g} mm)")
+    return (F >= 0.5).astype(float)
+
+
+def check_on_lattice(x0: float, x1: float, y0: float, y1: float, xmin: float, ymin: float, ax: float, ay: float,
+                     what: str) -> None:
+    """ValueError unless the rectangle [x0, x1] x [y0, y1] has its edges on cell boundaries (within ALIGN_TOL of a cell)."""
+    for v, o, a, ax_name in ((x0, xmin, ax, "x"), (x1, xmin, ax, "x"), (y0, ymin, ay, "y"), (y1, ymin, ay, "y")):
+        u = (v - o) / a
+        if abs(u - round(u)) > ALIGN_TOL * max(1.0, abs(u)):
+            raise ValueError(f"{what} is not on the lattice: its {ax_name} edge {v * 1e3:.4f} mm is {u - math.floor(u):.4f} "
+                             f"cells past a cell boundary (cell {a * 1e3:.4g} mm)")
+
+
+def cell_fill(cm, xmin: float, ymin: float, ax: float, ay: float, nx: int, ny: int) -> dict:
+    """Cells of the lattice carrying the conductors of ``cm`` (``Layout.to_conductors()``): per cell the fraction of its
+    area covered by top Cu (per net) / backside Cu / baseplate (``rect_cover`` of the disjoint top-Cu rectangles and of the
+    rectangle decomposition of each plane outline), which must be 0 or 1 (``_snap_aligned``: ValueError when a feature is
+    not on the lattice).  Returns {'top': (frac, label, nets), 'backside_cu': frac, 'baseplate': frac, 'area': {name:
+    (represented, exact)}}, frac in {0., 1.}, label = net index + 1 (0: no copper).  A cell that holds copper of two nets
+    cannot be represented (one unknown per branch and layer): ValueError (checked first)."""
+    from shapely.geometry import Polygon
+
+    from moduleforge.geometry.conductors import decompose_polygon
+    xe = xmin + np.arange(nx + 1) * ax
+    ye = ymin + np.arange(ny + 1) * ay
+    ca = ax * ay
+    nets = sorted({r.net for r in cm.rects})
+    per = []
+    area = {}
+    for net in nets:
+        rr = [(r.x0, r.y0, r.x1, r.y1) for r in cm.rects if r.net == net]
+        per.append(rect_cover(rr, xe, ye) / ca)
+        area[net] = (0.0, float(sum((x1 - x0) * (y1 - y0) for x0, y0, x1, y1 in rr)))
+    P = np.array(per) if per else np.zeros((0, nx, ny))
+    occ = (P > ALIGN_TOL).sum(axis=0)
+    if np.any(occ > 1):
+        i, j = (int(v[0]) for v in np.nonzero(occ > 1))
+        both = [nets[k] for k in range(len(nets)) if P[k, i, j] > ALIGN_TOL]
+        raise ValueError(f"cell ({i}, {j}) holds copper of nets {both}: the gap between them is narrower than one cell "
+                         f"({ax * 1e3:.3f} x {ay * 1e3:.3f} mm); refine")
+    P = np.array([_snap_aligned(F, f"the {net} trace", xe, ye) for F, net in zip(P, nets, strict=True)]) if per else P
+    for F, net in zip(P, nets, strict=True):
+        area[net] = (float(F.sum() * ca), area[net][1])
+    occ = (P > 0).sum(axis=0)
+    frac = P.sum(axis=0) if per else np.zeros((nx, ny))
+    label = np.where(occ > 0, np.argmax(P > 0, axis=0) + 1, 0) if per else np.zeros((nx, ny), np.int64)
+    out = dict(top=(frac, label.astype(np.int64), nets), area=area)
+    for p in cm.planes:
+        poly = Polygon(p.outline)
+        try:
+            rr = decompose_polygon(poly)
+            F = rect_cover(rr, xe, ye) / ca
+        except ValueError:  # not rectilinear: exact polygon clipping per cell
+            import shapely
+            cells = shapely.box(xe[:-1, None], ye[None, :-1], xe[1:, None], ye[None, 1:])
+            F = shapely.area(shapely.intersection(cells, poly)) / ca
+        F = _snap_aligned(F, f"the {p.name} outline", xe, ye)
+        out[p.name] = F
+        area[p.name] = (float(F.sum() * ca), float(poly.area))
+    return out
 
 
 def graded_layers(z0: float, z1: float, n: int, fmax: float, sigma: float, two_sided: bool):
@@ -534,23 +832,165 @@ def graded_layers(z0: float, z1: float, n: int, fmax: float, sigma: float, two_s
     return lo + hi
 
 
-PLANE_GROUP = 1  # layer pairs of ``core.plane_table`` evaluated concurrently (bounds the temporaries of its Gauss tensors)
+def slab_surface_impedance(thickness: float, f: float, sigma: float) -> complex:
+    """Exact internal impedance per square (Ohm) of a conducting slab of ``thickness`` with the field on one face only (the
+    other face field-free): Z = (k / sigma) coth(k t), k = (1 + j) / delta [RWV] 5.6.  Low-frequency limit 1/(sigma t) +
+    j omega mu0 t / 3; thick limit (1 + j) / (sigma delta)."""
+    k = (1.0 + 1.0j) / core.skin(f, sigma)
+    return complex(k / sigma / np.tanh(k * thickness))
 
 
-def layer_pair_tables(layers, a_al, a_tr, n1, n2, group: int = PLANE_GROUP):
-    """``core.plane_table(layers, layers, ...)`` evaluated for the upper triangle of layer pairs in groups of ``group``
-    concurrent pairs (peak memory ~ group x the temporaries of one pair instead of nL x), the lower triangle by reciprocity
-    (the mutual of two parallel boxes is symmetric under exchange of the boxes).  Returns (T, summed stated bound)."""
+def layered_surface_impedance(thick_from_face, f: float, sigma: float) -> complex:
+    """The same internal impedance for the slab cut into layers of uniform current density (the thickness layers of a
+    slab here, listed from the excited face): the 1-D PEEC of the layers.  Layer i, depths [e_i, e_i+1], density J_i:
+    J_i / sigma + j omega <Phi>_i = E (equal for all layers, parallel), sum t_i J_i = I, Z = E / I, with Phi(z) = mu0
+    int_0^z H the flux per unit length between the face and depth z and H(z) = int_z^T J (field-free far face).  Layer
+    averages of Phi in closed form (piecewise quadratic): <Phi_j>_i / mu0 = t_j (e_i + e_i+1)/2 (i above j), t_j (e_j +
+    t_j/2) (i below j), t_j (e_j + t_j/3) (i = j).  Converges to ``slab_surface_impedance`` as the layers shrink."""
+    t = np.asarray(thick_from_face, float)
+    e = np.concatenate([[0.0], np.cumsum(t)])
+    n = t.size
+    i, j = np.meshgrid(np.arange(n), np.arange(n), indexing="ij")
+    G = np.where(i < j, t[j] * 0.5 * (e[i] + e[i + 1]), np.where(i > j, t[j] * (e[j] + 0.5 * t[j]), t[j] * (e[j] + t[j] / 3.0)))
+    A = np.zeros((n + 1, n + 1), complex)
+    A[:n, :n] = np.eye(n) / sigma + 1j * 2.0 * math.pi * f * MU0 * G
+    A[:n, n] = -1.0
+    A[n, :n] = t
+    rhs = np.zeros(n + 1, complex)
+    rhs[n] = 1.0
+    return complex(np.linalg.solve(A, rhs)[n])
+
+
+# Assembly threads: the kernel assembly is many mid-size numpy calls that hold the GIL between them; measured on the DoD layout
+# (refinement 0) 4 threads gave wall 31 s vs 28 s and CPU 72 s vs 28 s, so the default is serial (CPU-s is the gated cost).
+# FFT workers: pocketfft threads do not spin; the CPU cost is the same as serial.
+NTHREADS = max(1, int(os.environ.get("MF_L2_THREADS", 1)))
+FFT_WORKERS = max(1, int(os.environ.get("MF_L2_FFT_WORKERS", min(4, os.cpu_count() or 1))))
+TABLE_TEMP_BUDGET = 2.5e9  # bytes: concurrent plane-table temporaries (``layer_pair_tables``) are kept under this
+
+
+def _pool_map(fn, items, workers: int):
+    """Thread map (numpy / scipy.fft release the GIL on large arrays); serial for one worker."""
+    items = list(items)
+    if workers <= 1 or len(items) <= 1:
+        return [fn(i) for i in items]
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        return list(ex.map(fn, items))
+
+
+def circulant_half(T: np.ndarray) -> np.ndarray:
+    """Half spectrum, real, laid out (ij, a, b), of the (2 n1, 2 n2) symmetric circulant embedding of the offset table
+    T[a, b, di, dj].  The embedding is even in both axes, so its DFT is real and the ``rfft2`` half (2 n1 x (n2 + 1)) carries
+    all of it: half the memory of ``l2_core.circulant_fft`` and no complex copy.  Built one output layer at a time."""
+    na, nb, n1, n2 = T.shape
+    out = np.empty((2 * n1 * (n2 + 1), na, nb))
+    for a in range(na):
+        full = np.zeros((nb, 2 * n1, 2 * n2))
+        full[:, :n1, :n2] = T[a]
+        full[:, n1 + 1:, :n2] = T[a][:, :0:-1, :]
+        full[:, :n1, n2 + 1:] = T[a][:, :, :0:-1]
+        full[:, n1 + 1:, n2 + 1:] = T[a][:, :0:-1, :0:-1]
+        out[:, a, :] = sfft.rfft2(full, axes=(1, 2), workers=FFT_WORKERS).real.reshape(nb, -1).T
+    return out
+
+
+def circulant_apply_half(Th: np.ndarray, X: np.ndarray, transposed: bool = False) -> np.ndarray:
+    """y = T x for ``circulant_half`` tables (X (nb, n1, n2), real or complex).  The multiplication is one real batched
+    matmul over (re, im) columns (``l2_core.circulant_apply`` casts the whole table to complex at every call)."""
+    nb, n1, n2 = X.shape
+    cplx = np.iscomplexobj(X)
+    Xs = np.stack([X.real, X.imag]) if cplx else X[None]
+    c = Xs.shape[0]
+    Xh = sfft.rfft2(Xs, s=(2 * n1, 2 * n2), axes=(2, 3), workers=FFT_WORKERS).reshape(c, nb, -1)  # (c, nb, F)
+    V = np.empty((Xh.shape[2], nb, 2 * c))
+    V[:, :, 0::2] = Xh.real.transpose(2, 1, 0)
+    V[:, :, 1::2] = Xh.imag.transpose(2, 1, 0)
+    Y = np.matmul(Th.transpose(0, 2, 1) if transposed else Th, V)  # (F, na, 2c)
+    na = Y.shape[1]
+    Yc = (Y[:, :, 0::2] + 1j * Y[:, :, 1::2]).transpose(2, 1, 0).reshape(c, na, 2 * n1, n2 + 1)
+    y = sfft.irfft2(Yc, s=(2 * n1, 2 * n2), axes=(2, 3), workers=FFT_WORKERS)[:, :, :n1, :n2]
+    return y[0] + 1j * y[1] if cplx else y[0]
+
+
+FAR_CHUNK_ELEMS = 6e6  # doubles per chunk of the far-field table tensor (memory ~ 10 x this x 8 B)
+
+
+def pair_table(z1, z2, a_al, a_tr, n1, n2, near: int | None = None):
+    """``core.plane_table([z1], [z2], a_al, a_tr, n1, n2)[0, 0]`` and its stated bound, evaluated with two changes that leave
+    every value and the stated bound unchanged:
+    * the far entries (beyond ``near`` cells; same Gauss rule over both cross-sections, same stated bound) need the
+      antiderivative g(u, d) of ``core.gfun`` at the axial positions u_m = m a_al only once per m = -1..n1 (the second
+      difference g(u_{di+1}) + g(u_{di-1}) - 2 g(u_di) of the core evaluates it three times), summed over the Gauss points
+      first and differenced afterwards (linear, the same cancellation per point);
+    * the tensors are built in chunks of lateral offsets (bounded memory: the core builds the whole
+      (n1 n2, 2 order_y, order_z^2) tensor at once, ~1 GB per pair at refinement 2).
+    The near block (Hoer-Love, double-double) is the core's own, taken from a ``near + 1`` sized call."""
+    near = core.N_NEAR if near is None else near
+    mn1, mn2 = min(n1, near + 1), min(n2, near + 1)
+    T0, bound0, _ = core.plane_table_full([z1], [z2], a_al, a_tr, mn1, mn2, near)
+    if n1 <= near + 1 and n2 <= near + 1:
+        return T0[0, 0], bound0
+    dmin = near * min(a_al, a_tr)
+    h_y = 0.5 * a_tr
+    ny_ord = core.gauss_order(1.0 + dmin / h_y)
+    tn, wn = core.gq(ny_ord, -a_tr, 0.0)
+    tp_, wp_ = core.gq(ny_ord, 0.0, a_tr)
+    tt = np.concatenate([tn, tp_])
+    wt = np.concatenate([wn * (a_tr + tn), wp_ * (a_tr - tp_)]) / (a_tr * a_tr)
+    hz = 0.5 * max(z1[1] - z1[0], z2[1] - z2[0])
+    nz = core.gauss_order(1.0 + dmin / hz, nmin=2)
+    za, wza = core.gq(nz, *z1)
+    zb, wzb = core.gq(nz, *z2)
+    wza, wzb = wza / (z1[1] - z1[0]), wzb / (z2[1] - z2[0])
+    dz = (zb[None, :] - za[:, None]).ravel()
+    w_tz = np.outer(wt, np.outer(wza, wzb).ravel())  # (nt, nzz)
+    bound = core.gauss_bound(ny_ord, 1.0 + dmin / h_y) + core.gauss_bound(nz, 1.0 + dmin / hz)
+    u = a_al * np.arange(-1, n1 + 1)  # axial positions m = -1 .. n1
+    T = np.zeros((n1, n2))
+    cj = int(max(1, FAR_CHUNK_ELEMS // ((n1 + 2) * tt.size * dz.size)))
+    for j0 in range(0, n2, cj):
+        dj = np.arange(j0, min(n2, j0 + cj))
+        dtr = dj[:, None] * a_tr + tt[None, :]  # (cj, nt)
+        d = np.maximum(np.hypot(dtr[:, :, None], dz[None, None, :]), 1e-300)  # (cj, nt, nzz)
+        G = np.einsum("mjtz,tz->mj", core.gfun(u[:, None, None, None], d[None]), w_tz)  # (n1 + 2, cj)
+        T[:, dj] = K4 * (G[2:] + G[:-2] - 2.0 * G[1:-1])
+    T[:mn1, :mn2] = T0[0, 0]
+    return T, bound
+
+
+def layer_pair_tables(layers, a_al, a_tr, n1, n2, group: int | None = None):
+    """``core.plane_table(layers, layers, ...)`` for the upper triangle of layer pairs; the lower triangle by reciprocity (the
+    mutual of two parallel boxes is symmetric under exchange of the boxes).  Pairs are deduplicated by their geometry: the
+    mutual of two boxes with the same lateral footprint depends only on the two thicknesses and |z-centre distance| (mirror
+    symmetry z -> -z), so symmetric stacks and repeated layer pairs are evaluated once (the stated bound is still summed over
+    every pair, as before).  Distinct pairs run in threads, ``group`` at a time (default: as many as ``TABLE_TEMP_BUDGET``
+    bytes of Gauss temporaries allow).  Returns (T, summed stated bound)."""
     nL = len(layers)
+    thick = np.array([z1 - z0 for z0, z1 in layers])
+    zc = np.array([0.5 * (z0 + z1) for z0, z1 in layers])
+    keys = {}
+    pairs = []
+    for la in range(nL):
+        for lb in range(la, nL):
+            k = (*sorted((round(thick[la] * 1e12), round(thick[lb] * 1e12))), round(abs(zc[la] - zc[lb]) * 1e12))
+            pairs.append((la, lb, keys.setdefault(k, (la, lb))))
+    uniq = sorted(set(v for v in keys.values()))
+    if group is None:
+        temp = 8.0 * n1 * n2 * 24 * 6  # nfar x (2 order_y) x (nz^2) doubles x ~6 live arrays, order of magnitude
+        group = int(max(1, min(NTHREADS, TABLE_TEMP_BUDGET // max(temp, 1.0))))
+
+    def one(pr):
+        la, lb = pr
+        t, b = pair_table(layers[la], layers[lb], a_al, a_tr, n1, n2)
+        return pr, t, b
+
+    res = {pr: (t, b) for pr, t, b in _pool_map(one, uniq, group)}
     T = np.zeros((nL, nL, n1, n2))
     bound = 0.0
-    for la in range(nL):
-        for s in range(la, nL, group):
-            lbs = list(range(s, min(nL, s + group)))
-            t, b = core.plane_table([layers[la]], [layers[lb] for lb in lbs], a_al, a_tr, n1, n2)
-            for k, lb in enumerate(lbs):
-                T[la, lb] = T[lb, la] = t[0, k]
-            bound += b
+    for la, lb, rep in pairs:
+        t, b = res[rep]
+        T[la, lb] = T[lb, la] = t
+        bound += b
     return T, bound
 
 
@@ -606,7 +1046,7 @@ class Grid:
         for a_al, a_tr, n1, n2 in ((ax, ay, nx - 1, ny), (ay, ax, ny - 1, nx)):
             T, b = layer_pair_tables(self.layers, a_al, a_tr, n1, n2)
             self.tabs.append(T[:, :, 0, 0].copy())
-            self.thr.append(core.circulant_fft(T))
+            self.thr.append(circulant_half(T))
             self.plane_bound = max(self.plane_bound, b)
         self._boxes()
 
@@ -617,15 +1057,21 @@ class Grid:
         xc, yc = self.cell_xy()
         z0 = np.array([z[0] for z in self.layers])
         z1 = np.array([z[1] for z in self.layers])
+        # branch boxes as corner lattices (``BoxLattice``): x-branch (l, i, j) spans cell centres i..i+1 in x, the cell edges
+        # of row j in y; y-branch (l, j, i) the cell edges of column i in x, cell centres j..j+1 in y; z = layer faces
+        zu = np.unique(np.concatenate([z0, z1]))
+        zi0, zi1 = np.searchsorted(zu, z0), np.searchsorted(zu, z1)
+        xe = self.x0 + np.arange(self.nx + 1) * self.ax
+        ye = self.y0 + np.arange(self.ny + 1) * self.ay
         l, i, j = np.nonzero(self.valid[0])
         self.bx_lij = (l, i, j)
-        self.bx_lo = np.stack([xc[i], yc[j] - self.ay / 2, z0[l]], 1)
-        self.bx_hi = np.stack([xc[i + 1], yc[j] + self.ay / 2, z1[l]], 1)
+        self.lat = [BoxLattice(xc, ye, zu, i, j, zi0[l], zi1[l])]
+        self.bx_lo, self.bx_hi = self.lat[0].lo_hi()
         self.bx_A = self.ay * self.thick[l]
         l, j, i = np.nonzero(self.valid[1])
         self.by_lij = (l, j, i)
-        self.by_lo = np.stack([xc[i] - self.ax / 2, yc[j], z0[l]], 1)
-        self.by_hi = np.stack([xc[i] + self.ax / 2, yc[j + 1], z1[l]], 1)
+        self.lat.append(BoxLattice(xe, yc, zu, i, j, zi0[l], zi1[l]))
+        self.by_lo, self.by_hi = self.lat[1].lo_hi()
         self.by_A = self.ax * self.thick[l]
 
     def apply(self, xg):
@@ -637,7 +1083,7 @@ class Grid:
             n = int(v.sum())
             full = np.zeros(v.shape, dtype=xg.dtype)
             full[v] = xg[off:off + n]
-            y = core.circulant_apply(self.thr[d], full)
+            y = circulant_apply_half(self.thr[d], full)
             out[off:off + n] = y[v] if np.iscomplexobj(out) else y[v].real
             off += n
         return out
@@ -755,6 +1201,7 @@ class WireGridPFFT(_WireGridBase):
         zu = (pos[:, 2] - self.zlo) / hz
         k0 = np.floor(zu).astype(int) - 1
         Wz = lagrange_weights(zu - k0, nzs)
+        self.stencil_shifted = False
         self.S, self.nodes_idx = [], None
         self.n_virt = []
         n1x, n2x, n1y, n2y = nx - 1, ny, ny - 1, nx
@@ -768,15 +1215,20 @@ class WireGridPFFT(_WireGridBase):
                 ua = (pos[:, 1] - g.y0) / g.ay - 1.0
                 ub = (pos[:, 0] - g.x0) / g.ax - 0.5
                 na_, nb_ = n1y, n2y
-            a0 = np.floor(ua).astype(int) - (nl // 2 - 1)
-            b0 = np.floor(ub).astype(int) - (nl // 2 - 1)
-            if a0.min() < 0 or b0.min() < 0 or (a0 + nl).max() > na_ or (b0 + nl).max() > nb_:
-                raise ValueError("wire too close to the edge of the shared grid for the interpolation stencil")
-            Wa, Wb = lagrange_weights(ua - a0, nl), lagrange_weights(ub - b0, nl)
+            nla, nlb = min(nl, na_), min(nl, nb_)  # a lattice smaller than the stencil: smaller stencil (no far branch then)
+            a0 = np.floor(ua).astype(int) - (nla // 2 - 1)
+            b0 = np.floor(ub).astype(int) - (nlb // 2 - 1)
+            if a0.min() < 0 or b0.min() < 0 or (a0 + nla).max() > na_ or (b0 + nlb).max() > nb_ or nla < nl or nlb < nl:
+                # stencil sticks out of the lattice: shift it inside (extrapolating weights).  Harmless when every branch
+                # is in the near box of every wire (the near correction replaces the whole pair); an error otherwise,
+                # because the far-field interpolation bound does not hold (checked after the near correction)
+                self.stencil_shifted = True
+                a0, b0 = np.clip(a0, 0, na_ - nla), np.clip(b0, 0, nb_ - nlb)
+            Wa, Wb = lagrange_weights(ua - a0, nla), lagrange_weights(ub - b0, nlb)
             coef = w * t[np.repeat(np.arange(ns), self.NQ), dd]
             val = (coef[:, None, None, None] * Wa[:, :, None, None] * Wb[:, None, :, None] * Wz[:, None, None, :])
-            ia = a0[:, None, None, None] + np.arange(nl)[None, :, None, None]
-            ib = b0[:, None, None, None] + np.arange(nl)[None, None, :, None]
+            ia = a0[:, None, None, None] + np.arange(nla)[None, :, None, None]
+            ib = b0[:, None, None, None] + np.arange(nlb)[None, None, :, None]
             ik = k0[:, None, None, None] + np.arange(nzs)[None, None, None, :]
             flat = (ik * na_ + ia) * nb_ + ib
             rows = np.broadcast_to(fil[:, None, None, None], flat.shape)
@@ -790,6 +1242,9 @@ class WireGridPFFT(_WireGridBase):
             self.S_abs.append(Sa)
         self._tables()
         self._near_correction()
+        if self.stencil_shifted and self.n_far_branches > 0:
+            raise ValueError("wire too close to the edge of the shared grid for the interpolation stencil "
+                             "(branches beyond the near box exist, so the far-field interpolation bound would not hold)")
         self._bounds(ell)
 
     # virtual-lattice tables
@@ -811,21 +1266,20 @@ class WireGridPFFT(_WireGridBase):
             lo[..., 1], hi[..., 1] = -a_tr / 2, a_tr / 2
             lo[..., 2] = z0[None, :, None, None]
             hi[..., 2] = z1[None, :, None, None]
-            pz = zv[:, None, None, None]
-            # field point (axial di, lateral dj) relative to the branch box centred at the origin
-            if dd == 0:
-                P = box_potential(di, dj, pz, lo, hi)
-            else:  # y-branch: lateral offset along x, axial along y; box ax (x) by ay (y)
-                lo2, hi2 = lo.copy(), hi.copy()
-                lo2[..., 0], hi2[..., 0] = -g.ax / 2, g.ax / 2
-                lo2[..., 1], hi2[..., 1] = -g.ay / 2, g.ay / 2
-                P = box_potential(dj, di, pz, lo2, hi2)
-            T = K4 * P / A[None, :, None, None]
-            T = np.ascontiguousarray(T)
+            if dd == 1:  # y-branch: lateral offset along x, axial along y; box ax (x) by ay (y)
+                lo[..., 0], hi[..., 0] = -g.ax / 2, g.ax / 2
+                lo[..., 1], hi[..., 1] = -g.ay / 2, g.ay / 2
+
+            def level(k, dd=dd, di=di, dj=dj, lo=lo, hi=hi, A=A):  # one z-level: bounded temporaries, threads
+                pz = zv[k:k + 1, None, None, None]
+                # field point (axial di, lateral dj) relative to the branch box centred at the origin
+                P = box_potential(di, dj, pz, lo, hi) if dd == 0 else box_potential(dj, di, pz, lo, hi)
+                return K4 * P / A[None, :, None, None]
+
+            T = np.concatenate(_pool_map(level, range(self.nzv), NTHREADS), axis=0)
             self.Tv.append(T)
-            th = core.circulant_fft(T)  # (F, nzv, nL)
-            self.Thr.append(th)
-            self.ThrT.append(np.ascontiguousarray(th.transpose(0, 2, 1)))
+            self.Thr.append(circulant_half(T))  # (F, nzv, nL)
+        self.ThrT = None  # transposed products use views of Thr
 
     def _near_correction(self):
         g, fs = self.grid, self.fs
@@ -867,14 +1321,26 @@ class WireGridPFFT(_WireGridBase):
                 ex = np.zeros((fl.size, idx.size))
                 exb = np.zeros((fl.size, idx.size))
                 loc = {int(f): k for k, f in enumerate(fl)}
-                for s in segs:
-                    if abs(self.t[s, dd]) < 1e-15:
-                        continue
-                    I, bd, _ = line_box_integral(fs.seg_p0[s], fs.seg_p1[s], lo, hi)
+
+                lat = g.lat[dd].sub(idx)
+                grads = {}  # box gradients at filament vertices: consecutive segments of a filament share them
+
+                def grad_at(p, lat=lat, grads=grads):
+                    key = p.tobytes()
+                    if key not in grads:
+                        grads[key] = lattice_grad(p, lat)
+                    return grads[key]
+
+                def seg_task(s, dd=dd, lo=lo, hi=hi, A=A, lat=lat):
+                    p0, p1 = fs.seg_p0[s], fs.seg_p1[s]
+                    I, bd, _ = line_box_integral(p0, p1, lo, hi, lat=lat)
+                    corr, rem = rod_box_correction(p0, p1, fs.rho[fs.seg_fil[s]], lo, hi, grad_at(p0), grad_at(p1))
+                    return s, K4 * self.t[s, dd] * (I + corr) / A, K4 * abs(self.t[s, dd]) * rem / A, bd
+
+                for s, e_s, eb_s, bd in _pool_map(seg_task, [s for s in segs if abs(self.t[s, dd]) >= 1e-15], NTHREADS):
                     self.near_bound = max(self.near_bound, bd)
-                    corr, rem = rod_box_correction(fs.seg_p0[s], fs.seg_p1[s], fs.rho[fs.seg_fil[s]], lo, hi)
-                    ex[loc[int(fs.seg_fil[s])]] += K4 * self.t[s, dd] * (I + corr) / A
-                    exb[loc[int(fs.seg_fil[s])]] += K4 * abs(self.t[s, dd]) * rem / A
+                    ex[loc[int(fs.seg_fil[s])]] += e_s
+                    exb[loc[int(fs.seg_fil[s])]] += eb_s
                 # approximate (what the FFT path produces for the same pairs)
                 Ssub = self.S[dd][fl]
                 cols = np.unique(Ssub.indices)
@@ -945,7 +1411,7 @@ class WireGridPFFT(_WireGridBase):
         self.bound = far + gq_b
 
     def _fft_x(self, Xfull, dd, transposed=False):
-        return core.circulant_apply(self.ThrT[dd] if transposed else self.Thr[dd], Xfull)
+        return circulant_apply_half(self.Thr[dd], Xfull, transposed=transposed)
 
     def to_wires(self, xg, absolute=False):
         g = self.grid
@@ -1002,7 +1468,13 @@ class LayoutSystem:
         adj = sp.coo_matrix((np.ones(sum(r.size for r in rows)), (np.concatenate(rows), np.concatenate(cols))),
                             shape=(n_raw, n_raw)) if rows else sp.coo_matrix((n_raw, n_raw))
         _, self.lab = connected_components(adj, directed=False)
-        self.ends = np.asarray(ends, np.int64)
+        if sp.issparse(ends):  # (n_wires, n_raw): +weights at the start contact nodes, -weights at the end contact nodes
+            self.E = ends.tocsr()
+        else:  # (n_wires, 2) raw node ids: start / end node of every wire
+            ends = np.asarray(ends, np.int64)
+            nw = ends.shape[0]
+            self.E = sp.csr_matrix((np.concatenate([np.ones(nw), -np.ones(nw)]),
+                                    (np.tile(np.arange(nw), 2), np.concatenate([ends[:, 0], ends[:, 1]]))), shape=(nw, n_raw))
         self.stated_total = 0.0
         self.stated = {}
 
@@ -1043,11 +1515,9 @@ class LayoutSystem:
         lab = self.lab
         nn = int(lab.max()) + 1
         rows, cols, vals = [], [], []
-        f_w = self.fs.fil_wire
-        ar = np.arange(self.nfil)
-        rows += [ar, ar]
-        cols += [lab[self.ends[f_w, 0]], lab[self.ends[f_w, 1]]]
-        vals += [np.ones(self.nfil), -np.ones(self.nfil)]
+        n_raw = self.E.shape[1]
+        Mlab = sp.csr_matrix((np.ones(n_raw), (np.arange(n_raw), lab)), shape=(n_raw, nn))  # raw node -> merged node
+        self.Cf = (self.E[self.fs.fil_wire] @ Mlab).tocsr()  # (nfil, nn): the wire (filament) rows of the incidence matrix
         off = self.nfil
         for d in (0, 1):
             l, a, b = np.nonzero(g.valid[d])
@@ -1064,7 +1534,9 @@ class LayoutSystem:
             cols += [lab[n1], lab[n2]]
             vals += [np.ones(l.size), -np.ones(l.size)]
             off += l.size
-        C = sp.csr_matrix((np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))), shape=(self.n, nn))
+        Cg = sp.csr_matrix((np.concatenate(vals), (np.concatenate(rows) - self.nfil, np.concatenate(cols))),
+                           shape=(self.n_g, nn))
+        C = sp.vstack([self.Cf, Cg]).tocsr()
         pat = abs(C).T @ abs(C)
         ncomp, comp = connected_components(pat, directed=False)
         first = np.array([np.flatnonzero(comp == c)[0] for c in range(ncomp)])
@@ -1082,13 +1554,9 @@ class LayoutPreconditioner:
         lab = sys_.lab
         self.Mi = np.linalg.inv(sys_.Rw * np.eye(sys_.nfil) + 1j * w * sys_.Lw)
         rows, cols, vals = [], [], []
-        nodes = np.unique(np.concatenate([lab[sys_.ends[:, 0]], lab[sys_.ends[:, 1]]]))
-        pos = {int(v): k for k, v in enumerate(nodes)}
-        Cw = np.zeros((sys_.nfil, nodes.size))
-        fw = sys_.fs.fil_wire
-        for f in range(sys_.nfil):
-            Cw[f, pos[int(lab[sys_.ends[fw[f], 0]])]] += 1.0
-            Cw[f, pos[int(lab[sys_.ends[fw[f], 1]])]] -= 1.0
+        Cf = sys_.Cf  # built by ``incidence`` (the caller has run it: Cr comes from it)
+        nodes = np.unique(Cf.nonzero()[1])
+        Cw = Cf[:, nodes].toarray()
         Sw = Cw.T @ (self.Mi @ Cw)
         ii, jj = np.meshgrid(nodes, nodes, indexing="ij")
         rows.append(ii.ravel())
@@ -1109,14 +1577,14 @@ class LayoutPreconditioner:
                 Rl = a_al / (g.sigma_arr[Ls] * a_tr * g.thick[Ls])
                 Bi = np.linalg.inv(1j * w * g.tabs[d][np.ix_(Ls, Ls)] + np.diag(Rl))
                 self.blocks.append((off + cnt, off + cnt + Ls.size * c_s, Ls.size, Bi))
-                ysum = Bi.sum()
+                ysum = np.full(c_s, Bi.sum())
                 a, b = np.nonzero(vk)
                 i, j = (a, b) if d == 0 else (b, a)
                 n1 = lab[g.node_id[k][i, j]]
                 n2 = lab[g.node_id[k][i + (d == 0), j + (d == 1)]]
                 rows += [n1, n2, n1, n2]
                 cols += [n1, n2, n2, n1]
-                vals += [np.full(n1.size, ysum), np.full(n1.size, ysum), np.full(n1.size, -ysum), np.full(n1.size, -ysum)]
+                vals += [ysum, ysum, -ysum, -ysum]
             off += int(v.sum())
         S = sp.coo_matrix((np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))), shape=(nn, nn)).tocsr()
         self.Slu = spla.splu(S[keep][:, keep].tocsc())
@@ -1137,16 +1605,41 @@ class LayoutPreconditioner:
         return np.concatenate([self.minv(f + self.Cr @ phi), phi])
 
 
+@dataclass(frozen=True)
+class Contact:
+    """A current injected over several cell nodes (raw ids) with weights summing to 1 (bilinear: a point contact at a position
+    inside a cell, instead of snapping it to one cell centre, which moves the injection point by up to half a cell)."""
+    nodes: np.ndarray
+    weights: np.ndarray
+
+
 @dataclass
 class SolveOut:
     z: np.ndarray  # (nf, np, np)
     solver_tol: float
     parts: list = field(default_factory=list)
     iters: list = field(default_factory=list)
+    tol_rel_L: list = field(default_factory=list)  # per frequency: solver_tol relative to L = Im Z / omega
+    t_pre: float = 0.0  # seconds: preconditioner setup / GMRES / a-posteriori bound (summed over frequencies)
+    t_gmres: float = 0.0
+    t_post: float = 0.0
+    flags: list = field(default_factory=list)  # scipy GMRES flag per (frequency, port); 0 = converged
 
 
 DENSE_MAX = 2500
-GMRES_TOL = 1e-9
+# GMRES stops at a preconditioned relative residual of GMRES_TOL.  It is a stopping rule, not an accuracy statement: the
+# reported solver_tol is the rigorous a-posteriori bound, whose residual term is QUADRATIC in the residual (||P M x||^2 /
+# r_min).  At 1e-9 that term was ~4e-15 on every T0075 layout, 1e-10 of the stated operator bounds (~2e-5) that make up
+# solver_tol; 1e-7 keeps it orders below them and saves ~2 decades of iterations (~20 % of GMRES time; 6 dies/switch at
+# 0.25 mm spent 1231 of 2286 CPU-s in GMRES at 1e-9).
+GMRES_TOL = 1e-7
+# Restarted GMRES(GMRES_RESTART), at most GMRES_MAXIT cycles.  The Krylov basis (GMRES_RESTART vectors of the saddle size)
+# is the largest memory term, so the restart stays at 100 and the cycle cap grows instead: the founder diagnostic I0039 hit
+# the former cap of 100 x 5 iterations at 0.125 mm cells (solver_tol 1.2e-3, residual-dominated); iterations grew 191 / 398
+# at 0.5 / 0.25 mm, ~2x per halving of the cell, so 0.125 mm needs ~800-1000.  The a-posteriori bound never relies on
+# convergence (``l2_core.a_posteriori``), and the scipy flag of every solve is in meta['gmres_flags'].
+GMRES_RESTART = 100
+GMRES_MAXIT = 40
 
 
 def solve_system(sys_: LayoutSystem, port_nodes, freqs, tol: float = GMRES_TOL, dense: bool | None = None) -> SolveOut:
@@ -1158,11 +1651,12 @@ def solve_system(sys_: LayoutSystem, port_nodes, freqs, tol: float = GMRES_TOL, 
     npt = len(port_nodes)
     D = np.zeros((len(keep), npt))
     for j, (a, b) in enumerate(port_nodes):
-        a, b = int(sys_.lab[a]), int(sys_.lab[b])
-        if a in pos:
-            D[pos[a], j] += 1.0
-        if b in pos:
-            D[pos[b], j] -= 1.0
+        for sgn, c in ((1.0, a), (-1.0, b)):
+            nodes_c, w_c = (c.nodes, c.weights) if isinstance(c, Contact) else ([c], [1.0])
+            for nd, wt in zip(nodes_c, w_c, strict=True):
+                nd = int(sys_.lab[nd])
+                if nd in pos:
+                    D[pos[nd], j] += sgn * wt
     n, R = sys_.n, sys_.R
     rmin = float(R.min())
     if dense is None:
@@ -1170,7 +1664,9 @@ def solve_system(sys_: LayoutSystem, port_nodes, freqs, tol: float = GMRES_TOL, 
     if dense:
         Ld = np.stack([sys_.lmul(np.eye(n)[:, i]).real for i in range(n)], 1)
         Ld = 0.5 * (Ld + Ld.T)
-    zs, tols, iters, parts = [], [], [], []
+    zs, tols, iters, parts, flags = [], [], [], [], []
+    t_pre = t_gmres = t_post = 0.0
+    tols_l = []
     for f in freqs:
         w = 2 * math.pi * f
 
@@ -1185,13 +1681,20 @@ def solve_system(sys_: LayoutSystem, port_nodes, freqs, tol: float = GMRES_TOL, 
             X = np.linalg.solve(A, np.concatenate([np.zeros((n, npt)), D]))[:n]
             iters.append(0)
         else:
+            t_a = time.perf_counter()
             pre = LayoutPreconditioner(sys_, w, Cr, keep, nn)
+            t_pre += time.perf_counter() - t_a
+            t_a = time.perf_counter()
             X = np.zeros((n, npt), complex)
             it = 0
             for j in range(npt):
-                X[:, j], k, info = core.block_gmres(apply_M, pre, Cr, D[:, j], n, tol)
+                X[:, j], k, info = core.block_gmres(apply_M, pre, Cr, D[:, j], n, tol, restart=GMRES_RESTART,
+                                                    maxit=GMRES_MAXIT)
                 it += k
+                flags.append(info)
             iters.append(it)
+            t_gmres += time.perf_counter() - t_a
+        t_a = time.perf_counter()
         Xt, MX, Z, resid = core.a_posteriori(apply_M, Cr, X, D, rmin)
         xa = np.abs(Xt)
         Lx = np.stack([sys_.lmul(xa[:, j], absolute=True).real for j in range(npt)], 1)
@@ -1203,8 +1706,13 @@ def solve_system(sys_: LayoutSystem, port_nodes, freqs, tol: float = GMRES_TOL, 
         pt.update({k: float(v.max() / zref) for k, v in sys_.stated_parts(xa, w).items()})
         parts.append(pt)
         tols.append(sum(pt.values()))
+        # the same absolute bound read as a bound on L_i = Im Z_ii / omega:  tol * max|Z_jj| / min_i Im Z_ii  (relative to L)
+        zd = np.diag(Z)
+        tols_l.append(tols[-1] * zref / float(np.min(zd.imag)) if np.all(zd.imag > 0) else float("inf"))
         zs.append(Z)
-    return SolveOut(z=np.array(zs), solver_tol=float(max(tols)), parts=parts, iters=iters)
+        t_post += time.perf_counter() - t_a
+    return SolveOut(z=np.array(zs), solver_tol=float(max(tols)), parts=parts, iters=iters, flags=flags, tol_rel_L=tols_l,
+                    t_pre=t_pre, t_gmres=t_gmres, t_post=t_post)
 
 
 # ---------------------------------------------------------------------------------------------- Layout -> system
@@ -1224,55 +1732,70 @@ def source_sha256() -> str:
     return h.hexdigest()
 
 
-def _cells_in(poly_or_rect, X, Y):
-    import shapely
-    return shapely.contains_xy(poly_or_rect, X, Y)
-
-
 def _nearest_cell(mask, xc, yc, x, y):
     """Index (i, j) of the masked cell nearest to (x, y)."""
     ii, jj = np.nonzero(mask)
+    if ii.size == 0:
+        raise ValueError("no cell to attach to: the mask is empty")
     d2 = (xc[ii] - x) ** 2 + (yc[jj] - y) ** 2
     k = int(np.argmin(d2))
     return int(ii[k]), int(jj[k])
 
 
-def build_layout_system(layout, fmax: float, refinement: int, coupling: str = "pfft"):
-    """(LayoutSystem, port raw nodes, info dict) of ``layout`` (see module docstring)."""
-    from shapely.geometry import Polygon
+def layout_lattice(cm, refinement: int):
+    """Shared lateral lattice (xmin, ymin, ax, ay, nx, ny) of the conductor model ``cm`` at ``refinement``: the bounding box
+    of the baseplate and the top-Cu rectangles, divided into cells of exactly CELL[refinement] (ValueError when the box is
+    not a whole number of cells: the cell would be stretched off the design grid and no feature would stay aligned)."""
     if not 0 <= refinement <= MAX_REFINEMENT:
         raise ValueError(f"refinement must be in 0..{MAX_REFINEMENT}")
-    cm = layout.to_conductors()
-    st = cm.stack
-    planes = {p.name: p for p in cm.planes}
-    bp = planes["baseplate"]
+    bp = {p.name: p for p in cm.planes}["baseplate"]
     xmin, ymin, xmax, ymax = bp.bounds
     for r in cm.rects:
         xmin, ymin, xmax, ymax = min(xmin, r.x0), min(ymin, r.y0), max(xmax, r.x1), max(ymax, r.y1)
     a = CELL[refinement]
     nx, ny = max(8, round((xmax - xmin) / a)), max(8, round((ymax - ymin) / a))
-    ax, ay = (xmax - xmin) / nx, (ymax - ymin) / ny
+    for n, ext, name in ((nx, xmax - xmin, "x"), (ny, ymax - ymin, "y")):
+        if abs(ext / a - n) > ALIGN_TOL * n:
+            raise ValueError(f"lattice {name} extent {ext * 1e3:.4f} mm is not a whole number of {a * 1e3:.4g} mm cells "
+                             f"(baseplate / trace bounding box); features would not lie on cell boundaries")
+    return float(xmin), float(ymin), (xmax - xmin) / nx, (ymax - ymin) / ny, int(nx), int(ny)
+
+
+def layout_cell_fill(layout, refinement: int) -> dict:
+    """``cell_fill`` of ``layout`` on its lattice at ``refinement`` (cheap: no system is built)."""
+    cm = layout.to_conductors()
+    return cell_fill(cm, *layout_lattice(cm, refinement))
+
+
+def build_layout_system(layout, fmax: float, refinement: int, coupling: str = "pfft"):
+    """(LayoutSystem, port raw nodes, info dict) of ``layout`` (see module docstring)."""
+    cm = layout.to_conductors()
+    st = cm.stack
+    planes = {p.name: p for p in cm.planes}
+    xmin, ymin, ax, ay, nx, ny = layout_lattice(cm, refinement)
     xc = xmin + (np.arange(nx) + 0.5) * ax
     yc = ymin + (np.arange(ny) + 0.5) * ay
     X, Y = np.meshgrid(xc, yc, indexing="ij")
-    # top Cu: rectangles of to_conductors(); label = net index + 1 (0 = no copper)
-    nets = sorted({r.net for r in cm.rects})
-    top_mask = np.zeros((nx, ny), bool)
-    top_lab = np.zeros((nx, ny), np.int64)
-    for r in cm.rects:
-        m = (X > r.x0) & (X < r.x1) & (Y > r.y0) & (Y < r.y1)
-        top_mask |= m
-        top_lab[m] = nets.index(r.net) + 1
+    # every trace, plane and die footprint on cell boundaries (ValueError otherwise): cells are full or empty
+    fill = cell_fill(cm, xmin, ymin, ax, ay, nx, ny)
+    for d in cm.shorts:
+        check_on_lattice(d.x - d.w / 2, d.x + d.w / 2, d.y - d.h / 2, d.y + d.h / 2, xmin, ymin, ax, ay,
+                         f"die {d.die_index} footprint")
+    top_frac, top_lab, nets = fill["top"]
+    top_mask = top_frac > 0
     z0t, z1t = layout.top_cu_z()
     top_sigma = st.layer("top_cu").sigma
     slabs = [SlabSpec("top_cu", top_mask, graded_layers(z0t, z1t, LAYERS_TOP[refinement], fmax, top_sigma, True),
                       top_sigma, top_lab)]
     for name, nlay, two in (("backside_cu", LAYERS_BACK[refinement], True), ("baseplate", LAYERS_BASE[refinement], False)):
         p = planes[name]
-        m = _cells_in(Polygon(p.outline), X, Y)
-        slabs.append(SlabSpec(name, m, graded_layers(p.z_bottom, p.z_bottom + p.thickness, nlay, fmax, p.sigma, two),
+        F = fill[name]
+        slabs.append(SlabSpec(name, F > 0, graded_layers(p.z_bottom, p.z_bottom + p.thickness, nlay, fmax, p.sigma, two),
                               p.sigma))
+    area_err = {k: abs(rep - ex) / ex for k, (rep, ex) in fill["area"].items()}
+    t_g = time.perf_counter()
     grid = Grid(xmin, ymin, ax, ay, nx, ny, slabs)
+    t_grid = time.perf_counter() - t_g
     # wires
     by_w: dict[int, list] = {}
     for s in cm.wires:
@@ -1287,40 +1810,75 @@ def build_layout_system(layout, fmax: float, refinement: int, coupling: str = "p
     fs = build_filaments(wires, refinement, z_floor=z1t + LANDING_GAP * dmax)
     # nodes: dies are ideal shorts of their footprint cells; wire ends join the die or the landing cell
     nid = grid.node_id[0]
-    shorts, die_node = [], []
+    shorts, die_node, short_nets = [], [], []
     for d in cm.shorts:
-        ci, cj = _nearest_cell(top_mask, xc, yc, d.x, d.y)
-        lab = top_lab[ci, cj]
+        if d.bottom_net not in nets:
+            raise ValueError(f"die {d.die_index}: no trace of its net {d.bottom_net!r}")
+        lab = nets.index(d.bottom_net) + 1  # a die shorts the cells of ITS net only (DieShort.bottom_net), not the nearest trace's
+        ci, cj = _nearest_cell(top_mask & (top_lab == lab), xc, yc, d.x, d.y)
         m = top_mask & (top_lab == lab) & (np.abs(X - d.x) < d.w / 2) & (np.abs(Y - d.y) < d.h / 2)
         m[ci, cj] = True
         shorts.append(nid[m])
+        short_nets.append(sorted({nets[int(k) - 1] for k in top_lab[m]}))
         die_node.append(int(nid[ci, cj]))
 
-    def node_at(p, net):
-        for k, d in enumerate(cm.shorts):
-            if abs(p[0] - d.x) <= d.w / 2 and abs(p[1] - d.y) <= d.h / 2 and p[2] >= d.z_top - 1e-9:
-                return die_node[k]
+    def contact_at(p, net):
+        """Raw nodes and weights of a point contact at p on ``net``: bilinear weights over the four cell centres around p that
+        belong to the net's cells (renormalised when some are not; the nearest cell if none)."""
         lab = nets.index(net) + 1
-        i = int(np.clip(np.floor((p[0] - xmin) / ax), 0, nx - 1))
-        j = int(np.clip(np.floor((p[1] - ymin) / ay), 0, ny - 1))
-        if not (top_mask[i, j] and top_lab[i, j] == lab):
+        u, v = (p[0] - xmin) / ax - 0.5, (p[1] - ymin) / ay - 0.5
+        i0, j0 = int(np.floor(u)), int(np.floor(v))
+        fx, fy = u - i0, v - j0
+        nodes, wts = [], []
+        for di, wx in ((0, 1.0 - fx), (1, fx)):
+            for dj, wy in ((0, 1.0 - fy), (1, fy)):
+                i, j = i0 + di, j0 + dj
+                if wx * wy > 1e-12 and 0 <= i < nx and 0 <= j < ny and top_mask[i, j] and top_lab[i, j] == lab:
+                    nodes.append(int(nid[i, j]))
+                    wts.append(wx * wy)
+        if not nodes:
             i, j = _nearest_cell(top_mask & (top_lab == lab), xc, yc, p[0], p[1])
-        return int(nid[i, j])
+            return Contact(np.array([int(nid[i, j])]), np.ones(1))
+        w = np.array(wts)
+        return Contact(np.array(nodes), w / w.sum())
 
-    ends = np.array([[node_at(w.points[0], n), node_at(w.points[-1], n)] for w, n in zip(wires, wnet, strict=True)])
+    def end_contact(p, net):
+        for k, d in enumerate(cm.shorts):  # a wire end on a die joins the die's (merged) node
+            if abs(p[0] - d.x) <= d.w / 2 and abs(p[1] - d.y) <= d.h / 2 and p[2] >= d.z_top - 1e-9:
+                return Contact(np.array([die_node[k]]), np.ones(1))
+        return contact_at(p, net)
+
+    n_raw = grid.n_cell_nodes
+    er, ec, ev = [], [], []
+    for wi, (w, n) in enumerate(zip(wires, wnet, strict=True)):
+        for sgn, pt in ((1.0, w.points[0]), (-1.0, w.points[-1])):
+            c = end_contact(pt, n)
+            er += [wi] * c.nodes.size
+            ec += list(c.nodes)
+            ev += list(sgn * c.weights)
+    ends = sp.csr_matrix((ev, (er, ec)), shape=(len(wires), n_raw))
     pp, pn = cm.port.p_pos, cm.port.p_neg
-    m_pos, m_neg = (top_mask & (top_lab == nets.index(n) + 1) for n in (DC_PLUS, DC_MINUS))
-    port = (int(nid[_nearest_cell(m_pos, xc, yc, pp[0], pp[1])]), int(nid[_nearest_cell(m_neg, xc, yc, pn[0], pn[1])]))
+    port = (contact_at(pp, DC_PLUS), contact_at(pn, DC_MINUS))
     t0 = time.perf_counter()
     wg = WireGridPFFT(fs, grid) if coupling == "pfft" else WireGridDense(fs, grid)
     t_wg = time.perf_counter() - t0
+    t0 = time.perf_counter()
     sys_ = LayoutSystem(fs, grid, wg, ends, shorts)
+    t_sys = time.perf_counter() - t0
     sys_.set_stated()
     info = dict(nx=nx, ny=ny, cell_x=ax, cell_y=ay, layers=[len(s.layers) for s in slabs], n_wires=len(wires),
                 filaments_per_wire=fs.nfil // len(wires), n_segments=int(fs.seg_p0.shape[0]), n_grid_unknowns=grid.n_g,
-                clamped_vertices=fs.clamped, coupling=coupling, wire_grid_build_s=t_wg,
+                clamped_vertices=fs.clamped, coupling=coupling, die_short_nets=short_nets, wire_grid_build_s=t_wg,
+                grid_build_s=t_grid, wire_matrices_s=t_sys, area_rel_err=area_err, on_lattice=True,
                 n_near_pairs=int(getattr(wg, "near_pairs", 0)), pfft_near_cells=PFFT_NEAR)
     return sys_, port, info
+
+
+def _peak_rss_gb() -> float:
+    import resource
+    import sys
+    r = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return r * (1.0 if sys.platform == "darwin" else 1024.0) / 1e9
 
 
 def loop_inductance(layout, freqs_hz, refinement: int = 0) -> LoopResult:
@@ -1339,7 +1897,10 @@ def loop_inductance(layout, freqs_hz, refinement: int = 0) -> LoopResult:
     z = out.z[:, 0, 0]
     meta = dict(tool=TOOL_NAME, tool_version=TOOL_VERSION, source_sha256=source_sha256(),
                 n_unknowns=int(sys_.n), n_filaments=int(sys_.nfil), mesh_params=info, refinement=int(refinement),
-                solver_tol=out.solver_tol, tol_parts=out.parts, stated=sys_.stated, gmres_iters=out.iters,
-                gmres_tol=GMRES_TOL, build_s=t1 - t0, wall_s=time.perf_counter() - t0, cpu_s=time.process_time() - c0,
+                solver_tol=out.solver_tol, solver_tol_rel_L=out.tol_rel_L, solver_tol_rel_L_max=float(max(out.tol_rel_L)),
+                tol_parts=out.parts, gmres_flags=out.flags, solve_s=dict(preconditioner=out.t_pre, gmres=out.t_gmres,
+                                                                         a_posteriori=out.t_post),
+                peak_rss_gb=_peak_rss_gb(), stated=sys_.stated, gmres_iters=out.iters,
+                gmres_tol=GMRES_TOL, gmres_restart=GMRES_RESTART, gmres_max_iters=GMRES_RESTART * GMRES_MAXIT, build_s=t1 - t0, wall_s=time.perf_counter() - t0, cpu_s=time.process_time() - c0,
                 layout_fingerprint=layout.fingerprint())
     return LoopResult(L_H=np.imag(z) / (2.0 * np.pi * freqs), R_ohm=np.real(z), meta=meta)

@@ -7,6 +7,15 @@ trace and are wired to PHASE; LS dies sit on PHASE and are wired to DC-. Rows ar
 * ``side_by_side``: DC+ | PHASE | DC-, simple PHASE strip.
 * ``interleaved``:  PHASE | DC+ | DC- | PHASE; DC+ and DC- rows adjacent, PHASE is a C joined at the left.
 * ``u_shaped``:     PHASE | DC+ | PHASE | DC-; PHASE wraps the DC+ row (long U-shaped current path).
+
+Design grid (T0075, founder re-scope I0039): every free lateral parameter is snapped to DESIGN_GRID_MM = 0.5 mm after it
+is drawn: die size s, gaps g and dg, row extensions e, and the die-row start xs (the row start, not the die centre).  The
+housing constants (pads, row ends, Y_BOT, the 1 / 3 / 4 mm row margins, the baseplate box -8..78 x -8..48 mm) are on the
+grid already, so every trace edge and every die footprint lies on it, and the layout L2 (``solvers.l2_layout``) meshes
+each layout exactly with cells that divide 0.5 mm.  Wire positions (die centre + k x 1 mm pitch), the loop height and the
+wire diameter are not lateral copper features and stay as drawn.  The random stream is unchanged (one draw per parameter as
+before; only the values are rounded), and so are the families, the die counts and the DRC check.  Before T0075 s, g, dg
+and e were rounded to 0.1 mm and xs was continuous.
 """
 from __future__ import annotations
 
@@ -41,6 +50,12 @@ PADS = {  # housing-fixed terminal pads (x0, y0, x1, y1) in mm
 }
 WIRE_PITCH_MM = 1.0
 X_DIE_MIN, X_DIE_MAX = 10.0, 60.0
+DESIGN_GRID_MM = 0.5  # every free lateral parameter is a multiple of this (see the module docstring)
+
+
+def _snap(v: float) -> float:
+    """``v`` (mm) rounded to the nearest multiple of DESIGN_GRID_MM (exact in binary floating point)."""
+    return round(float(v) / DESIGN_GRID_MM) * DESIGN_GRID_MM
 
 
 def _rows(family, s, g, e, rng):
@@ -92,18 +107,18 @@ def _rows(family, s, g, e, rng):
 
 def _build(family: str, n: int, rng: np.random.Generator) -> Layout:
     stack = default_dbc_stack()
-    s = round(rng.uniform(4.0, 5.5), 1)
-    dg = round(rng.uniform(1.5, 2.5), 1)
-    g = round(rng.uniform(1.5, 2.5), 1)
+    s = _snap(rng.uniform(4.0, 5.5))
+    dg = _snap(rng.uniform(1.5, 2.5))
+    g = _snap(rng.uniform(1.5, 2.5))
     emax = 1.5 if family == "u_shaped" else 2.0
-    e = [round(rng.uniform(0.0, emax), 1) for _ in range(4)]
+    e = [_snap(rng.uniform(0.0, emax)) for _ in range(4)]
     k = int(rng.integers(2, 4))  # wires per die
     diam = float(rng.choice([0.3, 0.4]))
     hloop = round(rng.uniform(0.6, 1.5), 2)
     u = rng.uniform({"side_by_side": 0.85, "interleaved": 0.0, "u_shaped": 0.0}[family],
                     {"side_by_side": 1.0, "interleaved": 1.0, "u_shaped": 0.15}[family])
     ld = n * s + (n - 1) * dg
-    xs = X_DIE_MIN + u * (X_DIE_MAX - X_DIE_MIN - ld)
+    xs = _snap(X_DIE_MIN + u * (X_DIE_MAX - X_DIE_MIN - ld))  # row start on the grid (X_DIE_MIN, X_DIE_MAX - ld are)
     R, hs_y0, hs_land, ls_y0, ls_land = _rows(family, s, g, e, rng)
 
     traces = []

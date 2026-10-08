@@ -1,0 +1,56 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "The 12 GB memory gate rests on a peak-RSS reading the note itself shows reads low under memory pressure",
+      "detail": "The cost gate passes on peak_rss_gb from getrusage ru_maxrss in each child. The note itself reports that this reading is deflated under macOS memory pressure. The same 0.5 mm, 2-die solve read 2.28 GB in the DoD run, 2.74 GB in attempt 4 and 3.58 GB standalone, a 57% spread. The DoD run had 8.8 GB of swap in use. The 6-die k_star solve recorded 8.92 GB (74% of the gate). Scaled by the note's own ratios it would be about 12.1 GB (attempt 4: 9.28 x 3.58/2.74) or about 14 GB (8.92 x 3.58/2.28), both over the gate. So the memory side of the 'cost at k_star' feasibility gate is not robustly shown. The DoD assertion passes only because it reads the deflated number. The CPU side has 16% margin (2011 of 2400 s), against a stated \u00b125% machine-state variability; attempt 4 measured 2286 s at the older tolerance.",
+      "evidence": "docs/notes/o001-l2-layout-cost.md, 'Measurements' bullets: 'standalone re-run of the 0.5 mm child \u2026 peak RSS of 3.58 GB \u2026 macOS compresses or swaps pages, so peak RSS reads low: 2.28 GB in the quick run, 2.74 GB in attempt 4'. cost.json: seed 7 / 6 dies / ref 1: peak_rss_gb 8.918, cpu_s 2011.5 (0.838 of the gate).",
+      "suggested_check": "Re-run the 6-die k_star child alone on an idle machine and record the macOS peak memory footprint (/usr/bin/time -l), not only ru_maxrss."
+    },
+    {
+      "severity": "major",
+      "title": "'Fine-level GMRES' and lateral convergence are not shown on any production layout",
+      "detail": "No 0.125 mm production solve has run under the new 100 x 40 cap; the founder diagnostic's only fine-level solve hit the old cap. The fine-level evidence is one toy test: two wires over a 20 x 16 mm plane, 'test_solver_tol_usable_at_every_refinement'. The convergence gate (k*\u2192k*+1 < 1%) is an extrapolation from the diagnostic's contraction of 0.61. The note discloses all of this. If that contraction holds, Richardson's estimate puts the remaining L error at k_star at about 0.59%/0.39 \u2248 1.5% for the diagnostic layout and about 1.9% for seed 11. That is a systematic bias E002 inherits even when the gate passes. The two iteration forecasts for 0.125 mm also disagree: the l2_layout docstring says about 800-1000, the note says about 430.",
+      "evidence": "The note says: 'The production 0.125 mm solve has not run here'; 'This is an extrapolation, not a measurement'; 'Seed 3 / 6 dies has not been solved at any level'. The l2_layout.py comment at GMRES_RESTART says '0.125 mm needs ~800-1000'.",
+      "suggested_check": "Run `--vm` and require convergence[] entries with converged=true and gmres_flags == [0] at refinement 2 before E002 relies on k_star."
+    },
+    {
+      "severity": "minor",
+      "title": "The '+2 thickness layers' sensitivity variant hardly refines the thickness mesh",
+      "detail": "Because the layers are graded to F_MESH = 100 MHz, the top-Cu 1-D internal-impedance error at 20 MHz barely moves from 10 to 12 layers. I measured 1.56% at 10 and 1.49% at 12; 6 and 8 layers give 8.3% and 6.7%. So the -0.043% L change under '+2 layers' says little about thickness convergence. L is probably insensitive anyway: the internal reactance is a few percent of the loop L. But R moved +8.2% under the same variant, which shows the backside and baseplate layering is not converged. The backside's 1-D Z_s error is 8.3% and is not gated; only top Cu is checked against the 2% limit.",
+      "evidence": "My check: layered_surface_impedance vs slab_surface_impedance at 20 MHz, graded_layers(\u2026, n, 1e8, \u2026): n=6 0.0832, n=8 0.0665, n=10 0.0156, n=12 0.0149. Fine uniform layering converges to the exact slab (3.8e-6).",
+      "suggested_check": "Use a sensitivity variant that actually halves the first-layer thickness, or grade to 20 MHz plus extra layers, to bound the thickness error."
+    },
+    {
+      "severity": "note",
+      "title": "Wire-filament sensitivity not measured on this ladder",
+      "detail": "The 'wires_finer' variant moved to --vm. The only figure, +0.02%, is from the old non-aligned ladder.",
+      "evidence": "The note's sensitivity table: 'not measured on this ladder'.",
+      "suggested_check": "Include in the VM run, as planned."
+    },
+    {
+      "severity": "note",
+      "title": "Snapping to 0.5 mm changes the parameter distribution, though the random stream is unchanged",
+      "detail": "Rounding uniform(4.0, 5.5) to 0.5 mm gives s in {4.0, 4.5, 5.0, 5.5}, with the end values at half the probability of the middle ones. g, dg and e are similarly coarsened. The draws per layout are unchanged, but layouts differ from before T0075. Anything that pinned pre-T0075 layouts (for example earlier E00x numbers) is no longer comparable.",
+      "evidence": "src/moduleforge/generate/halfbridge.py, _build: s = _snap(rng.uniform(4.0, 5.5)) etc.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Generated 600 layouts (seeds 0-39 x 15 layouts each, every family and die count 2-6). Ran layout_lattice, cell_fill and the die-footprint check_on_lattice at refinements 0, 1 and 2: 1800 of 1800 on the lattice, per-net area error <= 1e-12, no ValueError. The 'every generated layout is aligned at every level' claim holds.",
+    "Recomputed the skin depth at 20 MHz by hand: 14.777 um, matching. Checked slab_surface_impedance against the thick-slab limit (1+j)/(sigma delta): equal. Checked that layered_surface_impedance converges to the exact slab with 3000 uniform layers (3.8e-6). Reproduced the 1.56% (10 layers) and 8.3% (6 layers) Z_s errors and found 1.49% at 12 layers.",
+    "Re-derived the a-posteriori bound in l2_core.a_posteriori (Z - Z~ = e^T rho, ||e|| <= ||rho||/r_min from Re M = R on null(C^T)). It is quadratic in the residual, so loosening GMRES_TOL from 1e-9 to 1e-7 does not weaken the reported solver_tol.",
+    "Ran the DoD assertion block on the committed docs/notes/o001-l2-layout-cost.json: it passes (k_star 1; dies {2, 6} at k_star; a k_star-1 solve; L in (1e-9, 1e-7); cpu <= 2400; rss <= 12; solver_tol < 1e-3). The 6-die solve sits at 0.838 of the CPU gate and 0.743 of the RSS gate.",
+    "Checked the note's arithmetic against cost.json: step -0.778%, GMRES s/iteration 0.32 \u2192 2.10, CPU ratio 6.47x, c(d) slope 212 CPU-s per die, mean 0.44 CPU-h.",
+    "Re-implemented the convergence-gate logic by reading benchmarks convergence(): rel_change sign and contraction rule match the stated gate.",
+    "uv run ruff check on the deliverables: all checks passed.",
+    "Read the new and replaced tests (lattice refusal, area exactness, GMRES cap, fine-level solver_tol). The assertions test behaviour and are not tautological, but the area test covers only 2 layouts; my 600-layout scan fills that gap."
+  ],
+  "caveats": [
+    "The unit test suite (uv run pytest -q tests/unit/solvers) was still running when I had to report: about 72 tests had passed, none had failed, and the rest were unfinished. I did not see a final pass.",
+    "My re-run of the 0.5 mm benchmark child, meant to measure peak memory independently, had not finished. The memory finding rests on the note's own figures (2.28 / 2.74 / 3.58 GB for the same solve).",
+    "I did not re-run the full --quick DoD benchmark (about 50 minutes, about 9 GB) or any k_star solve. The cost-gate numbers are taken from the committed cost.json.",
+    "Valid scope: generator alignment, the aligned ladder, the lattice refusal and the GMRES cap are implemented and consistent. The k_star cost gate is met as recorded on a machine under memory pressure, with a thin and partly unreliable margin. Lateral convergence, production fine-level GMRES, wire-filament sensitivity and the side_by_side 6-die layout are all unverified until the --vm run."
+  ]
+}

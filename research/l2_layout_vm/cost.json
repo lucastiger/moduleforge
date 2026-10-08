@@ -1,0 +1,1239 @@
+{
+ "k_star": 1,
+ "mode": "vm",
+ "f_hz": 20000000.0,
+ "cells_mm": [
+  0.5,
+  0.25,
+  0.125
+ ],
+ "skin_depth_um": 14.777165489999476,
+ "k_star_criterion": "founder re-scope I0039: k_star = l2_layout.K_STAR = 1, the 0.25 mm lateral level, on the nested ladder 0.5 / 0.25 / 0.125 mm that divides the generator's 0.5 mm design grid; the thickness layers (top 10, backside 6, baseplate 6) and the wire filaments are held at every level at the counts that resolve the 20 MHz skin depth (top-Cu 1-D internal impedance within 2 % of the exact slab, l2_layout.layered_surface_impedance vs slab_surface_impedance; T0075 attempt 3's level 3)",
+ "design_grid_mm": 0.5,
+ "layer_thickness_um": {
+  "0": [
+   3.3042746550402824,
+   7.437793848174503,
+   16.74218492810732,
+   37.6860076910763,
+   84.82973887760159,
+   84.82973887760157,
+   37.686007691076284,
+   16.74218492810737,
+   7.437793848174483,
+   3.3042746550402824
+  ],
+  "1": [
+   3.3042746550402824,
+   7.437793848174503,
+   16.74218492810732,
+   37.6860076910763,
+   84.82973887760159,
+   84.82973887760157,
+   37.686007691076284,
+   16.74218492810737,
+   7.437793848174483,
+   3.3042746550402824
+  ],
+  "2": [
+   3.3042746550402824,
+   7.437793848174503,
+   16.74218492810732,
+   37.6860076910763,
+   84.82973887760159,
+   84.82973887760157,
+   37.686007691076284,
+   16.74218492810737,
+   7.437793848174483,
+   3.3042746550402824
+  ]
+ },
+ "skin_resolution": {
+  "0": {
+   "cell_mm": 0.5,
+   "delta_um": 14.777165489999476,
+   "top_cu": {
+    "n_layers": 10,
+    "layers_um": [
+     3.3042746550402824,
+     7.437793848174503,
+     16.74218492810732,
+     37.6860076910763,
+     84.82973887760159,
+     84.82973887760157,
+     37.686007691076284,
+     16.74218492810737,
+     7.437793848174483,
+     3.3042746550402824
+    ],
+    "zs_rel_err": 0.015614220448060922,
+    "R_s_rel_err": 0.01297758523125192,
+    "X_s_rel_err": 0.00868252047312506
+   },
+   "backside_cu": {
+    "n_layers": 6,
+    "layers_um": [
+     3.3042746550402833,
+     20.426189715285577,
+     126.26953562967414,
+     126.26953562967414,
+     20.426189715285567,
+     3.3042746550402824
+    ],
+    "zs_rel_err": 0.08316413663145103,
+    "R_s_rel_err": -0.031374877010265534,
+    "X_s_rel_err": 0.07701876858432213
+   },
+   "layers": [
+    10,
+    6,
+    6
+   ],
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ],
+   "resolved": true
+  },
+  "1": {
+   "cell_mm": 0.25,
+   "delta_um": 14.777165489999476,
+   "top_cu": {
+    "n_layers": 10,
+    "layers_um": [
+     3.3042746550402824,
+     7.437793848174503,
+     16.74218492810732,
+     37.6860076910763,
+     84.82973887760159,
+     84.82973887760157,
+     37.686007691076284,
+     16.74218492810737,
+     7.437793848174483,
+     3.3042746550402824
+    ],
+    "zs_rel_err": 0.015614220448060922,
+    "R_s_rel_err": 0.01297758523125192,
+    "X_s_rel_err": 0.00868252047312506
+   },
+   "backside_cu": {
+    "n_layers": 6,
+    "layers_um": [
+     3.3042746550402833,
+     20.426189715285577,
+     126.26953562967414,
+     126.26953562967414,
+     20.426189715285567,
+     3.3042746550402824
+    ],
+    "zs_rel_err": 0.08316413663145103,
+    "R_s_rel_err": -0.031374877010265534,
+    "X_s_rel_err": 0.07701876858432213
+   },
+   "layers": [
+    10,
+    6,
+    6
+   ],
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ],
+   "resolved": true
+  },
+  "2": {
+   "cell_mm": 0.125,
+   "delta_um": 14.777165489999476,
+   "top_cu": {
+    "n_layers": 10,
+    "layers_um": [
+     3.3042746550402824,
+     7.437793848174503,
+     16.74218492810732,
+     37.6860076910763,
+     84.82973887760159,
+     84.82973887760157,
+     37.686007691076284,
+     16.74218492810737,
+     7.437793848174483,
+     3.3042746550402824
+    ],
+    "zs_rel_err": 0.015614220448060922,
+    "R_s_rel_err": 0.01297758523125192,
+    "X_s_rel_err": 0.00868252047312506
+   },
+   "backside_cu": {
+    "n_layers": 6,
+    "layers_um": [
+     3.3042746550402833,
+     20.426189715285577,
+     126.26953562967414,
+     126.26953562967414,
+     20.426189715285567,
+     3.3042746550402824
+    ],
+    "zs_rel_err": 0.08316413663145103,
+    "R_s_rel_err": -0.031374877010265534,
+    "X_s_rel_err": 0.07701876858432213
+   },
+   "layers": [
+    10,
+    6,
+    6
+   ],
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ],
+   "resolved": true
+  }
+ },
+ "gates": {
+  "cpu_s": 2400.0,
+  "rss_gb": 12.0,
+  "l_rel_change": 0.01,
+  "converged_below": 0.0001,
+  "sensitivity": 0.002
+ },
+ "threads_per_child": 8,
+ "jobs": 4,
+ "solves": [
+  {
+   "seed": 3,
+   "dies_per_switch": 6,
+   "family": "side_by_side",
+   "refinement": 0,
+   "f_hz": 20000000.0,
+   "L_H": 4.173555847847094e-09,
+   "R_ohm": 0.011601776477425994,
+   "wall_s": 854.4842366769999,
+   "cpu_s": 1533.012233,
+   "cpu_user_s": 1444.879183,
+   "cpu_sys_s": 88.13305,
+   "peak_rss_gb": 6.661926912,
+   "n_unknowns": 458334,
+   "gmres_iters": 155,
+   "gmres_flags": [
+    0
+   ],
+   "gmres_max_iters": 4000,
+   "solver_tol": 4.546014930232886e-05,
+   "solver_tol_rel_L": 4.547127083246329e-05,
+   "build_s": 653.8224939709999,
+   "stage_s": {
+    "grid": 110.18900084100005,
+    "wire_grid": 491.0451238800006,
+    "wire_matrices": 52.559091880999404,
+    "preconditioner": 0.21597173400004976,
+    "gmres": 197.88946082700022,
+    "a_posteriori": 2.402626856000097
+   },
+   "n_near_pairs": 60279450,
+   "n_filaments": 900,
+   "n_grid_unknowns": 457434,
+   "layers": [
+    10,
+    6,
+    6
+   ],
+   "cell_m": 0.0005,
+   "cell_y_m": 0.0005,
+   "tol_parts": {
+    "resid": 1.94349085835141e-11,
+    "round": 9.799012570704986e-09,
+    "plane_tables": 3.7189299386734135e-11,
+    "wire_grid_operator": 4.4159119055615384e-05,
+    "wire_grid_finite_radius": 9.607304595434898e-07,
+    "inter_wire_finite_radius": 3.3041155093753806e-07,
+    "rod_series": 3.259945376975736e-11
+   },
+   "n_cpu": 32,
+   "threads": {
+    "OMP_NUM_THREADS": "8",
+    "OPENBLAS_NUM_THREADS": "8",
+    "MKL_NUM_THREADS": "8",
+    "VECLIB_MAXIMUM_THREADS": "8",
+    "MF_L2_FFT_WORKERS": "8"
+   },
+   "area_rel_err_max": 2.258754526011467e-16,
+   "on_lattice": true,
+   "filaments_per_wire": 25,
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ]
+  },
+  {
+   "seed": 3,
+   "dies_per_switch": 6,
+   "family": "side_by_side",
+   "refinement": 1,
+   "f_hz": 20000000.0,
+   "L_H": 4.12596384494449e-09,
+   "R_ohm": 0.011584649091239267,
+   "wall_s": 2464.3929288320005,
+   "cpu_s": 5228.108308,
+   "cpu_user_s": 4908.175701,
+   "cpu_sys_s": 319.932607,
+   "peak_rss_gb": 11.898216448,
+   "n_unknowns": 1844968,
+   "gmres_iters": 275,
+   "gmres_flags": [
+    0
+   ],
+   "gmres_max_iters": 4000,
+   "solver_tol": 4.985791778994364e-05,
+   "solver_tol_rel_L": 4.987036136441889e-05,
+   "build_s": 1520.7306363029998,
+   "stage_s": {
+    "grid": 607.9537193309998,
+    "wire_grid": 861.5717466229999,
+    "wire_matrices": 51.16546690499945,
+    "preconditioner": 0.9794288289995166,
+    "gmres": 935.769601045,
+    "a_posteriori": 6.439590750999741
+   },
+   "n_near_pairs": 87116400,
+   "n_filaments": 900,
+   "n_grid_unknowns": 1844068,
+   "layers": [
+    10,
+    6,
+    6
+   ],
+   "cell_m": 0.00025,
+   "cell_y_m": 0.00025,
+   "tol_parts": {
+    "resid": 2.3461915590702978e-11,
+    "round": 4.0139665122409525e-08,
+    "plane_tables": 7.966699369006254e-10,
+    "wire_grid_operator": 4.842799162388253e-05,
+    "wire_grid_finite_radius": 1.0562487035070347e-06,
+    "inter_wire_finite_radius": 3.326852503143806e-07,
+    "rod_series": 3.241526479478955e-11
+   },
+   "n_cpu": 32,
+   "threads": {
+    "OMP_NUM_THREADS": "8",
+    "OPENBLAS_NUM_THREADS": "8",
+    "MKL_NUM_THREADS": "8",
+    "VECLIB_MAXIMUM_THREADS": "8",
+    "MF_L2_FFT_WORKERS": "8"
+   },
+   "area_rel_err_max": 2.258754526011467e-16,
+   "on_lattice": true,
+   "filaments_per_wire": 25,
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ]
+  },
+  {
+   "seed": 3,
+   "dies_per_switch": 6,
+   "family": "side_by_side",
+   "refinement": 2,
+   "f_hz": 20000000.0,
+   "L_H": 4.0969849546168296e-09,
+   "R_ohm": 0.011653995632993852,
+   "wall_s": 13315.378604046,
+   "cpu_s": 33529.338609,
+   "cpu_user_s": 29604.209406,
+   "cpu_sys_s": 3925.129203,
+   "peak_rss_gb": 35.79502592,
+   "n_unknowns": 7405836,
+   "gmres_iters": 570,
+   "gmres_flags": [
+    0
+   ],
+   "gmres_max_iters": 4000,
+   "solver_tol": 0.0016364427578630773,
+   "solver_tol_rel_L": 0.0016368619531944005,
+   "build_s": 5657.2487766799995,
+   "stage_s": {
+    "grid": 3399.2223633589997,
+    "wire_grid": 2206.446823507,
+    "wire_matrices": 51.47780211400004,
+    "preconditioner": 5.745775366000089,
+    "gmres": 7626.987747261999,
+    "a_posteriori": 23.165532897999583
+   },
+   "n_near_pairs": 129902400,
+   "n_filaments": 900,
+   "n_grid_unknowns": 7404936,
+   "layers": [
+    10,
+    6,
+    6
+   ],
+   "cell_m": 0.000125,
+   "cell_y_m": 0.000125,
+   "tol_parts": {
+    "resid": 6.333925024855617e-13,
+    "round": 1.6564631870497802e-07,
+    "plane_tables": 0.0009142141023460686,
+    "wire_grid_operator": 0.0007209952267874165,
+    "wire_grid_finite_radius": 7.338638746760776e-07,
+    "inter_wire_finite_radius": 3.3388559779404045e-07,
+    "rod_series": 3.2305024500075354e-11
+   },
+   "n_cpu": 32,
+   "threads": {
+    "OMP_NUM_THREADS": "8",
+    "OPENBLAS_NUM_THREADS": "8",
+    "MKL_NUM_THREADS": "8",
+    "VECLIB_MAXIMUM_THREADS": "8",
+    "MF_L2_FFT_WORKERS": "8"
+   },
+   "area_rel_err_max": 2.258754526011467e-16,
+   "on_lattice": true,
+   "filaments_per_wire": 25,
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ]
+  },
+  {
+   "seed": 7,
+   "dies_per_switch": 2,
+   "family": "interleaved",
+   "refinement": 0,
+   "f_hz": 20000000.0,
+   "L_H": 1.1114978173833956e-08,
+   "R_ohm": 0.036415235507109206,
+   "wall_s": 367.6607167250004,
+   "cpu_s": 755.568241,
+   "cpu_user_s": 706.752309,
+   "cpu_sys_s": 48.815932,
+   "peak_rss_gb": 3.068071936,
+   "n_unknowns": 490214,
+   "gmres_iters": 133,
+   "gmres_flags": [
+    0
+   ],
+   "gmres_max_iters": 4000,
+   "solver_tol": 1.8124860842357465e-05,
+   "solver_tol_rel_L": 1.8131019700399443e-05,
+   "build_s": 263.3047444040003,
+   "stage_s": {
+    "grid": 106.598424238,
+    "wire_grid": 150.48818595299963,
+    "wire_matrices": 6.204431795000346,
+    "preconditioner": 0.33220994399925985,
+    "gmres": 102.1385783400001,
+    "a_posteriori": 1.716689105000114
+   },
+   "n_near_pairs": 19359900,
+   "n_filaments": 300,
+   "n_grid_unknowns": 489914,
+   "layers": [
+    10,
+    6,
+    6
+   ],
+   "cell_m": 0.0005,
+   "cell_y_m": 0.0005,
+   "tol_parts": {
+    "resid": 3.2960325644942397e-10,
+    "round": 1.3150608862890784e-08,
+    "plane_tables": 5.460797326954987e-11,
+    "wire_grid_operator": 1.7869702839374744e-05,
+    "wire_grid_finite_radius": 1.985054425200852e-07,
+    "inter_wire_finite_radius": 4.311386088408322e-08,
+    "rod_series": 3.879485941377934e-12
+   },
+   "n_cpu": 32,
+   "threads": {
+    "OMP_NUM_THREADS": "8",
+    "OPENBLAS_NUM_THREADS": "8",
+    "MKL_NUM_THREADS": "8",
+    "VECLIB_MAXIMUM_THREADS": "8",
+    "MF_L2_FFT_WORKERS": "8"
+   },
+   "area_rel_err_max": 2.5585891976059095e-16,
+   "on_lattice": true,
+   "filaments_per_wire": 25,
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ]
+  },
+  {
+   "seed": 7,
+   "dies_per_switch": 2,
+   "family": "interleaved",
+   "refinement": 1,
+   "f_hz": 20000000.0,
+   "L_H": 1.1029202562988431e-08,
+   "R_ohm": 0.036340752782934485,
+   "wall_s": 1593.018249539,
+   "cpu_s": 3655.3864750000002,
+   "cpu_user_s": 3256.376802,
+   "cpu_sys_s": 399.009673,
+   "peak_rss_gb": 8.537219072,
+   "n_unknowns": 1977168,
+   "gmres_iters": 238,
+   "gmres_flags": [
+    0
+   ],
+   "gmres_max_iters": 4000,
+   "solver_tol": 1.7073074386178953e-05,
+   "solver_tol_rel_L": 1.707894234415419e-05,
+   "build_s": 883.871844167,
+   "stage_s": {
+    "grid": 601.08009311,
+    "wire_grid": 277.02878193000004,
+    "wire_matrices": 5.737312172999964,
+    "preconditioner": 0.8795546380000587,
+    "gmres": 702.7050076579999,
+    "a_posteriori": 5.08127510700001
+   },
+   "n_near_pairs": 27591900,
+   "n_filaments": 300,
+   "n_grid_unknowns": 1976868,
+   "layers": [
+    10,
+    6,
+    6
+   ],
+   "cell_m": 0.00025,
+   "cell_y_m": 0.00025,
+   "tol_parts": {
+    "resid": 2.0123145112991584e-09,
+    "round": 5.3585404626265095e-08,
+    "plane_tables": 1.1623437393837069e-09,
+    "wire_grid_operator": 1.6715372257654306e-05,
+    "wire_grid_finite_radius": 2.5744436340346086e-07,
+    "inter_wire_finite_radius": 4.349377588386329e-08,
+    "rod_series": 3.926360375314446e-12
+   },
+   "n_cpu": 32,
+   "threads": {
+    "OMP_NUM_THREADS": "8",
+    "OPENBLAS_NUM_THREADS": "8",
+    "MKL_NUM_THREADS": "8",
+    "VECLIB_MAXIMUM_THREADS": "8",
+    "MF_L2_FFT_WORKERS": "8"
+   },
+   "area_rel_err_max": 2.5585891976059095e-16,
+   "on_lattice": true,
+   "filaments_per_wire": 25,
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ]
+  },
+  {
+   "seed": 7,
+   "dies_per_switch": 2,
+   "family": "interleaved",
+   "refinement": 2,
+   "f_hz": 20000000.0,
+   "L_H": 1.0975863502083191e-08,
+   "R_ohm": 0.036450221612814145,
+   "wall_s": 11105.198333714001,
+   "cpu_s": 31354.087058999998,
+   "cpu_user_s": 27358.48118,
+   "cpu_sys_s": 3995.605879,
+   "peak_rss_gb": 34.793213952,
+   "n_unknowns": 7942196,
+   "gmres_iters": 482,
+   "gmres_flags": [
+    0
+   ],
+   "gmres_max_iters": 4000,
+   "solver_tol": 0.0013719885018995668,
+   "solver_tol_rel_L": 0.0013724675155521548,
+   "build_s": 4195.5552227749995,
+   "stage_s": {
+    "grid": 3359.5818665389997,
+    "wire_grid": 830.1836509260002,
+    "wire_matrices": 5.721602370000255,
+    "preconditioner": 5.953541327000494,
+    "gmres": 6874.68054539,
+    "a_posteriori": 26.51981060700018
+   },
+   "n_near_pairs": 38489400,
+   "n_filaments": 300,
+   "n_grid_unknowns": 7941896,
+   "layers": [
+    10,
+    6,
+    6
+   ],
+   "cell_m": 0.000125,
+   "cell_y_m": 0.000125,
+   "tol_parts": {
+    "resid": 5.646011058521843e-11,
+    "round": 2.1877704629093918e-07,
+    "plane_tables": 0.0013265403345732462,
+    "wire_grid_operator": 4.4992131830486013e-05,
+    "wire_grid_finite_radius": 1.93441738465159e-07,
+    "inter_wire_finite_radius": 4.37562992591684e-08,
+    "rod_series": 3.9517087838880105e-12
+   },
+   "n_cpu": 32,
+   "threads": {
+    "OMP_NUM_THREADS": "8",
+    "OPENBLAS_NUM_THREADS": "8",
+    "MKL_NUM_THREADS": "8",
+    "VECLIB_MAXIMUM_THREADS": "8",
+    "MF_L2_FFT_WORKERS": "8"
+   },
+   "area_rel_err_max": 2.5585891976059095e-16,
+   "on_lattice": true,
+   "filaments_per_wire": 25,
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ]
+  },
+  {
+   "seed": 11,
+   "dies_per_switch": 2,
+   "family": "u_shaped",
+   "refinement": 0,
+   "f_hz": 20000000.0,
+   "L_H": 1.2834505343676001e-08,
+   "R_ohm": 0.0410153283441325,
+   "wall_s": 369.66155192600036,
+   "cpu_s": 778.8628530000001,
+   "cpu_user_s": 730.459094,
+   "cpu_sys_s": 48.403759,
+   "peak_rss_gb": 2.73641472,
+   "n_unknowns": 464344,
+   "gmres_iters": 142,
+   "gmres_flags": [
+    0
+   ],
+   "gmres_max_iters": 4000,
+   "solver_tol": 1.2758588028785795e-05,
+   "solver_tol_rel_L": 1.2762712960906415e-05,
+   "build_s": 258.5826331090002,
+   "stage_s": {
+    "grid": 106.92105440399973,
+    "wire_grid": 145.77217761799966,
+    "wire_matrices": 5.876198703000227,
+    "preconditioner": 0.21302938900043955,
+    "gmres": 109.0980226519996,
+    "a_posteriori": 1.6537624100001267
+   },
+   "n_near_pairs": 17646150,
+   "n_filaments": 300,
+   "n_grid_unknowns": 464044,
+   "layers": [
+    10,
+    6,
+    6
+   ],
+   "cell_m": 0.0005,
+   "cell_y_m": 0.0005,
+   "tol_parts": {
+    "resid": 6.80719382023243e-11,
+    "round": 1.0132942910893964e-08,
+    "plane_tables": 4.482620501229127e-11,
+    "wire_grid_operator": 1.2241842403979452e-05,
+    "wire_grid_finite_radius": 3.4855982998462414e-07,
+    "inter_wire_finite_radius": 1.578983992256873e-07,
+    "rod_series": 4.155454192235825e-11
+   },
+   "n_cpu": 32,
+   "threads": {
+    "OMP_NUM_THREADS": "8",
+    "OPENBLAS_NUM_THREADS": "8",
+    "MKL_NUM_THREADS": "8",
+    "VECLIB_MAXIMUM_THREADS": "8",
+    "MF_L2_FFT_WORKERS": "8"
+   },
+   "area_rel_err_max": 9.933789538479743e-16,
+   "on_lattice": true,
+   "filaments_per_wire": 25,
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ]
+  },
+  {
+   "seed": 11,
+   "dies_per_switch": 2,
+   "family": "u_shaped",
+   "refinement": 1,
+   "f_hz": 20000000.0,
+   "L_H": 1.2683188767021977e-08,
+   "R_ohm": 0.0407689755371664,
+   "wall_s": 1581.623703099,
+   "cpu_s": 3572.4334830000003,
+   "cpu_user_s": 3167.264,
+   "cpu_sys_s": 405.169483,
+   "peak_rss_gb": 8.521601024,
+   "n_unknowns": 1873268,
+   "gmres_iters": 233,
+   "gmres_flags": [
+    0
+   ],
+   "gmres_max_iters": 4000,
+   "solver_tol": 1.3778854033495273e-05,
+   "solver_tol_rel_L": 1.3783361111109253e-05,
+   "build_s": 879.3829761469999,
+   "stage_s": {
+    "grid": 599.3296867370002,
+    "wire_grid": 274.24816312600024,
+    "wire_matrices": 5.779603311999836,
+    "preconditioner": 0.8715132130000711,
+    "gmres": 695.5771996579997,
+    "a_posteriori": 5.3031005839998215
+   },
+   "n_near_pairs": 24415550,
+   "n_filaments": 300,
+   "n_grid_unknowns": 1872968,
+   "layers": [
+    10,
+    6,
+    6
+   ],
+   "cell_m": 0.00025,
+   "cell_y_m": 0.00025,
+   "tol_parts": {
+    "resid": 2.3007890535985963e-09,
+    "round": 4.1671286795286336e-08,
+    "plane_tables": 9.576526528115335e-10,
+    "wire_grid_operator": 1.317407126233145e-05,
+    "wire_grid_finite_radius": 3.9954548512498255e-07,
+    "inter_wire_finite_radius": 1.6026535766794097e-07,
+    "rod_series": 4.219986920157726e-11
+   },
+   "n_cpu": 32,
+   "threads": {
+    "OMP_NUM_THREADS": "8",
+    "OPENBLAS_NUM_THREADS": "8",
+    "MKL_NUM_THREADS": "8",
+    "VECLIB_MAXIMUM_THREADS": "8",
+    "MF_L2_FFT_WORKERS": "8"
+   },
+   "area_rel_err_max": 9.933789538479743e-16,
+   "on_lattice": true,
+   "filaments_per_wire": 25,
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ]
+  },
+  {
+   "seed": 11,
+   "dies_per_switch": 2,
+   "family": "u_shaped",
+   "refinement": 2,
+   "f_hz": 20000000.0,
+   "L_H": 1.259187077723908e-08,
+   "R_ohm": 0.040905547892797614,
+   "wall_s": 11691.553751475,
+   "cpu_s": 31810.19049,
+   "cpu_user_s": 27691.130192,
+   "cpu_sys_s": 4119.060298,
+   "peak_rss_gb": 36.582285312,
+   "n_unknowns": 7525756,
+   "gmres_iters": 477,
+   "gmres_flags": [
+    0
+   ],
+   "gmres_max_iters": 4000,
+   "solver_tol": 0.0011391591837499298,
+   "solver_tol_rel_L": 0.0011395397638390072,
+   "build_s": 4325.385373591001,
+   "stage_s": {
+    "grid": 3391.538470502,
+    "wire_grid": 927.8574204719998,
+    "wire_matrices": 5.921346719000212,
+    "preconditioner": 5.324928011000338,
+    "gmres": 7333.537954829001,
+    "a_posteriori": 25.00496066800042
+   },
+   "n_near_pairs": 36898500,
+   "n_filaments": 300,
+   "n_grid_unknowns": 7525456,
+   "layers": [
+    10,
+    6,
+    6
+   ],
+   "cell_m": 0.000125,
+   "cell_y_m": 0.000125,
+   "tol_parts": {
+    "resid": 6.892917064143361e-11,
+    "round": 1.70299799069301e-07,
+    "plane_tables": 0.0010965129297824158,
+    "wire_grid_operator": 4.2042466476315517e-05,
+    "wire_grid_finite_radius": 2.7166963444894953e-07,
+    "inter_wire_finite_radius": 1.6170656315272704e-07,
+    "rod_series": 4.256535694169512e-11
+   },
+   "n_cpu": 32,
+   "threads": {
+    "OMP_NUM_THREADS": "8",
+    "OPENBLAS_NUM_THREADS": "8",
+    "MKL_NUM_THREADS": "8",
+    "VECLIB_MAXIMUM_THREADS": "8",
+    "MF_L2_FFT_WORKERS": "8"
+   },
+   "area_rel_err_max": 9.933789538479743e-16,
+   "on_lattice": true,
+   "filaments_per_wire": 25,
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ]
+  }
+ ],
+ "not_fitted": [],
+ "steps": [
+  {
+   "seed": 3,
+   "dies_per_switch": 6,
+   "from_refinement": 0,
+   "to_refinement": 1,
+   "cells_mm": [
+    0.5,
+    0.25
+   ],
+   "rel_change": -0.011534760044230303,
+   "R_rel_change": -0.0014784553292753173
+  },
+  {
+   "seed": 3,
+   "dies_per_switch": 6,
+   "from_refinement": 1,
+   "to_refinement": 2,
+   "cells_mm": [
+    0.25,
+    0.125
+   ],
+   "rel_change": -0.007073223516479914,
+   "R_rel_change": 0.005950452011347675
+  },
+  {
+   "seed": 7,
+   "dies_per_switch": 2,
+   "from_refinement": 0,
+   "to_refinement": 1,
+   "cells_mm": [
+    0.5,
+    0.25
+   ],
+   "rel_change": -0.007777136230444183,
+   "R_rel_change": -0.0020495647027349907
+  },
+  {
+   "seed": 7,
+   "dies_per_switch": 2,
+   "from_refinement": 1,
+   "to_refinement": 2,
+   "cells_mm": [
+    0.25,
+    0.125
+   ],
+   "rel_change": -0.004859668753635326,
+   "R_rel_change": 0.003003241819555235
+  },
+  {
+   "seed": 11,
+   "dies_per_switch": 2,
+   "from_refinement": 0,
+   "to_refinement": 1,
+   "cells_mm": [
+    0.5,
+    0.25
+   ],
+   "rel_change": -0.011930483684628892,
+   "R_rel_change": -0.006042653849408423
+  },
+  {
+   "seed": 11,
+   "dies_per_switch": 2,
+   "from_refinement": 1,
+   "to_refinement": 2,
+   "cells_mm": [
+    0.25,
+    0.125
+   ],
+   "rel_change": -0.007252138415203807,
+   "R_rel_change": 0.0033387245170051916
+  }
+ ],
+ "convergence": [
+  {
+   "seed": 3,
+   "dies_per_switch": 6,
+   "k_star": 1,
+   "rel_change": -0.007073223516479914,
+   "R_rel_change": 0.005950452011347675,
+   "prev_change": -0.011534760044230303,
+   "R_prev_change": -0.0014784553292753173,
+   "converged": true
+  },
+  {
+   "seed": 7,
+   "dies_per_switch": 2,
+   "k_star": 1,
+   "rel_change": -0.004859668753635326,
+   "R_rel_change": 0.003003241819555235,
+   "prev_change": -0.007777136230444183,
+   "R_prev_change": -0.0020495647027349907,
+   "converged": true
+  },
+  {
+   "seed": 11,
+   "dies_per_switch": 2,
+   "k_star": 1,
+   "rel_change": -0.007252138415203807,
+   "R_rel_change": 0.0033387245170051916,
+   "prev_change": -0.011930483684628892,
+   "R_prev_change": -0.006042653849408423,
+   "converged": true
+  }
+ ],
+ "sensitivity": [
+  {
+   "seed": 7,
+   "dies_per_switch": 2,
+   "refinement": 1,
+   "variant": "layers+2",
+   "L_H": 1.1024470397497331e-08,
+   "base_L_H": 1.1029202562988431e-08,
+   "rel_change": -0.00042905780939956565,
+   "R_rel_change": 0.08176819476273056,
+   "layers": [
+    12,
+    8,
+    8
+   ],
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ],
+   "cpu_s": 4943.411190000001,
+   "peak_rss_gb": 11.57187584,
+   "solver_tol": 1.7857220918492598e-05,
+   "ok": true
+  },
+  {
+   "seed": 7,
+   "dies_per_switch": 2,
+   "refinement": 1,
+   "variant": "layers_x2_f20",
+   "L_H": 1.1009524313667986e-08,
+   "base_L_H": 1.1029202562988431e-08,
+   "rel_change": -0.0017841951136595194,
+   "R_rel_change": 0.031063081444841135,
+   "layers": [
+    20,
+    12,
+    12
+   ],
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ],
+   "cpu_s": 6964.79923,
+   "peak_rss_gb": 19.063898112,
+   "solver_tol": 1.7697570062066298e-05,
+   "ok": true
+  },
+  {
+   "seed": 7,
+   "dies_per_switch": 2,
+   "refinement": 1,
+   "variant": "wires_finer",
+   "L_H": 1.1031145117229953e-08,
+   "base_L_H": 1.1029202562988431e-08,
+   "rel_change": 0.00017612825863230587,
+   "R_rel_change": 0.0017515147034298359,
+   "layers": [
+    10,
+    6,
+    6
+   ],
+   "wire_edges": [
+    0,
+    0.3,
+    0.5,
+    0.7,
+    0.85,
+    0.95,
+    1
+   ],
+   "cpu_s": 4251.8523000000005,
+   "peak_rss_gb": 9.15085312,
+   "solver_tol": 1.637617208320332e-05,
+   "ok": true
+  }
+ ],
+ "sensitivity_solves": [
+  {
+   "seed": 7,
+   "dies_per_switch": 2,
+   "family": "interleaved",
+   "refinement": 1,
+   "f_hz": 20000000.0,
+   "L_H": 1.1024470397497331e-08,
+   "R_ohm": 0.039312270534313715,
+   "wall_s": 2217.262588412,
+   "cpu_s": 4943.411190000001,
+   "cpu_user_s": 4370.076237,
+   "cpu_sys_s": 573.334953,
+   "peak_rss_gb": 11.57187584,
+   "n_unknowns": 2561188,
+   "gmres_iters": 239,
+   "gmres_flags": [
+    0
+   ],
+   "gmres_max_iters": 4000,
+   "solver_tol": 1.7857220918492598e-05,
+   "solver_tol_rel_L": 1.786440907511801e-05,
+   "build_s": 1280.1394773990005,
+   "stage_s": {
+    "grid": 892.686259483,
+    "wire_grid": 381.2869404130015,
+    "wire_matrices": 6.136899709999852,
+    "preconditioner": 1.2002339540013054,
+    "gmres": 928.4230867539991,
+    "a_posteriori": 6.799922858999707
+   },
+   "n_near_pairs": 35272200,
+   "n_filaments": 300,
+   "n_grid_unknowns": 2560888,
+   "layers": [
+    12,
+    8,
+    8
+   ],
+   "cell_m": 0.00025,
+   "cell_y_m": 0.00025,
+   "tol_parts": {
+    "resid": 4.1093015642046967e-10,
+    "round": 7.597314279776778e-08,
+    "plane_tables": 1.3561079055067147e-10,
+    "wire_grid_operator": 1.7482019750551048e-05,
+    "wire_grid_finite_radius": 2.5516700796443237e-07,
+    "inter_wire_finite_radius": 4.3510548370394035e-08,
+    "rod_series": 3.927861983427792e-12
+   },
+   "n_cpu": 32,
+   "threads": {
+    "OMP_NUM_THREADS": "8",
+    "OPENBLAS_NUM_THREADS": "8",
+    "MKL_NUM_THREADS": "8",
+    "VECLIB_MAXIMUM_THREADS": "8",
+    "MF_L2_FFT_WORKERS": "8"
+   },
+   "area_rel_err_max": 2.5585891976059095e-16,
+   "on_lattice": true,
+   "filaments_per_wire": 25,
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ],
+   "variant": "layers+2"
+  },
+  {
+   "seed": 7,
+   "dies_per_switch": 2,
+   "family": "interleaved",
+   "refinement": 1,
+   "f_hz": 20000000.0,
+   "L_H": 1.1009524313667986e-08,
+   "R_ohm": 0.037469608546397616,
+   "wall_s": 3254.3508338599986,
+   "cpu_s": 6964.79923,
+   "cpu_user_s": 6036.707555,
+   "cpu_sys_s": 928.091675,
+   "peak_rss_gb": 19.063898112,
+   "n_unknowns": 3954036,
+   "gmres_iters": 242,
+   "gmres_flags": [
+    0
+   ],
+   "gmres_max_iters": 4000,
+   "solver_tol": 1.7697570062066298e-05,
+   "solver_tol_rel_L": 1.7704059476368155e-05,
+   "build_s": 1854.294170019999,
+   "stage_s": {
+    "grid": 1298.904963428,
+    "wire_grid": 549.8294347760002,
+    "wire_matrices": 5.534486390000893,
+    "preconditioner": 0.9482475949989748,
+    "gmres": 1389.3679887279995,
+    "a_posteriori": 8.858626261000609
+   },
+   "n_near_pairs": 55183800,
+   "n_filaments": 300,
+   "n_grid_unknowns": 3953736,
+   "layers": [
+    20,
+    12,
+    12
+   ],
+   "cell_m": 0.00025,
+   "cell_y_m": 0.00025,
+   "tol_parts": {
+    "resid": 6.82649776849991e-11,
+    "round": 1.1426919417845197e-07,
+    "plane_tables": 1.9282888112445994e-10,
+    "wire_grid_operator": 1.7289022331143235e-05,
+    "wire_grid_finite_radius": 2.5044055428240836e-07,
+    "inter_wire_finite_radius": 4.357295526644664e-08,
+    "rod_series": 3.933336947942797e-12
+   },
+   "n_cpu": 32,
+   "threads": {
+    "OMP_NUM_THREADS": "8",
+    "OPENBLAS_NUM_THREADS": "8",
+    "MKL_NUM_THREADS": "8",
+    "VECLIB_MAXIMUM_THREADS": "8",
+    "MF_L2_FFT_WORKERS": "8"
+   },
+   "area_rel_err_max": 2.5585891976059095e-16,
+   "on_lattice": true,
+   "filaments_per_wire": 25,
+   "wire_edges": [
+    0,
+    0.35,
+    0.6,
+    0.8,
+    0.93,
+    1
+   ],
+   "variant": "layers_x2_f20"
+  },
+  {
+   "seed": 7,
+   "dies_per_switch": 2,
+   "family": "interleaved",
+   "refinement": 1,
+   "f_hz": 20000000.0,
+   "L_H": 1.1031145117229953e-08,
+   "R_ohm": 0.036404404145767504,
+   "wall_s": 1786.933267344999,
+   "cpu_s": 4251.8523000000005,
+   "cpu_user_s": 3766.49575,
+   "cpu_sys_s": 485.35655,
+   "peak_rss_gb": 9.15085312,
+   "n_unknowns": 1977240,
+   "gmres_iters": 240,
+   "gmres_flags": [
+    0
+   ],
+   "gmres_max_iters": 4000,
+   "solver_tol": 1.637617208320332e-05,
+   "solver_tol_rel_L": 1.638181825991546e-05,
+   "build_s": 961.512707332,
+   "stage_s": {
+    "grid": 614.7414493590004,
+    "wire_grid": 337.3363953200005,
+    "wire_matrices": 9.40617615500014,
+    "preconditioner": 1.0273022940000374,
+    "gmres": 817.8245558130002,
+    "a_posteriori": 6.055474348000644
+   },
+   "n_near_pairs": 34773444,
+   "n_filaments": 372,
+   "n_grid_unknowns": 1976868,
+   "layers": [
+    10,
+    6,
+    6
+   ],
+   "cell_m": 0.00025,
+   "cell_y_m": 0.00025,
+   "tol_parts": {
+    "resid": 1.2774430415799069e-09,
+    "round": 5.3494043145258255e-08,
+    "plane_tables": 1.1621427851372507e-09,
+    "wire_grid_operator": 1.6145474865031217e-05,
+    "wire_grid_finite_radius": 1.4819917740886415e-07,
+    "inter_wire_finite_radius": 2.656275963681562e-08,
+    "rod_series": 1.652154447793566e-12
+   },
+   "n_cpu": 32,
+   "threads": {
+    "OMP_NUM_THREADS": "8",
+    "OPENBLAS_NUM_THREADS": "8",
+    "MKL_NUM_THREADS": "8",
+    "VECLIB_MAXIMUM_THREADS": "8",
+    "MF_L2_FFT_WORKERS": "8"
+   },
+   "area_rel_err_max": 2.5585891976059095e-16,
+   "on_lattice": true,
+   "filaments_per_wire": 31,
+   "wire_edges": [
+    0,
+    0.3,
+    0.5,
+    0.7,
+    0.85,
+    0.95,
+    1
+   ],
+   "variant": "wires_finer"
+  }
+ ]
+}

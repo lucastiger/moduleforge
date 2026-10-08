@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-08T22:42:35+00:00 from repository state — do not edit_
+_generated 2026-10-08T23:56:55+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -15,7 +15,6 @@ cancelled: 20, done: 65, failed: 3, todo: 7
 
 
 ## Recent events
-- 2026-10-08T13:56:30+00:00 sleep_detected {"gap_s": 752, "runs_extended": 0}
 - 2026-10-08T14:02:45+00:00 sleep_detected {"gap_s": 375, "runs_extended": 0}
 - 2026-10-08T15:27:15+00:00 sleep_detected {"gap_s": 1335, "runs_extended": 0}
 - 2026-10-08T15:49:04+00:00 sleep_detected {"gap_s": 1051, "runs_extended": 0}
@@ -30,3 +29,4 @@ cancelled: 20, done: 65, failed: 3, todo: 7
 - 2026-10-08T20:58:21+00:00 sleep_detected {"gap_s": 458, "runs_extended": 0}
 - 2026-10-08T22:18:01+00:00 sleep_detected {"gap_s": 315, "runs_extended": 0}
 - 2026-10-08T22:42:33+00:00 sleep_detected {"gap_s": 832, "runs_extended": 0}
+- 2026-10-08T23:56:53+00:00 sleep_detected {"gap_s": 3362, "runs_extended": 0}

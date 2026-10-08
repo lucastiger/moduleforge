@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-08T02:16:48+00:00 from repository state — do not edit_
+_generated 2026-10-08T04:05:49+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -8,18 +8,16 @@ _generated 2026-10-08T02:16:48+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $237.66/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $238.16/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 20, done: 60, failed: 3, running: 1, todo: 6
+cancelled: 20, done: 60, failed: 3, review: 1, running: 2, todo: 6
 
-- T0075 `running` builder/implement: Layout L2 on grid-aligned layouts: snapped generator, aligned lateral ladder, fine-level GMRES, cost at k_star (feasibility gate) (attempt 6)
+- T0075 `review` builder/implement: Layout L2 on grid-aligned layouts: snapped generator, aligned lateral ladder, fine-level GMRES, cost at k_star (feasibility gate) (attempt 6)
+- T0091 `running` critic/review: Review T0075 (physics) (attempt 1)
+- T0092 `running` critic/review: Review T0075 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-07T21:08:33+00:00 loop_started {"pid": 3607}
-- 2026-10-07T21:08:38+00:00 cost_backfilled {"run": "T0075-builder-20261006T225540-ea88", "task": "T0075", "cost": 6.923208, "source": "transcript"}
-- 2026-10-07T21:08:43+00:00 inbox_resolved {"id": "I0041", "status": "answered", "note": "Founder (2026-10-07): no replan. The I0039 re-scope was applied directly to T0075 (grid-aligned layout L2); T0076
-- 2026-10-07T21:08:56+00:00 run_started {"run": "T0075-builder-20261007T140856-27e1", "task": "T0075", "role": "builder", "session": "e9d91e4c-3e18-4ef8-9b97-d1cb6fd576e0"}
 - 2026-10-07T22:52:00+00:00 run_finished {"run": "T0075-builder-20261007T140856-27e1", "status": "completed", "cost": 3.042035, "subtype": "success", "report": "structured_output"}
 - 2026-10-07T23:58:06+00:00 verified {"task": "T0075"}
 - 2026-10-07T23:58:08+00:00 run_started {"run": "T0088-critic-20261007T165808-dae1", "task": "T0088", "role": "critic", "session": "c2615a41-8955-4472-a923-0ac9e88ca188"}
@@ -31,3 +29,7 @@ cancelled: 20, done: 60, failed: 3, running: 1, todo: 6
 - 2026-10-08T00:03:39+00:00 investigation_spawned {"task": "T0090", "about": "T0075", "cls": "implementation"}
 - 2026-10-08T02:08:32+00:00 loop_started {"pid": 30941}
 - 2026-10-08T02:16:24+00:00 run_started {"run": "T0075-builder-20261007T191624-59c2", "task": "T0075", "role": "builder", "session": "87a1f5c0-40c7-452b-b588-fb8ef59d9e33"}
+- 2026-10-08T03:00:47+00:00 run_finished {"run": "T0075-builder-20261007T191624-59c2", "status": "completed", "cost": 0.500821, "subtype": "success", "report": "structured_output"}
+- 2026-10-08T04:05:46+00:00 verified {"task": "T0075"}
+- 2026-10-08T04:05:48+00:00 run_started {"run": "T0091-critic-20261007T210548-136f", "task": "T0091", "role": "critic", "session": "a559c3f8-9ef9-4be8-9ac8-aef6ab821425"}
+- 2026-10-08T04:05:49+00:00 run_started {"run": "T0092-critic-20261007T210549-2f84", "task": "T0092", "role": "critic", "session": "be8a227f-143c-4ade-a251-ebfb81ab9f19"}

@@ -665,3 +665,7 @@
 {"ts": "2026-10-08T00:03:39+00:00", "event": "investigation_spawned", "actor": "orchestrator", "task": "T0090", "about": "T0075", "cls": "implementation"}
 {"ts": "2026-10-08T02:08:32+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 30941}
 {"ts": "2026-10-08T02:16:24+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0075-builder-20261007T191624-59c2", "task": "T0075", "role": "builder", "session": "87a1f5c0-40c7-452b-b588-fb8ef59d9e33"}
+{"ts": "2026-10-08T03:00:47+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0075-builder-20261007T191624-59c2", "status": "completed", "cost": 0.500821, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-10-08T04:05:46+00:00", "event": "verified", "actor": "orchestrator", "task": "T0075"}
+{"ts": "2026-10-08T04:05:48+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0091-critic-20261007T210548-136f", "task": "T0091", "role": "critic", "session": "a559c3f8-9ef9-4be8-9ac8-aef6ab821425"}
+{"ts": "2026-10-08T04:05:49+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0092-critic-20261007T210549-2f84", "task": "T0092", "role": "critic", "session": "be8a227f-143c-4ade-a251-ebfb81ab9f19"}

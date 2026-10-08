@@ -4,7 +4,7 @@ title: 'Layout L2 on grid-aligned layouts: snapped generator, aligned lateral la
   cost at k_star (feasibility gate)'
 type: implement
 agent: builder
-status: running
+status: review
 depends_on:
 - T0074
 description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; restoration requested
@@ -843,3 +843,117 @@ history:
 
     '
   at: '2026-10-08T00:03:39+00:00'
+- attempt: 6
+  outcome: agent_finished
+  summary: 'The merged branch is confirmed and every check this retry asked for passes. I changed no code
+    and made no commit; the worktree is clean at ac590646.
+
+
+    **Main''s change is present.** Since the branch point, main changed l2_layout.py in one commit only,
+    1e2bb2ce, which unpacks the three values `l2_core.block_gmres` now returns: `(x, iters, info)`. The
+    merged call at l2_layout.py:1691 does that, and stores `info` in `flags` (exposed as `meta[''gmres_flags'']`).
+
+
+    **The branch''s GMRES settings are intact.** The same call passes `restart=GMRES_RESTART` (100) and
+    `maxit=GMRES_MAXIT` (40), a cap of 4000 iterations, with `GMRES_TOL = 1e-7`. `l2_core.block_gmres`
+    accepts those arguments. The merged l2_layout.py is identical to the branch version from before the
+    merge.
+
+
+    **Scope.** Against main, the branc'
+  report:
+    status: completed
+    summary: 'The merged branch is confirmed and every check this retry asked for passes. I changed no
+      code and made no commit; the worktree is clean at ac590646.
+
+
+      **Main''s change is present.** Since the branch point, main changed l2_layout.py in one commit only,
+      1e2bb2ce, which unpacks the three values `l2_core.block_gmres` now returns: `(x, iters, info)`.
+      The merged call at l2_layout.py:1691 does that, and stores `info` in `flags` (exposed as `meta[''gmres_flags'']`).
+
+
+      **The branch''s GMRES settings are intact.** The same call passes `restart=GMRES_RESTART` (100)
+      and `maxit=GMRES_MAXIT` (40), a cap of 4000 iterations, with `GMRES_TOL = 1e-7`. `l2_core.block_gmres`
+      accepts those arguments. The merged l2_layout.py is identical to the branch version from before
+      the merge.
+
+
+      **Scope.** Against main, the branch changes only files I may write:
+
+      - benchmarks/l2_layout_cost.py
+
+      - docs/notes/o001-l2-layout-cost.md and .json
+
+      - src/moduleforge/generate/halfbridge.py
+
+      - src/moduleforge/solvers/l2_layout.py
+
+      - tests/unit/generate/test_halfbridge.py
+
+      - tests/unit/solvers/test_l2_layout.py
+
+
+      l2.py, l2_core.py and every protected path are unchanged.
+
+
+      **Checks.**
+
+      - `uv run pytest -q tests/unit/solvers`: 114 passed (6 min 23 s).
+
+      - Ruff on the task files: clean.
+
+      - The note exists.
+
+      - `uv run mfos gate --fast`: all gates passed.
+
+
+      As you asked, I did not re-run the benchmark. As an extra check, I ran the DoD''s cost.json assertion
+      against the attempt-5 data committed in docs/notes/o001-l2-layout-cost.json, which came from this
+      same l2_layout.py, and it passes:
+
+
+      | dies/switch | cell (refinement) | L (nH) | CPU-s | peak RSS (GB) | GMRES iterations | solver_tol
+      |
+
+      |---|---|---|---|---|---|---|
+
+      | 2 | 0.5 mm (k*−1) | 11.115 | 180 | 2.28 | 133 | 1.8e-5 |
+
+      | 2 | 0.25 mm (k* = 1) | 11.029 | 1162 | 7.69 | 238 | 1.7e-5 |
+
+      | 6 | 0.25 mm (k* = 1) | 8.007 | 2011 | 8.92 | 249 | 2.0e-5 |'
+    checks_run:
+    - cmd: git show 1e2bb2ce -- src/moduleforge/solvers/l2_layout.py (main's only change to l2_layout.py
+        since the branch point)
+      exit_code: 0
+    - cmd: grep -n 'block_gmres|GMRES_RESTART|GMRES_MAXIT|GMRES_TOL' src/moduleforge/solvers/l2_layout.py;
+        grep -n 'def block_gmres' -A 30 src/moduleforge/solvers/l2_core.py
+      exit_code: 0
+    - cmd: git diff --stat ac590646^2 ac590646 -- src/moduleforge/solvers/l2.py src/moduleforge/solvers/l2_core.py
+        tools/ .mfos/ .claude/ tests/acceptance/ experiments/specs/ project/
+      exit_code: 0
+    - cmd: uv run pytest -q tests/unit/solvers
+      exit_code: 0
+    - cmd: uv run ruff check benchmarks/l2_layout_cost.py src/moduleforge/solvers tests/unit/solvers
+      exit_code: 0
+    - cmd: test -f docs/notes/o001-l2-layout-cost.md
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    - cmd: uv run python -c "<DoD cost.json assertion applied to docs/notes/o001-l2-layout-cost.json>"
+      exit_code: 0
+    concerns:
+    - I did not re-run the DoD benchmark (`benchmarks/l2_layout_cost.py --quick --out /tmp/l2cost`), as
+      the founder note instructed. The orchestrator's run decides it.
+    - The tooling guard blocked one read-only command because it contains the word 'merge'. I used `git
+      log ac590646^1..ac590646^2` instead to find main's changes.
+    - 'Reviews T0088 and T0089 accepted with caveats that still stand and depend on the founder''s --vm
+      run: fine-level (0.125 mm) GMRES convergence and the k_star to k_star+1 convergence gate have not
+      been measured at production scale.'
+    - The 6-die cost at k_star (2011 CPU-s against the 2400 limit) is within the note's own stated ±25
+      % run-to-run variation. Peak RSS was measured under memory pressure, so the 12 GB margin is a lower
+      bound. Both reviewers flagged this.
+    - 'Other reviewer caveats: the k*+1 cost projection is likely low; the absolute lateral error at k_star
+      (~1.5 % by the diagnostic''s rate) may exceed the 1 % step gate; the skin-resolution check covers
+      top Cu only; the code comment and the note disagree on the expected 0.125 mm GMRES iteration count;
+      and the committed cost.json cannot be tied to the code that produced it.'

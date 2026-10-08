@@ -447,3 +447,28 @@ def test_a_task_carries_its_own_wall_limit(sandbox, monkeypatch):
         s.save_task(t)
         o._start_agent(t)
         assert seen["wall_minutes"] == wall
+
+
+def test_a_merge_conflict_goes_to_the_founder_without_using_an_attempt(sandbox):
+    """T0075, 2026-10-08: a one-line conflict with a hotfix on main failed the task on its last attempt and spawned a
+    diagnosis; and agents cannot resolve it, because git merge is denied to them."""
+    import subprocess
+    pol = sandbox / ".mfos" / "policy.toml"
+    pol.write_text(pol.read_text().replace("level = 3", "level = 2"))
+    setup_objective()
+    s = _tick_until(lambda s: any(i.kind == "protected_change" for i in s.inbox("open")))
+    item = next(i for i in s.inbox("open") if i.kind == "protected_change")
+    build = s.task(item.refs[0])
+    attempts = build.attempts
+    (sandbox / "src" / "moduleforge" / "canary.py").write_text("def harmonic(n):\n    return 0.0\n")  # add/add conflict
+    subprocess.run(["git", "add", "-A", "src"], cwd=sandbox, check=True)
+    subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "main moves"], cwd=sandbox,
+                   check=True)
+    assert cli(["approve", item.id]) == 0
+    Orchestrator(Store()).tick()
+    s = Store()
+    t = s.task(build.id)
+    assert t.status == "needs_founder" and t.attempts == attempts, (t.status, t.attempts)
+    assert t.history[-1]["outcome"] == "merge_conflict"
+    assert any("merge conflict with main" in i.subject for i in s.inbox("open"))
+    assert not [x for x in s.tasks("O000") if x.type == "investigate"]

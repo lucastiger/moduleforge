@@ -456,8 +456,7 @@ class Orchestrator:
             if self.git.mode == "local" and self.git.main_code_moved(path):
                 ok, out = self.git.update_from_main(path)
                 if not ok:
-                    self._fail(t, "dod_failed", "merge conflict with main",
-                               "Bring the branch up to date with main and resolve conflicts.\n" + out)
+                    self._merge_conflict(t, path, out)
                     return
                 passed, text = gates.summarize(gates.run_gate(self.s, path, "fast"))
                 if not passed:
@@ -475,8 +474,7 @@ class Orchestrator:
             self._post_merge(t)
             self.git.remove_worktree(path)
         elif state == "conflict":
-            self._fail(t, "dod_failed", "merge conflict with main",
-                       "Bring the branch up to date with main and resolve conflicts.\n" + self.git.last_error)
+            self._merge_conflict(t, path, self.git.last_error)
         elif state == "error":
             t.status = "needs_founder"
             self.s.save_task(t)
@@ -490,6 +488,24 @@ class Orchestrator:
                              summary=f"{t.title}\nRisk {t.risk}; {len(files)} files. PR: {t.pr}", refs=[t.id])
         else:
             self.s.save_task(t)
+
+    def _merge_conflict(self, t: m.Task, path: Path, output: str) -> None:
+        """A conflict with main is integration, not a failure of the agent's work, and agents may not merge (policy:
+        git merge is denied to them). So no attempt is used, no investigation is spawned, and the founder resolves it
+        in the task's worktree. T0075 (2026-10-08) was failed on its last attempt, and a diagnosis spawned, for a
+        one-line conflict with a hotfix on main."""
+        t.history.append({"attempt": t.attempts, "outcome": "merge_conflict", "summary": "merge conflict with main",
+                          "failure_output": output[-4000:], "at": now()})
+        t.status = "needs_founder"
+        self.s.save_task(t)
+        self.s.event("merge_conflict", task=t.id)
+        self.s.add_inbox(
+            kind="decision", subject=f"{t.id}: merge conflict with main (integration, no attempt used)",
+            summary=(f"main changed lines that {t.id} also changed. In its worktree: `cd {path} && git merge main`, "
+                     f"resolve the conflicts, run the fast gate, commit. Then `uv run mfos task retry {t.id}` and "
+                     f"start it: the agent confirms the merged branch, and verification, review and merge follow.\n\n"
+                     + output[-1500:]),
+            refs=[t.id], options=["resolve in the worktree, then retry", "cancel the task"])
 
     def _post_merge(self, t: m.Task) -> None:
         if t.type == "design_experiment":

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-08T02:00:56+00:00 from repository state — do not edit_
+_generated 2026-10-08T02:08:34+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -15,7 +15,6 @@ cancelled: 20, done: 60, failed: 4, todo: 6
 
 
 ## Recent events
-- 2026-10-07T19:54:58+00:00 sleep_detected {"gap_s": 522, "runs_extended": 0}
 - 2026-10-07T21:05:21+00:00 loop_started {"pid": 98351}
 - 2026-10-07T21:08:33+00:00 loop_started {"pid": 3607}
 - 2026-10-07T21:08:38+00:00 cost_backfilled {"run": "T0075-builder-20261006T225540-ea88", "task": "T0075", "cost": 6.923208, "source": "transcript"}
@@ -30,3 +29,4 @@ cancelled: 20, done: 60, failed: 4, todo: 6
 - 2026-10-08T00:03:38+00:00 run_finished {"run": "T0088-critic-20261007T165808-dae1", "status": "completed", "cost": 1.786147, "subtype": "success", "report": "structured_output"}
 - 2026-10-08T00:03:39+00:00 task_failed_attempt {"task": "T0075", "signal": "dod_failed", "action": "diagnose"}
 - 2026-10-08T00:03:39+00:00 investigation_spawned {"task": "T0090", "about": "T0075", "cls": "implementation"}
+- 2026-10-08T02:08:32+00:00 loop_started {"pid": 30941}

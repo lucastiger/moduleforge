@@ -93,6 +93,10 @@ def apply_variant(L, refinement: int, variant: str | None) -> None:
                                                       for x in (L.LAYERS_TOP, L.LAYERS_BACK, L.LAYERS_BASE))
     elif variant == "wires_finer":
         L.WIRE_EDGES = put(L.WIRE_EDGES, WIRE_EDGES_FINER)
+    elif variant == "layers_x2_f20":  # review T0091: "+2" graded to 100 MHz barely refines the 20 MHz thickness mesh
+        L.LAYERS_TOP, L.LAYERS_BACK, L.LAYERS_BASE = (put(x, 2 * x[refinement])
+                                                      for x in (L.LAYERS_TOP, L.LAYERS_BACK, L.LAYERS_BASE))
+        L.F_MESH = F_HZ
     else:
         raise ValueError(f"unknown variant {variant!r}")
 
@@ -219,7 +223,7 @@ def plan(mode: str, k: int, with_sens: bool) -> list[tuple]:
     else:
         jobs = [(s, d, r, None) for s, d in FULL_CASES for r in (k - 1, k)]
     if with_sens:
-        jobs += [(*SENS_CASE, k, "layers+2"), (*SENS_CASE, k, "wires_finer")]
+        jobs += [(*SENS_CASE, k, "layers+2"), (*SENS_CASE, k, "wires_finer"), (*SENS_CASE, k, "layers_x2_f20")]
     assert all(s in DEV_SEEDS for s, *_ in jobs)
     return jobs
 

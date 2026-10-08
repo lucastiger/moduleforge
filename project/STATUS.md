@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-08T02:08:34+00:00 from repository state — do not edit_
+_generated 2026-10-08T02:16:48+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -11,11 +11,11 @@ _generated 2026-10-08T02:08:34+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $237.66/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 20, done: 60, failed: 4, todo: 6
+cancelled: 20, done: 60, failed: 3, running: 1, todo: 6
 
+- T0075 `running` builder/implement: Layout L2 on grid-aligned layouts: snapped generator, aligned lateral ladder, fine-level GMRES, cost at k_star (feasibility gate) (attempt 6)
 
 ## Recent events
-- 2026-10-07T21:05:21+00:00 loop_started {"pid": 98351}
 - 2026-10-07T21:08:33+00:00 loop_started {"pid": 3607}
 - 2026-10-07T21:08:38+00:00 cost_backfilled {"run": "T0075-builder-20261006T225540-ea88", "task": "T0075", "cost": 6.923208, "source": "transcript"}
 - 2026-10-07T21:08:43+00:00 inbox_resolved {"id": "I0041", "status": "answered", "note": "Founder (2026-10-07): no replan. The I0039 re-scope was applied directly to T0075 (grid-aligned layout L2); T0076
@@ -30,3 +30,4 @@ cancelled: 20, done: 60, failed: 4, todo: 6
 - 2026-10-08T00:03:39+00:00 task_failed_attempt {"task": "T0075", "signal": "dod_failed", "action": "diagnose"}
 - 2026-10-08T00:03:39+00:00 investigation_spawned {"task": "T0090", "about": "T0075", "cls": "implementation"}
 - 2026-10-08T02:08:32+00:00 loop_started {"pid": 30941}
+- 2026-10-08T02:16:24+00:00 run_started {"run": "T0075-builder-20261007T191624-59c2", "task": "T0075", "role": "builder", "session": "87a1f5c0-40c7-452b-b588-fb8ef59d9e33"}

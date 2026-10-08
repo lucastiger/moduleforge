@@ -4,7 +4,7 @@ title: 'Layout L2 on grid-aligned layouts: snapped generator, aligned lateral la
   cost at k_star (feasibility gate)'
 type: implement
 agent: builder
-status: failed
+status: running
 depends_on:
 - T0074
 description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; restoration requested
@@ -192,7 +192,19 @@ description: 'Restores T0069 plan node n4b (dropped by the open-task-limit bug; 
   everything to cost.json.
 
   - Run --quick once, in the background, and poll it; do not block on it in the foreground. Then write
-  the note with its numbers and report. Do not start the 0.125 mm level on this Mac.'
+  the note with its numbers and report. Do not start the 0.125 mm level on this Mac.
+
+
+  FOUNDER NOTE for this retry (2026-10-08). The work of attempt 5 passed every DoD check, and both reviews
+  (T0088, T0089) accepted it with caveats. It failed only on a one-line merge conflict with main in l2_layout.py
+  (the block_gmres call), now resolved by the founder in merge commit ac590646, keeping the branch''s
+  line. The fast gate passes on the merged branch (ruff; 348 unit tests).
+
+  This run: confirm the merged branch. Run `uv run pytest -q tests/unit/solvers` and ruff, check that
+  main''s changes are present and the branch''s GMRES settings are intact, then report completed with
+  a short summary. Do not re-run the benchmark (the orchestrator''s verification runs it) and do not change
+  code unless a check fails. Keep the reviewers'' caveats in mind; the founder''s VM run addresses them
+  after merge.'
 context_files:
 - src/moduleforge/solvers/l2_layout.py
 - src/moduleforge/solvers/l2_core.py
@@ -247,8 +259,8 @@ model: null
 budget_usd: 8.0
 max_turns: 150
 wall_minutes: 240
-attempts: 5
-max_attempts: 5
+attempts: 6
+max_attempts: 6
 branch: task/T0075-layout-l2-at-e002-scale-measured-cpu-tim
 pr: null
 runs:
@@ -257,6 +269,7 @@ runs:
 - T0075-builder-20261006T110921-d1aa
 - T0075-builder-20261006T225540-ea88
 - T0075-builder-20261007T140856-27e1
+- T0075-builder-20261007T191624-59c2
 created_by: planner:T0073
 created_at: '2026-10-05T00:31:24+00:00'
 protected_approved: false

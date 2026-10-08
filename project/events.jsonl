@@ -664,3 +664,4 @@
 {"ts": "2026-10-08T00:03:39+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0075", "signal": "dod_failed", "action": "diagnose"}
 {"ts": "2026-10-08T00:03:39+00:00", "event": "investigation_spawned", "actor": "orchestrator", "task": "T0090", "about": "T0075", "cls": "implementation"}
 {"ts": "2026-10-08T02:08:32+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 30941}
+{"ts": "2026-10-08T02:16:24+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0075-builder-20261007T191624-59c2", "task": "T0075", "role": "builder", "session": "87a1f5c0-40c7-452b-b588-fb8ef59d9e33"}

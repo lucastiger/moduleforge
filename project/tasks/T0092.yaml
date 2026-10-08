@@ -3,7 +3,7 @@ objective: O001
 title: Review T0075 (numerics)
 type: review
 agent: critic
-status: running
+status: done
 depends_on: []
 description: ac590646202f089cab3fd6892b27c6d9447d9587
 context_files: []
@@ -30,4 +30,6 @@ target: T0075
 lens: numerics
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: review:accept_with_caveats
+  summary: 6 findings

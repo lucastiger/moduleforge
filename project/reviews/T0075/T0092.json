@@ -1,0 +1,64 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "The 12 GB memory gate is read from ru_maxrss, which reads low under memory pressure on a 16 GB machine. 8.9 GB at 6 dies is a lower bound, not the peak.",
+      "detail": "cost.json's peak_rss_gb comes from getrusage ru_maxrss. On macOS this excludes compressed and swapped pages. The DoD run had 8.8 GB of swap in use, so its RSS numbers are biased low by an unknown amount. On a 16 GB laptop the gate can barely fail as measured: resident memory cannot grow much past the free RAM. I re-ran the 0.5 mm child (seed 7, 2 dies) with the machine not paging (sys time 1.9 s). Peak RSS was 3.87 GB and peak phys_footprint 3.58 GB, against the 2.28 GB recorded in the DoD run: 1.57-1.70x higher. The author's own standalone re-run (3.58 GB) agrees. Scaling the 6-die k* value (8.92 GB) by the same ratio gives 14-15 GB, above the gate. That scaling is an inference, not a measurement, but the claimed 74 % margin is not demonstrated.",
+      "evidence": "My re-run: ru_maxrss 3.870 GB, lifetime_max_phys_footprint 3.577 GB, pageins 804, L_H 1.1114978173833478e-08 (bit-identical to the recorded value). Recorded in docs/notes/o001-l2-layout-cost.json: peak_rss_gb 2.278. Note: 'Under memory pressure macOS compresses or swaps pages, so peak RSS reads low'.",
+      "suggested_check": "Run the 6-die k* child alone, with no other load, and record proc_pid_rusage ri_lifetime_max_phys_footprint (or /usr/bin/time -l 'peak memory footprint') next to ru_maxrss. Gate on the larger value."
+    },
+    {
+      "severity": "major",
+      "title": "The CPU gate at 6 dies (2011 of 2400 CPU-s, 16 % margin) is inside run-to-run variation on this 4P+6E machine",
+      "detail": "cpu_s is user+sys over all threads. On a heterogeneous Apple core layout it depends on which cores the BLAS and FFT threads land on, and on contention. My 0.5 mm re-run took 282 CPU-s (280 user, 1.9 sys) against the recorded 180 CPU-s: 1.57x. That spread exceeds the \u00b125 % the note discloses. Attempt 4 measured the same 6-die solve at 2286 CPU-s (95 % of the gate). The ratio from my run would put it at ~3160 CPU-s. The 'gate met' statement rests on one favourable sample. The E002 projection (0.44 CPU-h per layout) inherits the same noise.",
+      "evidence": "Re-run cpu_s 282.2, wall 255 s; recorded cpu_s 179.6, wall 156 s; same L to every digit.",
+      "suggested_check": "Repeat the k* 6-die solve at least 3 times with pinned thread counts (OMP/VECLIB/MF_L2_FFT_WORKERS). Report the max or the median with spread, not a single run."
+    },
+    {
+      "severity": "minor",
+      "title": "The convergence gate's step criterion understates the discretisation error at k* by about 2.5x, given the observed order ~0.7",
+      "detail": "From the founder diagnostic ladder (12.8885 / 12.7662 / 12.6915 nH): contraction 0.611, observed order 0.711, Richardson limit 12.574 nH. That puts the error at k* at +1.53 %, while the gate quantity |L(k*+1)-L(k*)|/L is 0.59 % and passes. The same contraction applied to the generated layouts gives a projected k* error of 1.2 % (seed 7) and 1.9 % (seed 11). The steps also differ by family (-0.78 % vs -1.19 %). Rankings of layouts whose L differ by under ~1 % are therefore not resolved at k*. The DoD does not gate convergence; this limits what k* values mean.",
+      "evidence": "Computed in a python one-liner: L_inf 12.5743, err@k* 1.53 %, err@k*+1 0.93 %.",
+      "suggested_check": "When the VM run lands, report Richardson-extrapolated L and the error at k* per layout, and check that pairwise rankings agree between k* and k*+1."
+    },
+    {
+      "severity": "minor",
+      "title": "Fine-level (0.125 mm) GMRES is untested at production scale, and its iteration estimates are inconsistent",
+      "detail": "The cap of 4000 iterations is only exercised on a two-wire 20x16 mm plane (test_solver_tol_usable_at_every_refinement[2]). No production 0.125 mm solve ran. The code comment at l2_layout.py:1639 says '0.125 mm needs ~800-1000' iterations; the note says 'about 430 at 1e-7'. A Krylov basis of 100 complex vectors at ~7.9 M unknowns is ~12.6 GB by itself. The claim's 'fine-level GMRES' is plausible but unverified.",
+      "evidence": "l2_layout.py lines 1636-1642; note section 'GMRES iterations'.",
+      "suggested_check": "The --vm run should record gmres_flags==0 and the iteration count at 0.125 mm for all three families."
+    },
+    {
+      "severity": "minor",
+      "title": "Backside-Cu layers miss the 2 % Z_s criterion (8.3 %), but 'resolved' checks only top Cu",
+      "detail": "skin_resolution marks a level resolved only from top_cu zs_rel_err. Backside Cu (6 layers) is 8.3 % off the exact slab at 20 MHz. The docstring nonetheless says the thickness layers 'resolve the 20 MHz skin depth at every level'. L sensitivity to +2 layers was small (-0.043 %, attempt 4), but R moved +8.2 %. The wording overstates the resolution.",
+      "evidence": "cost.json skin_resolution: backside_cu zs_rel_err 0.0832, X_s_rel_err 0.077.",
+      "suggested_check": "Either gate backside_cu too or state that only top Cu is held to 2 %."
+    },
+    {
+      "severity": "note",
+      "title": "Wire-filament sensitivity and the second family are not measured on this ladder",
+      "detail": "The +0.02 % filament sensitivity comes from attempt 3's old 0.35 mm ladder. The seed-11 u_shaped k* figures are from attempt 4 at GMRES_TOL 1e-9. Seed 3 / 6 dies has never been solved. The note discloses all of this; it is listed here only to bound the claim.",
+      "evidence": "",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Generator/lattice alignment: generated 375 layouts (seeds 0-24 x dies 2-6 x 3 layouts; 125 each interleaved/side_by_side/u_shaped). Every trace rectangle edge is on the 0.5 mm grid. layout_cell_fill succeeded at refinements 0/1/2 with per-net area error <= 1e-12, and every die footprint passed check_on_lattice. Zero failures (dies=1 is rejected by design).",
+    "Reproduced the 0.5 mm (k*-1) solve, seed 7 / 2 dies, through the benchmark's own run_child. L_H 1.1114978173833478e-08 is bit-identical to the recorded value, with 133 GMRES iterations and solver_tol 1.81e-5. Cost differed sharply: cpu_s 282 vs 180 recorded, peak RSS 3.87 GB (phys_footprint 3.58 GB) vs 2.28 GB recorded.",
+    "Ran `uv run pytest -q tests/unit/solvers`: 114 passed in 510 s.",
+    "Ran `uv run ruff check benchmarks/l2_layout_cost.py src/moduleforge/solvers tests/unit/solvers`: all checks passed.",
+    "Re-derived the a-posteriori bound in l2_core.a_posteriori: |Z - Z~| = |e^T rho| <= ||rho||^2 / r_min, using Re M = R >= r_min on null(C^T). The 1e-9 -> 1e-7 GMRES_TOL loosening therefore leaves solver_tol rigorous; the residual term is quadratic.",
+    "Checked the skin depth by hand: delta = sqrt(2/(omega mu0 sigma)) = 14.78 um at 20 MHz, sigma 5.8e7, matching skin_depth_um. The first graded layer of 3.30 um is 0.5 x delta at 100 MHz, as documented.",
+    "Richardson extrapolation of the founder diagnostic ladder: order 0.71, error at k* about 1.5 %, against a gate step of 0.59 %.",
+    "Confirmed that the solvers use threads only (ThreadPoolExecutor, scipy.fft workers), so RUSAGE_SELF counts all solver CPU.",
+    "Read the new and replaced tests (alignment, refusal, GMRES cap/restart, solver_tol at every refinement). They test behaviour: off-lattice refusal, a flag>0 under the cap, restart convergence to the unrestarted value. They do not re-derive the implementation."
+  ],
+  "caveats": [
+    "The full DoD benchmark (`--quick`, about 50 min wall and ~9 GB per solve) was not re-run end-to-end. Only its k*-1 solve was reproduced. Background runs and file redirects were not permitted, and the 10-min foreground cap rules out the 15-30 min k* solves.",
+    "The cost-gate pass at k* holds only for the measurement conditions of that one run. Peak RSS under memory pressure is a lower bound, and CPU-s on this 4P+6E laptop varied 1.57x between my run and the recorded one. Treat '74 % / 84 % of the gate' as unconfirmed until a peak-footprint, repeated measurement exists.",
+    "Lateral convergence (k*+1) and the sensitivity solves are deferred to the VM run and are not part of this acceptance. The k* values carry an estimated ~1-2 % discretisation error (observed order ~0.7), larger than the 1 % step gate suggests.",
+    "Accepted scope: the generator snaps to the 0.5 mm design grid; layouts align at all three levels; the off-lattice refusal; the GMRES cap change; and the benchmark harness producing a cost.json that satisfies the DoD schema."
+  ]
+}

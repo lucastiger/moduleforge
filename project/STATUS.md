@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-08T11:28:58+00:00 from repository state — do not edit_
+_generated 2026-10-08T13:56:31+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -15,7 +15,6 @@ cancelled: 20, done: 65, failed: 3, todo: 7
 
 
 ## Recent events
-- 2026-10-08T04:10:59+00:00 run_finished {"run": "T0091-critic-20261007T210548-136f", "status": "completed", "cost": 2.039056, "subtype": "success", "report": "structured_output"}
 - 2026-10-08T04:23:59+00:00 run_finished {"run": "T0092-critic-20261007T210549-2f84", "status": "completed", "cost": 1.501344, "subtype": "success", "report": "structured_output"}
 - 2026-10-08T04:24:01+00:00 inbox_opened {"id": "I0042", "kind": "protected_change", "subject": "T0075: merge needs founder approval"}
 - 2026-10-08T05:06:18+00:00 inbox_resolved {"id": "I0042", "status": "approved", "note": "Founder: approve (founder session's recommendation). Loop DoD verified on merge commit ac590646 (quick benchmark,
@@ -30,3 +29,4 @@ cancelled: 20, done: 65, failed: 3, todo: 7
 - 2026-10-08T11:27:49+00:00 run_finished {"run": "T0095-critic-20261008T042129-bafa", "status": "completed", "cost": 2.169244, "subtype": "success", "report": "structured_output"}
 - 2026-10-08T11:28:57+00:00 run_finished {"run": "T0094-critic-20261008T042129-e982", "status": "completed", "cost": 2.512996, "subtype": "success", "report": "structured_output"}
 - 2026-10-08T11:28:57+00:00 task_failed_attempt {"task": "T0076", "signal": "review_rejected", "action": "repair"}
+- 2026-10-08T13:56:30+00:00 sleep_detected {"gap_s": 752, "runs_extended": 0}

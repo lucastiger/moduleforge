@@ -1,0 +1,81 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "The k_star cost gate passes with less margin than the measurement noise the note itself states, on one 6-die layout from one family",
+      "detail": "The 6-die k_star solve took 2011 CPU-s against the 2400 gate, a 16 % margin. The note says per-solve CPU-s varies \u00b125 % with machine load and memory pressure, and 2011 \u00d7 1.25 = 2514, which is over the gate. GMRES time per iteration for this solve was 4.52 s, against 2.97 s in attempt 4. System time was 801 s of the 3354 CPU-s in the run, which points to paging, and that time counts toward cpu_s. The only 6-die layout measured is seed 7, interleaved. Seed 3 (side_by_side, 6 dies) has not been solved at any level. Side_by_side HS wires span 0.25s + 2 + e0 + g mm, up to about 7.5 mm, against about 5.5 mm for interleaved. Near pairs and wire\u2194grid work grow with wire length, so the worst E002 layout could cost more than the one measured. So 'feasible at k_star' is shown for one layout on one machine state. It is not shown with margin across E002's 2-6 die, 3-family sample.",
+      "evidence": "docs/notes/o001-l2-layout-cost.json: cpu_s 2011.456, gmres 1126.1 s / 249 iterations = 4.52 s per iteration. Note, attempt 4: 1231 s / 415 iterations = 2.97 s per iteration. Note: '\u00b125 % with machine load'; 'Seed 3 / 6 dies has not been solved at any level'. Wire span derived from halfbridge._rows (side_by_side hs_land = p0 + 1).",
+      "suggested_check": "Re-run the 6-die k_star child on an idle machine and on the longest-wire side_by_side 6-die layout (for example seed 3) with /usr/bin/time -l, and report user and sys time separately."
+    },
+    {
+      "severity": "major",
+      "title": "'Fine-level GMRES' and the aligned ladder's convergence are not verified at production scale",
+      "detail": "The GMRES change raises the cycle cap from 5 to 40 (4000 iterations). No production 0.125 mm solve has run. The only fine-level evidence is a two-wire toy plane system in test_solver_tol_usable_at_every_refinement. The k*\u2192k*+1 convergence gate and the wire-filament sensitivity are not measured on this ladder. The note admits that the \u22120.5 % / \u22120.7 % k*\u2192k*+1 values are extrapolations. One measured step, k*\u22121\u2192k* for seed 11, is \u22121.19 %, which is already above the 1 % step gate. The claim is therefore supported for the cost gate at k_star only, not for convergence at k_star.",
+      "evidence": "Note: 'The production 0.125 mm solve has not run here'; 'Convergence gate: not measured here'. cost.json: convergence [] and sensitivity [].",
+      "suggested_check": "Treat convergence at k_star as open until the --vm run reports convergence[].converged for all three layouts and gmres_flags 0 at 0.125 mm."
+    },
+    {
+      "severity": "minor",
+      "title": "The k*+1 cost projection contradicts its own stated method and comes out low",
+      "detail": "The note says it applies 'the same factors per stage'. It states the GMRES factor as \u00d711.7, which gives 501 s \u00d7 11.7 \u2248 5860 s, but the note uses ~4700 s. Redone with its own factors, the 2-die estimate is about 2140 + 254 + 5860 \u2248 8250 s wall. At the measured CPU/wall ratio of 1.255 that is about 10,400 CPU-s, or 2.9 CPU-h, not 2.5. For 6 dies: 319\u00d77.6 + 388\u00d71.87 + 1126\u00d711.7 \u2248 16,300 s wall, or about 4.9 CPU-h. Using attempt 4's per-iteration time it is still about 3.3-3.5 CPU-h, not '3 CPU-h' with '+0.5 for six dies'. That changes the planning table: with about 4 CPU-h per refinement layout, n = 60 fits about 8 refinement layouts in 60 CPU-h, not 11.",
+      "evidence": "Note, 'Cost per layout vs dies per switch and refinement'. Stage times in docs/notes/o001-l2-layout-cost.json: grid 280.7 / 318.9 s, wire_grid 136.0 / 387.7 s, gmres 500.9 / 1126.1 s.",
+      "suggested_check": "Recompute the extrapolation per stage with the stated factors, or replace it with the VM measurement."
+    },
+    {
+      "severity": "minor",
+      "title": "Peak RSS was measured under memory pressure (8.8 GB swap in use), so the 12 GB gate margin is a lower bound",
+      "detail": "On macOS, ru_maxrss leaves out compressed and swapped pages. The note shows the 0.5 mm child at 2.28 GB in the quick run but 3.58 GB standalone, 1.57\u00d7 higher. My component estimate for the 6-die k_star solve gives a similar total, so it is probably not badly understated: the Krylov basis is about 101 \u00d7 1.98 M \u00d7 16 B \u2248 3.2 GB, the near pairs about 82.8 M \u00d7 ~20 B \u2248 1.7 GB, and the plane tables about 1.3 GB. Even so, the 8.92 GB recorded is a lower bound. Attempt 4 recorded 9.28 GB, also under pressure.",
+      "evidence": "Note, Measurements bullets on RSS under memory pressure. JSON peak_rss_gb: 2.278 / 7.692 / 8.918.",
+      "suggested_check": "Measure the 6-die k_star child's peak memory footprint (/usr/bin/time -l 'peak memory footprint') on an otherwise idle machine."
+    },
+    {
+      "severity": "minor",
+      "title": "The committed cost.json cannot be tied to the code that produced it",
+      "detail": "The committed docs/notes/o001-l2-layout-cost.json has no cpu_user_s or cpu_sys_s fields, which the committed run_child always writes. So the JSON came from an earlier version of the benchmark script. run_child also drops meta['source_sha256'], tool_version and layout_fingerprint, even though loop_inductance provides them. Neither cost.json nor the committed artifact records which solver source produced each L or cost value.",
+      "evidence": "benchmarks/l2_layout_cost.py run_child rec has no source_sha256 or layout_fingerprint. JSON solves lack cpu_user_s and cpu_sys_s. Note: 'added after this run'.",
+      "suggested_check": "Add source_sha256 and layout_fingerprint to each solve record, then regenerate the committed JSON with the committed script."
+    },
+    {
+      "severity": "minor",
+      "title": "The code comment and the note disagree on the expected 0.125 mm GMRES iteration count",
+      "detail": "The l2_layout.py comment above GMRES_RESTART says 0.125 mm 'needs ~800-1000' iterations; that figure dates from the 1e-9 tolerance. The note expects about 430 at 1e-7. Both are below the 4000 cap, so this does not change behaviour, but one of the two expectations is stale.",
+      "evidence": "src/moduleforge/solvers/l2_layout.py lines 1636-1640 against the note's 'GMRES iterations' section.",
+      "suggested_check": "Update the comment to the 1e-7 expectation."
+    },
+    {
+      "severity": "note",
+      "title": "With the diagnostic's convergence rate, the error at k_star is about 1.5 %, larger than the 1 % step the gate checks",
+      "detail": "From the founder diagnostic (12.8885 / 12.7662 / 12.6915 nH), the contraction is r = 0.611 and the order p \u2248 0.71, so convergence is sub-linear. Richardson extrapolation gives L\u221e \u2248 12.574 nH. That puts the error at k_star (0.25 mm) at about 1.5 % and at 0.125 mm at about 0.9 %. A k*\u2192k*+1 step under 1 % therefore means an error at k_star of roughly 2.6\u00d7 that step. The two measured k*\u22121\u2192k* steps differ by 0.41 % between families (\u22120.78 % and \u22121.19 %). Rankings of layouts whose L differs by less than about 0.5 % may depend on the level. This concerns the gate's design and E002's use of L. It is not a defect in this change.",
+      "evidence": "Hand computation from the founder diagnostic L values quoted in the note.",
+      "suggested_check": "In the VM run, report Richardson-extrapolated errors at k_star and check that the layout ranking is the same at k_star and k_star+1."
+    },
+    {
+      "severity": "note",
+      "title": "Loosening GMRES_TOL from 1e-9 to 1e-7 does not weaken the stated accuracy",
+      "detail": "I checked whether this is a tolerance loosened to pass a gate. The reported bound is the a-posteriori term |r^T A^{-1} r| \u2264 ||r||\u00b2/\u03bb_min(Re A) = ||r||\u00b2/r_min. The Hermitian part of R + j\u03c9L is R, because j\u03c9L is skew-Hermitian, so the term is quadratic in the true residual. The recorded residual parts (3e-10 to 2e-9) are about 1e-4 of the stated operator bounds (~2e-5). L matches the 1e-9 values to 5 digits: 11.1150 / 11.0292 / 8.0069 nH. solver_tol stays rigorous, and the DoD's 1e-3 bound is not approached.",
+      "evidence": "l2_layout.solve_system / core.a_posteriori; tol_parts.resid in the JSON.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran the DoD assertion logic by hand on the committed docs/notes/o001-l2-layout-cost.json: k_star = 1 is an int; dies {2, 6} at refinement 1; a refinement-0 solve exists; L_H is in (1e-9, 1e-7); cpu_s \u2264 2400 and RSS \u2264 12 at k_star; solver_tol \u2264 2e-5 < 1e-3. All pass on the committed artifact.",
+    "Recomputed the step (11.0292026 \u2212 11.1149782)/11.0292026 = \u22120.7777 %, which matches steps[0].rel_change. The 5-digit L match with attempt 4 also holds.",
+    "Cross-checked the CPU accounting: the sum of child cpu_s (179.6 + 1162.4 + 2011.5 = 3353.5 s) matches the parent's `time` total (2553 user + 801 sys = 3354 s). No CPU is hidden in grandchild processes, so RUSAGE_SELF is adequate.",
+    "Checked the generator snapping analytically. _snap is exact (dividing by 0.5 is a power of two). s, dg, g and e land on 0.5 mm. xs is rounded within [X_DIE_MIN, X_DIE_MAX \u2212 ld], whose ends are both on the grid, so it cannot leave the window. Die footprint edges xs + i(s + dg) and y0 = hs_y0 / ls_y0 are on the grid for all three families. _rows does not consume rng, so the random stream is unchanged. The baseplate box (\u22128..78 \u00d7 \u22128..48) and the substrate inset are on the grid.",
+    "Read cell_fill, _snap_aligned, check_on_lattice and layout_lattice. Misaligned trace, plane and die edges and non-integer lattice extents all raise ValueError with ALIGN_TOL = 1e-9 relative. rect_cover is exact for disjoint rectangles. The two-net cell check runs before snapping.",
+    "Checked that the generator test test_every_trace_edge_and_die_footprint_on_the_design_grid exercises behaviour (polygon vertices and die edges over 60 layouts on all families), not the implementation's own formula.",
+    "Derived the a-posteriori bound for the complex-symmetric R + j\u03c9L system to confirm the residual term is quadratic, so GMRES_TOL 1e-7 keeps solver_tol rigorous.",
+    "Redid the note's k*+1 extrapolation per stage from the JSON stage times. Its GMRES figure (4700 s) contradicts its own \u00d711.7 factor (\u2248 5860 s).",
+    "Checked per-iteration GMRES times between attempts 4 and 5 (2.97 s against 4.52 s) to size machine-state variance against the 16 % CPU margin.",
+    "Did a Richardson extrapolation on the founder diagnostic's aligned ladder (r = 0.611, p \u2248 0.71, error at k* \u2248 1.5 %).",
+    "Checked the ruff config: E501 is not selected, so the over-long line 1904 in l2_layout.py does not fail the ruff DoD step."
+  ],
+  "caveats": [
+    "Bash was denied in this session, so I could not rerun the DoD benchmark, pytest tests/unit/solvers or ruff. Every conclusion comes from reading the code and recomputing the committed artifact and note by hand. The orchestrator's deterministic DoD run is the real test.",
+    "The diff in the packet was cut off inside l2_layout.py, and I read only parts of l2_layout.py, l2_core.py and the tests. Changes in unread regions, such as the preconditioner, WireGridPFFT and the rest of the test file, were not reviewed.",
+    "Valid only for cost at k_star (0.25 mm) on the measured layouts: seed 7 interleaved with 2 and 6 dies, on one 16 GB laptop with unthrottled threads. Cost on other families and die counts, and on the VM with --threads, is not shown.",
+    "Convergence at k_star, wire-filament sensitivity on this ladder, and GMRES behaviour on the production 0.125 mm system are not established. They depend on the --vm run.",
+    "The 12 GB RSS gate margin is a lower bound, because it was measured under memory pressure."
+  ]
+}

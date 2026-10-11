@@ -4,7 +4,7 @@ title: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timi
   the measured L2 layout cost
 type: design_experiment
 agent: scientist
-status: merge
+status: needs_founder
 depends_on:
 - T0075
 description: "Restores T0069 plan node n5 (dropped by the open-task-limit bug; restoration requested by\

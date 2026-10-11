@@ -1,0 +1,15 @@
+id: I0043
+kind: protected_change
+subject: 'T0076: merge needs founder approval'
+summary: 'Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timing) + runners, sized
+  from the measured L2 layout cost
+
+  Risk high; 11 files. PR: None'
+refs:
+- T0076
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-11T04:02:33+00:00'
+resolved_at: null

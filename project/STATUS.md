@@ -1,8 +1,8 @@
 # ModuleForge status
-_generated 2026-10-11T04:02:30+00:00 from repository state — do not edit_
+_generated 2026-10-11T04:02:34+00:00 from repository state — do not edit_
 
-## Founder inbox (0 open)
-- nothing needs you
+## Founder inbox (1 open)
+- **I0043** [protected_change] T0076: merge needs founder approval
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -11,12 +11,11 @@ _generated 2026-10-11T04:02:30+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $263.73/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 20, done: 67, failed: 3, merge: 1, todo: 6
+cancelled: 20, done: 67, failed: 3, needs_founder: 1, todo: 6
 
-- T0076 `merge` scientist/design_experiment: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timing) + runners, sized from the measured L2 layout cost (attempt 2)
+- T0076 `needs_founder` scientist/design_experiment: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timing) + runners, sized from the measured L2 layout cost (attempt 2)
 
 ## Recent events
-- 2026-10-11T01:06:20+00:00 loop_started {"pid": 93011}
 - 2026-10-11T01:06:55+00:00 run_started {"run": "T0076-scientist-20261010T180655-e404", "task": "T0076", "role": "scientist", "session": "5383acf8-410c-4621-830f-0cddd48006de"}
 - 2026-10-11T02:35:43+00:00 run_finished {"run": "T0076-scientist-20261010T180655-e404", "status": "completed", "cost": 6.279168, "subtype": "success", "report": "structured_output"}
 - 2026-10-11T03:19:14+00:00 verified {"task": "T0076"}
@@ -31,3 +30,4 @@ cancelled: 20, done: 67, failed: 3, merge: 1, todo: 6
 - 2026-10-11T03:50:21+00:00 run_started {"run": "T0097-critic-20261010T205021-ddf9", "task": "T0097", "role": "critic", "session": "1a526a3e-658d-48a3-b198-ce1d354ff202"}
 - 2026-10-11T03:55:47+00:00 run_finished {"run": "T0097-critic-20261010T205021-ddf9", "status": "completed", "cost": 2.103506, "subtype": "success", "report": "structured_output"}
 - 2026-10-11T03:56:54+00:00 run_finished {"run": "T0096-critic-20261010T205021-8ea1", "status": "completed", "cost": 2.253956, "subtype": "success", "report": "structured_output"}
+- 2026-10-11T04:02:33+00:00 inbox_opened {"id": "I0043", "kind": "protected_change", "subject": "T0076: merge needs founder approval"}

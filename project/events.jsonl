@@ -764,3 +764,5 @@
 {"ts": "2026-10-11T04:34:07+00:00", "event": "experiment_task_started", "actor": "orchestrator", "task": "T0078", "experiment": "E003"}
 {"ts": "2026-10-11T04:34:39+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0078", "signal": "experiment_error", "action": "repair"}
 {"ts": "2026-10-11T04:34:40+00:00", "event": "experiment_task_started", "actor": "orchestrator", "task": "T0078", "experiment": "E003"}
+{"ts": "2026-10-11T04:35:13+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0078", "signal": "experiment_error", "action": "repair"}
+{"ts": "2026-10-11T04:35:14+00:00", "event": "experiment_task_started", "actor": "orchestrator", "task": "T0078", "experiment": "E003"}

@@ -769,3 +769,4 @@
 {"ts": "2026-10-11T04:35:47+00:00", "event": "task_failed_attempt", "actor": "orchestrator", "task": "T0078", "signal": "experiment_error", "action": "diagnose"}
 {"ts": "2026-10-11T04:35:47+00:00", "event": "investigation_spawned", "actor": "orchestrator", "task": "T0099", "about": "T0078", "cls": "implementation"}
 {"ts": "2026-10-11T20:47:47+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 480, "runs_extended": 0}
+{"ts": "2026-10-11T22:13:04+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 4650, "runs_extended": 0}

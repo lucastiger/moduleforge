@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E002: L1 vs L2 loop-inductance ranking on sealed generated layouts'
 type: experiment
 agent: none
-status: running
+status: failed
 depends_on:
 - T0076
 - T0072
@@ -76,3 +76,23 @@ history:
     \      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No\
     \ such file or directory: '/Users/lukeskywalker/mf/main/experiments/specs/E002.yaml'\n"
   at: '2026-10-11T04:33:31+00:00'
+- attempt: 3
+  outcome: experiment_error
+  summary: experiment produced no result
+  failure_output: "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n\
+    \  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/Users/lukeskywalker/mf/main/tools/mfos/mfos/cli.py\"\
+    , line 459, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/Users/lukeskywalker/mf/main/tools/mfos/mfos/cli.py\"\
+    , line 455, in main\n    return int(args.fn(args) or 0)\n               ^^^^^^^^^^^^^\n  File \"/Users/lukeskywalker/mf/main/tools/mfos/mfos/cli.py\"\
+    , line 257, in cmd_exp\n    res = experiments.run(s, a.id, force=a.force, here=a.here)\n         \
+    \ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lukeskywalker/mf/main/tools/mfos/mfos/experiments.py\"\
+    , line 72, in run\n    spec = store.spec(eid)\n           ^^^^^^^^^^^^^^^\n  File \"/Users/lukeskywalker/mf/main/tools/mfos/mfos/store.py\"\
+    , line 186, in spec\n    return self.read_yaml(self.spec_path(eid), m.ExperimentSpec)\n          \
+    \ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lukeskywalker/mf/main/tools/mfos/mfos/store.py\"\
+    , line 96, in read_yaml\n    return model.model_validate(yaml.safe_load(path.read_text()) or {})\n\
+    \                                               ^^^^^^^^^^^^^^^^\n  File \"/Users/lukeskywalker/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py\"\
+    , line 1027, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors) as f:\n\
+    \         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lukeskywalker/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py\"\
+    , line 1013, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n     \
+    \      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No\
+    \ such file or directory: '/Users/lukeskywalker/mf/main/experiments/specs/E002.yaml'\n"
+  at: '2026-10-11T04:34:05+00:00'

@@ -3,7 +3,7 @@ objective: O001
 title: Review T0076 (numerics)
 type: review
 agent: critic
-status: running
+status: done
 depends_on: []
 description: c93b225ce3917ef610c56e84df38683ec460cf9d
 context_files: []
@@ -35,3 +35,5 @@ history:
 - outcome: capacity_backoff
   summary: You've hit your session limit · resets 8:50pm (America/Los_Angeles)
   at: '2026-10-11T03:19:50+00:00'
+- outcome: review:accept_with_caveats
+  summary: 5 findings

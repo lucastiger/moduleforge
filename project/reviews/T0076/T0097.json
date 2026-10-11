@@ -1,0 +1,58 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "L2 bias band and contraction ignore the solver's own stated error bound (overconfident reference-robust readings)",
+      "detail": "l2_converged counts solver_tol_rel_L(k*) + solver_tol_rel_L(k*+1) in its step test, but bias_model treats d1, d2 and r as exact. At k*+1 the stated bound (1.1-1.6e-3, mostly plane_tables) is 20-30 % of |d2| (0.48-0.72 %). Under those bounds r and beta are poorly determined, and the band adds only +/-0.5 pt. In envelope (a) r_lo = r_hi = the single checked layout's r, so all 14 two-level layouts get point intervals that use that r as exact. mape_Lloop_refbound_lo/hi, near_tie_band and top_decile_recall_band_lo/hi are presented as the reference-robust reading of A4/A5, and so inherit a band that is too narrow. Mitigating: the three dev r values agree closely (0.603-0.622), which suggests actual errors are well below the bound or systematic.",
+      "evidence": "Scratch propagation over the 2^3 sign combinations of each level's bound, using research/l2_layout_vm/cost.json: s3_d6 side_by_side r=0.609 beta=1.80 % -> r in [0.46,0.76], beta in [0.99 %,3.63 %]; s7_d2 interleaved r=0.622 beta=1.28 % -> r in [0.44,0.80], beta in [0.62 %,3.16 %]; s11_d2 u_shaped r=0.603 beta=1.82 % -> r in [0.51,0.70], beta in [1.23 %,2.79 %]. Code: bias_model per[i] = (beta, beta, beta) for checked layouts; ends = (b_of(d, r_lo), b_of(d, r_hi)) with r_lo = r_hi when one layout is checked.",
+      "suggested_check": "Propagate each solve's solver_tol_rel_L into the per-layout r and beta intervals (and so into the band) before registration, or state in the spec that the band excludes solver error."
+    },
+    {
+      "severity": "major",
+      "title": "'Inside O001's frozen 60 CPU-h budget' ignores CPU-h already spent on O001",
+      "detail": "The note and spec header treat envelope (a) (estimate 52 CPU-h) as inside O001's cpu_hours: 60. The measured L2 cost campaign that sized the design was itself O001 work and used about 35.7 CPU-h; E001 and the E002 smokes add more. If the objective budget is cumulative (mfos does not enforce it at objective level; only a per-task local maximum exists), envelope (a) brings O001 to about 88 CPU-h. Even counted alone, the note's +25 % margin gives about 64 CPU-h, over 60.",
+      "evidence": "Sum of cpu_s in research/l2_layout_vm/cost.json: 9 solves 112217 s + 3 sensitivity solves 16160 s = 128377 s = 35.7 CPU-h. project/objectives/O001/objective.yaml: budget {usd: 120, cpu_hours: 60, wall_days: 21}. Note section 4: '(a) at +25 % is ~64 CPU-h'.",
+      "suggested_check": "Have the founder state whether the 60 CPU-h is cumulative and, if it is, add consumed O001 CPU-h to the envelope table."
+    },
+    {
+      "severity": "minor",
+      "title": "Envelope (a) does not measure how the ranking changes with L2 refinement, although the data exist",
+      "detail": "The numerics lens asks for discretisation dependence of rankings, not only of values. In (a) only one layout is solved at k*+1 and check_pairs_concordant_frac needs at least 2 checked layouts. However L2 is solved at k*-1 and k* on 15 layouts (one per stratum), so the L1-vs-L2 Spearman, or L2 pair concordance, at k*-1 versus k* on that subset could be reported at no extra solve cost. As designed, ranking sensitivity is only inferred through the bias model.",
+      "evidence": "plan_subsets: low = first low_per_stratum of each stratum plus chk (15 layouts); metric_plan adds check_pairs_concordant_frac only if n_chk >= 2; nothing compares rankings across levels on the k*-1 subset.",
+      "suggested_check": "Add a secondary metric: Spearman(L1, L2_{k*-1}) vs Spearman(L1, L2_{k*}) on the k*-1 subset."
+    },
+    {
+      "severity": "minor",
+      "title": "Inconsistent convergence criteria and an unhandled edge case in the bias path",
+      "detail": "(i) The predicted-step test for two-level layouts (r_max |d1| < conv_tol) leaves out the solver tolerances that the checked-layout test adds. (ii) A checked layout can pass contraction through the '|d2| < 1e-4' branch with r outside (0,1). beta is then NaN, bias_model may return None, and the bias metrics that metric_plan marks as required are omitted with only a note. The dry pass and selftest use exact synthetic ladders and cannot reach this path.",
+      "evidence": "check_converged: pred = |d1| * r_max (no tolerance term); beta[i] = -d2/(1-r) if 0<r<1 else NAN; emit_metrics: 'no finite L2 bias estimate: bias metrics not emitted'.",
+      "suggested_check": "Add the tolerance term to the predicted-step test, and decide in advance how bias metrics are reported when r is outside (0,1)."
+    },
+    {
+      "severity": "note",
+      "title": "C1 layout-path threshold relaxed after a smoke failure; the reference case is not independent of development",
+      "detail": "The layout-path solver-bound sub-condition went from <= 1e-3 to <= c1_layout_tol (0.5 %) after the smoke run failed at 1.5e-3. This is documented, was done on a fixed analytic case before registration, and the unit test (test_c1_layout_internals_vs_l2_solve_same_refinement) has no such condition, so it is a defensible alignment rather than weakening a registered test. C1 is the same case the unit test already covers, so l2_layout_reference_valid is not an independent method on a case neither solver was tuned on. The note states this limitation.",
+      "evidence": "tests/unit/solvers/test_l2_layout.py:265-273 asserts only tol_ref < 1e-5 and rel=5e-3; runner check_layout_ref uses tol_ok = layout_tol_rel_L <= c1_layout_tol and l2_solver_tol < 1e-5; smoke margin 0.38 % vs 0.5 %.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Re-derived beta = -d2/(1-r) and the two-level form -d1 r/(1-r) for the geometric ladder L_k = Linf(1 + c q^k), and checked both numerically (python3) on two exact ladders, including c < 0: they match 1 - Linf/L_k to rounding.",
+    "Recomputed d1, d2, r and beta from the raw L_H values in research/l2_layout_vm/cost.json (they reproduce the note's 1.28/1.80/1.82 %), and propagated each level's stated solver_tol_rel_L over all sign combinations: r ranges 0.44-0.80 and beta ranges 0.6-3.6 %.",
+    "Cross-checked the cost model against cost.json: k* CPU 3572/3655/5228 s (0.99/1.02/1.45 CPU-h), k*+1 CPU 31354-33529 s (8.7-9.3 CPU-h), k*+1 wall 11105-13315 s (phase 1 about 3.7 h). The phase-2 wall estimate (about 4.6-4.7 h) and the 720-min timeout are consistent. Summed the CPU-h already used by the cost campaign (35.7 CPU-h).",
+    "Confirmed analytically that ape_range is correct: |L1/(L2(1-beta)) - 1| is monotone-quasi-convex in beta, so the maximum is at an endpoint and the minimum is 0 iff beta0 = 1 - L1/L2 lies in the band. Confirmed that top_decile_recall_band_lo <= point recall <= band_hi by construction (inside equals the reference top-w set when there are no ties).",
+    "Read mfos.stats (spearman uses average ranks; topk_recall rounds k and w; bootstrap_ci is a paired percentile bootstrap) to confirm the runner's calls and the k=3, w=6 resolution at n=30.",
+    "Checked that the E001 functions (DEFAULT_CFG, CU/AL, build_cases, analytic_values, l2_solve) and the l2_layout APIs (layout_lattice, cell_fill, check_on_lattice, solve_system, MAX_REFINEMENT=2, LAYERS_BACK, source_sha256) used by the runner exist, and that l2 meta carries gmres_info, version and solver_tol, so the GMRES and version checks can actually fail.",
+    "Compared check_layout_ref with tests/unit/solvers/test_l2_layout.py::test_c1_layout_internals_vs_l2_solve_same_refinement: same refinement, 0.7 mm cells, LAYERS_BACK[1], fmax 20 MHz, rel 5e-3, l2 tol < 1e-5.",
+    "Searched L1 (physics/peec, geometry) for per-layout caching that would bias E003's repeated timings: only a layout-independent Gauss-Legendre node cache (covered by warm-up) was found.",
+    "Checked the objective's A1-A6/K1-K3 definitions against the emitted metric names: spearman_rho_Lloop, mape_Lloop and top_decile_recall with CIs; l1_eval_ms_p50 (point, <= 50 ms)."
+  ],
+  "caveats": [
+    "The definition-of-done commands were NOT executed by this reviewer: Bash denied every `uv run` call (mfos exp check E002/E003, ruff, both smoke runs, --selftest). Whether they pass rests on the orchestrator's deterministic checks; the note's own smoke and selftest claims were not reproduced.",
+    "Valid only for envelope (a) as drafted (n=30, one k*+1 check). Envelope (b) (research/e002_design/E002-envelope-b.yaml) was not reviewed in detail.",
+    "The bias, band, refbound and near-tie metrics are conditional estimates that do not include solver-bound uncertainty (finding 1). They should not be read as rigorous reference-robust bounds for A4/A5.",
+    "'Inside the 60 CPU-h budget' holds only if O001's budget is not cumulative (finding 2), and only before the note's own +25 % margin.",
+    "Parts of e002_ranking.py (roughly lines 430-820) were reviewed from the packet diff, not re-read in the repository file."
+  ]
+}

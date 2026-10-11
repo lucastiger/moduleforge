@@ -735,3 +735,7 @@
 {"ts": "2026-10-10T05:36:59+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 913, "runs_extended": 0}
 {"ts": "2026-10-11T01:06:20+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 93011}
 {"ts": "2026-10-11T01:06:55+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0076-scientist-20261010T180655-e404", "task": "T0076", "role": "scientist", "session": "5383acf8-410c-4621-830f-0cddd48006de"}
+{"ts": "2026-10-11T02:35:43+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0076-scientist-20261010T180655-e404", "status": "completed", "cost": 6.279168, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-10-11T03:19:14+00:00", "event": "verified", "actor": "orchestrator", "task": "T0076"}
+{"ts": "2026-10-11T03:19:16+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0096-critic-20261010T201916-7d97", "task": "T0096", "role": "critic", "session": "1e0e7e26-ec83-45b1-90d6-fcbe906b7f89"}
+{"ts": "2026-10-11T03:19:16+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0097-critic-20261010T201916-a407", "task": "T0097", "role": "critic", "session": "98339234-90b8-4533-add6-23c18605c0ef"}

@@ -1,0 +1,33 @@
+id: T0097
+objective: O001
+title: Review T0076 (numerics)
+type: review
+agent: critic
+status: running
+depends_on: []
+description: c93b225ce3917ef610c56e84df38683ec460cf9d
+context_files: []
+deliverables: []
+touches: []
+definition_of_done: []
+experiment: null
+risk: low
+model: null
+budget_usd: 3.0
+max_turns: 60
+wall_minutes: null
+attempts: 1
+max_attempts: 3
+branch: null
+pr: null
+runs:
+- T0097-critic-20261010T201916-a407
+created_by: orchestrator
+created_at: '2026-10-11T03:19:14+00:00'
+protected_approved: false
+approval: null
+target: T0076
+lens: numerics
+trigger: null
+rationale: ''
+history: []

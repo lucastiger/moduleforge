@@ -4,7 +4,7 @@ title: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timi
   the measured L2 layout cost
 type: design_experiment
 agent: scientist
-status: running
+status: review
 depends_on:
 - T0075
 description: "Restores T0069 plan node n5 (dropped by the open-task-limit bug; restoration requested by\
@@ -421,3 +421,167 @@ history:
     but not E-core placement, and the recorded CPU model (''Apple M5'') does not say which core type ran
     the loop. A slower core would only inflate the timing, so this is conservative for A6.'
   at: '2026-10-08T11:28:57+00:00'
+- attempt: 2
+  outcome: agent_finished
+  summary: 'All nine repair items are addressed and committed as c93b225c. One real smoke run failed on
+    a check condition I had added myself; after aligning that condition with the unit test, the rerun
+    passed.
+
+
+    **Commands run and exit codes:**
+
+    - `uv run mfos exp check E002`: 0. `uv run mfos exp check E003`: 0.
+
+    - `uv run ruff check` on both runners: 0.
+
+    - `--selftest`: 0, PASS in 13 s. Rerun after the last runner edit: PASS.
+
+    - E002 `--smoke`, first run: exit 0, but the DoD assertion failed (KeyError: no primary metric).
+
+    - E002 `--smoke`, rerun: exit 0, and the DoD assertion exits 0. 1513 s wall, 7.75 GB peak RSS, all
+    8 sanity checks pass.
+
+    - E003 `--smoke` and its DoD assertion: 0 and 0 (p50 27.8 ms while the E002 smoke ran alongside).
+
+    - `uv run mfos gate --fast`: 0.
+
+
+    **Repairs:**
+
+    1. **Crash after comput'
+  report:
+    summary: 'All nine repair items are addressed and committed as c93b225c. One real smoke run failed
+      on a check condition I had added myself; after aligning that condition with the unit test, the rerun
+      passed.
+
+
+      **Commands run and exit codes:**
+
+      - `uv run mfos exp check E002`: 0. `uv run mfos exp check E003`: 0.
+
+      - `uv run ruff check` on both runners: 0.
+
+      - `--selftest`: 0, PASS in 13 s. Rerun after the last runner edit: PASS.
+
+      - E002 `--smoke`, first run: exit 0, but the DoD assertion failed (KeyError: no primary metric).
+
+      - E002 `--smoke`, rerun: exit 0, and the DoD assertion exits 0. 1513 s wall, 7.75 GB peak RSS, all
+      8 sanity checks pass.
+
+      - E003 `--smoke` and its DoD assertion: 0 and 0 (p50 27.8 ms while the E002 smoke ran alongside).
+
+      - `uv run mfos gate --fast`: 0.
+
+
+      **Repairs:**
+
+      1. **Crash after compute.** Every subset index is now an integer array. F4 L2 metrics need at least
+      3 layouts and the pair-concordance metric at least 2. A metric is declared only in the envelope
+      that can emit it. Before any solve, the runner stops a spec whose declared metrics don''t match
+      what its config emits.
+
+      2. **Fail early.** Before any solve, the runner checks the spec, runs DRC and lattice checks, and
+      does a dry pass of the whole analysis on placeholder values. The dry pass covers a valid run, an
+      aborted run and a run with one failed solve. Phase 1 then solves only the checked layouts at all
+      three refinement levels plus both C1 references, and a gate must pass before phase 2 starts. A failed
+      gate stops further solves, reports all 8 checks and exits 0, so the status stays "complete" and
+      the evaluator refuses the evidence. A non-zero exit would have become status "error" and hidden
+      the reason.
+
+      3. **New sanity check `l2_layout_reference_valid`.** It solves E001''s C1 through the l2_layout
+      internals, set up exactly as the unit test, and compares against `l2.solve` (within 0.5 %) and E001''s
+      closed form (within 2 %). The note states what it does not cover: lattice mapping, contacts, die
+      shorts.
+
+      4. **Bias band.** Each layout''s interval now takes both contraction ends, ordered by sign, so layouts
+      with d1 > 0 are handled. The band is described as measured on the refinement subset only and conditional
+      on its transfer assumption, not "rigorous". A new metric, `l2_bias_band_loo_coverage`, tests that
+      transfer during the run.
+
+      5. **Checks that could not fail.** The hard-coded `on_lattice` is gone. `l2_solver_ok` now compares
+      represented copper area to exact area and checks one short per die on a single net. `all_drc_valid`
+      now checks die footprints at every solved level.
+
+      6. **E003.** The bad token is dropped, not prefixed: with `--intra_op_parallelism_threads=1`, XLA
+      aborts on JAX import ("Unknown flag"). The sanity check now fails if any XLA_FLAGS token lacks `--`.
+      The run records that macOS cannot pin cores or choose P/E cores.
+
+      7. **Budget.** The draft now carries envelope (a), 52 CPU-h, inside the frozen 60. Envelope (b),
+      158 CPU-h, is a separate complete spec; the YAML headers and the note say plainly it exceeds the
+      budget and needs your decision.
+
+      8. **Thin margin.** `research/l2_layout_vm2/` was not on main when I finished, so the risk is stated,
+      not resolved. A gate failure now costs about 11 CPU-h in (a) and 32 in (b), not the whole run.
+
+      9. **`--selftest`.** It runs six scenarios with synthetic values and no solves: both envelopes,
+      both gate-fail cases, a failed solve, and the mismatched-spec refusal.
+
+
+      **Change made after a real run.** The first smoke stopped at the phase-1 gate. L agreed within tolerance
+      (0.38 % vs l2.solve, 0.46 % vs the closed form). The failure came from a sub-condition I had added,
+      layout solver_tol ≤ 1e-3, which the unit test does not check; at the unit test''s settings that
+      bound is 1.5e-3. The condition now matches the unit test: l2 solver_tol < 1e-5, plus the layout
+      bound must sit below the 0.5 % comparison tolerance. The 0.5 % tolerance itself is unchanged. C1
+      is a fixed analytic case, not sealed data; the note discloses this. The failed run did confirm the
+      abort path on real solves.'
+    failure_class: none
+    confidence: 0.8
+    files_written:
+    - experiments/drafts/E002.yaml
+    - experiments/drafts/E003.yaml
+    - experiments/runners/e002_ranking.py
+    - experiments/runners/e003_timing.py
+    - research/notes/o001-e002-e003-design.md
+    - research/e002_design/E002-envelope-b.yaml
+    experiment_drafts:
+    - experiments/drafts/E002.yaml
+    - experiments/drafts/E003.yaml
+    evidence:
+    - 'Fact: `uv run python experiments/runners/e002_ranking.py --selftest` exits 0 and prints PASS for
+      6 scenarios: envelope (a) with freq_per_stratum 0, 1 checked layout and d1>0 layouts; envelope (b);
+      a gate failure in each envelope, with exactly one solve call (phase 1 only); a failed solve; and
+      a mismatched spec refused before any solve.'
+    - 'Fact: in selftest scenario a, the beta of the checked layout matches the exact synthetic value
+      to 1e-9, the recovered contraction is 0.61, and every measured layout''s bias interval lies inside
+      the band.'
+    - 'Fact: second E002 smoke exits 0 in 1513 s with 7.75 GB peak RSS. Status complete, all 8 sanity
+      checks pass, and the DoD assertion exits 0.'
+    - 'Fact: first E002 smoke, the C1 check through the l2_layout path: layout path 14.458 nH vs l2.solve
+      14.403 nH (0.38 %), vs the closed form 14.392 nH (0.46 %). The layout path''s stated solver_tol
+      was 1.5e-3, which failed a sub-condition (<= 1e-3) not present in the unit test; the gate aborted
+      with no phase-2 solve and all 8 checks reported.'
+    - 'Fact: with XLA_FLAGS=''--xla_cpu_multi_thread_eigen=false --intra_op_parallelism_threads=1'', importing
+      jax 0.11.2 aborts: ''Unknown flag in XLA_FLAGS: --intra_op_parallelism_threads=1''. With only the
+      first flag, JAX imports and computes normally.'
+    - 'Fact: on the smoke layouts, l2_layout reports area_rel_err_max 3.9e-16 and die_short_nets [[DC+],[DC+],[PHASE],[PHASE]],
+      so the new area and die-short checks have real inputs.'
+    - 'Fact: research/l2_layout_vm2/ is absent on main (checked with git ls-tree when finishing).'
+    - 'Fact: mfos experiments.py line 121 turns a non-zero runner exit into status ''error''; controlled
+      aborts therefore exit 0.'
+    recommended_actions:
+    - 'Founder, at registration: choose the envelope. (a) = the draft, 52 CPU-h, inside O001''s frozen
+      60 CPU-h budget. (b) = research/e002_design/E002-envelope-b.yaml, 158 CPU-h; it exceeds the budget
+      and needs an explicit budget change; copy it to experiments/drafts/E002.yaml to register it.'
+    - 'Founder: when research/l2_layout_vm2/ (6-die steps from k* to k*+1) lands, check the u_shaped:6
+      and interleaved:6 margins against the 1 % gate before registering. If either step is near 1 %, choose
+      other check strata (dev data, not sealed).'
+    - 'Founder: state before the run how an A4 outcome is read if mape_Lloop and the conditional band
+      (mape_Lloop_refbound_lo/hi) disagree.'
+    - Add E002 to policy compute.burst_experiments at registration; run E003 on Linux if a pinned-core
+      claim is wanted for A6.
+    - After any edit to the spec config, re-run `uv run python experiments/runners/e002_ranking.py --selftest`
+      before registering.
+    discriminating_tests:
+    - '--selftest scenario b_freq0_undeclared: a config change without the matching metric list must raise
+      before any solve (passes).'
+    - '--selftest gate-fail scenarios: no phase-2 solve may start after a failed gate (passes: exactly
+      1 solve call).'
+    - 'In-run: l2_bias_band_loo_coverage well below ~0.85 would show the bias band does not carry over
+      to unmeasured layouts.'
+    alternative_explanations:
+    - explanation: The in-run C1 check through the l2_layout path may still pass when the layout front
+        end (lattice mapping, contacts, die shorts) has a defect, because C1 does not use those parts.
+      how_to_discriminate: The front end is covered in-run by all_drc_valid and by the area and die-short
+        checks in l2_solver_ok, and offline by unit tests (net area exact, die shorts on their own net,
+        DC resistance closed form, independent partial-inductance sum). A front-end closed-form layout
+        case could be added in a later experiment if wanted.

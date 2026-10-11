@@ -4,7 +4,7 @@ title: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timi
   the measured L2 layout cost
 type: design_experiment
 agent: scientist
-status: todo
+status: running
 depends_on:
 - T0075
 description: "Restores T0069 plan node n5 (dropped by the open-task-limit bug; restoration requested by\
@@ -62,7 +62,34 @@ description: "Restores T0069 plan node n5 (dropped by the open-task-limit bug; r
   \ power for A2/A3/A5 (rho lower CI >= 0.85, point >= 0.90, top-decile recall), projected CPU-h and VM-hours,\
   \ and the registered cpu_hours_est:\n  (a) <= 60 CPU-h, and\n  (b) <= 180 CPU-h (about 15-20 VM-hours,\
   \ about $30-40).\n  The founder chooses at registration. E002 runs on burst compute (add it to policy\
-  \ compute.burst_experiments at registration, as for E001)."
+  \ compute.burst_experiments at registration, as for E001).\n\nREPAIR (founder, 2026-10-10). Both reviews\
+  \ rejected attempt 1. Read project/reviews/T0076/T0094.json and T0095.json in full: the failure text\
+  \ in your packet was truncated and is missing the blocker. Keep what both reviewers verified (stats,\
+  \ bias algebra, ape_range, E003 timing). Required:\n(1) BLOCKER. Envelope (a), and any config with freq_per_stratum\
+  \ 0, crashes with IndexError at e002_ranking.py ~539 (l2_20[si] with an empty si). The crash comes after\
+  \ every L2 solve and after the primary metrics are computed, so it would burn the compute and one evaluation.\
+  \ Fix every empty-subset path. When fewer than 2 layouts are checked, emit check_pairs_concordant_frac\
+  \ or drop it from the declared checks.\n(2) Fail early. Validate the config and every metric code path\
+  \ before any solve, e.g. with a dry pass over the metric pipeline on placeholder values, so no crash\
+  \ can occur after compute. Run the k_star+1 check-strata solves first, so an l2_converged failure is\
+  \ known early.\n(3) In-run reference check for the solver E002 uses. l2_reference_valid exercises solvers.l2,\
+  \ but every E002 value comes from solvers.l2_layout. Add a sanity check through l2_layout: e.g. E001's\
+  \ C1 geometry through the layout path against l2.solve or the C1 closed form, within the tolerance of\
+  \ test_c1_layout_internals_vs_l2_solve_same_refinement.\n(4) Bias band. Handle d1 > 0 by choosing r_min\
+  \ / r_max by sign. State that the band is measured on the refinement subset only; do not call refbound\
+  \ rigorous for unmeasured layouts, but say what it assumes.\n(5) Checks that cannot fail on their own.\
+  \ meta on_lattice is hard-coded True: make it a real check or rename it. all_drc_valid must also check\
+  \ die footprints.\n(6) E003. Every XLA_FLAGS token must carry its '--' prefix. Record that macOS cannot\
+  \ pin cores or choose the P- or E-core type.\n(7) Budget. O001's frozen objective budget is cpu_hours\
+  \ 60. Keep both envelopes. State plainly in the YAML header and the note that envelope (b) exceeds that\
+  \ budget and needs a founder budget decision at registration. Envelope (a) must run end to end.\n(8)\
+  \ Thin margin. On dev data, |d2| + tol(k_star) + tol(k_star+1) was 0.63-0.88 % against the 1 % gate,\
+  \ and interleaved:6 and u_shaped:6 were never solved at k_star+1. The founder is measuring them now\
+  \ on the burst VM (dev seeds 7 and 11 at 6 dies) into research/l2_layout_vm2/. Use the results if present\
+  \ when you finish; otherwise state the risk.\n(9) Add --selftest to e002_ranking.py. It runs full-mode\
+  \ main end to end with a synthetic L2 (fast, no solves) at BOTH envelope configs, including freq_per_stratum\
+  \ 0, fewer than 2 checked layouts and a layout with d1 > 0. It asserts status complete and that every\
+  \ declared sanity check was emitted. The DoD now runs it.\nNever weaken a test or a tolerance."
 context_files:
 - project/tasks/T0024.yaml
 - project/objectives/O001/objective.yaml
@@ -85,6 +112,8 @@ context_files:
 - project/reviews/T0075/T0091.json
 - project/reviews/T0075/T0092.json
 - research/l2_layout_vm/cost.json
+- project/reviews/T0076/T0094.json
+- project/reviews/T0076/T0095.json
 deliverables:
 - experiments/drafts/E002.yaml
 - experiments/drafts/E003.yaml
@@ -136,18 +165,22 @@ definition_of_done:
     ms', v)"
   exists: null
   timeout_s: 900
+- cmd: uv run python experiments/runners/e002_ranking.py --selftest
+  exists: null
+  timeout_s: 1800
 experiment: null
 risk: high
 model: null
 budget_usd: 7.0
 max_turns: 90
 wall_minutes: null
-attempts: 1
+attempts: 2
 max_attempts: 3
 branch: task/T0076-design-e002-l1-vs-l2-ranking-sealed-seed
 pr: null
 runs:
 - T0076-scientist-20261008T021638-e9bb
+- T0076-scientist-20261010T180655-e404
 created_by: planner:T0073
 created_at: '2026-10-05T00:31:24+00:00'
 protected_approved: false

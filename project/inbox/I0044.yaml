@@ -1,0 +1,16 @@
+id: I0044
+kind: experiment_registration
+subject: register E002 (pre-registration)
+summary: Designed by T0076. Reviewed by critic. Registering freezes the design.
+refs:
+- E002
+- T0076
+- O001
+options:
+- approve
+- reject with note
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-11T04:32:23+00:00'
+resolved_at: null

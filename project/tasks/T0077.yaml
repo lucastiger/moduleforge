@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E002: L1 vs L2 loop-inductance ranking on sealed generated layouts'
 type: experiment
 agent: none
-status: todo
+status: running
 depends_on:
 - T0076
 - T0072
@@ -20,7 +20,8 @@ risk: low
 model: null
 budget_usd: 0.5
 max_turns: 1
-attempts: 0
+wall_minutes: null
+attempts: 1
 max_attempts: 3
 branch: null
 pr: null

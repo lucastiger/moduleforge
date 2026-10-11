@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-11T04:02:34+00:00 from repository state — do not edit_
+_generated 2026-10-11T04:03:08+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0043** [protected_change] T0076: merge needs founder approval
@@ -16,7 +16,6 @@ cancelled: 20, done: 67, failed: 3, needs_founder: 1, todo: 6
 - T0076 `needs_founder` scientist/design_experiment: Design E002 (L1 vs L2 ranking, sealed seed) and E003 (L1 single-core timing) + runners, sized from the measured L2 layout cost (attempt 2)
 
 ## Recent events
-- 2026-10-11T01:06:55+00:00 run_started {"run": "T0076-scientist-20261010T180655-e404", "task": "T0076", "role": "scientist", "session": "5383acf8-410c-4621-830f-0cddd48006de"}
 - 2026-10-11T02:35:43+00:00 run_finished {"run": "T0076-scientist-20261010T180655-e404", "status": "completed", "cost": 6.279168, "subtype": "success", "report": "structured_output"}
 - 2026-10-11T03:19:14+00:00 verified {"task": "T0076"}
 - 2026-10-11T03:19:16+00:00 run_started {"run": "T0096-critic-20261010T201916-7d97", "task": "T0096", "role": "critic", "session": "1e0e7e26-ec83-45b1-90d6-fcbe906b7f89"}
@@ -31,3 +30,4 @@ cancelled: 20, done: 67, failed: 3, needs_founder: 1, todo: 6
 - 2026-10-11T03:55:47+00:00 run_finished {"run": "T0097-critic-20261010T205021-ddf9", "status": "completed", "cost": 2.103506, "subtype": "success", "report": "structured_output"}
 - 2026-10-11T03:56:54+00:00 run_finished {"run": "T0096-critic-20261010T205021-8ea1", "status": "completed", "cost": 2.253956, "subtype": "success", "report": "structured_output"}
 - 2026-10-11T04:02:33+00:00 inbox_opened {"id": "I0043", "kind": "protected_change", "subject": "T0076: merge needs founder approval"}
+- 2026-10-11T04:03:06+00:00 sleep_detected {"gap_s": 373, "runs_extended": 0}

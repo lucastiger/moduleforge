@@ -44,3 +44,4 @@ log:
   T0075 (grid-aligned layout L2); T0076 waits on the founder-run VM convergence gate. (no replan)'
 - diagnosis:T0090 of T0075 (implementation)
 - diagnosis:T0098 of T0077 (implementation)
+- diagnosis:T0099 of T0078 (implementation)

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-11T04:35:14+00:00 from repository state — do not edit_
+_generated 2026-10-11T04:35:48+00:00 from repository state — do not edit_
 
 ## Founder inbox (2 open)
 - **I0044** [experiment_registration] register E002 (pre-registration)
@@ -12,13 +12,10 @@ _generated 2026-10-11T04:35:14+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $263.73/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 20, done: 68, failed: 4, running: 1, todo: 5
+cancelled: 20, done: 68, failed: 5, todo: 6
 
-- T0078 `running` none/experiment: Run E003: L1 median single-core evaluation time (attempt 3)
 
 ## Recent events
-- 2026-10-11T04:32:23+00:00 merged {"task": "T0076"}
-- 2026-10-11T04:32:23+00:00 inbox_opened {"id": "I0044", "kind": "experiment_registration", "subject": "register E002 (pre-registration)"}
 - 2026-10-11T04:32:23+00:00 inbox_opened {"id": "I0045", "kind": "experiment_registration", "subject": "register E003 (pre-registration)"}
 - 2026-10-11T04:32:24+00:00 experiment_task_started {"task": "T0077", "experiment": "E002"}
 - 2026-10-11T04:32:57+00:00 task_failed_attempt {"task": "T0077", "signal": "experiment_error", "action": "repair"}
@@ -32,3 +29,5 @@ cancelled: 20, done: 68, failed: 4, running: 1, todo: 5
 - 2026-10-11T04:34:40+00:00 experiment_task_started {"task": "T0078", "experiment": "E003"}
 - 2026-10-11T04:35:13+00:00 task_failed_attempt {"task": "T0078", "signal": "experiment_error", "action": "repair"}
 - 2026-10-11T04:35:14+00:00 experiment_task_started {"task": "T0078", "experiment": "E003"}
+- 2026-10-11T04:35:47+00:00 task_failed_attempt {"task": "T0078", "signal": "experiment_error", "action": "diagnose"}
+- 2026-10-11T04:35:47+00:00 investigation_spawned {"task": "T0099", "about": "T0078", "cls": "implementation"}

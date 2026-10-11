@@ -1,0 +1,54 @@
+id: T0099
+objective: O001
+title: Diagnose failure of T0078
+type: investigate
+agent: scientist
+status: todo
+depends_on: []
+description: "Task T0078 ('Run E003: L1 median single-core evaluation time') failed with preliminary class\
+  \ `implementation`: experiment produced no result.\nFailure output (tail):\n```\nTraceback (most recent\
+  \ call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\"\
+  , line 88, in _run_code\n  File \"/Users/lukeskywalker/mf/main/tools/mfos/mfos/cli.py\", line 459, in\
+  \ <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/Users/lukeskywalker/mf/main/tools/mfos/mfos/cli.py\"\
+  , line 455, in main\n    return int(args.fn(args) or 0)\n               ^^^^^^^^^^^^^\n  File \"/Users/lukeskywalker/mf/main/tools/mfos/mfos/cli.py\"\
+  , line 257, in cmd_exp\n    res = experiments.run(s, a.id, force=a.force, here=a.here)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\
+  \  File \"/Users/lukeskywalker/mf/main/tools/mfos/mfos/experiments.py\", line 72, in run\n    spec =\
+  \ store.spec(eid)\n           ^^^^^^^^^^^^^^^\n  File \"/Users/lukeskywalker/mf/main/tools/mfos/mfos/store.py\"\
+  , line 186, in spec\n    return self.read_yaml(self.spec_path(eid), m.ExperimentSpec)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\
+  \  File \"/Users/lukeskywalker/mf/main/tools/mfos/mfos/store.py\", line 96, in read_yaml\n    return\
+  \ model.model_validate(yaml.safe_load(path.read_text()) or {})\n                                   \
+  \            ^^^^^^^^^^^^^^^^\n  File \"/Users/lukeskywalker/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py\"\
+  , line 1027, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors) as f:\n  \
+  \       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lukeskywalker/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py\"\
+  , line 1013, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n       \
+  \    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such\
+  \ file or directory: '/Users/lukeskywalker/mf/main/experiments/specs/E003.yaml'\n\n```\nDetermine the\
+  \ true failure class and root cause. Follow skill mf-diagnosis: list at least two alternative explanations,\
+  \ design a discriminating test, run it if cheap, and write your notes to research/diagnoses/T0099.md."
+context_files:
+- project/tasks/T0078.yaml
+deliverables:
+- research/diagnoses/T0099.md
+touches:
+- research/diagnoses/T0099.md
+definition_of_done: []
+experiment: null
+risk: medium
+model: null
+budget_usd: 5.0
+max_turns: 80
+wall_minutes: null
+attempts: 0
+max_attempts: 3
+branch: null
+pr: null
+runs: []
+created_by: orchestrator
+created_at: '2026-10-11T04:35:47+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

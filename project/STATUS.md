@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-11T04:35:48+00:00 from repository state — do not edit_
+_generated 2026-10-11T20:47:48+00:00 from repository state — do not edit_
 
 ## Founder inbox (2 open)
 - **I0044** [experiment_registration] register E002 (pre-registration)
@@ -16,7 +16,6 @@ cancelled: 20, done: 68, failed: 5, todo: 6
 
 
 ## Recent events
-- 2026-10-11T04:32:23+00:00 inbox_opened {"id": "I0045", "kind": "experiment_registration", "subject": "register E003 (pre-registration)"}
 - 2026-10-11T04:32:24+00:00 experiment_task_started {"task": "T0077", "experiment": "E002"}
 - 2026-10-11T04:32:57+00:00 task_failed_attempt {"task": "T0077", "signal": "experiment_error", "action": "repair"}
 - 2026-10-11T04:32:58+00:00 experiment_task_started {"task": "T0077", "experiment": "E002"}
@@ -31,3 +30,4 @@ cancelled: 20, done: 68, failed: 5, todo: 6
 - 2026-10-11T04:35:14+00:00 experiment_task_started {"task": "T0078", "experiment": "E003"}
 - 2026-10-11T04:35:47+00:00 task_failed_attempt {"task": "T0078", "signal": "experiment_error", "action": "diagnose"}
 - 2026-10-11T04:35:47+00:00 investigation_spawned {"task": "T0099", "about": "T0078", "cls": "implementation"}
+- 2026-10-11T20:47:47+00:00 sleep_detected {"gap_s": 480, "runs_extended": 0}

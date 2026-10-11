@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-11T04:32:24+00:00 from repository state — do not edit_
+_generated 2026-10-11T04:32:58+00:00 from repository state — do not edit_
 
 ## Founder inbox (2 open)
 - **I0044** [experiment_registration] register E002 (pre-registration)
@@ -14,11 +14,9 @@ _generated 2026-10-11T04:32:24+00:00 from repository state — do not edit_
 ## Tasks
 cancelled: 20, done: 68, failed: 3, running: 1, todo: 5
 
-- T0077 `running` none/experiment: Run E002: L1 vs L2 loop-inductance ranking on sealed generated layouts (attempt 1)
+- T0077 `running` none/experiment: Run E002: L1 vs L2 loop-inductance ranking on sealed generated layouts (attempt 2)
 
 ## Recent events
-- 2026-10-11T03:19:50+00:00 run_finished {"run": "T0096-critic-20261010T201916-7d97", "status": "error", "cost": 0.313172, "subtype": "success", "report": "missing"}
-- 2026-10-11T03:19:50+00:00 capacity_backoff {"task": "T0096", "minutes": 30}
 - 2026-10-11T03:19:50+00:00 run_finished {"run": "T0097-critic-20261010T201916-a407", "status": "error", "cost": 0.408222, "subtype": "success", "report": "missing"}
 - 2026-10-11T03:19:50+00:00 capacity_backoff {"task": "T0097", "minutes": 30}
 - 2026-10-11T03:50:21+00:00 run_started {"run": "T0096-critic-20261010T205021-8ea1", "task": "T0096", "role": "critic", "session": "25419070-3d4a-4184-b8e8-60804b76dd2f"}
@@ -32,3 +30,5 @@ cancelled: 20, done: 68, failed: 3, running: 1, todo: 5
 - 2026-10-11T04:32:23+00:00 inbox_opened {"id": "I0044", "kind": "experiment_registration", "subject": "register E002 (pre-registration)"}
 - 2026-10-11T04:32:23+00:00 inbox_opened {"id": "I0045", "kind": "experiment_registration", "subject": "register E003 (pre-registration)"}
 - 2026-10-11T04:32:24+00:00 experiment_task_started {"task": "T0077", "experiment": "E002"}
+- 2026-10-11T04:32:57+00:00 task_failed_attempt {"task": "T0077", "signal": "experiment_error", "action": "repair"}
+- 2026-10-11T04:32:58+00:00 experiment_task_started {"task": "T0077", "experiment": "E002"}

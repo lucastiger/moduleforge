@@ -733,3 +733,4 @@
 {"ts": "2026-10-10T04:21:02+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 3645, "runs_extended": 0}
 {"ts": "2026-10-10T05:21:47+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 3645, "runs_extended": 0}
 {"ts": "2026-10-10T05:36:59+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 913, "runs_extended": 0}
+{"ts": "2026-10-11T01:06:20+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 93011}

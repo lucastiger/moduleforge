@@ -1,0 +1,72 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "minor",
+      "title": "Selftest cannot tell the in-run contraction from the config fallback",
+      "detail": "The selftest's synthetic ladder (class Synthetic) uses q = cfg['contraction_dev'] = 0.61 for every layout. The selftest then asserts r_mean == contraction_dev and that each layout's bias interval lies inside the band. That test would also pass if bias_model silently used the config value 0.61 instead of the r measured in the run. With one shared q, the two-level [r_min, r_max] intervals collapse to points, so the sign-ordering repair for d1 > 0 is only weakly exercised. I checked independently and the code itself is correct (see checks). The test just does not prove it.",
+      "evidence": "e002_ranking.py: Synthetic.__init__ sets q = ctx.cfg['contraction_dev']; the selftest checks abs(bias['r_mean'] - q) with the same q. My own run with q = 0.45 gave r_mean 0.45 and exact beta for a 3-level layout, a c>0 2-level layout and a c<0 (d1>0) 2-level layout: 0.0176817 / 0.0133202 / -0.0090817, matching closed form to about 1e-15.",
+      "suggested_check": "Add a selftest scenario with q \u2260 contraction_dev and a different q per layout."
+    },
+    {
+      "severity": "minor",
+      "title": "'Inside O001's frozen 60 CPU-h budget' ignores compute already spent under O001",
+      "detail": "Envelope (a) is presented as inside the 60 CPU-h objective budget (estimate 52; +25 % gives about 64, which the note does disclose). The note does not count compute O001 has already used: the L2 cost benchmark in research/l2_layout_vm/cost.json used about 31.2 CPU-h for the main ladder solves plus 4.5 CPU-h for sensitivity solves, and E001 runs come on top of that. If the objective budget is cumulative, (a) does not fit. mfos only tracks USD spend, so cpu_hours accounting is undefined. The sizing from measured unit costs is itself correct.",
+      "evidence": "Sum of cpu_s over cost.json solves = 31.17 CPU-h; sensitivity_solves = 4.49 CPU-h. objective.yaml budget: {usd: 120, cpu_hours: 60}. tools/mfos tracks only spent_usd.",
+      "suggested_check": "Have the founder state at registration whether the 60 CPU-h is cumulative per objective or per experiment."
+    },
+    {
+      "severity": "minor",
+      "title": "The L2 bias covers lateral refinement only, with no safety factor",
+      "detail": "The 0.5/0.25/0.125 mm ladder keeps the thickness layers fixed ([10,6,6] at every level in cost.json). So beta and the band capture lateral discretisation only. The vertical-layer sensitivity (-0.18 % with layers x2 graded to 20 MHz) and the wire-filament sensitivity (+0.02 %) are not part of the bias. The extrapolation is also plain geometric with an effective safety factor of 1, while the project's own E001 runner applies Roache's FS 1.25 even when three grids verify the asymptotic range. The 0.5-pt bias_margin is large enough to absorb both effects at dev values, so this is a matter of labelling, not a numerical defect.",
+      "evidence": "cost.json skin_resolution: layers [10,6,6] at refinements 0, 1 and 2. Note \u00a71 sensitivity list. e001_reference.py FS_VERIFIED = 1.25.",
+      "suggested_check": "State in the spec descriptions that l2_bias_* means lateral discretisation bias only."
+    },
+    {
+      "severity": "note",
+      "title": "In envelope (a) the contraction is one number, so two-level intervals are points",
+      "detail": "Only u_shaped:6 has three levels in (a), so r_lo = r_hi = r_mean, and the bias of the other 14 refinement-subset layouts carries no contraction uncertainty except the margin. Sensitivity: d(beta)/dr = -d1/(1-r)^2 \u2248 0.076 pt per 0.01 in r at d1 = -1.2 %, r = 0.61. At the dev spread (0.60-0.62) this sits well inside the 0.5-pt margin. The note discloses the point.",
+      "evidence": "bias_model: r_lo, r_hi = min/max(r_vals) with len(r_vals) = 1 in (a).",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "Edge case: gate passes via |d2| < 1e-4 and the bias model falls back to the dev contraction",
+      "detail": "Suppose the checked layout passes l2_converged only through the '|d2| < 1e-4' branch, with r outside (0, 1). Then beta is NaN and r_vals is empty. bias_model then quietly uses contraction_dev = 0.61 (a dev-data constant) for every two-level interval, and the required metrics l2_bias_kstar_mean/max go unemitted. That is unlikely given dev steps of 0.5-0.7 %, but the run would not flag it.",
+      "evidence": "check_converged: beta = NaN unless 0 < r < 1. bias_model: r_mean = cfg['contraction_dev'] when r_vals is empty.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "Thin phase-1 gate margin on a check stratum that has never been solved",
+      "detail": "On dev data, |d2| + tol(k*) + tol(k*+1) is 0.62 / 0.84 / 0.87 % against the 1 % gate. The k*+1 solver tolerance reaches 1.64e-3 at 6 dies against a 2e-3 limit in l2_solver_ok. u_shaped:6 has never been solved at k*+1. A gate failure costs about 11 CPU-h, and the gate has not been weakened. The note discloses this risk.",
+      "evidence": "My recomputation from cost.json: seed 7 0.623 %, seed 11 0.835 %, seed 3 0.871 %; solver_tol_rel_L at k*+1 1.14-1.64e-3.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "The note's dev table mixes normalisations",
+      "detail": "The note's table uses cost.json 'steps', normalised by the coarser level, while the runner normalises d1 and d2 by L_k*. With the runner's convention, u_shaped:2 has beta = 1.82 %, not the quoted 1.9 %. The difference is negligible, but the 'fact' values do not come from the runner's own definition.",
+      "evidence": "Recomputed: beta = 1.279 / 1.816 / 1.796 % (interleaved / u_shaped / side_by_side) with d normalised by L_k*.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran `mfos exp check E002` and `mfos exp check E003`: no error output. Ran `ruff check` on both runners: all checks passed.",
+    "Ran `e002_ranking.py --selftest`: all 6 scenarios PASS (a, b, a_gate_fail, b_gate_fail, a_solve_fails, b_freq0_undeclared).",
+    "Ran `e003_timing.py --smoke`: status complete, p50 16.5 ms (CI 14.2-20.0), CPU/wall 0.999, single_thread_enforced and results_finite pass. This satisfies the DoD assertion.",
+    "Recomputed d1, d2, r, beta and the gate quantity from research/l2_layout_vm/cost.json: beta 1.28 / 1.82 / 1.80 %, gate 0.62 / 0.84 / 0.87 %. These match the note to rounding.",
+    "Recomputed envelope (a) cost from measured unit costs: k* c(d) = 1.0035 + 0.112(d-2), balanced mean 1.228 \u00d7 30 = 36.8; k*-1 15 \u00d7 0.32 = 4.8; k*+1 9.3 (s3 d6 measured 9.31). Total \u2248 51, against 52 registered. The phase-1 wall time of about 3.7 h matches the 6-die k*+1 wall of 13315 s, and the 720 min timeout is about 1.4\u00d7 the projected wall.",
+    "Derived beta = -d2/(1-r) and the two-level beta = -d1 r/(1-r) from L_k = L\u221e(1 + c q^k), then checked them numerically for q = 0.4, 0.61, 0.75 with c of both signs: exact to about 1e-15.",
+    "Brute-forced ape_range (min/max over the band of |L1/(L2(1-\u03b2)) - 1|) on 2000 random cases with a 4001-point \u03b2 grid: max deviation 1.6e-5, which is the grid resolution.",
+    "Called check_converged and bias_model on hand-built ladders with in-run q = 0.45 \u2260 contraction_dev, including a d1 > 0 layout. Exact beta recovered, r_mean = 0.45 (measured in-run, not the fallback), and the gate correctly fails at |d2| + tol = 1.07 %.",
+    "Compared c1_layout_system with tests/unit/solvers/test_l2_layout.py::c1_system (same geometry, slab, grid, filaments and gap port). Confirmed that L1 and L2 both use the DC+/DC- port of the layout, and that L1 has no per-layout cache (only Gauss-Legendre nodes), so E003's repeated evaluations are not biased low.",
+    "Confirmed that the current l2_layout source_sha256 (76bff20f\u2026) equals the provenance in the existing /tmp/e002-smoke/result.json, and that the e001_reference.py sha256 equals the value registered in E001.yaml. That smoke result passes the full E002 DoD assertion: status complete, finite primary metrics with CIs, all 8 sanity checks present and passing."
+  ],
+  "caveats": [
+    "I could not run the E002 `--smoke` DoD step myself: it takes about 25 min and about 8 GB, and background execution was denied. The /tmp/e002-smoke/result.json I inspected came from the author's run at commit c93b225, which is not in this repository. The l2_layout source hash matches, but I cannot confirm it was produced by this exact runner revision.",
+    "The physics conclusions about the L2 reference rest on three dev layouts at three levels. The bias model's extrapolation is geometric and assumes the asymptotic range from three grids. Nothing in the run verifies that with a fourth level.",
+    "Whether envelope (a) is within budget depends on an undefined accounting rule: per-experiment versus cumulative CPU-h for the objective.",
+    "The review covers the physics lens. Statistical power and the CI method were only spot-checked (the topk_recall direction, the paired bootstrap, and the cluster bootstrap in E003)."
+  ]
+}

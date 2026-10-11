@@ -75,3 +75,16 @@ def test_level1_resumes_a_founder_started_task_after_a_capacity_pause(sandbox, m
     monkeypatch.setattr(o.runner, "start", start)
     o._dispatch()
     assert started == ["T9010"]
+
+
+def test_a_rejection_keeps_its_most_severe_findings():
+    """T0076, 2026-10-08: two long rejections were stored as their last 4000 characters, so the repair packet lost
+    T0094's blocker. Findings are ordered most severe first and the tail is cut, with a pointer to the reviews."""
+    from mfos import models as m
+    from mfos.loop import rejection_text
+    minor = m.Finding(severity="minor", title="m", detail="x" * 3000)
+    blocker = m.Finding(severity="blocker", title="crash after all compute", detail="IndexError")
+    reviews = [m.Review(verdict="reject", findings=[minor]), m.Review(verdict="reject", findings=[minor, blocker])]
+    text = rejection_text("T9", reviews)
+    assert text.startswith("- [blocker] crash after all compute") and len(text) < 4000
+    assert text.endswith("full reviews: project/reviews/T9/]")

@@ -54,6 +54,19 @@ def acquire_loop_lock(store: Store) -> Optional[Any]:
     return fh
 
 
+SEVERITY_ORDER = {"blocker": 0, "major": 1, "minor": 2, "note": 3}
+
+
+def rejection_text(task_id: str, reviews: list, limit: int = 3800) -> str:
+    """The rejecting reviews' findings for the repair packet, most severe first, cut at the end and pointing to the full
+    reviews. Failure output is stored as its last 4000 characters, which dropped T0094's blocker for T0076 (2026-10-08)."""
+    found = sorted((f for r in reviews for f in r.findings), key=lambda f: SEVERITY_ORDER.get(f.severity, 9))
+    text = "\n".join(f"- [{f.severity}] {f.title}: {f.detail}" for f in found)
+    if len(text) > limit:
+        text = text[:limit] + f"\n...[truncated; full reviews: project/reviews/{task_id}/]"
+    return text
+
+
 class Orchestrator:
     def __init__(self, store: Optional[Store] = None):
         self.s = store or Store()
@@ -427,8 +440,7 @@ class Orchestrator:
                 return
             rejects = [r for r in revs if r.verdict in ("reject", "cannot_assess")]
             if rejects:
-                findings = "\n".join(f"- [{f.severity}] {f.title}: {f.detail}" for r in rejects for f in r.findings)
-                self._fail(t, "review_rejected", "adversarial review rejected the work", findings)
+                self._fail(t, "review_rejected", "adversarial review rejected the work", rejection_text(t.id, rejects))
                 return
             t.status = "merge"
             self.s.save_task(t)

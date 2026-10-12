@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-12T02:28:33+00:00 from repository state — do not edit_
+_generated 2026-10-12T02:30:08+00:00 from repository state — do not edit_
 
 ## Founder inbox (3 open)
 - **I0044** [experiment_registration] register E002 (pre-registration)
@@ -17,7 +17,6 @@ cancelled: 22, done: 68, failed: 5, todo: 4
 
 
 ## Recent events
-- 2026-10-11T04:35:13+00:00 task_failed_attempt {"task": "T0078", "signal": "experiment_error", "action": "repair"}
 - 2026-10-11T04:35:14+00:00 experiment_task_started {"task": "T0078", "experiment": "E003"}
 - 2026-10-11T04:35:47+00:00 task_failed_attempt {"task": "T0078", "signal": "experiment_error", "action": "diagnose"}
 - 2026-10-11T04:35:47+00:00 investigation_spawned {"task": "T0099", "about": "T0078", "cls": "implementation"}
@@ -32,3 +31,4 @@ cancelled: 22, done: 68, failed: 5, todo: 4
 - 2026-10-12T00:57:26+00:00 sleep_detected {"gap_s": 597, "runs_extended": 0}
 - 2026-10-12T02:05:47+00:00 inbox_opened {"id": "I0046", "kind": "decision", "subject": "GitHub main has commits the forge box does not"}
 - 2026-10-12T02:06:17+00:00 sleep_detected {"gap_s": 4132, "runs_extended": 0}
+- 2026-10-12T02:30:07+00:00 loop_started {"pid": 5699}

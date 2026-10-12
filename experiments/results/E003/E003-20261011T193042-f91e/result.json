@@ -1,0 +1,96 @@
+{
+  "experiment_id": "E003",
+  "run_id": "E003-20261011T193042-f91e",
+  "status": "complete",
+  "seed": 772345894,
+  "config": {
+    "n_layouts": 150,
+    "repeats": 3,
+    "n_warmup": 5,
+    "freq_hz": 20000000.0,
+    "cpu_wall_max": 1.1,
+    "n_boot": 2000,
+    "boot_seed": 20261008,
+    "order_seed": 3,
+    "warmup_seed": 7
+  },
+  "provenance": {
+    "git_commit": "4c8cf3e13510e7d25a69b8ea98c646ad95a5e524",
+    "git_dirty": false,
+    "git_branch": "HEAD",
+    "spec_hash": "sha256:f740a9c2ce3d4ead16bb3cec410d75250bf6827d5e03f0a38d5e04ee81b95c09",
+    "lock_hash": "4d231621bdeed59452bca941b571b16fdf51a476777308aef7e08ec0274f5e5b",
+    "python": "3.12.14",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "host": "Lucass-MacBook-Air-6.local",
+    "packages": {
+      "numpy": "2.5.3",
+      "scipy": "1.18.1",
+      "jax": "0.11.2",
+      "pydantic": "2.13.5",
+      "shapely": "2.1.2"
+    },
+    "tools": {
+      "cpu_model": "Apple M5",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "cores": "4 x Super, 6 x Efficiency; macOS: no core pinning, core type (P/E) chosen by the scheduler, not controlled",
+      "core_pinning": "not available on darwin (no affinity API; P/E core type not selectable)"
+    },
+    "started": "2026-10-12T02:30:45+00:00",
+    "finished": "2026-10-12T02:30:57+00:00"
+  },
+  "metrics": {
+    "l1_eval_ms_p50": {
+      "value": 22.392729530110955,
+      "ci": [
+        21.391568845137954,
+        23.44131306745112
+      ],
+      "level": 0.95,
+      "n": 450,
+      "unit": "ms"
+    },
+    "l1_eval_ms_p90": {
+      "value": 31.79577495902777,
+      "ci": [
+        30.9429541695863,
+        33.62387511879206
+      ],
+      "level": 0.95,
+      "n": 450,
+      "unit": "ms"
+    },
+    "l1_eval_ms_p50_6dies": {
+      "value": 26.335646165534854,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": "ms"
+    },
+    "cpu_wall_ratio": {
+      "value": 0.9765669673632037,
+      "ci": null,
+      "level": 0.95,
+      "n": 450,
+      "unit": ""
+    }
+  },
+  "sanity": [
+    {
+      "name": "single_thread_enforced",
+      "passed": true,
+      "value": 0.9765669673632037,
+      "threshold": 1.1,
+      "detail": "CPU/wall over the timed loop 0.977 (<= 1.1); Python threads 1; CPU affinity set size None (None: not available on darwin: no core pinning, P/E core type not controlled; cores 4 x Super, 6 x Efficiency; macOS: no core pinning, core type (P/E) chosen by the scheduler, not controlled); thread env set before import; XLA_FLAGS '--xla_cpu_multi_thread_eigen=false' (every token '--'-prefixed: True)"
+    },
+    {
+      "name": "results_finite",
+      "passed": true,
+      "value": 0.0,
+      "threshold": 0.0,
+      "detail": "450 L values and timings finite and > 0"
+    }
+  ],
+  "artifacts": [],
+  "notes": "CPU model: Apple M5; cores: 4 x Super, 6 x Efficiency; macOS: no core pinning, core type (P/E) chosen by the scheduler, not controlled; macOS-26.6.2-arm64-arm-64bit; n_layouts 150 x repeats 3; warm-up 5 calls excluded; L1 default hmax 0.004 m; f 2e+07 Hz. "
+}

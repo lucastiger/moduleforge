@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-12T02:30:42+00:00 from repository state — do not edit_
+_generated 2026-10-12T02:31:16+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0044** [experiment_registration] register E002 (pre-registration)
@@ -11,12 +11,10 @@ _generated 2026-10-12T02:30:42+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $263.73/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 22, done: 68, failed: 3, running: 1, todo: 5
+cancelled: 22, done: 69, failed: 3, todo: 5
 
-- T0078 `running` none/experiment: Run E003: L1 median single-core evaluation time (attempt 4)
 
 ## Recent events
-- 2026-10-11T22:13:04+00:00 sleep_detected {"gap_s": 4650, "runs_extended": 0}
 - 2026-10-11T22:23:35+00:00 sleep_detected {"gap_s": 631, "runs_extended": 0}
 - 2026-10-11T22:54:44+00:00 sleep_detected {"gap_s": 1838, "runs_extended": 0}
 - 2026-10-11T23:35:11+00:00 sleep_detected {"gap_s": 2150, "runs_extended": 0}
@@ -31,3 +29,4 @@ cancelled: 22, done: 68, failed: 3, running: 1, todo: 5
 - 2026-10-12T02:30:20+00:00 inbox_resolved {"id": "I0045", "status": "approved", "note": "Founder (2026-10-12): register E003 (L1 single-core timing; local; sealed seed). Approved explicitly in the found
 - 2026-10-12T02:30:42+00:00 experiment_task_started {"task": "T0078", "experiment": "E003"}
 - 2026-10-12T02:30:42+00:00 experiment_started {"id": "E003", "run": "E003-20261011T193042-f91e", "commit": "4c8cf3e13510e7d25a69b8ea98c646ad95a5e524"}
+- 2026-10-12T02:30:57+00:00 experiment_finished {"id": "E003", "run": "E003-20261011T193042-f91e", "status": "complete", "seconds": 15.2}

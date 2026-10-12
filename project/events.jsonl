@@ -784,3 +784,4 @@
 {"ts": "2026-10-12T02:30:20+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0045", "status": "approved", "note": "Founder (2026-10-12): register E003 (L1 single-core timing; local; sealed seed). Approved explicitly in the founder session."}
 {"ts": "2026-10-12T02:30:42+00:00", "event": "experiment_task_started", "actor": "orchestrator", "task": "T0078", "experiment": "E003"}
 {"ts": "2026-10-12T02:30:42+00:00", "event": "experiment_started", "actor": "orchestrator", "id": "E003", "run": "E003-20261011T193042-f91e", "commit": "4c8cf3e13510e7d25a69b8ea98c646ad95a5e524"}
+{"ts": "2026-10-12T02:30:57+00:00", "event": "experiment_finished", "actor": "orchestrator", "id": "E003", "run": "E003-20261011T193042-f91e", "status": "complete", "seconds": 15.2}

@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E003: L1 median single-core evaluation time'
 type: experiment
 agent: none
-status: running
+status: done
 depends_on:
 - T0076
 description: The orchestrator runs registered E003 on merged main. It feeds A6 (l1_eval_ms_p50 <= 50 ms,
@@ -93,3 +93,6 @@ history:
     \      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No\
     \ such file or directory: '/Users/lukeskywalker/mf/main/experiments/specs/E003.yaml'\n"
   at: '2026-10-11T04:35:47+00:00'
+- attempt: 4
+  outcome: experiment_complete
+  summary: E003-20261011T193042-f91e

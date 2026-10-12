@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-12T21:57:49+00:00 from repository state — do not edit_
+_generated 2026-10-12T23:53:06+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0048** [protected_change] T0100: merge needs founder approval
@@ -16,7 +16,6 @@ cancelled: 22, done: 71, failed: 3, needs_founder: 1, todo: 5
 - T0100 `needs_founder` scientist/design_experiment: Revise E002: Richardson-extrapolated L2 reference verified on checked layouts incl. both 6-die strata; run by Oct 20 (attempt 1)
 
 ## Recent events
-- 2026-10-12T04:20:47+00:00 run_started {"run": "T0102-critic-20261011T212047-6051", "task": "T0102", "role": "critic", "session": "8f4cc4b2-02ed-4b3f-9f71-3db8b69f95cb"}
 - 2026-10-12T04:21:20+00:00 sleep_detected {"gap_s": 1321, "runs_extended": 2}
 - 2026-10-12T04:27:48+00:00 run_finished {"run": "T0101-critic-20261011T212047-0ce9", "status": "completed", "cost": 2.195695, "subtype": "success", "report": "structured_output"}
 - 2026-10-12T04:27:48+00:00 run_finished {"run": "T0102-critic-20261011T212047-6051", "status": "completed", "cost": 2.355125, "subtype": "success", "report": "structured_output"}
@@ -31,3 +30,4 @@ cancelled: 22, done: 71, failed: 3, needs_founder: 1, todo: 5
 - 2026-10-12T20:39:01+00:00 sleep_detected {"gap_s": 391, "runs_extended": 0}
 - 2026-10-12T21:43:21+00:00 sleep_detected {"gap_s": 2448, "runs_extended": 0}
 - 2026-10-12T21:57:47+00:00 sleep_detected {"gap_s": 723, "runs_extended": 0}
+- 2026-10-12T23:53:04+00:00 sleep_detected {"gap_s": 1282, "runs_extended": 0}

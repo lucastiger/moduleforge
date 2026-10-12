@@ -1,0 +1,14 @@
+id: I0047
+kind: budget_increase
+subject: '[O001] O001: +$30 for the E002 revision, E002/E003 runs and evaluation'
+summary: Founder decision 2026-10-12 in the founder session. Cap 284.95 -> 314.95.
+refs:
+- O001
+options:
+- approve
+- reject
+recommendation: ''
+status: approved
+response: usd=51.22
+created_at: '2026-10-12T02:31:58+00:00'
+resolved_at: '2026-10-12T02:32:01+00:00'

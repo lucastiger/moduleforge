@@ -10,7 +10,10 @@ options:
 - approve
 - reject with note
 recommendation: ''
-status: open
-response: ''
+status: rejected
+response: 'Founder (2026-10-12): not registered as drafted. The founder pre-flight (research/l2_layout_vm2)
+  shows the draft''s only check stratum u_shaped:6 fails its 1 % step gate at k_star (-1.23 %). Revision
+  task: Richardson-extrapolated L2 reference verified on checked layouts incl. both 6-die strata; run
+  by Oct 20.'
 created_at: '2026-10-11T04:32:23+00:00'
-resolved_at: null
+resolved_at: '2026-10-12T02:31:58+00:00'

@@ -1,23 +1,20 @@
 # ModuleForge status
-_generated 2026-10-12T02:31:16+00:00 from repository state — do not edit_
+_generated 2026-10-12T02:32:23+00:00 from repository state — do not edit_
 
-## Founder inbox (1 open)
-- **I0044** [experiment_registration] register E002 (pre-registration)
+## Founder inbox (0 open)
+- nothing needs you
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $263.73/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $263.73/$315 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
 cancelled: 22, done: 69, failed: 3, todo: 5
 
 
 ## Recent events
-- 2026-10-11T22:23:35+00:00 sleep_detected {"gap_s": 631, "runs_extended": 0}
-- 2026-10-11T22:54:44+00:00 sleep_detected {"gap_s": 1838, "runs_extended": 0}
-- 2026-10-11T23:35:11+00:00 sleep_detected {"gap_s": 2150, "runs_extended": 0}
 - 2026-10-11T23:58:19+00:00 sleep_detected {"gap_s": 976, "runs_extended": 0}
 - 2026-10-12T00:27:17+00:00 sleep_detected {"gap_s": 1738, "runs_extended": 0}
 - 2026-10-12T00:46:05+00:00 sleep_detected {"gap_s": 1087, "runs_extended": 0}
@@ -30,3 +27,6 @@ cancelled: 22, done: 69, failed: 3, todo: 5
 - 2026-10-12T02:30:42+00:00 experiment_task_started {"task": "T0078", "experiment": "E003"}
 - 2026-10-12T02:30:42+00:00 experiment_started {"id": "E003", "run": "E003-20261011T193042-f91e", "commit": "4c8cf3e13510e7d25a69b8ea98c646ad95a5e524"}
 - 2026-10-12T02:30:57+00:00 experiment_finished {"id": "E003", "run": "E003-20261011T193042-f91e", "status": "complete", "seconds": 15.2}
+- 2026-10-12T02:31:58+00:00 inbox_resolved {"id": "I0044", "status": "rejected", "note": "Founder (2026-10-12): not registered as drafted. The founder pre-flight (research/l2_layout_vm2) shows the draft'
+- 2026-10-12T02:31:58+00:00 inbox_opened {"id": "I0047", "kind": "budget_increase", "subject": "[O001] O001: +$30 for the E002 revision, E002/E003 runs and evaluation"}
+- 2026-10-12T02:32:01+00:00 inbox_resolved {"id": "I0047", "status": "approved", "note": "usd=51.22"}

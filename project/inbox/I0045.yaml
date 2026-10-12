@@ -10,7 +10,8 @@ options:
 - approve
 - reject with note
 recommendation: ''
-status: open
-response: ''
+status: approved
+response: 'Founder (2026-10-12): register E003 (L1 single-core timing; local; sealed seed). Approved explicitly
+  in the founder session.'
 created_at: '2026-10-11T04:32:23+00:00'
-resolved_at: null
+resolved_at: '2026-10-12T02:30:20+00:00'

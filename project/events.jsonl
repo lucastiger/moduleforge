@@ -780,3 +780,7 @@
 {"ts": "2026-10-12T02:05:47+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0046", "kind": "decision", "subject": "GitHub main has commits the forge box does not"}
 {"ts": "2026-10-12T02:06:17+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 4132, "runs_extended": 0}
 {"ts": "2026-10-12T02:30:07+00:00", "event": "loop_started", "actor": "orchestrator", "pid": 5699}
+{"ts": "2026-10-12T02:30:20+00:00", "event": "experiment_registered", "actor": "orchestrator", "id": "E003", "hash": "sha256:f740a9c2ce3d4ead16bb3cec410d75250bf6827d5e03f0a38d5e04ee81b95c09", "by": "founder"}
+{"ts": "2026-10-12T02:30:20+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0045", "status": "approved", "note": "Founder (2026-10-12): register E003 (L1 single-core timing; local; sealed seed). Approved explicitly in the founder session."}
+{"ts": "2026-10-12T02:30:42+00:00", "event": "experiment_task_started", "actor": "orchestrator", "task": "T0078", "experiment": "E003"}
+{"ts": "2026-10-12T02:30:42+00:00", "event": "experiment_started", "actor": "orchestrator", "id": "E003", "run": "E003-20261011T193042-f91e", "commit": "4c8cf3e13510e7d25a69b8ea98c646ad95a5e524"}

@@ -1,0 +1,47 @@
+id: E003
+title: L1 single-core evaluation time (Layout -> L_loop at 20 MHz, discretisation included)
+objective: O001
+status: registered
+runner: uv run python experiments/runners/e003_timing.py
+config:
+  n_layouts: 150
+  repeats: 3
+  n_warmup: 5
+  freq_hz: 20000000.0
+  cpu_wall_max: 1.1
+  n_boot: 2000
+  boot_seed: 20261008
+  order_seed: 3
+  warmup_seed: 7
+sealed_seed: true
+metrics:
+- name: l1_eval_ms_p50
+  description: median wall time (perf_counter) of one loop_inductance(layout, [20 MHz]) call at the default
+    mesh, one thread (pinned to one CPU on Linux; on macOS no core pinning and the P/E core type is chosen
+    by the scheduler, recorded), over n_layouts x repeats evaluations (10 per stratum x 3, shuffled order);
+    warm-up calls excluded; cluster bootstrap 95 % CI over layouts. A6 reads the point
+  unit: ms
+- name: l1_eval_ms_p90
+  description: 90th percentile of the same; cluster bootstrap CI
+  unit: ms
+- name: l1_eval_ms_p50_6dies
+  description: median over the 6-dies-per-switch stratum (slowest)
+  unit: ms
+- name: cpu_wall_ratio
+  description: process CPU time / wall time over the timed loop
+  unit: ''
+sanity_checks:
+- name: single_thread_enforced
+  description: 'BLAS/OpenMP thread variables set to 1 and XLA_FLAGS to valid --prefixed single-thread
+    flags before numpy import; CPU/wall over the timed loop <= 1.1, one Python thread, and (Linux) CPU
+    affinity of size 1. macOS cannot pin cores or choose P/E cores: recorded in run.tools, not checked
+    (an E-core only inflates the time: conservative for A6)'
+- name: results_finite
+  description: every L value and timing finite and > 0
+timeout_min: 30
+cpu_hours_est: 0.05
+registered_by: founder
+registered_at: '2026-10-12T02:30:20+00:00'
+spec_hash: sha256:f740a9c2ce3d4ead16bb3cec410d75250bf6827d5e03f0a38d5e04ee81b95c09
+runner_files:
+  experiments/runners/e003_timing.py: 35eb6a5852281122dac215916026654db80a9331774ae24cd3c4d0ddf9f55e70

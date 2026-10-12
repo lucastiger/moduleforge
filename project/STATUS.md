@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-12T04:20:47+00:00 from repository state — do not edit_
+_generated 2026-10-12T04:21:22+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -18,7 +18,6 @@ cancelled: 22, done: 69, failed: 3, review: 1, running: 2, todo: 5
 - T0102 `running` critic/review: Review T0100 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-12T02:30:07+00:00 loop_started {"pid": 5699}
 - 2026-10-12T02:30:20+00:00 experiment_registered {"id": "E003", "hash": "sha256:f740a9c2ce3d4ead16bb3cec410d75250bf6827d5e03f0a38d5e04ee81b95c09", "by": "founder"}
 - 2026-10-12T02:30:20+00:00 inbox_resolved {"id": "I0045", "status": "approved", "note": "Founder (2026-10-12): register E003 (L1 single-core timing; local; sealed seed). Approved explicitly in the found
 - 2026-10-12T02:30:42+00:00 experiment_task_started {"task": "T0078", "experiment": "E003"}
@@ -33,3 +32,4 @@ cancelled: 22, done: 69, failed: 3, review: 1, running: 2, todo: 5
 - 2026-10-12T04:20:44+00:00 verified {"task": "T0100"}
 - 2026-10-12T04:20:47+00:00 run_started {"run": "T0101-critic-20261011T212047-0ce9", "task": "T0101", "role": "critic", "session": "d4f58b25-d11c-418e-89b4-ca091200d416"}
 - 2026-10-12T04:20:47+00:00 run_started {"run": "T0102-critic-20261011T212047-6051", "task": "T0102", "role": "critic", "session": "8f4cc4b2-02ed-4b3f-9f71-3db8b69f95cb"}
+- 2026-10-12T04:21:20+00:00 sleep_detected {"gap_s": 1321, "runs_extended": 2}

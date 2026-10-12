@@ -802,3 +802,4 @@
 {"ts": "2026-10-12T17:26:06+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 523, "runs_extended": 0}
 {"ts": "2026-10-12T17:46:04+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 738, "runs_extended": 0}
 {"ts": "2026-10-12T18:01:22+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 918, "runs_extended": 0}
+{"ts": "2026-10-12T18:18:42+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 1040, "runs_extended": 0}

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-12T02:32:23+00:00 from repository state — do not edit_
+_generated 2026-10-12T02:32:56+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -11,12 +11,11 @@ _generated 2026-10-12T02:32:23+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $263.73/$315 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 22, done: 69, failed: 3, todo: 5
+cancelled: 22, done: 69, failed: 3, running: 1, todo: 5
 
+- T0100 `running` scientist/design_experiment: Revise E002: Richardson-extrapolated L2 reference verified on checked layouts incl. both 6-die strata; run by Oct 20 (attempt 1)
 
 ## Recent events
-- 2026-10-11T23:58:19+00:00 sleep_detected {"gap_s": 976, "runs_extended": 0}
-- 2026-10-12T00:27:17+00:00 sleep_detected {"gap_s": 1738, "runs_extended": 0}
 - 2026-10-12T00:46:05+00:00 sleep_detected {"gap_s": 1087, "runs_extended": 0}
 - 2026-10-12T00:57:26+00:00 sleep_detected {"gap_s": 597, "runs_extended": 0}
 - 2026-10-12T02:05:47+00:00 inbox_opened {"id": "I0046", "kind": "decision", "subject": "GitHub main has commits the forge box does not"}
@@ -30,3 +29,5 @@ cancelled: 22, done: 69, failed: 3, todo: 5
 - 2026-10-12T02:31:58+00:00 inbox_resolved {"id": "I0044", "status": "rejected", "note": "Founder (2026-10-12): not registered as drafted. The founder pre-flight (research/l2_layout_vm2) shows the draft'
 - 2026-10-12T02:31:58+00:00 inbox_opened {"id": "I0047", "kind": "budget_increase", "subject": "[O001] O001: +$30 for the E002 revision, E002/E003 runs and evaluation"}
 - 2026-10-12T02:32:01+00:00 inbox_resolved {"id": "I0047", "status": "approved", "note": "usd=51.22"}
+- 2026-10-12T02:32:23+00:00 task_added {"task": "T0100"}
+- 2026-10-12T02:32:29+00:00 run_started {"run": "T0100-scientist-20261011T193229-18a4", "task": "T0100", "role": "scientist", "session": "990a50a7-fa0d-44d7-b007-092cb86915a0"}

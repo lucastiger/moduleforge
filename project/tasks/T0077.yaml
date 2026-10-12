@@ -8,6 +8,7 @@ depends_on:
 - T0076
 - T0072
 - T0075
+- T0100
 description: The orchestrator runs registered E002 (sealed seed) on merged main. It runs only after E001's
   result (T0072) is admissible, so the reference is validated first (F1). It feeds A2-A5 and K1-K3. Its
   secondary metrics feed F3 (residual correlations) and F4 (rho at 5 and 80 MHz).

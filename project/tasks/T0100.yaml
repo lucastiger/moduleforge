@@ -1,0 +1,130 @@
+id: T0100
+objective: O001
+title: 'Revise E002: Richardson-extrapolated L2 reference verified on checked layouts incl. both 6-die
+  strata; run by Oct 20'
+type: design_experiment
+agent: scientist
+status: running
+depends_on: []
+description: 'Revise the merged E002 draft (experiments/drafts/E002.yaml, experiments/runners/e002_ranking.py,
+  research/notes/o001-e002-e003-design.md) before registration. The founder rejected registration I0044
+  of the draft as it stands.
+
+
+  WHY (evidence; read research/l2_layout_vm2/cost.json and research/l2_layout_vm/cost.json). The draft''s
+  reference is L2 at k_star = 0.25 mm, with l2_converged = |d2| + tolerances < 1 % on its checked layouts.
+  Its default envelope checks only u_shaped:6, and the founder pre-flight shows that stratum FAILS the
+  step gate:
+
+  - u_shaped:6 (dev seed 11): steps -2.11 % then -1.23 %;
+
+  - interleaved:6 (dev seed 7): -1.40 % then -0.82 %, about 0.97 % once tolerances are added.
+
+  Six-die layouts converge more slowly. Across all five three-level dev layouts, the contraction r is
+  0.573-0.622 (mean 0.597), and the raw bias of L2(k_star) is 1.3-2.9 %. Two-level Richardson extrapolation
+  with the common ratio reproduces each layout''s three-level limit within 0.05-0.31 %, and the band over
+  [r_min, r_max] contains it in all five.
+
+
+  REQUIRED
+
+  (1) Reference. E002''s reference is the Richardson-extrapolated L2 of each layout: L2_inf = L(k_star)
+  + d1 * r / (1 - r), with d1 = L(k_star) - L(k_star-1) and r measured on the checked layouts. Every layout
+  is therefore solved at k_star-1 and k_star. The reference uncertainty is the band over [r_lo, r_hi],
+  from the checked layouts'' contraction widened by their solver_tol(k_star+1). Apply Roache''s safety
+  factor 1.25 to the extrapolated correction, as E001''s runner does. Primary metrics (A2-A5) use L2_inf.
+  Also report them against L2(k_star) and L2(k_star-1), which needs no extra solves (ranking sensitivity,
+  review T0097).
+
+  (2) Gate. Keep conv_tol = 1 %, applied to the reference error. Replace l2_converged with l2_extrapolation_verified:
+  on every checked layout, the two-level extrapolation, using the leave-one-out common ratio of the OTHER
+  checked layouts, must agree with that layout''s own three-level limit within conv_tol; every checked
+  layout must contract with 0 < d2/d1 < 1 and r inside the band. Checked layouts must include BOTH 6-die
+  strata (u_shaped:6, interleaved:6), side_by_side:6, and at least one 2-die stratum. Run them first (phase
+  1): if the gate fails, no other solve starts. Never weaken conv_tol.
+
+  (3) Reviews T0094-T0097 (project/reviews/T0076/): carry over everything the repair fixed. In addition:
+  count solver_tol(k_star+1) in the contraction uncertainty; handle the |d2| < 1e-4 branch and r outside
+  (0, 1) explicitly, never by silently falling back to a dev constant; and extend --selftest to per-layout
+  varying contraction (review T0096 noted it used a single q), d1 > 0, and the gate failing.
+
+  (4) Sizing and time. D0005 (project/decisions/D0005-o001-compute-budget.md) sets O001''s compute budget
+  to 400 VM CPU-h; about 150 are already used, so stay within about 200. Measured VM cost per layout:
+  k_star-1 about 0.2-0.4 CPU-h; k_star 1.0-1.45 CPU-h (26-41 min wall at 4 jobs x 8 threads); k_star+1
+  8.7-9.3 CPU-h (3.1-3.7 h wall, 35-39 GB). E002 must finish on one n2-highmem-32 within about 24 h wall:
+  O001''s wall-day deadline is 2026-10-20. Choose n and m for power on A2/A3/A5 within that; state n,
+  m, CPU-h, wall-h, cpu_hours_est and timeout_min. Keep a sealed seed. E002 runs on the burst VM; the
+  founder adds it to compute.burst_experiments at registration.
+
+  (5) The note: update the design note with the pre-flight evidence, the extrapolated-reference rationale,
+  and the sizing.'
+context_files:
+- experiments/drafts/E002.yaml
+- experiments/runners/e002_ranking.py
+- research/notes/o001-e002-e003-design.md
+- research/l2_layout_vm2/cost.json
+- research/l2_layout_vm/cost.json
+- research/l2_layout_diag/summary.json
+- project/reviews/T0076/T0094.json
+- project/reviews/T0076/T0095.json
+- project/reviews/T0076/T0096.json
+- project/reviews/T0076/T0097.json
+- project/decisions/D0005-o001-compute-budget.md
+- project/objectives/O001/objective.yaml
+- experiments/runners/e001_reference.py
+deliverables:
+- experiments/drafts/E002.yaml
+- experiments/runners/e002_ranking.py
+- research/notes/o001-e002-e003-design.md
+touches:
+- experiments/drafts/E002.yaml
+- experiments/runners/e002_ranking.py
+- research/notes/o001-e002-e003-design.md
+definition_of_done:
+- cmd: null
+  exists: experiments/drafts/E002.yaml
+  timeout_s: 60
+- cmd: null
+  exists: experiments/runners/e002_ranking.py
+  timeout_s: 60
+- cmd: null
+  exists: research/notes/o001-e002-e003-design.md
+  timeout_s: 60
+- cmd: uv run mfos exp check E002
+  exists: null
+  timeout_s: 120
+- cmd: 'rm -rf /tmp/e002-smoke && uv run python experiments/runners/e002_ranking.py --smoke && uv run
+    python -c "import json,math; r=json.load(open(''/tmp/e002-smoke/result.json'')); assert r[''status'']==''complete'',
+    r[''status'']; m=r[''metrics'']; ks=(''spearman_rho_Lloop'',''mape_Lloop'',''top_decile_recall'');
+    assert all(math.isfinite(m[k][''value'']) for k in ks), m; assert m[''spearman_rho_Lloop''][''ci'']
+    and m[''mape_Lloop''][''ci''], m; names={s[''name''] for s in r[''sanity'']}; assert {''l2_converged'',''sample_diverse'',''all_drc_valid'',''l2_reference_valid''}
+    <= names, names; print({k: m[k][''value''] for k in m})"'
+  exists: null
+  timeout_s: 5400
+- cmd: uv run python experiments/runners/e002_ranking.py --selftest
+  exists: null
+  timeout_s: 1800
+- cmd: uv run ruff check experiments/runners/e002_ranking.py
+  exists: null
+  timeout_s: 120
+experiment: null
+risk: high
+model: null
+budget_usd: 7.0
+max_turns: 90
+wall_minutes: 240
+attempts: 1
+max_attempts: 3
+branch: task/T0100-revise-e002-richardson-extrapolated-l2-r
+pr: null
+runs:
+- T0100-scientist-20261011T193229-18a4
+created_by: founder
+created_at: '2026-10-12T02:32:23+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

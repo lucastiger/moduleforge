@@ -799,3 +799,4 @@
 {"ts": "2026-10-12T04:27:48+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0102-critic-20261011T212047-6051", "status": "completed", "cost": 2.355125, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-10-12T04:27:51+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0048", "kind": "protected_change", "subject": "T0100: merge needs founder approval"}
 {"ts": "2026-10-12T17:08:48+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 2235, "runs_extended": 0}
+{"ts": "2026-10-12T17:26:06+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 523, "runs_extended": 0}

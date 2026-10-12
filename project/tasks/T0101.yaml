@@ -3,7 +3,7 @@ objective: O001
 title: Review T0100 (physics)
 type: review
 agent: critic
-status: running
+status: done
 depends_on: []
 description: ba84436766a0aedd30ab1a841cc145218655a8e5
 context_files: []
@@ -30,4 +30,6 @@ target: T0100
 lens: physics
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: review:accept_with_caveats
+  summary: 6 findings

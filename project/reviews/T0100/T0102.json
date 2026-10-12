@@ -1,0 +1,65 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "The 1% gate is about as wide as the stated k*+1 solver bound, so a pass means 'consistent point values', not 'reference error below 1%'",
+      "detail": "The claim is a 'Richardson-extrapolated L2 reference verified on checked layouts' to conv_tol = 1%. The gate (l2_extrapolation_verified) compares point values only. Each layout's three-level limit L3 moves by dL3/dL(k*+1) = 1/(1-r)^2, about 6, times the stated bound at 0.125 mm (1.1-1.6e-3, mostly the plane_tables term). That shift is about 0.8-1% of L3, the same size as conv_tol. On the registered check structure with dev data, the worst solver-bound corner gives leave-one-out errors of 1.03 / 1.04 / 2.05 / 2.13%: every layout would fail if the bound were realised. In a Monte Carlo where L(k*+1) of the 4 checked layouts is perturbed uniformly within the stated bound, the gate passes 42.7% of the time; at half the bound 91%, at a quarter 100%. l2_converged's 'reference error < 1%' also leaves out the common-mode uncertainty in r_hat. The design's own band puts that at -7.9% / +1.9% around L2_inf (u_shaped:6 dev). So a pass verifies the reference to 1% only if the a-posteriori bound is loose by at least 2x. The note argues this is so (chi-squared argument, sec. 1.1) and raises it as founder decisions 0.2 and 0.3. The spec and runner descriptions still state it as an unconditional 1% reference error.",
+      "evidence": "Ran the runner's own reference_model on research/l2_layout_vm{,2}/solve_*_r{0,1,2}.json for (u6, i6, s6, interleaved:2 stand-in): valid=True; loo_err -0.387/-0.191/+0.130/+0.176%; loo_err_worst_tol 1.030/1.041/2.052/2.129%; r_hat 0.5956; s_lo / s_hat / s_hi = 0.594 / 1.473 / 5.105; per-layout band relative to L2_inf from -7.9%/+1.9% to -2.9%/+0.7%. Monte Carlo (3000 draws, seed 1): gate pass rate 0.427 at full bound, 0.911 at 0.5x, 1.0 at 0.25x.",
+      "suggested_check": "In the l2_converged and l2_extrapolation_verified descriptions, say that the 1% applies to point values on condition that the k*+1 bound is loose, or tighten the plane-table tolerance at k*+1 so that 6*tol is well below conv_tol."
+    },
+    {
+      "severity": "minor",
+      "title": "The gate can fail on the solver bound alone for a 2-die checked layout with a small first step, and the registered 2-die stratum has no pre-flight data",
+      "detail": "The condition [r_lo, r_hi] inside (0, 1) fails on the bound alone whenever |d1| < about 0.36% (r ~ 0.6, tol(k*+1) ~ 1.4e-3), even for a perfectly geometric ladder. side_by_side:2 was chosen precisely because it has no refinement data. Scaling the dev 2-die/6-die ratio (~0.56) to side_by_side:6 (|d1| 1.15%) gives an expected |d1| of about 0.65%, a margin of about 1.8x. A failure here is deterministic, so a rerun would not help. It costs ~42 CPU-h and would put the 'run by Oct 20' target at risk without a design change. Even a pass near that margin gives s_hi of about 6, which makes the refband readings uninformative.",
+      "evidence": "Crafted exact ladders fed to reference_model: q = 0.6 for all four layouts, 2-die |d1| = 0.3% gives the band [0.124, 1.089] and valid=False ('contraction band ... not inside (0, 1)'). Hand derivation: r_hi < 1 iff 0.4|d1| > tb + tc + ta + tb, i.e. |d1| > 0.363%.",
+      "suggested_check": "Before registration, solve side_by_side:2 at k*-1 and k* on a dev seed (~0.3 CPU-h) to confirm |d1| is well above 0.36%."
+    },
+    {
+      "severity": "minor",
+      "title": "Three levels cannot test whether a layout is in the asymptotic range; the gate only checks that r is similar across layouts",
+      "detail": "With 3 levels, r is determined exactly for each layout, so nothing tests whether the ratio is constant under further refinement. The leave-one-out criterion is algebraically |d1_j| * |rho(r_loo) - rho(r_j)| < 1%: it tests whether r is the same across layouts. The observed order is p = log2(1/0.596), about 0.75, and no theoretical order is cited to confirm the asymptotic range, which Roache's GCI practice expects. A drift of r with k, shared by all layouts, would bias every L3 in the same direction and pass the gate. The common-mode band s in [0.59, 5.1] covers plausible drift (r -> 0.5 gives rho = 1), and Spearman is almost insensitive to it, so the rankings are not threatened. MAPE is affected at the ~0.3-0.6% level.",
+      "evidence": "Derivation: L3 = Lb + D1 rho(r_j), and the two-level estimate is Lb + D1 rho(r_loo). Their difference is D1 (rho(r_loo) - rho(r_j)), with no term that depends on k.",
+      "suggested_check": "State in the note that 'verified' means cross-layout consistency of the contraction, not within-layout convergence."
+    },
+    {
+      "severity": "minor",
+      "title": "For the 86 unchecked layouts, l2_converged rests on an assumed spread of r estimated from 4 checked layouts",
+      "detail": "The check uses dr, the largest leave-one-out deviation among the 4 checked layouts, as a bound on |r_i - r_hat| for every unchecked layout. The dies 3-5 strata and the u_shaped/interleaved 2-die strata are never checked. A bound taken from the maximum of 4 samples is optimistic for a population of 90. Arithmetic: even with dr = 0.05, the reference error stays below 1% for |d1| <= ~2.5% (dev max 2.1%), so the risk is low. The note's phrase 'per-layout departures ... are bounded by l2_converged' still overstates what is checked.",
+      "evidence": "rho(0.646) - rho(0.596) = 0.35, and 0.35 x 2.1% = 0.73% < 1%.",
+      "suggested_check": "Name the assumption in the l2_converged description (r of unchecked layouts within r_hat +- dr), and flag l2_d1_ratio_max > 1.2 when reading results."
+    },
+    {
+      "severity": "note",
+      "title": "The selftest's gate_fail_loo scenario fails for two reasons at once, so it does not isolate the leave-one-out criterion",
+      "detail": "The scenario uses q = 0.35 on the 2-die checked layout. That value is also outside the other checked layouts' widened band, so the scenario fails through two criteria together. I checked separately that the leave-one-out criterion triggers on its own: u_shaped:6 with q = 0.5 and d1 = 5%, others at 0.6, is in band but fails the leave-one-out test.",
+      "evidence": "reference_model on crafted ladders returned valid=False with the single reason 'two-level extrapolation with the leave-one-out ratio 0.6000 differs from its three-level limit'.",
+      "suggested_check": "Add a selftest scenario that is in band but fails the leave-one-out test."
+    },
+    {
+      "severity": "note",
+      "title": "The extrapolation path is exercised only on synthetic ladders by the DoD; I verified it on real dev solver output",
+      "detail": "The smoke runs level 0 only and reports both extrapolation checks as failed. The selftest uses exact synthetic geometric ladders. I ran checked_ladder, reference_model and layout_reference on the real dev solve JSONs. The results match my independent recomputation and design note sec. 1: r = 0.5730 / 0.5787 / 0.6089 / 0.6218; pred_err 0.52 / 0.34 / 0.29 / 0.19%; gate and l2_converged both pass. The note's sec. 0.2 range (1.09-1.98%) is for the 5-layout dev set; on the registered 4-layout structure the runner gives 1.03-2.13%.",
+      "evidence": "See the independent checks.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran `uv run python experiments/runners/e002_ranking.py --selftest`: PASS. Formula checks ok, 9 scenarios ok (valid, 4 gate failures, converged_fail_other, solve_fails, spec_mismatch, strata_missing).",
+    "Ran `uv run mfos exp check E002`: no error output (exit status not captured).",
+    "Recomputed d1, d2, r, the three-level Aitken limit, solver-bound-widened r intervals and leave-one-out two-level errors from research/l2_layout_vm{,2}/solve_*_r{0,1,2}.json with my own script, for the registered check structure (dev stand-in interleaved:2), the u_shaped:2 alternative and all 5 layouts. The values reproduce design note sec. 1 (r 0.573-0.622; LOO errors -0.39/-0.19/+0.13/+0.18%).",
+    "Imported the runner and ran reference_model, layout_reference, check_extrap and check_conv on the real dev ladders. They match the independent computation: valid, r_hat 0.5956, dr 0.035, s band [0.594, 5.105], pred_err max 0.52%, per-layout band down to -7.9%/+1.9%.",
+    "Monte Carlo of the gate with L(k*+1) of each checked layout perturbed uniformly within its stated solver_tol_rel_L: pass rate 0.427 at full bound, 0.911 at half, 1.0 at a quarter.",
+    "Probed gate criteria with crafted exact ladders: the leave-one-out criterion fails on its own when it should; a band with r_hi >= 1 fails the gate even on exact ladders when 2-die |d1| = 0.3% (and for r = 0.85 everywhere, or a small-d1 outlier); derived the threshold |d1| > 0.363% by hand.",
+    "Checked by derivation that the 8-corner r interval is exact (r monotone in each level when both step intervals exclude 0), and that the solver-bound propagation in pred_err (tb Lb (1+s) + ta La s) is correct.",
+    "Checked the breakpoint formula in band_breakpoints (s = (lb_j - lb_i)/(d_i - d_j)), and that mfos.stats.mape and topk_recall depend only on the quantities band_boot and the recall band assume.",
+    "Checked the sizing arithmetic (phase 2: 86 x ~0.705 h / 4 slots, about 15.2 h; ~170 CPU-h) and the budget against D0005 (400 CPU-h, ~150 used)."
+  ],
+  "caveats": [
+    "I did not run `uv run ruff check experiments/runners/e002_ranking.py`: the command was denied by the permission mode.",
+    "My `--smoke` run had not finished when I wrote this. /tmp/e002-smoke/result.json exists with status 'complete', but it comes from an earlier run on commit ba84436 (branch task/T0100), not from my reproduction. I did not independently confirm the smoke DoD assertion.",
+    "The accept assumes the founder accepts the point-agreement reading of the gate (note sec. 0 item 2). If the gate must hold under the stated k*+1 solver bound, the design fails on dev data and the major finding becomes a blocker.",
+    "Within its stated scope the reference is valid only under the common-ratio model, and only if the k*+1 a-posteriori bound is loose by at least ~2x. The refband readings are the reference-robust readings, and with s_hi ~5 they may be uninformative.",
+    "The 2-die check stratum (side_by_side:2) has no pre-flight data. A deterministic gate failure there would threaten the Oct 20 date."
+  ]
+}

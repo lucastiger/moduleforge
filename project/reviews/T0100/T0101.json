@@ -1,0 +1,66 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "Gate and l2_converged are blind to a level-specific systematic error at k*+1; e_i under-reports the reference error",
+      "detail": "The k*+1 (0.125 mm) solver bound is ~1.1-1.6e-3 and almost entirely the plane_tables term (k*, k*-1: ~2e-5): a deterministic, level-specific error likely correlated in sign across layouts. The leave-one-out gate only tests cross-layout consistency of r, and l2_converged's e_i counts only the k*/k*-1 bounds plus the LOO spread dr, not the k*+1 bound's effect on r_hat. A common +1.2e-3 relative error on every k*+1 value (inside the stated bound) leaves both checks passing (max LOO err 0.24%, max e_i 0.34%) while the true L2_inf error on the checked layouts is +0.5 to +0.8%; it scales with |d1|, so an unmeasured layout with |d1| ~3% would exceed conv_tol = 1% undetected. The note discloses that solver_tol(k*+1) is excluded from the agreement test (decision item 2, \u00a76), but l2_converged is still described as 'conv_tol applied to the reference error of every layout'. The 1 % verification is therefore conditional on the k*+1 error being well below its stated bound, which rests only on an indirect chi-square argument (P = 0.043).",
+      "evidence": "Scratch scan with the runner's formulas on the dev ladders (u6, i6, s6, i2 from research/l2_layout_vm{,2}/cost.json), adding a common relative error eps to L(k*+1). eps=+1.2e-3: gate True, conv True, claimed max_e 0.34%, true ref err u6 +0.78%, i6 +0.55%, s6 +0.67%, i2 +0.52%. eps=-6e-4: gate True, conv False. cost.json tol_parts: plane_tables 1.244e-3 of 1.298e-3 (u6), 1.474e-3 of 1.528e-3 (i6).",
+      "suggested_check": "Add |D1_i| * max|rho(r_lo/r_hi of the k*+1-bound-shifted r_hat) - rho(r_hat)| to e_i, or rename and document l2_converged as excluding the k*+1 systematic term."
+    },
+    {
+      "severity": "minor",
+      "title": "'Verified' means the contraction ratio transfers between layouts, not that the extrapolation is correct",
+      "detail": "The gated quantity reduces algebraically to |D1| |rho(r_loo) - rho(r)| / L3. L3 itself assumes the same geometric ladder, so with three levels the asymptotic-regime assumption cannot be tested. For u6 (D2 = -1.21%), a tail ratio drifting to 0.5 or 0.7 would move the true limit by about 0.6% or 1.0% relative to L3. Only the FS = 1.25 band covers this tail-model uncertainty; l2_converged does not.",
+      "evidence": "Hand derivation: L_inf - L_k = D_k q/(1-q) for L_k = L_inf(1 + c q^k), checked; L3 + D2(rho(r2) - rho(r)) for r2 in {0.5, 0.7}.",
+      "suggested_check": "State in the spec that l2_extrapolation_verified tests ratio transfer at fixed model, and keep the FS band reading alongside the primary metrics."
+    },
+    {
+      "severity": "minor",
+      "title": "r_hat from 4 checked layouts is applied to 86 unmeasured layouts; r trends systematically with |d1|",
+      "detail": "dr is the largest of 4 leave-one-out deviations (dev ~0.035), a weak estimate of the population spread. Across all 5 dev layouts r falls monotonically as |d1| grows (0.622 at 0.78% down to 0.573 at 2.11%), so ratios are not scattered randomly around r_hat. Layouts whose first step lies beyond the checked range get systematically biased corrections, correlated with die count, which matters for the F3 die-count residual.",
+      "evidence": "Recomputed r: i2 0.6218 (|d1| 0.778%), s6 0.6089 (1.153%), u2 0.6035 (1.193%), i6 0.5787 (1.397%), u6 0.5730 (2.112%).",
+      "suggested_check": "Read l2_d1_ratio_max and the per-family l2_kstar_bias before interpreting F3 die-count flags."
+    },
+    {
+      "severity": "note",
+      "title": "The gate's [r_lo, r_hi] inside (0, 1) criterion can fail on well-converged checked layouts",
+      "detail": "r_hi < 1 requires roughly (1 - r)|d1| > tol(k*) + tol(k*+1), i.e. |d1| greater than about 0.35-0.41% at the stated k*+1 bounds. The gate therefore fails precisely where extrapolation matters least. The registered 2-die check stratum side_by_side:2 has one dev data point (smoke layout 0, step -0.815%), giving r_hi of about 0.80, so it passes with margin. A sealed layout much better converged would fail phase 1 (~42 CPU-h), and a repeat would pick the same layout by generation order.",
+      "evidence": "/tmp/e002-smoke/e002_rows.json: layout 0 is side_by_side:2; design note \u00a77: first smoke step -0.815% on layout 0.",
+      "suggested_check": "Pre-compute the gate's r_hi on the sealed side_by_side:2 layout's k*-1/k* step before committing to the k*+1 solves (the step is cheap)."
+    },
+    {
+      "severity": "note",
+      "title": "A4/K2 acceptance reads the point reference; reference uncertainty is near the A4 decision margin",
+      "detail": "Acceptance criterion A4 reads E002.mape_Lloop against the point L2_inf. Reference shifts of 0.5-1 point (see finding 1) are comparable to the dev distance from the 0.12 threshold (dev MAPE ~0.10-0.11). The reference-robust mape_Lloop_refband_hi is a secondary reading only.",
+      "evidence": "project/objectives/O001/objective.yaml A4; design note \u00a75.",
+      "suggested_check": "Report both readings together at evaluation."
+    },
+    {
+      "severity": "note",
+      "title": "Timeout above the stated 24 h requirement; budget decision dated after today",
+      "detail": "timeout_min = 1560 (26 h) versus the 24 h wall requirement; disclosed as founder decision item 4. D0005 (the 400 CPU-h budget the 172 CPU-h estimate relies on) is dated 2026-10-12, one day after today's date (2026-10-11).",
+      "evidence": "experiments/drafts/E002.yaml; project/decisions/D0005-o001-compute-budget.md",
+      "suggested_check": "Founder confirms both at registration."
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran `uv run mfos exp check E002`: exit 0",
+    "Ran `uv run ruff check experiments/runners/e002_ranking.py`: all checks passed",
+    "Ran `uv run python experiments/runners/e002_ranking.py --selftest`: PASS, all 10 scenarios (valid, 4 gate failures, converged_fail_other, solve_fails, spec_mismatch, strata_missing), ~75 s",
+    "Recomputed d1, d2, r, bias of L2(k*) and leave-one-out errors from research/l2_layout_vm{,2}/cost.json; they match the design note table and \u00a71 (LOO -0.387/-0.191/+0.130/+0.176 %)",
+    "Hand-derived the Richardson/Aitken identity L_inf = L_k + D1 q/(1-q) for a geometric ladder; the runner's rho_of / checked_ladder / layout_reference match it",
+    "Scanned a common-mode relative error eps on L(k*+1) through the runner's gate and e_i formulas; found the blind spot reported in finding 1",
+    "Read tol_parts in cost.json: plane_tables dominates the k*+1 solver bound",
+    "Verified that mfos.stats.mape(pred, ref) and topk_recall(pred, ref) argument order matches the runner's calls",
+    "Checked the sizing arithmetic (~169 CPU-h total, ~15 h phase-2 wall at 4 jobs, CPU/wall about 2.2) against the note's unit costs",
+    "Inspected the existing /tmp/e002-smoke/result.json and e002_rows.json (status complete, primary metrics finite with CI, required sanity names present, the 2 extrapolation checks reported failed by design)"
+  ],
+  "caveats": [
+    "The 1 % reference verification holds only for point values: it assumes the k*+1 systematic (plane-table) error is well below its stated bound of about 1.1-1.6e-3. Within that bound the reference can be off by about 0.5-1 % (more for large-|d1| layouts) without failing any check.",
+    "The extrapolation model (a geometric ladder with one ratio shared by all layouts) cannot be tested with three levels; the gate tests only that the ratio transfers between the 4 checked layouts.",
+    "I could not run the smoke DoD command myself: background execution was denied and it takes about 20 min, above the foreground limit. I relied on the author's existing /tmp/e002-smoke/result.json from commit ba84436 and did not confirm that the runner there is byte-identical to this snapshot.",
+    "No real L2 solve was run; the claims about phase-1 gate behaviour on sealed layouts are extrapolated from 5 dev layouts.",
+    "The founder's T0100 packet text was not available in the repository; requirements were inferred from the claim title, the spec, and the design note."
+  ]
+}

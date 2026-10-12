@@ -777,3 +777,5 @@
 {"ts": "2026-10-12T00:27:17+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 1738, "runs_extended": 0}
 {"ts": "2026-10-12T00:46:05+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 1087, "runs_extended": 0}
 {"ts": "2026-10-12T00:57:26+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 597, "runs_extended": 0}
+{"ts": "2026-10-12T02:05:47+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0046", "kind": "decision", "subject": "GitHub main has commits the forge box does not"}
+{"ts": "2026-10-12T02:06:17+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 4132, "runs_extended": 0}

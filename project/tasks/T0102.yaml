@@ -1,0 +1,33 @@
+id: T0102
+objective: O001
+title: Review T0100 (numerics)
+type: review
+agent: critic
+status: running
+depends_on: []
+description: ba84436766a0aedd30ab1a841cc145218655a8e5
+context_files: []
+deliverables: []
+touches: []
+definition_of_done: []
+experiment: null
+risk: low
+model: null
+budget_usd: 3.0
+max_turns: 60
+wall_minutes: null
+attempts: 1
+max_attempts: 3
+branch: null
+pr: null
+runs:
+- T0102-critic-20261011T212047-6051
+created_by: orchestrator
+created_at: '2026-10-12T04:20:44+00:00'
+protected_approved: false
+approval: null
+target: T0100
+lens: numerics
+trigger: null
+rationale: ''
+history: []

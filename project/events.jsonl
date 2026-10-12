@@ -790,3 +790,7 @@
 {"ts": "2026-10-12T02:32:01+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0047", "status": "approved", "note": "usd=51.22"}
 {"ts": "2026-10-12T02:32:23+00:00", "event": "task_added", "actor": "founder", "task": "T0100"}
 {"ts": "2026-10-12T02:32:29+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0100-scientist-20261011T193229-18a4", "task": "T0100", "role": "scientist", "session": "990a50a7-fa0d-44d7-b007-092cb86915a0"}
+{"ts": "2026-10-12T03:59:19+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0100-scientist-20261011T193229-18a4", "status": "completed", "cost": 6.940985, "subtype": "success", "report": "structured_output"}
+{"ts": "2026-10-12T04:20:44+00:00", "event": "verified", "actor": "orchestrator", "task": "T0100"}
+{"ts": "2026-10-12T04:20:47+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0101-critic-20261011T212047-0ce9", "task": "T0101", "role": "critic", "session": "d4f58b25-d11c-418e-89b4-ca091200d416"}
+{"ts": "2026-10-12T04:20:47+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0102-critic-20261011T212047-6051", "task": "T0102", "role": "critic", "session": "8f4cc4b2-02ed-4b3f-9f71-3db8b69f95cb"}

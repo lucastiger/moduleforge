@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-12T02:06:20+00:00 from repository state — do not edit_
+_generated 2026-10-12T02:28:33+00:00 from repository state — do not edit_
 
 ## Founder inbox (3 open)
 - **I0044** [experiment_registration] register E002 (pre-registration)
@@ -13,7 +13,7 @@ _generated 2026-10-12T02:06:20+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $263.73/$285 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 20, done: 68, failed: 5, todo: 6
+cancelled: 22, done: 68, failed: 5, todo: 4
 
 
 ## Recent events

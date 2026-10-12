@@ -3,7 +3,7 @@ objective: O001
 title: Diagnose failure of T0078
 type: investigate
 agent: scientist
-status: todo
+status: cancelled
 depends_on: []
 description: "Task T0078 ('Run E003: L1 median single-core evaluation time') failed with preliminary class\
   \ `implementation`: experiment produced no result.\nFailure output (tail):\n```\nTraceback (most recent\

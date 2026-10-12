@@ -3,7 +3,7 @@ objective: O001
 title: Diagnose failure of T0077
 type: investigate
 agent: scientist
-status: todo
+status: cancelled
 depends_on: []
 description: "Task T0077 ('Run E002: L1 vs L2 loop-inductance ranking on sealed generated layouts') failed\
   \ with preliminary class `implementation`: experiment produced no result.\nFailure output (tail):\n\

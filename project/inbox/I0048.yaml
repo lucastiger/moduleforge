@@ -1,0 +1,15 @@
+id: I0048
+kind: protected_change
+subject: 'T0100: merge needs founder approval'
+summary: 'Revise E002: Richardson-extrapolated L2 reference verified on checked layouts incl. both 6-die
+  strata; run by Oct 20
+
+  Risk high; 6 files. PR: None'
+refs:
+- T0100
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-12T04:27:51+00:00'
+resolved_at: null

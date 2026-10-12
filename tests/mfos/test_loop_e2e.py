@@ -472,3 +472,44 @@ def test_a_merge_conflict_goes_to_the_founder_without_using_an_attempt(sandbox):
     assert t.history[-1]["outcome"] == "merge_conflict"
     assert any("merge conflict with main" in i.subject for i in s.inbox("open"))
     assert not [x for x in s.tasks("O000") if x.type == "investigate"]
+
+
+def test_an_experiment_task_waits_for_its_registration(sandbox):
+    """2026-10-11: the E002/E003 tasks were dispatched the moment their design merged, before the founder registered
+    the experiments, and each failed three times on the missing spec."""
+    assert cli(["objective", "approve", "O000"]) == 0  # E000 left unregistered (a draft)
+
+    def exp_ready(s):
+        return any(t.type == "experiment" and t.status == "todo"
+                   and all(s.task(d).status == "done" for d in t.depends_on) for t in s.tasks("O000"))
+    s = _tick_until(exp_ready)
+    o = Orchestrator(Store())
+    for _ in range(3):
+        o.tick()
+    exp = next(t for t in Store().tasks("O000") if t.type == "experiment")
+    assert exp.status == "todo" and exp.attempts == 0, (exp.status, exp.attempts)
+    assert any("not registered" in w for w in o._blockers(exp, []))
+    assert cli(["exp", "register", "E000"]) == 0
+    s = drive()
+    assert s.objective_state("O000").status == "passed"
+
+
+def test_only_a_non_fast_forward_push_counts_as_divergence(sandbox):
+    """I0046 (2026-10-12) said GitHub had commits this box did not; local and GitHub were identical and the next push
+    succeeded. Only a non-fast-forward rejection is divergence, and a later good push closes the item."""
+    import subprocess
+
+    from mfos.loop import DIVERGED_SUBJECT, push_diverged
+    assert push_diverged(" ! [rejected]        main -> main (fetch first)\nerror: failed to push some refs")
+    assert push_diverged(" ! [rejected]        main -> main (non-fast-forward)")
+    assert not push_diverged(" ! [remote rejected] main -> main (Internal Server Error)")
+    assert not push_diverged(" ! [rejected]        O000-passed -> O000-passed (already exists)")
+    bare = sandbox.parent / "remote.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
+    subprocess.run(["git", "remote", "add", "origin", str(bare)], cwd=sandbox, check=True)
+    s = Store()
+    (s.mfos / "push_diverged").write_text("x")
+    s.add_inbox(kind="decision", subject=DIVERGED_SUBJECT, summary="x", refs=[])
+    Orchestrator(s)._push()
+    assert not (s.mfos / "push_diverged").exists()
+    assert not [i for i in Store().inbox("open") if i.subject == DIVERGED_SUBJECT]

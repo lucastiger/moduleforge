@@ -54,6 +54,15 @@ def acquire_loop_lock(store: Store) -> Optional[Any]:
     return fh
 
 
+DIVERGED_SUBJECT = "GitHub main has commits the forge box does not"
+
+
+def push_diverged(stderr: str) -> bool:
+    """Only a non-fast-forward rejection means GitHub has commits this box does not. Any other rejection (a transient
+    remote error, a tag) is not divergence: I0046 (2026-10-12) reported one, and the next push succeeded."""
+    return "non-fast-forward" in stderr or "(fetch first)" in stderr or "remote contains work that you do" in stderr
+
+
 SEVERITY_ORDER = {"blocker": 0, "major": 1, "minor": 2, "note": 3}
 
 
@@ -769,6 +778,10 @@ class Orchestrator:
             why.append(f"objective {t.objective} is {ost}")
         if self._conflicts(t, running):
             why.append("touches overlap a running task")
+        # An experiment runs only once registered: T0077/T0078 were dispatched the moment their design merged, before
+        # the founder registered E002/E003, and failed three times each on the missing spec (2026-10-11).
+        if t.type == "experiment" and t.experiment and not self.s.spec_path(t.experiment).exists():
+            why.append(f"experiment {t.experiment} is not registered")
         return why
 
     def _conflicts(self, t: m.Task, running: list[m.Task]) -> bool:
@@ -931,12 +944,16 @@ class Orchestrator:
         r = subprocess.run(["git", "push", "-q", "--follow-tags", self.git.remote, self.git.main],
                            cwd=self.s.root, env=self.git.gh_env, capture_output=True, text=True)
         notice = self.s.mfos / "push_diverged"
-        if r.returncode != 0 and ("rejected" in r.stderr or "non-fast-forward" in r.stderr):
+        if r.returncode != 0 and push_diverged(r.stderr):
             if not notice.exists():
                 notice.write_text(now())
-                self.s.add_inbox(kind="decision", subject="GitHub main has commits the forge box does not",
+                self.s.add_inbox(kind="decision", subject=DIVERGED_SUBJECT,
                                  summary="Someone pushed to main from elsewhere. In ~/mf/main run "
                                          "`git pull --rebase` (state files never conflict with founder files), "
                                          "then `rm .mfos/push_diverged`.", refs=[])
         elif r.returncode == 0:
             notice.unlink(missing_ok=True)
+            for item in self.s.inbox("open"):  # a later push went through: whatever blocked it is gone
+                if item.subject == DIVERGED_SUBJECT:
+                    item.status, item.response, item.resolved_at = "answered", "resolved: a later push succeeded", now()
+                    self.s.save_inbox(item)

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-15T19:16:08+00:00 from repository state — do not edit_
+_generated 2026-10-15T19:25:36+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0049** [experiment_registration] register E002 (pre-registration)
@@ -15,7 +15,6 @@ cancelled: 22, done: 75, failed: 3, todo: 5
 
 
 ## Recent events
-- 2026-10-15T02:56:47+00:00 run_started {"run": "T0104-critic-20261014T195647-1dde", "task": "T0104", "role": "critic", "session": "243f9dd0-c68e-4224-a4c0-d023bc4b71d4"}
 - 2026-10-15T02:56:48+00:00 run_started {"run": "T0105-critic-20261014T195648-adf8", "task": "T0105", "role": "critic", "session": "cf2918c3-46a8-4c09-9000-09f7251f1790"}
 - 2026-10-15T02:57:20+00:00 sleep_detected {"gap_s": 1623, "runs_extended": 2}
 - 2026-10-15T03:21:51+00:00 run_finished {"run": "T0104-critic-20261014T195647-1dde", "status": "completed", "cost": 2.195181, "subtype": "success", "report": "structured_output"}
@@ -30,3 +29,4 @@ cancelled: 22, done: 75, failed: 3, todo: 5
 - 2026-10-15T15:16:42+00:00 sleep_detected {"gap_s": 960, "runs_extended": 0}
 - 2026-10-15T16:28:58+00:00 sleep_detected {"gap_s": 4302, "runs_extended": 0}
 - 2026-10-15T19:16:06+00:00 sleep_detected {"gap_s": 5266, "runs_extended": 0}
+- 2026-10-15T19:25:34+00:00 sleep_detected {"gap_s": 568, "runs_extended": 0}

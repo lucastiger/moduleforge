@@ -1,0 +1,380 @@
+{
+ "source": [
+  "research/l2_layout_vm/cost.json",
+  "research/l2_layout_vm2/cost.json"
+ ],
+ "jobs": 4,
+ "measured": [
+  {
+   "src": "research/l2_layout_vm/cost.json",
+   "seed": 3,
+   "dies": 6,
+   "family": "side_by_side",
+   "k": 0,
+   "cpu_h": 0.4258367313888889,
+   "wall_h": 0.23735673241027774,
+   "rss_gb": 6.661926912
+  },
+  {
+   "src": "research/l2_layout_vm/cost.json",
+   "seed": 3,
+   "dies": 6,
+   "family": "side_by_side",
+   "k": 1,
+   "cpu_h": 1.4522523077777778,
+   "wall_h": 0.6845535913422224,
+   "rss_gb": 11.898216448
+  },
+  {
+   "src": "research/l2_layout_vm/cost.json",
+   "seed": 3,
+   "dies": 6,
+   "family": "side_by_side",
+   "k": 2,
+   "cpu_h": 9.313705169166667,
+   "wall_h": 3.6987162789016668,
+   "rss_gb": 35.79502592
+  },
+  {
+   "src": "research/l2_layout_vm/cost.json",
+   "seed": 7,
+   "dies": 2,
+   "family": "interleaved",
+   "k": 0,
+   "cpu_h": 0.20988006694444442,
+   "wall_h": 0.10212797686805566,
+   "rss_gb": 3.068071936
+  },
+  {
+   "src": "research/l2_layout_vm/cost.json",
+   "seed": 7,
+   "dies": 2,
+   "family": "interleaved",
+   "k": 1,
+   "cpu_h": 1.0153851319444445,
+   "wall_h": 0.4425050693163889,
+   "rss_gb": 8.537219072
+  },
+  {
+   "src": "research/l2_layout_vm/cost.json",
+   "seed": 7,
+   "dies": 2,
+   "family": "interleaved",
+   "k": 2,
+   "cpu_h": 8.7094686275,
+   "wall_h": 3.0847773149205557,
+   "rss_gb": 34.793213952
+  },
+  {
+   "src": "research/l2_layout_vm/cost.json",
+   "seed": 11,
+   "dies": 2,
+   "family": "u_shaped",
+   "k": 0,
+   "cpu_h": 0.21635079250000003,
+   "wall_h": 0.10268376442388899,
+   "rss_gb": 2.73641472
+  },
+  {
+   "src": "research/l2_layout_vm/cost.json",
+   "seed": 11,
+   "dies": 2,
+   "family": "u_shaped",
+   "k": 1,
+   "cpu_h": 0.9923426341666667,
+   "wall_h": 0.4393399175275,
+   "rss_gb": 8.521601024
+  },
+  {
+   "src": "research/l2_layout_vm/cost.json",
+   "seed": 11,
+   "dies": 2,
+   "family": "u_shaped",
+   "k": 2,
+   "cpu_h": 8.836164025,
+   "wall_h": 3.2476538198541665,
+   "rss_gb": 36.582285312
+  },
+  {
+   "src": "research/l2_layout_vm2/cost.json",
+   "seed": 7,
+   "dies": 6,
+   "family": "interleaved",
+   "k": 2,
+   "cpu_h": 7.554738466666667,
+   "wall_h": 3.108106324254722,
+   "rss_gb": 38.287282176
+  },
+  {
+   "src": "research/l2_layout_vm2/cost.json",
+   "seed": 11,
+   "dies": 6,
+   "family": "u_shaped",
+   "k": 2,
+   "cpu_h": 8.190159279722222,
+   "wall_h": 3.3480685433455553,
+   "rss_gb": 39.050797056
+  },
+  {
+   "src": "research/l2_layout_vm2/cost.json",
+   "seed": 7,
+   "dies": 6,
+   "family": "interleaved",
+   "k": 1,
+   "cpu_h": 1.3216546944444445,
+   "wall_h": 0.6354399649463889,
+   "rss_gb": 12.418453504
+  },
+  {
+   "src": "research/l2_layout_vm2/cost.json",
+   "seed": 11,
+   "dies": 6,
+   "family": "u_shaped",
+   "k": 1,
+   "cpu_h": 1.3072581633333333,
+   "wall_h": 0.6311084706336112,
+   "rss_gb": 10.767843328
+  },
+  {
+   "src": "research/l2_layout_vm2/cost.json",
+   "seed": 7,
+   "dies": 6,
+   "family": "interleaved",
+   "k": 0,
+   "cpu_h": 0.38510236472222226,
+   "wall_h": 0.21217491601444433,
+   "rss_gb": 6.450409472
+  },
+  {
+   "src": "research/l2_layout_vm2/cost.json",
+   "seed": 11,
+   "dies": 6,
+   "family": "u_shaped",
+   "k": 0,
+   "cpu_h": 0.36870810972222223,
+   "wall_h": 0.20205562837388888,
+   "rss_gb": 6.084722688
+  }
+ ],
+ "model": {
+  "0": {
+   "cpu_h": {
+    "at2": 0.21311542972222225,
+    "per_die": 0.045025076388888856,
+    "max_abs_resid": 0.032620996111111245
+   },
+   "wall_h": {
+    "at2": 0.10240587064597233,
+    "per_die": 0.028697472071724482,
+    "max_abs_resid": 0.0201609734774075
+   }
+  },
+  "1": {
+   "cpu_h": {
+    "at2": 1.0038638830555553,
+    "per_die": 0.08913112636574061,
+    "max_abs_resid": 0.09186391925926007
+   },
+   "wall_h": {
+    "at2": 0.4409224934219444,
+    "per_die": 0.052361212221365715,
+    "max_abs_resid": 0.03418624903481515
+   }
+  },
+  "2": {
+   "cpu_h": {
+    "at2": 8.772816326249997,
+    "per_die": -0.10498717193287105,
+    "max_abs_resid": 0.9608375306481545
+   },
+   "wall_h": {
+    "at2": 3.1662155673873604,
+    "per_die": 0.054687037028321686,
+    "max_abs_resid": 0.31375256340101965
+   }
+  }
+ },
+ "designs": [
+  {
+   "n": 60,
+   "m": 4,
+   "check": [
+    "u_shaped:6",
+    "interleaved:6",
+    "side_by_side:6",
+    "side_by_side:2"
+   ],
+   "cpu_h": 123.7689223390276,
+   "wall_phase1_h": 4.250974427560509,
+   "wall_phase2_h": 9.79518157286427,
+   "wall_h": 14.046156000424778,
+   "cpu_h_phase1": 40.4092109259722,
+   "wall_scale": 1.0
+  },
+  {
+   "n": 60,
+   "m": 4,
+   "check": [
+    "u_shaped:6",
+    "interleaved:6",
+    "side_by_side:6",
+    "side_by_side:2"
+   ],
+   "cpu_h": 123.7689223390276,
+   "wall_phase1_h": 4.8886205916945835,
+   "wall_phase2_h": 11.264458808793911,
+   "wall_h": 16.153079400488494,
+   "cpu_h_phase1": 40.4092109259722,
+   "wall_scale": 1.15
+  },
+  {
+   "n": 60,
+   "m": 4,
+   "check": [
+    "u_shaped:6",
+    "interleaved:6",
+    "side_by_side:6",
+    "side_by_side:2"
+   ],
+   "cpu_h": 123.7689223390276,
+   "wall_phase1_h": 5.313718034450634,
+   "wall_phase2_h": 12.243976966080337,
+   "wall_h": 17.55769500053097,
+   "cpu_h_phase1": 40.4092109259722,
+   "wall_scale": 1.25
+  },
+  {
+   "n": 90,
+   "m": 4,
+   "check": [
+    "u_shaped:6",
+    "interleaved:6",
+    "side_by_side:6",
+    "side_by_side:2"
+   ],
+   "cpu_h": 168.68767388763845,
+   "wall_phase1_h": 4.250974427560509,
+   "wall_phase2_h": 15.133962015314882,
+   "wall_h": 19.384936442875393,
+   "cpu_h_phase1": 40.4092109259722,
+   "wall_scale": 1.0
+  },
+  {
+   "n": 90,
+   "m": 4,
+   "check": [
+    "u_shaped:6",
+    "interleaved:6",
+    "side_by_side:6",
+    "side_by_side:2"
+   ],
+   "cpu_h": 168.68767388763845,
+   "wall_phase1_h": 4.8886205916945835,
+   "wall_phase2_h": 17.404056317612124,
+   "wall_h": 22.292676909306707,
+   "cpu_h_phase1": 40.4092109259722,
+   "wall_scale": 1.15
+  },
+  {
+   "n": 90,
+   "m": 4,
+   "check": [
+    "u_shaped:6",
+    "interleaved:6",
+    "side_by_side:6",
+    "side_by_side:2"
+   ],
+   "cpu_h": 168.68767388763845,
+   "wall_phase1_h": 5.313718034450634,
+   "wall_phase2_h": 18.91745251914359,
+   "wall_h": 24.231170553594225,
+   "cpu_h_phase1": 40.4092109259722,
+   "wall_scale": 1.25
+  },
+  {
+   "n": 120,
+   "m": 4,
+   "check": [
+    "u_shaped:6",
+    "interleaved:6",
+    "side_by_side:6",
+    "side_by_side:2"
+   ],
+   "cpu_h": 213.60642543624928,
+   "wall_phase1_h": 4.250974427560509,
+   "wall_phase2_h": 20.37686756267575,
+   "wall_h": 24.627841990236256,
+   "cpu_h_phase1": 40.4092109259722,
+   "wall_scale": 1.0
+  },
+  {
+   "n": 120,
+   "m": 4,
+   "check": [
+    "u_shaped:6",
+    "interleaved:6",
+    "side_by_side:6",
+    "side_by_side:2"
+   ],
+   "cpu_h": 213.60642543624928,
+   "wall_phase1_h": 4.8886205916945835,
+   "wall_phase2_h": 23.433397697077083,
+   "wall_h": 28.322018288771666,
+   "cpu_h_phase1": 40.4092109259722,
+   "wall_scale": 1.15
+  },
+  {
+   "n": 120,
+   "m": 4,
+   "check": [
+    "u_shaped:6",
+    "interleaved:6",
+    "side_by_side:6",
+    "side_by_side:2"
+   ],
+   "cpu_h": 213.60642543624928,
+   "wall_phase1_h": 5.313718034450634,
+   "wall_phase2_h": 25.471084453344663,
+   "wall_h": 30.784802487795297,
+   "cpu_h_phase1": 40.4092109259722,
+   "wall_scale": 1.25
+  },
+  {
+   "n": 60,
+   "m": 6,
+   "check": [
+    "u_shaped:6",
+    "interleaved:6",
+    "side_by_side:6",
+    "side_by_side:2",
+    "interleaved:2",
+    "u_shaped:2"
+   ],
+   "cpu_h": 141.3145549915275,
+   "wall_phase1_h": 6.5511792828880075,
+   "wall_phase2_h": 9.571454838375196,
+   "wall_h": 16.122634121263204,
+   "cpu_h_phase1": 60.38880220402775,
+   "wall_scale": 1.0
+  },
+  {
+   "n": 90,
+   "m": 6,
+   "check": [
+    "u_shaped:6",
+    "interleaved:6",
+    "side_by_side:6",
+    "side_by_side:2",
+    "interleaved:2",
+    "u_shaped:2"
+   ],
+   "cpu_h": 186.23330654013833,
+   "wall_phase1_h": 6.5511792828880075,
+   "wall_phase2_h": 14.814360385736041,
+   "wall_h": 21.36553966862405,
+   "cpu_h_phase1": 60.38880220402775,
+   "wall_scale": 1.0
+  }
+ ],
+ "notes": "k: 0 = 0.5 mm (k*-1), 1 = 0.25 mm (k*), 2 = 0.125 mm (k*+1). Wall per task as measured at 4 jobs x 8 threads (concurrent solves); wall_scale inflates every task's wall to test the timeout margin."
+}

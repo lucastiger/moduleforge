@@ -1,3 +1,4 @@
+# SUPERSEDED (T0100): the E002 design is now the single spec experiments/drafts/E002.yaml (extrapolated reference). Do not register this file.
 # E002 ENVELOPE (b) (T0076): <= 180 CPU-h (estimate 158, +-25 %: up to ~198).
 # THIS EXCEEDS O001's FROZEN OBJECTIVE BUDGET (project/objectives/O001/objective.yaml: cpu_hours 60) and needs a founder
 # budget decision at registration. To register (b), copy this file to experiments/drafts/E002.yaml. It differs from

@@ -1,0 +1,109 @@
+id: T0103
+objective: O001
+title: 'Tighten the 0.125 mm stated bounds: plane-table Gauss order cap; wire-grid near box vs wire radius
+  (no gate changes)'
+type: implement
+agent: builder
+status: running
+depends_on: []
+description: 'Founder-approved 2026-10-14. E002''s registration is held until this task merges.
+
+  WHY. At k_star+1 (0.125 mm) the layout L2''s solver_tol is 1.1-1.6e-3, against 1.4-5.0e-5 at 0.25 mm
+  (research/l2_layout_vm/cost.json, tol_parts). Two stated terms dominate:
+
+  - plane_tables: 9.1e-4 (8e-10 at 0.25 mm);
+
+  - wire_grid_operator: 7.2e-4 (4.8e-5 at 0.25 mm).
+
+  E002''s extrapolated reference amplifies a k_star+1 error by about 1/(1-r)^2, roughly 6, so these bounds
+  are the same size as its 1 % gate (reviews T0101, T0102 in project/reviews/T0100/). Both look like parameters
+  that do not scale with refinement, not real errors:
+
+  (a) Plane tables. l2_core.gauss_order caps the order at nmax = 24. For the thick baseplate layers (up
+  to 2.18 mm) at 0.125 mm, rho = 1 + dmin/hz is about 1.3, so the cap binds. Founder measurement: on the
+  2.18 mm baseplate layer at 0.125 mm, core.plane_table_full far entries at the production orders (cap
+  24) differ from cap-200 values by 4.9e-13 relative, while the stated bound is 5.7e-6. So the actual
+  error is negligible and the bound is loose.
+
+  (b) Wire-grid operator. The near box is a fixed number of cells (self.near), so at 0.125 mm it shrinks
+  toward the bond-wire radius (0.15-0.2 mm). That inflates the far bound, via q = rmax / (Df - 2 rmax),
+  and the node Gauss bound, via rho = 1 + (Df - rmax) / (0.5 ell).
+
+  REQUIRED
+
+  (1) Plane tables. Every refinement must meet QUAD_TOL for the stated bound: raise the order cap, or
+  use composite Gauss panels in z for thick layers so rho per panel stays >= ~1.5. Report the achieved
+  plane_tables bound at 0.125 mm (target <= 1e-10) and the change in table build time.
+
+  (2) Wire-grid operator. Make the near box a physical minimum distance relative to the wire radius (Df
+  >= c * rmax for a stated c), and/or raise the node Gauss order, so the stated wire-grid bound at 0.125
+  mm is no worse than at 0.25 mm (about 5e-5) and preferably better. Verify actual vs stated error against
+  the dense operator (WireGridDense) on a fine-level case small enough for this Mac.
+
+  (3) Target: total solver_tol at 0.125 mm of about 1e-4 or less. A full 0.125 mm generated layout needs
+  about 35 GB, which this 16 GB Mac does not have. Report tol_parts at refinement 2 on a reduced representative
+  case (a reduced-extent layout, or the tests'' tiny layouts at refinement 2), state what scales, and
+  leave the full-size measurement to the founder''s burst-VM run.
+
+  (4) Values must not move. Tightening bounds must not change L beyond the actual quadrature error. The
+  DoD checks seed 7 / 2 dies at refinement 0 against the burst-VM value 1.1114978173833956e-08 H within
+  1e-9 relative. Report refinement 1 the same way (VM value 1.10292e-08; see cost.json).
+
+  (5) Scope. No gate, tolerance or E002/E003 file changes. l2_core is shared with E001''s validated l2,
+  so E001''s frozen smoke must still pass; it is in the DoD. Add tests for both bound changes, with actual
+  error <= stated bound. Never weaken a test or a tolerance.'
+context_files:
+- research/l2_layout_vm/cost.json
+- research/l2_layout_vm2/cost.json
+- project/reviews/T0100/T0101.json
+- project/reviews/T0100/T0102.json
+- src/moduleforge/solvers/l2_core.py
+- src/moduleforge/solvers/l2_layout.py
+- project/decisions/D0004-l2-iterative-solve-fasthenry-optional.md
+deliverables:
+- src/moduleforge/solvers/l2_core.py
+- src/moduleforge/solvers/l2_layout.py
+touches:
+- src/moduleforge/solvers/l2_core.py
+- src/moduleforge/solvers/l2_layout.py
+- tests/unit/solvers/**
+definition_of_done:
+- cmd: uv run pytest -q tests/unit/solvers
+  exists: null
+  timeout_s: 1800
+- cmd: uv run ruff check src/moduleforge/solvers tests/unit/solvers
+  exists: null
+  timeout_s: 300
+- cmd: rm -rf /tmp/e001-smoke && uv run python experiments/runners/e001_reference.py --smoke && uv run
+    python -c "import json; r=json.load(open('/tmp/e001-smoke/result.json')); assert r['status']=='complete',
+    r['status']; assert r['sanity'] and all(s['passed'] for s in r['sanity']), r['sanity']; v=r['metrics']['max_rel_err_vs_analytic']['value'];
+    assert v <= 0.02, v; print('E001 smoke max_rel_err', v)"
+  exists: null
+  timeout_s: 2400
+- cmd: uv run python -c "from moduleforge.generate.halfbridge import generate_layouts; from moduleforge.solvers.l2_layout
+    import loop_inductance; r=loop_inductance(generate_layouts(1, seed=7, dies_per_switch=2)[0], [2e7],
+    refinement=0); v=float(r.L_H[0]); ref=1.1114978173833956e-08; d=abs(v-ref)/ref; print('L ref0', v,
+    'rel diff', d, 'solver_tol', r.meta['solver_tol'], r.meta.get('tol_parts')); assert d <= 1e-9, d"
+  exists: null
+  timeout_s: 1200
+experiment: null
+risk: high
+model: null
+budget_usd: 8.0
+max_turns: 120
+wall_minutes: 240
+attempts: 1
+max_attempts: 3
+branch: task/T0103-tighten-the-0-125-mm-stated-bounds-plane
+pr: null
+runs:
+- T0103-builder-20261014T182127-5092
+created_by: founder
+created_at: '2026-10-15T01:21:26+00:00'
+protected_approved: false
+approval: null
+target: null
+lens: null
+trigger: null
+rationale: ''
+history: []

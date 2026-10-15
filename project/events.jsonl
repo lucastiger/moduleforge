@@ -860,3 +860,5 @@
 {"ts": "2026-10-15T01:20:34+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0048", "status": "approved", "note": "Founder (2026-10-14): approve merge of T0100 (DoD incl. --selftest verified; T0101 and T0102 accept_with_caveats). E002 registration is HELD until the 0.125 mm stated-bound task merges."}
 {"ts": "2026-10-15T01:20:40+00:00", "event": "merged", "actor": "orchestrator", "task": "T0100"}
 {"ts": "2026-10-15T01:20:40+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0049", "kind": "experiment_registration", "subject": "register E002 (pre-registration)"}
+{"ts": "2026-10-15T01:21:26+00:00", "event": "task_added", "actor": "founder", "task": "T0103"}
+{"ts": "2026-10-15T01:21:27+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0103-builder-20261014T182127-5092", "task": "T0103", "role": "builder", "session": "fb5c6378-d11e-4b62-b1fb-05c1c540a231"}

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-15T01:21:49+00:00 from repository state — do not edit_
+_generated 2026-10-15T02:56:48+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0049** [experiment_registration] register E002 (pre-registration)
@@ -8,18 +8,16 @@ _generated 2026-10-15T01:21:49+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $275.22/$315 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $276.30/$315 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 22, done: 72, failed: 3, running: 1, todo: 5
+cancelled: 22, done: 72, failed: 3, review: 1, running: 2, todo: 5
 
-- T0103 `running` builder/implement: Tighten the 0.125 mm stated bounds: plane-table Gauss order cap; wire-grid near box vs wire radius (no gate changes) (attempt 1)
+- T0103 `review` builder/implement: Tighten the 0.125 mm stated bounds: plane-table Gauss order cap; wire-grid near box vs wire radius (no gate changes) (attempt 1)
+- T0104 `running` critic/review: Review T0103 (physics) (attempt 1)
+- T0105 `running` critic/review: Review T0103 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-14T18:44:11+00:00 sleep_detected {"gap_s": 455, "runs_extended": 0}
-- 2026-10-14T20:01:54+00:00 sleep_detected {"gap_s": 3770, "runs_extended": 0}
-- 2026-10-14T20:26:37+00:00 sleep_detected {"gap_s": 1145, "runs_extended": 0}
-- 2026-10-14T20:32:36+00:00 sleep_detected {"gap_s": 359, "runs_extended": 0}
 - 2026-10-14T21:12:03+00:00 sleep_detected {"gap_s": 2367, "runs_extended": 0}
 - 2026-10-14T21:17:45+00:00 sleep_detected {"gap_s": 342, "runs_extended": 0}
 - 2026-10-14T21:43:57+00:00 sleep_detected {"gap_s": 1022, "runs_extended": 0}
@@ -31,3 +29,7 @@ cancelled: 22, done: 72, failed: 3, running: 1, todo: 5
 - 2026-10-15T01:20:40+00:00 inbox_opened {"id": "I0049", "kind": "experiment_registration", "subject": "register E002 (pre-registration)"}
 - 2026-10-15T01:21:26+00:00 task_added {"task": "T0103"}
 - 2026-10-15T01:21:27+00:00 run_started {"run": "T0103-builder-20261014T182127-5092", "task": "T0103", "role": "builder", "session": "fb5c6378-d11e-4b62-b1fb-05c1c540a231"}
+- 2026-10-15T02:30:18+00:00 run_finished {"run": "T0103-builder-20261014T182127-5092", "status": "completed", "cost": 1.079118, "subtype": "success", "report": "structured_output"}
+- 2026-10-15T02:56:45+00:00 verified {"task": "T0103"}
+- 2026-10-15T02:56:47+00:00 run_started {"run": "T0104-critic-20261014T195647-1dde", "task": "T0104", "role": "critic", "session": "243f9dd0-c68e-4224-a4c0-d023bc4b71d4"}
+- 2026-10-15T02:56:48+00:00 run_started {"run": "T0105-critic-20261014T195648-adf8", "task": "T0105", "role": "critic", "session": "cf2918c3-46a8-4c09-9000-09f7251f1790"}

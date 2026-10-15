@@ -4,7 +4,7 @@ title: 'Tighten the 0.125 mm stated bounds: plane-table Gauss order cap; wire-gr
   (no gate changes)'
 type: implement
 agent: builder
-status: running
+status: review
 depends_on: []
 description: 'Founder-approved 2026-10-14. E002''s registration is held until this task merges.
 
@@ -106,4 +106,145 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- attempt: 1
+  outcome: agent_finished
+  summary: 'Both bound fixes are in and committed (2bca5aa4). Values did not move: refinement 0 matches
+    the VM value to 3.2e-14 relative, and refinement 1 gives 1.10292026e-08 H against 1.10292e-08. Every
+    DoD check passes. I did not measure the full-size 0.125 mm solver_tol; that is left to the burst-VM
+    run.
+
+
+    **(1) Plane tables.**
+
+    - New `core.z_rule` splits each layer into the fewest equal z panels whose Bernstein parameter is
+    at least 1.5. Each panel gets the smallest Gauss order that meets QUAD_TOL.
+
+    - `plane_table_full` and `l2_layout.pair_table` both use it.
+
+    - On the 2.18 mm layer at 0.125 mm, the stated bound is 1.75e-14 (was 5.1e-7 with the cap of 24; the
+    packet quotes 5.7e-6). That is under the 1e-10 target.
+
+    - Thin layers and coarse cells keep a single panel and the old order, so those values ar'
+  report:
+    status: completed
+    summary: 'Both bound fixes are in and committed (2bca5aa4). Values did not move: refinement 0 matches
+      the VM value to 3.2e-14 relative, and refinement 1 gives 1.10292026e-08 H against 1.10292e-08. Every
+      DoD check passes. I did not measure the full-size 0.125 mm solver_tol; that is left to the burst-VM
+      run.
+
+
+      **(1) Plane tables.**
+
+      - New `core.z_rule` splits each layer into the fewest equal z panels whose Bernstein parameter is
+      at least 1.5. Each panel gets the smallest Gauss order that meets QUAD_TOL.
+
+      - `plane_table_full` and `l2_layout.pair_table` both use it.
+
+      - On the 2.18 mm layer at 0.125 mm, the stated bound is 1.75e-14 (was 5.1e-7 with the cap of 24;
+      the packet quotes 5.7e-6). That is under the 1e-10 target.
+
+      - Thin layers and coarse cells keep a single panel and the old order, so those values are unchanged.
+
+      - Cost: the table for one thick layer pair at 0.125 mm (40×40 offsets) took 2.25 s against 0.44
+      s before, about 5× because the point count goes from 24 to 54 per layer. I did not time a full layout
+      build.
+
+      - The stated bound is now the sum of the two layers'' z bounds, where it used to be one order for
+      both. That is more conservative, not looser.
+
+      - At refinement 0 the stated plane_tables is 7.7e-11, and at refinement 1 it is 1.07e-10.
+
+
+      **(2) Wire-grid operator.**
+
+      - The near box is now `max(PFFT_NEAR=18, ceil(PFFT_NEAR_RADII=20 × rmax / cell) + 1)` cells. This
+      only applies when `near` is not passed explicitly. The far disc-rule bound is therefore at most
+      1.9e-5 at any refinement.
+
+      - The node Gauss order is now raised from 4 until its bound is at most `NODE_GAUSS_TOL=1e-6`.
+
+      - On a 16×14 mm grid at 0.125 mm the stated operator bound is 3.2e-6, against 2.6e-6 at 0.25 mm.
+      Before the change it was 1.6e-5. A thick-wire case at 0.125 mm, where the radius rule sets the near
+      box, stays below 5e-5.
+
+      - In those tests the actual error against `WireGridDense` stays within the stated bound, in both
+      directions.
+
+
+      **(3) Reduced case.** This is two inclined wires over a 20×16 mm plane with the refinement''s own
+      cell and layer counts, as in the existing `test_solver_tol_usable_at_every_refinement`.
+
+
+      | Refinement | Cell | solver_tol | plane_tables | wire_grid_operator |
+
+      |---|---|---|---|---|
+
+      | 1 | 0.25 mm | 1.44e-5 | 1.1e-13 | 1.31e-5 |
+
+      | 2 | 0.125 mm | 1.50e-5 | 4.5e-14 | 1.37e-5 |
+
+
+      Both columns of solver_tol are well under the 1e-4 target. The operator term now comes from the
+      far-field interpolation bound, which is fixed in cell units, so it stays flat across refinements.
+      The plane-table term is far below 1e-10. The node order used 7 at refinement 2 against 4 at refinement
+      1.
+
+
+      **(4) Values.**
+
+      - Refinement 0: L = 1.1114978173833604e-08 H against 1.1114978173833956e-08 H (VM), a relative difference
+      of 3.2e-14. solver_tol is 1.81e-5.
+
+      - Refinement 1: L = 1.1029202563e-08 H, solver_tol 1.71e-5, with `wire_grid_operator` at 1.67e-5.
+
+      - Refinement 1 took 857 s on this Mac.
+
+
+      **(5) Scope.** No gate, tolerance or E002/E003 file changed. The E001 smoke passes with max_rel_err
+      8.39e-5.
+
+
+      **Tests added** (in `tests/unit/solvers/test_l2_layout.py`):
+
+      - `z_rule` panel and weight properties.
+
+      - Thick-layer far entries against an independent order-150 reference, with stated bound ≤ 1e-10
+      and `pair_table` agreeing.
+
+      - Near box scaling and operator bound against the dense operator, at 0.25 and 0.125 mm and for a
+      thick wire.'
+    files_changed:
+    - src/moduleforge/solvers/l2_core.py
+    - src/moduleforge/solvers/l2_layout.py
+    - tests/unit/solvers/test_l2_layout.py
+    checks_run:
+    - cmd: uv run pytest -q tests/unit/solvers
+      exit_code: 0
+    - cmd: uv run ruff check src/moduleforge/solvers tests/unit/solvers
+      exit_code: 0
+    - cmd: rm -rf /tmp/e001-smoke && uv run python experiments/runners/e001_reference.py --smoke && uv
+        run python -c "...E001 smoke assertions..."
+      exit_code: 0
+    - cmd: 'uv run python /tmp/t0103_run.py 0  (DoD refinement-0 check: rel diff 3.17e-14 <= 1e-9, asserted
+        by hand)'
+      exit_code: 0
+    - cmd: uv run python /tmp/t0103_run.py 1
+      exit_code: 0
+    - cmd: uv run python /tmp/t0103_ref2.py (reduced refinement 1/2 case)
+      exit_code: 0
+    - cmd: uv run mfos gate --fast
+      exit_code: 0
+    concerns:
+    - 'The DoD''s refinement-0 one-liner was not run verbatim. I ran an equivalent script (/tmp/t0103_run.py
+      0) and computed the relative difference separately: 3.17e-14.'
+    - Refinement 1 now uses the adaptive node order and a possibly wider near box in the full layout.
+      The result still matches the VM value to the digits given (1.10292e-08), but a 1e-9-tight check
+      was not available for it.
+    - The thick-layer plane table is about 5x slower at 0.125 mm (more z points per layer). The full-layout
+      build-time effect is unmeasured; the founder's burst-VM run should record it.
+    - Wider near boxes (near rises to about 20 × rmax / cell) increase near-correction cost at fine levels.
+      Not measured at full size.
+    - I ran `git stash push` to time the old code and could not drop the entry, because the guard blocks
+      the drop. A stale stash entry labelled t0103-timing (SHA 5f7dba0c) remains in the shared stash stack,
+      and the working tree was restored from it. Please drop it.

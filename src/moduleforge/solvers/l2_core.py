@@ -118,6 +118,29 @@ def gauss_order(rho: float, tol: float | None = None, nmin: int = 3, nmax: int =
     return nmax
 
 
+RHO_PANEL = 1.5  # composite z rule: panels are split until the Bernstein parameter of each is >= this (stated choice)
+GAUSS_NMAX_PANEL = 40  # order cap of a panel with rho >= RHO_PANEL (the order needed for QUAD_TOL there is below this)
+
+
+def z_rule(z0: float, z1: float, dmin: float, tol: float | None = None):
+    """Composite Gauss-Legendre rule over the layer [z0, z1] for a kernel analytic outside the real axis by >= dmin
+    (the smallest lateral distance of the far entries): the layer is cut into the fewest equal panels whose Bernstein
+    parameter rho = 1 + dmin / (half panel width) is >= RHO_PANEL (one panel for thin layers: the same rule as the
+    single-panel ``gauss_order``), each with the smallest order whose ``gauss_bound`` is <= tol (default QUAD_TOL;
+    errors of panels add, the weights are normalised to sum 1 so the relative bound is the worst panel's).
+    Returns (nodes, weights summing to 1, stated relative bound, rho of a panel)."""
+    h = 0.5 * (z1 - z0)
+    m = max(1, math.ceil(h * (RHO_PANEL - 1.0) / dmin - 1e-12))
+    rho = 1.0 + dmin / (h / m)
+    n = gauss_order(rho, tol, nmin=2, nmax=GAUSS_NMAX_PANEL)
+    zs, ws = [], []
+    for k in range(m):
+        z, w = gq(n, z0 + (z1 - z0) * k / m, z0 + (z1 - z0) * (k + 1) / m)
+        zs.append(z)
+        ws.append(w)
+    return np.concatenate(zs), np.concatenate(ws) / (z1 - z0), gauss_bound(n, rho), rho
+
+
 # ---------------------------------------------------------------------------------------------- Hoer-Love boxes
 def hl_f(x, y, z):
     """Hoer-Love function whose second derivative in each variable is 1/R [HL eq. 14]."""
@@ -555,11 +578,8 @@ def plane_table_full(lay_a, lay_b, ax_al: float, a_tr: float, n1: int, n2: int, 
     def one(ab):
         la, lb = ab
         z1, z2 = lay_a[la], lay_b[lb]
-        hz = 0.5 * max(z1[1] - z1[0], z2[1] - z2[0])
-        nz = gauss_order(1.0 + dmin / hz, nmin=2)
-        za, wza = gq(nz, *z1)
-        zb, wzb = gq(nz, *z2)
-        wza, wzb = wza / (z1[1] - z1[0]), wzb / (z2[1] - z2[0])
+        za, wza, bza, _ = z_rule(*z1, dmin)
+        zb, wzb, bzb, _ = z_rule(*z2, dmin)
         dz = (zb[None, :] - za[:, None]).ravel()
         wz = np.outer(wza, wzb).ravel()
         dtr = dj[fi][:, None] * a_tr + tt[None, :]  # (nfar, nt)
@@ -573,7 +593,7 @@ def plane_table_full(lay_a, lay_b, ax_al: float, a_tr: float, n1: int, n2: int, 
         val = np.einsum("ftz,t,z->f", f, wt, wz) * K4
         out = np.zeros(di.size)
         out[fi] = val
-        return la, lb, out.reshape(n1, n2), gauss_bound(nz, 1.0 + dmin / hz)
+        return la, lb, out.reshape(n1, n2), bza + bzb
 
     res = _pmap(one, [(a, b) for a in range(na) for b in range(nb)])
     for la, lb, v, bz in res:

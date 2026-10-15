@@ -1008,3 +1008,84 @@ def test_corner_lattice_potential_gradient_and_line_integral_equal_box_by_box():
         I0, b0, _ = L.line_box_integral(a, b, lo[sub], hi[sub])
         I1, b1, _ = L.line_box_integral(a, b, lo[sub], hi[sub], lat=ls)
         assert b1 == b0 and np.allclose(I1, I0, rtol=1e-11, atol=1e-12 * np.abs(I0).max())
+
+
+# ------------------------------------------------------------------------------------------------ T0103: bounds at 0.125 mm
+def _gauss_ref_far_entries(z1, z2, ax, ay, entries, order=150):
+    """Independent reference of far plane-table entries (axial offset di, lateral dj): single-panel Gauss of very high order in
+    z and over the lateral band, with the axial integrals in closed form (second difference of g(u, d), [G] ch. 7)."""
+    xg, wg = np.polynomial.legendre.leggauss(order)
+    za, zb = 0.5 * (z1[1] - z1[0]) * xg + 0.5 * sum(z1), 0.5 * (z2[1] - z2[0]) * xg + 0.5 * sum(z2)
+    wza, wzb = wg / 2, wg / 2
+    tn = 0.5 * ay * (xg - 1)  # [-ay, 0]
+    tp = 0.5 * ay * (xg + 1)  # [0, ay]
+    tt = np.concatenate([tn, tp])
+    wt = np.concatenate([0.5 * ay * wg * (ay + tn), 0.5 * ay * wg * (ay - tp)]) / ay**2
+    g = lambda u, d: u * np.arcsinh(u / d) - np.sqrt(u * u + d * d)  # noqa: E731
+    out = []
+    for di, dj in entries:
+        d = np.hypot((dj * ay + tt)[:, None, None], (zb[None, :] - za[:, None])[None])
+        u = di * ax
+        f = g(u + ax, d) + g(u - ax, d) - 2 * g(u, d)
+        out.append(K4 * np.einsum("tab,t,a,b->", f, wt, wza, wzb))
+    return np.array(out)
+
+
+def test_z_rule_composite_panels_keep_rho_and_integrate_analytic_kernels():
+    dmin = 4 * 0.125e-3
+    za, wa, b, rho = L.core.z_rule(0.0, 2.18e-3, dmin)
+    assert rho >= L.core.RHO_PANEL - 1e-9 and b <= 2 * L.core.QUAD_TOL
+    assert wa.sum() == pytest.approx(1.0, abs=1e-14) and za.min() > 0 and za.max() < 2.18e-3
+    f = lambda z: 1.0 / np.hypot(dmin, z - 3e-3)  # noqa: E731  (singularity dmin off the layer's end, real-axis distance)
+    exact = (np.arcsinh((2.18e-3 - 3e-3) / dmin) - np.arcsinh((0 - 3e-3) / dmin)) / 2.18e-3
+    assert float(wa @ f(za)) == pytest.approx(exact, rel=1e-13)
+    # a thin layer is one panel with the single-panel order: unchanged from the previous rule
+    zt, wt_, bt, rt = L.core.z_rule(0.0, 10e-6, dmin)
+    assert zt.size == L.core.gauss_order(1.0 + dmin / 5e-6, nmin=2) and rt == pytest.approx(1.0 + dmin / 5e-6)
+
+
+def test_plane_table_far_entries_thick_layer_at_0p125mm_meet_quad_tol_and_match_high_order_reference():
+    """The 2.18 mm baseplate layer at a 0.125 mm cell: the stated plane-table bound is <= 1e-10 (it was 5.7e-6 with the order
+    capped at 24) and the entries agree with a single-panel order-150 reference to within it."""
+    a = 0.125e-3
+    z = (-2.18e-3, 0.0)
+    n1 = n2 = 9  # offsets 5..8 are beyond the 4-cell Hoer-Love block
+    T, bound, _ = L.core.plane_table_full([z], [z], a, a, n1, n2)
+    assert bound <= 1e-10, bound
+    entries = [(5, 0), (6, 3), (8, 8), (0, 7), (7, 5)]
+    ref = _gauss_ref_far_entries(z, z, a, a, entries)
+    got = np.array([T[0, 0, i, j] for i, j in entries])
+    assert np.max(np.abs(got - ref) / np.abs(ref)) <= max(bound, 1e-12)
+    # pair_table (the layout's chunked copy of the rule) agrees entry for entry and reports the same bound
+    Tp, bp = L.pair_table(z, z, a, a, n1, n2)
+    assert bp == pytest.approx(bound, rel=1e-9, abs=0) and np.max(np.abs(Tp - T[0, 0])) <= 1e-9 * np.max(np.abs(T))
+
+
+def test_wire_grid_near_box_scales_with_wire_radius_and_bound_not_worse_at_0p125_than_0p25mm():
+    """Production near box on 0.25 and 0.125 mm grids over the same 10 mm window: D_f = (near - 1) cells >= PFFT_NEAR_RADII x the
+    largest filament radius, the stated wire-grid operator bound at 0.125 mm is no larger than at 0.25 mm and below 5e-5, and
+    the actual error vs the dense exact coupling stays within it."""
+    s = 1e-3
+    res = {}
+    for cell, rad in ((0.25, 0.2), (0.125, 0.2), (0.125, 1.5)):  # wire radius parameter (mm)
+        nx, ny = round(16 * s / (cell * s)), round(14 * s / (cell * s))
+        slab = L.SlabSpec("gnd", np.ones((nx, ny), bool), L.graded_layers(-0.3 * s, 0.0, 1, L.F_MESH, SIG_CU, False), SIG_CU)
+        g = L.Grid(-8 * s, -7 * s, cell * s, cell * s, nx, ny, [slab])
+        pts = np.array([(0, 0, 0.3), (1.0, 0.3, 0.8), (2.0, 0.5, 0.4)], float) * s
+        pts[:, 2] += 2.5 * s * (rad > 1)  # a thick wire stays clear of the plane
+        fs = L.build_filaments([L.WireIn("w", pts, rad * s, SIG_AL)], 0)
+        wg = L.WireGridPFFT(fs, g)
+        rmax = float(fs.rho.max())
+        assert (wg.near - 1) * cell * s >= L.PFFT_NEAR_RADII * rmax - 1e-15 and wg.near >= L.PFFT_NEAR
+        assert wg.n_far_branches > 0
+        tol = wg.bound + wg.near_bound + wg.bnd_far
+        dense = L.WireGridDense(fs, g)
+        rng = np.random.default_rng(3)
+        x, y = rng.standard_normal(g.n_g), rng.standard_normal(fs.nfil)
+        e1 = np.abs(wg.to_wires(x) - dense.to_wires(x)) / dense.to_wires(np.abs(x), absolute=True)
+        e2 = np.abs(wg.to_grid(y) - dense.to_grid(y)) / dense.to_grid(np.abs(y), absolute=True)
+        assert max(e1.max(), e2.max()) <= tol
+        if rad > 1:
+            assert wg.near > L.PFFT_NEAR  # the physical minimum binds, not the cell count
+        res[cell, rad] = tol
+    assert res[0.125, 0.2] <= res[0.25, 0.2] * 1.5 and max(res.values()) < 5e-5, res

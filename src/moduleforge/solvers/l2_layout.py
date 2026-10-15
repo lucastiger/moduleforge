@@ -120,7 +120,10 @@ K_STAR = 1  # E002's level (0.25 mm cells): the gates of T0075 apply here; k_sta
 ALIGN_TOL = 1e-9  # a cell's covered fraction must be within this of 0 or 1 (round-off where an edge meets a cell edge)
 WIRE_PHI = 6  # filaments per ring
 LANDING_GAP = 0.5  # wire filaments are kept >= LANDING_GAP * diameter above the top-Cu surface (modelling clamp)
-PFFT_NEAR = 18  # cells: branches within this Chebyshev distance of a wire are coupled exactly
+PFFT_NEAR = 18  # cells: branches within this Chebyshev distance of a wire are coupled exactly (minimum; see PFFT_NEAR_RADII)
+PFFT_NEAR_RADII = 20.0  # c: the near box is also >= c x the largest filament radius wide, D_f = (near - 1) cells >= c rmax (stated
+# choice: far disc-rule bound 2 q^4 / (1 - q) with q = rmax / (D_f - 2 rmax) <= 2 / (c - 2)^4 = 1.9e-5, independent of refinement)
+NODE_GAUSS_TOL = 1e-6  # target of the node Gauss bound of the far field (stated choice; was a fixed order 4)
 PFFT_STENCIL = 8  # lateral Lagrange points per axis
 PFFT_STENCIL_Z = 4
 PFFT_DZ = 0.4e-3  # virtual z-level spacing (cap)
@@ -937,14 +940,11 @@ def pair_table(z1, z2, a_al, a_tr, n1, n2, near: int | None = None):
     tp_, wp_ = core.gq(ny_ord, 0.0, a_tr)
     tt = np.concatenate([tn, tp_])
     wt = np.concatenate([wn * (a_tr + tn), wp_ * (a_tr - tp_)]) / (a_tr * a_tr)
-    hz = 0.5 * max(z1[1] - z1[0], z2[1] - z2[0])
-    nz = core.gauss_order(1.0 + dmin / hz, nmin=2)
-    za, wza = core.gq(nz, *z1)
-    zb, wzb = core.gq(nz, *z2)
-    wza, wzb = wza / (z1[1] - z1[0]), wzb / (z2[1] - z2[0])
+    za, wza, bza, _ = core.z_rule(*z1, dmin)
+    zb, wzb, bzb, _ = core.z_rule(*z2, dmin)
     dz = (zb[None, :] - za[:, None]).ravel()
     w_tz = np.outer(wt, np.outer(wza, wzb).ravel())  # (nt, nzz)
-    bound = core.gauss_bound(ny_ord, 1.0 + dmin / h_y) + core.gauss_bound(nz, 1.0 + dmin / hz)
+    bound = core.gauss_bound(ny_ord, 1.0 + dmin / h_y) + bza + bzb
     u = a_al * np.arange(-1, n1 + 1)  # axial positions m = -1 .. n1
     T = np.zeros((n1, n2))
     cj = int(max(1, FAR_CHUNK_ELEMS // ((n1 + 2) * tt.size * dz.size)))
@@ -1164,16 +1164,21 @@ class WireGridPFFT(_WireGridBase):
     """Precorrected-FFT wire <-> grid coupling (see module docstring).  ``far_error`` returns the stated relative bound of
     the interpolation of the far field (all branches outside the near box of a wire), ``bound`` adds the node Gauss bound."""
 
-    NG = 4
+    NG = 4  # minimum node order along a segment; raised per instance until the node Gauss bound is <= NODE_GAUSS_TOL
 
     def __init__(self, fs: FilamentSet, grid: Grid, near: int | None = None):
-        near = PFFT_NEAR if near is None else near
+        if near is None:
+            near = max(PFFT_NEAR, math.ceil(PFFT_NEAR_RADII * float(fs.rho.max()) / min(grid.ax, grid.ay)) + 1)
         self.fs, self.grid, self.near = fs, grid, near
         g = grid
         nx, ny = g.nx, g.ny
         ns = fs.seg_p0.shape[0]
         d = fs.seg_p1 - fs.seg_p0
         ell = np.linalg.norm(d, axis=1)
+        # node order: the far field is smooth on the scale D_f = (near - 1) cells, so the Bernstein parameter of a segment
+        # is rho = 1 + (D_f - rmax) / (ell / 2); the order grows when the cells shrink the near box below the segment length
+        rho_n = 1.0 + ((near - 1.0) * min(g.ax, g.ay) - float(fs.rho.max())) / (0.5 * float(ell.max()))
+        self.NG = next((n for n in range(WireGridPFFT.NG, 13) if rho_n > 1.0 and core.gauss_bound(n, rho_n) <= NODE_GAUSS_TOL), 12)
         t = d / ell[:, None]
         xg_, wg_ = core.gq(self.NG, 0.0, 1.0)
         # nodes: NG Gauss points along the axis x a degree-3 disc rule over the filament's cross-section (4 points at
@@ -1870,7 +1875,7 @@ def build_layout_system(layout, fmax: float, refinement: int, coupling: str = "p
                 filaments_per_wire=fs.nfil // len(wires), n_segments=int(fs.seg_p0.shape[0]), n_grid_unknowns=grid.n_g,
                 clamped_vertices=fs.clamped, coupling=coupling, die_short_nets=short_nets, wire_grid_build_s=t_wg,
                 grid_build_s=t_grid, wire_matrices_s=t_sys, area_rel_err=area_err, on_lattice=True,
-                n_near_pairs=int(getattr(wg, "near_pairs", 0)), pfft_near_cells=PFFT_NEAR)
+                n_near_pairs=int(getattr(wg, "near_pairs", 0)), pfft_near_cells=int(getattr(wg, "near", PFFT_NEAR)))
     return sys_, port, info
 
 

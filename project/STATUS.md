@@ -1,24 +1,22 @@
 # ModuleForge status
-_generated 2026-10-15T03:26:46+00:00 from repository state — do not edit_
+_generated 2026-10-15T03:26:56+00:00 from repository state — do not edit_
 
-## Founder inbox (1 open)
+## Founder inbox (2 open)
 - **I0049** [experiment_registration] register E002 (pre-registration)
+- **I0050** [protected_change] T0103: merge needs founder approval
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $278.49/$315 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | active | - | 0/3 | $280.66/$315 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 22, done: 73, failed: 3, review: 1, running: 1, todo: 5
+cancelled: 22, done: 74, failed: 3, needs_founder: 1, todo: 5
 
-- T0103 `review` builder/implement: Tighten the 0.125 mm stated bounds: plane-table Gauss order cap; wire-grid near box vs wire radius (no gate changes) (attempt 1)
-- T0105 `running` critic/review: Review T0103 (numerics) (attempt 1)
+- T0103 `needs_founder` builder/implement: Tighten the 0.125 mm stated bounds: plane-table Gauss order cap; wire-grid near box vs wire radius (no gate changes) (attempt 1)
 
 ## Recent events
-- 2026-10-14T21:43:57+00:00 sleep_detected {"gap_s": 1022, "runs_extended": 0}
-- 2026-10-14T22:07:59+00:00 sleep_detected {"gap_s": 1405, "runs_extended": 0}
 - 2026-10-14T23:30:59+00:00 sleep_detected {"gap_s": 4195, "runs_extended": 0}
 - 2026-10-15T00:52:41+00:00 sleep_detected {"gap_s": 4378, "runs_extended": 0}
 - 2026-10-15T01:20:34+00:00 inbox_resolved {"id": "I0048", "status": "approved", "note": "Founder (2026-10-14): approve merge of T0100 (DoD incl. --selftest verified; T0101 and T0102 accept_with_caveats)
@@ -32,3 +30,5 @@ cancelled: 22, done: 73, failed: 3, review: 1, running: 1, todo: 5
 - 2026-10-15T02:56:48+00:00 run_started {"run": "T0105-critic-20261014T195648-adf8", "task": "T0105", "role": "critic", "session": "cf2918c3-46a8-4c09-9000-09f7251f1790"}
 - 2026-10-15T02:57:20+00:00 sleep_detected {"gap_s": 1623, "runs_extended": 2}
 - 2026-10-15T03:21:51+00:00 run_finished {"run": "T0104-critic-20261014T195647-1dde", "status": "completed", "cost": 2.195181, "subtype": "success", "report": "structured_output"}
+- 2026-10-15T03:26:53+00:00 run_finished {"run": "T0105-critic-20261014T195648-adf8", "status": "completed", "cost": 2.162941, "subtype": "success", "report": "structured_output"}
+- 2026-10-15T03:26:56+00:00 inbox_opened {"id": "I0050", "kind": "protected_change", "subject": "T0103: merge needs founder approval"}

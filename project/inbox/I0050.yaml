@@ -1,0 +1,15 @@
+id: I0050
+kind: protected_change
+subject: 'T0103: merge needs founder approval'
+summary: 'Tighten the 0.125 mm stated bounds: plane-table Gauss order cap; wire-grid near box vs wire
+  radius (no gate changes)
+
+  Risk high; 3 files. PR: None'
+refs:
+- T0103
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-15T03:26:56+00:00'
+resolved_at: null

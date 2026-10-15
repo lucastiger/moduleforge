@@ -4,7 +4,7 @@ title: 'Tighten the 0.125 mm stated bounds: plane-table Gauss order cap; wire-gr
   (no gate changes)'
 type: implement
 agent: builder
-status: review
+status: merge
 depends_on: []
 description: 'Founder-approved 2026-10-14. E002''s registration is held until this task merges.
 

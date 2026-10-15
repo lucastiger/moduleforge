@@ -1,0 +1,58 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "minor",
+      "title": "GAUSS_NMAX_PANEL=40 is below the order QUAD_TOL needs at rho=RHO_PANEL",
+      "detail": "The comment says the order needed for QUAD_TOL at rho >= RHO_PANEL is below the cap. That is false. With ELLIPSE_M=10, gauss_bound reaches 1e-14 only at n=45 when rho=1.5. When the layer half-width is an exact multiple of 2*dmin, each panel has rho=1.5, the cap of 40 applies, and the stated z bound is 2.8e-13 per panel, about 28x QUAD_TOL. The bound is still reported honestly through gauss_bound(n, rho), so nothing is understated. For the production stack at 0.125 mm the baseplate panels have rho=1.917 and need n=27, so the cap does not apply there.",
+      "evidence": "Scratch scan: 'order needed at rho=1.5: 45 cap 40 bound at cap 2.79e-13'. Worst stated z bound over 4 cell sizes and thicknesses up to 5 mm was 2.79e-13 (rho=1.5, 200 nodes). plane_table_full for 3 mm layers at 0.0625 mm gave a stated bound of 5.6e-13.",
+      "suggested_check": "Raise GAUSS_NMAX_PANEL to >= 45, or fix the comment."
+    },
+    {
+      "severity": "minor",
+      "title": "Far table entries: the actual error exceeds the tightened stated quadrature bound because of float64 cancellation",
+      "detail": "Far entries are computed as the second difference g(u+a)+g(u-a)-2g(u), which loses precision to cancellation. No stated bound covers that rounding; plane_table_full's third return covers only the Hoer-Love near entries. Now that the quadrature bound is ~1e-14, rounding is the larger error, so the tightened plane-table bound is not an end-to-end bound on the table entries. The quadrature part alone, measured against a 1e-22-target rule, stays within the stated bound. The author's test cannot see this because it compares against max(bound, 1e-12). The issue predates this change and is negligible against the 1e-10 to 1e-5 tolerances in use, but it limits what 'tightened' means.",
+      "evidence": "Asymmetric case z1=(-2.18,0) mm, z2=(0.1,0.4) mm, ax=0.125 mm, atr=0.2 mm: stated bound 1.02e-14; production vs Hoer-Love (near=8, double-double) 2.19e-14; production vs high-order rule 9.1e-15; high-order rule vs Hoer-Love 1.8e-14. 3 mm layers at 0.0625 mm: high-order rule vs Hoer-Love 2.3e-13, so the rule itself is not the cause.",
+      "suggested_check": "State a float64 cancellation bound for the far second difference, or drop the 1e-12 floor in the test and compare against bound + rounding."
+    },
+    {
+      "severity": "note",
+      "title": "The wire-radius near-box rule never binds for production layouts; the real 0.125 mm gain is from the adaptive node order",
+      "detail": "Production wires are 0.3\u20130.4 mm in diameter, so the largest filament radius is 0.35 r \u2264 0.07 mm. Then ceil(20*rmax/cell)+1 \u2264 18 at every cell size, and near stays at PFFT_NEAR=18. At 0.125 mm the far disc-rule bound is therefore unchanged: 3.2e-6, versus 1.7e-7 at 0.25 mm. It still depends on refinement but stays under the 2e-5 cap. The production tightening comes from NG rising from 4 to 5, which cuts the node Gauss bound from 1.4e-5 to 7.2e-7 (seed 23). The radius rule only engages for wires thicker than about 0.6 mm, which the author's 1.5 mm-diameter test case exercises.",
+      "evidence": "Seeds 7, 11 and 23 with dies_per_switch=2, cell 0.125 mm: near=18, NG=5. Old NG=4 node bound 3.5e-6 to 1.4e-5, new 1.3e-7 to 7.2e-7. Disc bound old = new = 9.4e-7 to 3.2e-6.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "Documentation slips in the new code and test",
+      "detail": "(a) The PFFT_NEAR_RADII comment writes 'q <= 2/(c-2)^4 = 1.9e-5'. Correctly, q \u2264 1/(c-2), and the bound is 2q^4/(1-q) = 2.02e-5. (b) The new wire-grid test labels the third WireIn argument as 'wire radius parameter (mm)', but that argument is the diameter. (c) The z_rule test docstring calls the thin-layer case 'unchanged from the previous rule'. The old rule used one order set by the thicker of the two layers. The new rule picks an order per layer and sums bza+bzb, which raises the stated bounds slightly at 0.5 and 0.25 mm (for example 6.1e-14 to 1.1e-13), conservatively.",
+      "evidence": "l2_layout.py lines 124\u2013125; test_l2_layout.py line 1070 (WireIn(name, pts, diameter, sigma)); production-stack scan of summed z bounds old vs new.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "The same single-panel order cap is still in the core wire_plane_op z rule",
+      "detail": "l2_core.wire_plane_op still uses gauss_order(1+gap/h_z, nmin=2) with the default nmax=24 for each layer. For a thick layer this cap gives a loose but honestly stated bound. That function is on the core/E001 path, whose planes are 0.3 mm thick, not on the 0.125 mm layout path. It is outside this deliverable's stated scope; I record it only as a limit on 'completely'.",
+      "evidence": "l2_core.py lines 732\u2013734.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran every DoD command. `pytest tests/unit/solvers`: 117 passed (12m15s). Ruff: clean. E001 smoke: status complete, all sanity checks pass, max_rel_err 8.39e-5 (result.json freshly written). Refinement-0 loop inductance: L=1.1114978173833604e-08, rel diff 3.2e-14 vs the reference, solver_tol 1.81e-5.",
+    "z_rule accuracy: integrated 1/sqrt(dmin^2+(z-c)^2) over the 2.18 mm layer with the singularity at distance dmin above the middle and the quarter point. New composite rule error ~1.7e-16; old capped rule 1.3e-10.",
+    "Order cap: the order needed for QUAD_TOL at rho=1.5 is 45, above the cap of 40. Scanned thicknesses 1 \u00b5m to 5 mm at 4 cell sizes; worst stated z bound 2.8e-13.",
+    "Compared far plane-table entries (near=4) with an independent method: double-double Hoer-Love from the same code with near=8. Cases were asymmetric layers, non-square cells, and 0.0625 to 0.25 mm cells. Also separated quadrature error from rounding by recomputing with QUAD_TOL=1e-22 and cap 120. Quadrature error is within the stated bound in all cases; the residual vs Hoer-Love is float64 cancellation.",
+    "Production layer stack (top 10, back 6, base 6 graded layers; 3 mm baseplate) at 0.5, 0.25 and 0.125 mm. Summed z bound at 0.125 mm fell from 3.1e-6 to 9.4e-14. z-node pair count ratio new/old is 0.42\u20130.75, or 1.09 for the base at 0.125 mm, so no performance regression.",
+    "Production wire geometry from generate_layouts (seeds 7, 11, 23). Computed near, NG and the node Gauss and disc-rule bounds per cell size: the radius rule never binds, NG goes 4 to 5 at 0.125 mm, and the node bound improves about 20x.",
+    "Checked by hand that rho = 1 + delta/h is a valid Bernstein parameter: the ellipse's maximum distance from the interval is sinh(s) < delta. Checked that every far branch is at least near cells (one cell beyond D_f) from every node, so the node-order rho_n and the PFFT_NEAR_RADII inequality D_f >= c*rmax hold as coded.",
+    "Tested the author's tests. The wire-grid test with the 1.5 mm wire would fail under the old near=18 (bnd_far \u2248 1.7e-3 > 5e-5). The plane-table test's bound <= 1e-10 assertion would fail under the old cap (old bound 5.1e-7). Its reference comparison, however, uses a 1e-12 floor that does not test the bound itself."
+  ],
+  "caveats": [
+    "The claim holds for the layout path: the production baseplate plane-table bound at 0.125 mm drops from 3.1e-6 to 9.4e-14, and the wire-grid node bound from about 1.4e-5 to 7e-7.",
+    "The stated z bound is \u2264 QUAD_TOL only when each panel's rho is about 1.6 or more. At rho \u2248 1.5 the order cap of 40 gives up to 2.8e-13 per panel, still reported honestly.",
+    "The near-box radius rule is a guard for wires thicker than about 0.6 mm and does not change production runs. At 0.125 mm the far disc-rule bound is still about 20x its 0.25 mm value, though below 2e-5.",
+    "The tightened quadrature bound does not cover float64 cancellation in the far-entry second difference. Measured actual errors are 1e-14 to 1e-13, above the stated quadrature bound in one case.",
+    "I did not run a full refinement-2 (0.125 mm) layout solve because of cost. The 0.125 mm conclusions come from component-level checks and the production geometry parameters.",
+    "I could not diff against the pre-change base commit (single review-snapshot commit), so I could not independently confirm that no existing test was modified beyond what the packet diff shows."
+  ]
+}

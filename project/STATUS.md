@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-15T14:38:18+00:00 from repository state — do not edit_
+_generated 2026-10-15T15:16:44+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0049** [experiment_registration] register E002 (pre-registration)
@@ -15,7 +15,6 @@ cancelled: 22, done: 75, failed: 3, todo: 5
 
 
 ## Recent events
-- 2026-10-15T01:21:27+00:00 run_started {"run": "T0103-builder-20261014T182127-5092", "task": "T0103", "role": "builder", "session": "fb5c6378-d11e-4b62-b1fb-05c1c540a231"}
 - 2026-10-15T02:30:18+00:00 run_finished {"run": "T0103-builder-20261014T182127-5092", "status": "completed", "cost": 1.079118, "subtype": "success", "report": "structured_output"}
 - 2026-10-15T02:56:45+00:00 verified {"task": "T0103"}
 - 2026-10-15T02:56:47+00:00 run_started {"run": "T0104-critic-20261014T195647-1dde", "task": "T0104", "role": "critic", "session": "243f9dd0-c68e-4224-a4c0-d023bc4b71d4"}
@@ -30,3 +29,4 @@ cancelled: 22, done: 75, failed: 3, todo: 5
 - 2026-10-15T14:05:29+00:00 inbox_resolved {"id": "I0050", "status": "approved", "note": "Founder (2026-10-15): approve merge of T0103. DoD verified (117 solver tests, E001 smoke, value invariance 3.2e-1
 - 2026-10-15T14:05:59+00:00 merged {"task": "T0103"}
 - 2026-10-15T14:38:16+00:00 sleep_detected {"gap_s": 424, "runs_extended": 0}
+- 2026-10-15T15:16:42+00:00 sleep_detected {"gap_s": 960, "runs_extended": 0}

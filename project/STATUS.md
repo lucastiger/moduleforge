@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-15T13:42:29+00:00 from repository state — do not edit_
+_generated 2026-10-15T13:51:13+00:00 from repository state — do not edit_
 
 ## Founder inbox (2 open)
 - **I0049** [experiment_registration] register E002 (pre-registration)
@@ -17,7 +17,6 @@ cancelled: 22, done: 74, failed: 3, needs_founder: 1, todo: 5
 - T0103 `needs_founder` builder/implement: Tighten the 0.125 mm stated bounds: plane-table Gauss order cap; wire-grid near box vs wire radius (no gate changes) (attempt 1)
 
 ## Recent events
-- 2026-10-15T00:52:41+00:00 sleep_detected {"gap_s": 4378, "runs_extended": 0}
 - 2026-10-15T01:20:34+00:00 inbox_resolved {"id": "I0048", "status": "approved", "note": "Founder (2026-10-14): approve merge of T0100 (DoD incl. --selftest verified; T0101 and T0102 accept_with_caveats)
 - 2026-10-15T01:20:40+00:00 merged {"task": "T0100"}
 - 2026-10-15T01:20:40+00:00 inbox_opened {"id": "I0049", "kind": "experiment_registration", "subject": "register E002 (pre-registration)"}
@@ -32,3 +31,4 @@ cancelled: 22, done: 74, failed: 3, needs_founder: 1, todo: 5
 - 2026-10-15T03:26:53+00:00 run_finished {"run": "T0105-critic-20261014T195648-adf8", "status": "completed", "cost": 2.162941, "subtype": "success", "report": "structured_output"}
 - 2026-10-15T03:26:56+00:00 inbox_opened {"id": "I0050", "kind": "protected_change", "subject": "T0103: merge needs founder approval"}
 - 2026-10-15T13:42:28+00:00 sleep_detected {"gap_s": 451, "runs_extended": 0}
+- 2026-10-15T13:51:11+00:00 sleep_detected {"gap_s": 524, "runs_extended": 0}

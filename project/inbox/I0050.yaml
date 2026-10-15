@@ -9,7 +9,9 @@ refs:
 - T0103
 options: []
 recommendation: ''
-status: open
-response: ''
+status: approved
+response: 'Founder (2026-10-15): approve merge of T0103. DoD verified (117 solver tests, E001 smoke, value
+  invariance 3.2e-14); T0104 and T0105 accept_with_caveats (bounds honest; reduced 0.125 mm solver_tol
+  1.5e-5).'
 created_at: '2026-10-15T03:26:56+00:00'
-resolved_at: null
+resolved_at: '2026-10-15T14:05:29+00:00'

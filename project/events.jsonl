@@ -873,3 +873,4 @@
 {"ts": "2026-10-15T13:42:28+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 451, "runs_extended": 0}
 {"ts": "2026-10-15T13:51:11+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 524, "runs_extended": 0}
 {"ts": "2026-10-15T14:03:44+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 718, "runs_extended": 0}
+{"ts": "2026-10-15T14:05:29+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0050", "status": "approved", "note": "Founder (2026-10-15): approve merge of T0103. DoD verified (117 solver tests, E001 smoke, value invariance 3.2e-14); T0104 and T0105 accept_with_caveats (bounds honest; reduced 0.125 mm solver_tol 1.5e-5)."}

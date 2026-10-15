@@ -1,0 +1,59 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "minor",
+      "title": "GAUSS_NMAX_PANEL = 40 does bind, despite the comment saying it doesn't",
+      "detail": "The comment says the order needed to reach QUAD_TOL for a panel with rho >= RHO_PANEL is below 40. That is false near the bottom of the allowed range. At rho = 1.5, gauss_order needs n = 45. At 1.52 it needs 43, and at 1.55 it needs 41. In those cases the panel order is capped at 40 and the stated z bound is up to 2.8e-13, not <= 1e-14. Panel splitting lands on exactly rho = 1.5 whenever h*(RHO_PANEL-1)/dmin is an integer, for example a 2.0 mm or 4.0 mm layer at a 0.125 mm cell. The returned bound is still honest (gauss_bound of the capped order), so the reported numbers are not wrong. Only the comment's guarantee is. The new unit test checks b <= 2*QUAD_TOL only for 2.18 mm (rho = 1.917), where the cap does not bind.",
+      "evidence": "Scratch sweep of core.z_rule(0, t, 0.5e-3) for t in [1e-6, 5e-3]: worst bound 2.78e-13 at t = 2.0 mm (rho = 1.5001, n = 40). gauss_order(1.5, nmax=200) returns 45.",
+      "suggested_check": "Raise GAUSS_NMAX_PANEL to 45, or correct the comment and add a test at a thickness where rho = RHO_PANEL exactly."
+    },
+    {
+      "severity": "minor",
+      "title": "The PFFT_NEAR_RADII comment understates the disc-rule bound",
+      "detail": "The comment claims 2 q^4/(1-q) <= 2/(c-2)^4 = 1.9e-5 with q <= 1/(c-2). It drops the 1/(1-q) factor. With c = 20, q = 1/18, the true worst case is 2/(17*18^3) = 2.02e-5. This only affects the comment: _bounds computes bnd_far from the actual q, so the stated tolerance is correct.",
+      "evidence": "By hand: 2*(1/18)^4/(17/18) = 2.017e-5 > 1.905e-5.",
+      "suggested_check": "Correct the comment to 2/((c-2)^3 (c-3)) \u2248 2.0e-5."
+    },
+    {
+      "severity": "minor",
+      "title": "The plane-table accuracy check could not have failed the old rule; only the bound assertion catches it",
+      "detail": "test_plane_table_far_entries... compares entries with tolerance max(bound, 1e-12). The new stated bound is ~1.8e-14, so this lets actual errors 50-100x above the stated bound pass. I re-ran the old rule (single panel, order 24) against an independent order-300 reference. Its actual errors were <= 6.7e-13, which also passes the accuracy assertion. So the test only tells old from new through `bound <= 1e-10`. It does not check that the new stated bound is honest at the level it claims. My own check did find it honest: new errors were <= 9.6e-15, below the stated 1.8e-14.",
+      "evidence": "Scratch comparison against an order-300 z and lateral reference, entries (5,0), (0,5), (5,1), (20,0), etc. Old relative errors: up to 6.73e-13. New: up to 9.58e-15.",
+      "suggested_check": "Tighten the tolerance to bound plus a few ulp-level round-off terms instead of max(bound, 1e-12)."
+    },
+    {
+      "severity": "note",
+      "title": "The near box scales with the filament's equivalent radius (0.35 x wire radius), and the rule never binds for production wires",
+      "detail": "fs.rho is sqrt(filament area/pi). With WIRE_EDGES = (0, .35, ...), the largest filament is the central one, at 0.35 x the wire radius. So D_f >= 20*rmax means about 3.5 wire diameters, not 20 wire radii. That is the right quantity for the disc-rule bound the code states, but the task title says 'vs wire radius'. The generator's wires are 300 um (rmax = 52.5 um). For them the new rule gives near = 10 at 0.125 mm, 6 at 0.25 mm and 4 at 0.5 mm, so PFFT_NEAR = 18 always wins. At 0.125 mm the rule only starts to bind above about 0.6 mm wire diameter. In production the real tightening at 0.125 mm comes from the adaptive node order: NG goes 4 -> 5, and the node bound drops from 3.5e-6 to 1.3e-7. Also, the new test names its loop variable `rad` ('wire radius parameter') but passes it to WireIn as a diameter.",
+      "evidence": "Scratch calculation on generate_layouts(1, seed=7, dies_per_switch=2): diameter 300 um, rmax 0.0525 mm, ell_max 1.00 mm. Near box 18 at all three cell sizes. NG = 4, 4, 5 at 0.5, 0.25, 0.125 mm.",
+      "suggested_check": "Rename `rad` to `diam` in the test, and say 'filament radius' in the task wording."
+    },
+    {
+      "severity": "note",
+      "title": "Peak memory for the thick-baseplate self-pair rises about 5x at 0.125 mm (total work falls)",
+      "detail": "With composite panels the 2.18 mm baseplate layer gets 54 z nodes, so the self-pair has nzz = 2916 versus 576 before. In pair_table, (n1+2)*nt*nzz = 32e6 elements, which exceeds FAR_CHUNK_ELEMS = 6e6 and floors cj at 1, so the 'bounded memory' chunking no longer bounds this pair. Summed over unique pairs, z work drops to 0.58x at refinement 2 and 0.32x at refinement 1, because thin layers no longer inherit the thick layer's order.",
+      "evidence": "Measured pair_table(baseplate, baseplate, 0.125 mm, 687 x 8): peak RSS 0.81 GB, versus about 0.16 GB expected for 576 nodes. Sum of nzz over unique pairs: ref 2 new 15082 vs old 26038; worst pair 2916 vs 576.",
+      "suggested_check": "Chunk over the z-pair axis as well when (n1+2)*nt*nzz > FAR_CHUNK_ELEMS."
+    }
+  ],
+  "independent_checks_performed": [
+    "Ran `uv run pytest -q tests/unit/solvers`: 117 passed (12.5 min).",
+    "Ran `uv run ruff check src/moduleforge/solvers tests/unit/solvers`: all checks passed.",
+    "Ran the refinement-0 loop-inductance reference check from the definition of done: L = 1.1114978173833604e-08, rel diff 3.2e-14 (<= 1e-9); solver_tol 1.81e-5, dominated by the wire-grid operator.",
+    "Checked by hand that the z kernel is analytic in a strip of half-width dmin for all far entries. For di >= 5 the ln D singularity cancels in the axial second difference; for dj >= 5 the lateral distance is >= 4 a. Also checked that the ellipse rho = 1 + dmin/h_p (semi-minor h_p(rho-1/rho)/2 < dmin) fits inside that strip, and that the tensor bound bza + bzb is valid because the weights are positive and sum to 1.",
+    "Swept z_rule over layer thickness 1 um..5 mm at a 0.125 mm cell: found the order cap binding at rho near 1.5 (needs 45 > 40) and a worst stated bound of 2.8e-13.",
+    "Adversarial z_rule test: 1/hypot(dmin, z-zc) and hypot(dmin, z-zc), with the singularity at distance dmin placed anywhere over/near the layer (41 positions x 5 thicknesses), compared with closed forms. Max error 6.3e-16; worst error/bound ratio 0.16.",
+    "Ran the old rule (single panel, order 24) and the new rule against an independent order-300 Gauss reference for 10 far entries of the 2.18 mm layer at 0.125 mm. Old errors <= 6.7e-13 (old stated bound 5.1e-7); new errors <= 9.6e-15 (new stated bound 1.8e-14).",
+    "Adversarial wire-grid case at 0.125 mm: 300 um wire with 4 mm segments, compared with WireGridDense. New: NG = 12, to_grid error 1.38e-7 <= stated 3.2e-6. Old NG = 4, emulated by setting NODE_GAUSS_TOL = 1e9: error 1.42e-3, stated 5.1e-2. So the node-order change fixes a real error, and the new bound holds.",
+    "Computed near, NG, node bound and disc bound for the production layout's wires (300 um) at each refinement: wire-grid behaviour is unchanged at refinements 0 and 1; at 0.125 mm NG goes 4 -> 5.",
+    "Checked the production layer stack: at refinement 1 the only plane-table change is the baseplate z order (24 -> 27), so values move by about 1e-13 or less (consistent with 'no gate changes').",
+    "Measured pair_table peak memory for the thick-baseplate self-pair at the 0.125 mm lattice width: 0.81 GB."
+  ],
+  "caveats": [
+    "I could not run the E001 smoke step of the definition of done (`e001_reference.py --smoke` and `rm -rf /tmp/e001-smoke`): the sandbox denied permission. Its pass/fail is unverified by me; the orchestrator's deterministic run decides it.",
+    "The repository is a one-commit snapshot, so I could not diff against the parent. I relied on the packet's diff to confirm that no gate, threshold or policy files changed.",
+    "Valid only within the stated ELLIPSE_M = 10 assumption of gauss_bound. My adversarial tests found it comfortably met for panels at rho >= 1.5, but they are not a proof.",
+    "The near-box rule bounds the disc-rule error in terms of the filament's equivalent radius. It does not act on wire radius as such, and it is inactive for the generator's 300 um wires at every refinement level."
+  ]
+}

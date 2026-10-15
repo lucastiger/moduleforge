@@ -1,8 +1,8 @@
 # ModuleForge status
-_generated 2026-10-15T01:20:29+00:00 from repository state — do not edit_
+_generated 2026-10-15T01:20:41+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
-- **I0048** [protected_change] T0100: merge needs founder approval
+- **I0049** [experiment_registration] register E002 (pre-registration)
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
@@ -11,14 +11,10 @@ _generated 2026-10-15T01:20:29+00:00 from repository state — do not edit_
 | O001 | active | - | 0/3 | $275.22/$315 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 22, done: 71, failed: 3, needs_founder: 1, todo: 5
+cancelled: 22, done: 72, failed: 3, todo: 5
 
-- T0100 `needs_founder` scientist/design_experiment: Revise E002: Richardson-extrapolated L2 reference verified on checked layouts incl. both 6-die strata; run by Oct 20 (attempt 1)
 
 ## Recent events
-- 2026-10-14T16:34:21+00:00 sleep_detected {"gap_s": 311, "runs_extended": 0}
-- 2026-10-14T17:39:17+00:00 sleep_detected {"gap_s": 3861, "runs_extended": 0}
-- 2026-10-14T18:01:59+00:00 sleep_detected {"gap_s": 1362, "runs_extended": 0}
 - 2026-10-14T18:18:47+00:00 sleep_detected {"gap_s": 722, "runs_extended": 0}
 - 2026-10-14T18:36:36+00:00 sleep_detected {"gap_s": 997, "runs_extended": 0}
 - 2026-10-14T18:44:11+00:00 sleep_detected {"gap_s": 455, "runs_extended": 0}
@@ -31,3 +27,6 @@ cancelled: 22, done: 71, failed: 3, needs_founder: 1, todo: 5
 - 2026-10-14T22:07:59+00:00 sleep_detected {"gap_s": 1405, "runs_extended": 0}
 - 2026-10-14T23:30:59+00:00 sleep_detected {"gap_s": 4195, "runs_extended": 0}
 - 2026-10-15T00:52:41+00:00 sleep_detected {"gap_s": 4378, "runs_extended": 0}
+- 2026-10-15T01:20:34+00:00 inbox_resolved {"id": "I0048", "status": "approved", "note": "Founder (2026-10-14): approve merge of T0100 (DoD incl. --selftest verified; T0101 and T0102 accept_with_caveats)
+- 2026-10-15T01:20:40+00:00 merged {"task": "T0100"}
+- 2026-10-15T01:20:40+00:00 inbox_opened {"id": "I0049", "kind": "experiment_registration", "subject": "register E002 (pre-registration)"}

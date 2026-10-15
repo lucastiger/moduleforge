@@ -4,7 +4,7 @@ title: 'Revise E002: Richardson-extrapolated L2 reference verified on checked la
   strata; run by Oct 20'
 type: design_experiment
 agent: scientist
-status: merge
+status: done
 depends_on: []
 description: 'Revise the merged E002 draft (experiments/drafts/E002.yaml, experiments/runners/e002_ranking.py,
   research/notes/o001-e002-e003-design.md) before registration. The founder rejected registration I0044

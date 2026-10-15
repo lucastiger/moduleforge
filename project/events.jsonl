@@ -857,3 +857,4 @@
 {"ts": "2026-10-14T22:07:59+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 1405, "runs_extended": 0}
 {"ts": "2026-10-14T23:30:59+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 4195, "runs_extended": 0}
 {"ts": "2026-10-15T00:52:41+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 4378, "runs_extended": 0}
+{"ts": "2026-10-15T01:20:34+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0048", "status": "approved", "note": "Founder (2026-10-14): approve merge of T0100 (DoD incl. --selftest verified; T0101 and T0102 accept_with_caveats). E002 registration is HELD until the 0.125 mm stated-bound task merges."}

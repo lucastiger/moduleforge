@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E002: L1 vs L2 loop-inductance ranking on sealed generated layouts'
 type: experiment
 agent: none
-status: todo
+status: needs_founder
 depends_on:
 - T0076
 - T0072
@@ -97,3 +97,7 @@ history:
     \      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No\
     \ such file or directory: '/Users/lukeskywalker/mf/main/experiments/specs/E002.yaml'\n"
   at: '2026-10-11T04:34:05+00:00'
+- outcome: awaiting_burst
+  summary: ~172 CPU-h exceeds local limit
+  at: '2026-10-16T05:42:33+00:00'
+  since: 1792129353.880436

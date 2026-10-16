@@ -10,7 +10,9 @@ options:
 - approve
 - reject with note
 recommendation: ''
-status: open
-response: ''
+status: approved
+response: 'Founder (2026-10-15): register E002 (Richardson-extrapolated L2 reference; n=90 sealed, 4 checked
+  layouts, conv_tol 1 %, FS 1.25; ~172 VM CPU-h under D0005). Re-validated on main after T0103: exp check,
+  --selftest, smoke all pass.'
 created_at: '2026-10-15T01:20:40+00:00'
-resolved_at: null
+resolved_at: '2026-10-16T05:42:26+00:00'

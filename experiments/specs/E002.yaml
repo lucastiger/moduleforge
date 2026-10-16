@@ -1,0 +1,245 @@
+id: E002
+title: L1 vs Richardson-extrapolated L2 commutation-loop inductance ranking on sealed generated half-bridge
+  layouts (20 MHz)
+objective: O001
+status: registered
+runner: uv run python experiments/runners/e002_ranking.py
+config:
+  n_layouts: 90
+  freq_hz: 20000000.0
+  freqs_secondary_hz:
+  - 5000000.0
+  - 80000000.0
+  l2_refinement: 1
+  check_strata:
+  - u_shaped:6
+  - interleaved:6
+  - side_by_side:6
+  - side_by_side:2
+  conv_tol: 0.01
+  roache_fs: 1.25
+  step_resolve_min: 0.0001
+  l2_tol_max: 0.001
+  l2_tol_max_check: 0.002
+  cv_min: 0.3
+  area_tol: 1.0e-09
+  l1_hmax_fine_m:
+  - 0.002
+  - 0.001
+  - 0.0005
+  ref_case: C1
+  ref_refinement: 2
+  ref_tol: 0.02
+  ref_freqs_hz:
+  - 5000000.0
+  - 20000000.0
+  - 80000000.0
+  c1_layout_refinement: 1
+  c1_layout_cell_m: 0.0007
+  c1_layout_tol: 0.005
+  band_grid: 101
+  n_boot: 2000
+  boot_seed: 20261008
+  jobs: 4
+  threads: 8
+sealed_seed: true
+metrics:
+- name: spearman_rho_Lloop
+  description: Spearman (average ranks) of L1 and L2_inf over all n layouts; paired percentile bootstrap
+    95 % CI (n_boot 2000, boot_seed 20261008)
+  unit: ''
+- name: mape_Lloop
+  description: mean over layouts of |L1 - L2_inf| / L2_inf (mfos.stats.mape, L2_inf the reference); paired
+    percentile bootstrap 95 % CI
+  unit: ''
+- name: top_decile_recall
+  description: 'mfos.stats.topk_recall vs L2_inf: share of L1''s k lowest-L layouts among L2_inf''s w
+    lowest, k = round(0.1 n) = 9, w = round(0.2 n) = 18; bootstrap CI reported, A5/K3 read the point'
+  unit: ''
+- name: spearman_rho_Lloop_vs_kstar
+  description: as spearman_rho_Lloop with L2(k*) (0.25 mm) as the reference; bootstrap CI
+  unit: ''
+- name: mape_Lloop_vs_kstar
+  description: as mape_Lloop vs L2(k*); bootstrap CI
+  unit: ''
+- name: top_decile_recall_vs_kstar
+  description: as top_decile_recall vs L2(k*)
+  unit: ''
+- name: spearman_rho_Lloop_vs_kstar_m1
+  description: as spearman_rho_Lloop vs L2(k*-1) (0.5 mm); bootstrap CI
+  unit: ''
+- name: mape_Lloop_vs_kstar_m1
+  description: as mape_Lloop vs L2(k*-1); bootstrap CI
+  unit: ''
+- name: top_decile_recall_vs_kstar_m1
+  description: as top_decile_recall vs L2(k*-1)
+  unit: ''
+- name: spearman_L2inf_vs_L2kstar
+  description: Spearman of L2_inf with L2(k*) (does extrapolation reorder the reference?); bootstrap CI
+  unit: ''
+- name: spearman_rho_Lloop_refband_lo
+  description: '2.5 % bootstrap quantile of min over the band (101-point grid + s_hat) of Spearman(L1,
+    ref(s)): reference-robust A2 reads this >= 0.85'
+  unit: ''
+- name: spearman_rho_Lloop_refband_hi
+  description: '97.5 % bootstrap quantile of the max over the band: reference-robust K1 reads this < 0.80'
+  unit: ''
+- name: mape_Lloop_refband_lo
+  description: '2.5 % bootstrap quantile of the min over the band of MAPE(L1, ref(s)): reference-robust
+    K2 reads this > 0.20'
+  unit: ''
+- name: mape_Lloop_refband_hi
+  description: '97.5 % bootstrap quantile of the max over the band: reference-robust A4 reads this <=
+    0.12'
+  unit: ''
+- name: top_decile_recall_refband_lo
+  description: 'min over the band of the point recall (exact: evaluated where the reference order is constant)'
+  unit: ''
+- name: top_decile_recall_refband_hi
+  description: max over the band of the point recall
+  unit: ''
+- name: l2_contraction_mean
+  description: 'r_hat: mean over the checked layouts of r = (L(k*+1) - L(k*)) / (L(k*) - L(k*-1))'
+  unit: ''
+- name: l2_contraction_obs_min
+  description: min of r over the checked layouts
+  unit: ''
+- name: l2_contraction_obs_max
+  description: max of r over the checked layouts
+  unit: ''
+- name: l2_contraction_band_lo
+  description: 'r_lo: min over checked layouts of r with each level''s L moved within its stated solver
+    bound (solver_tol_rel_L, 8 sign corners)'
+  unit: ''
+- name: l2_contraction_band_hi
+  description: 'r_hi: the matching max'
+  unit: ''
+- name: l2_extrap_loo_err_max
+  description: max over checked layouts of |two-level extrapolation with the leave-one-out common ratio
+    / own three-level limit - 1| (the gated quantity)
+  unit: ''
+- name: l2_extrap_loo_err_worst_tol_max
+  description: the same with the layout's own three levels at the worst solver-bound corner (reported,
+    not gated)
+  unit: ''
+- name: l2_ref_pred_err_max
+  description: max over all layouts of the predicted reference error e_i (the l2_converged quantity)
+  unit: ''
+- name: l2_kstar_bias_mean
+  description: mean over layouts of L2(k*)/L2_inf - 1 (raw lateral-discretisation bias of L2 at k*); bootstrap
+    CI
+  unit: ''
+- name: l2_kstar_bias_max
+  description: max over layouts of |L2(k*)/L2_inf - 1|
+  unit: ''
+- name: l2_kstar_bias_side_by_side
+  description: mean of L2(k*)/L2_inf - 1 over the family
+  unit: ''
+- name: l2_kstar_bias_interleaved
+  description: same
+  unit: ''
+- name: l2_kstar_bias_u_shaped
+  description: same
+  unit: ''
+- name: l2_ref_band_rel_lo
+  description: min over layouts of (lower end of the layout's reference band)/L2_inf - 1
+  unit: ''
+- name: l2_ref_band_rel_hi
+  description: max over layouts of (upper end)/L2_inf - 1
+  unit: ''
+- name: l2_d1_ratio_max
+  description: max over all layouts of |d1| / max over checked layouts of |d1| (how far the sample's first
+    steps reach beyond the verified ones)
+  unit: ''
+- name: spearman_rho_within_family
+  description: mean over the 3 families of the within-family Spearman (L1 vs L2_inf); bootstrap CI
+  unit: ''
+- name: cv_L2
+  description: 'diversity statistic (F2): coefficient of variation of L2_inf'
+  unit: ''
+- name: cv_loop_area
+  description: coefficient of variation of loop_area_proxy
+  unit: ''
+- name: spearman_L1_5MHz_vs_20MHz
+  description: 'F4: rank stability of L1 itself, 5 vs 20 MHz, all layouts; bootstrap CI (no L2 at 5/80
+    MHz in this design)'
+  unit: ''
+- name: spearman_L1_80MHz_vs_20MHz
+  description: 'F4: rank stability of L1 itself, 80 vs 20 MHz; bootstrap CI'
+  unit: ''
+- name: resid_spearman_loop_area
+  description: 'F3: Spearman of (L1 - L2_inf)/L2_inf (L1 default mesh) with loop_area_proxy; bootstrap
+    CI'
+  unit: ''
+- name: resid_spearman_plane_dist
+  description: 'F3: same with plane_dist_proxy (mean wire apex height above the backside-Cu top face;
+    the stack is fixed, so this probes wire height only)'
+  unit: ''
+- name: resid_spearman_dies
+  description: 'F3: same with dies_per_switch'
+  unit: ''
+- name: resid_fine_spearman_loop_area
+  description: F3 with L1 at hmax 0.5 mm (separates L1's discretisation bias from missing physics)
+  unit: ''
+- name: resid_fine_spearman_plane_dist
+  description: same with plane_dist_proxy
+  unit: ''
+- name: resid_fine_spearman_dies
+  description: same with dies_per_switch
+  unit: ''
+- name: l1_mesh_bias_mean
+  description: mean of L1(default 4 mm)/L1(0.5 mm) - 1 at 20 MHz
+  unit: ''
+- name: l1_mesh_bias_spearman_dies
+  description: Spearman of L1's mesh bias with dies_per_switch; bootstrap CI
+  unit: ''
+- name: cpu_hours_total
+  description: user+sys CPU-h of all L2 children plus the parent (cost accounting, not a result)
+  unit: ''
+- name: l2_wall_hours
+  description: wall hours of the L2 phases
+  unit: ''
+sanity_checks:
+- name: all_drc_valid
+  description: moduleforge.drc.check reports no violation, and every trace, plane outline and die footprint
+    lies on the L2 lattice of every solved level (k*-1, k*, k*+1); checked before any solve
+- name: l2_reference_valid
+  description: 'E001''s C1 re-solved in-run with moduleforge.solvers.l2 at refinement 2, 5/20/80 MHz:
+    max |L - closed form|/closed form <= 2 %, GMRES converged, and e001_reference.py (the closed form)
+    has the sha256 registered in experiments/specs/E001.yaml'
+- name: l2_layout_reference_valid
+  description: 'E001''s C1 assembled from the solvers.l2_layout internals (refinement 1, 0.7 mm cells,
+    20 MHz, as test_c1_layout_internals_vs_l2_solve_same_refinement): |L_layout/L_l2.solve - 1| <= 0.5
+    % and |L_layout/closed form - 1| <= 2 %, GMRES converged, layout-path solver_tol_rel_L <= 0.5 %, l2''s
+    < 1e-5'
+- name: l2_extrapolation_verified
+  description: 'PHASE-1 GATE (founder T0100 (2)); on every checked layout (u_shaped:6, interleaved:6,
+    side_by_side:6, side_by_side:2): both steps resolvable (|d| >= 1e-4 and outside the solver bounds),
+    contracting 0 < d2/d1 < 1, r inside the band of the OTHER checked layouts (widened by their solver
+    bounds), and |two-level extrapolation with the leave-one-out common ratio of the OTHER checked layouts
+    / own three-level limit - 1| < conv_tol = 1 %; and the widened band [r_lo, r_hi] inside (0, 1). If
+    it fails no other solve starts'
+- name: l2_converged
+  description: 'conv_tol applied to the reference error of every layout: e_i = |D1_i| max|rho(r_hat +-
+    dr) - rho(r_hat)| / L2_inf + solver bounds < 1 %, rho(r) = r/(1 - r), dr = the largest leave-one-out
+    contraction deviation of the checked layouts. Checked layouts in the phase-1 gate, all layouts after
+    phase 2'
+- name: l2_solver_ok
+  description: 'every L2 layout solve: GMRES flags 0; solver_tol_rel_L_max <= 1e-3 (k*, k*-1), <= 2e-3
+    (k*+1); represented copper area of every net and plane equal to the exact area (rel <= 1e-9); one
+    die short per die, each on a single net'
+- name: l2_provenance_consistent
+  description: every L2 child (layouts and the C1 layout-path solve) reports the parent's l2_layout tool_version
+    and source_sha256, unchanged from start to end
+- name: all_finite
+  description: every L1, L2 and L2_inf value finite and > 0, no L2 child failed, nothing aborted (a failed
+    solve invalidates the run; nothing is dropped)
+- name: sample_diverse
+  description: CV of L2_inf >= 0.3 (F2) and every (family, dies 2-6) stratum holds exactly n/15 layouts
+timeout_min: 1560
+cpu_hours_est: 172.0
+registered_by: founder
+registered_at: '2026-10-16T05:42:26+00:00'
+spec_hash: sha256:9791c87bf3c318015dd0908d40ab5455137c4d084f68859e5d0aee8f6ef87d73
+runner_files:
+  experiments/runners/e002_ranking.py: 02d75c142bce9ed4c209ce966967152e4ddc948cb758441ac40cea24be076df1

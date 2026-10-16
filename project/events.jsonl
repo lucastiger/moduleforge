@@ -895,3 +895,7 @@
 {"ts": "2026-10-16T05:01:54+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 522, "runs_extended": 0}
 {"ts": "2026-10-16T05:25:39+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 1147, "runs_extended": 0}
 {"ts": "2026-10-16T05:33:28+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 468, "runs_extended": 0}
+{"ts": "2026-10-16T05:42:26+00:00", "event": "experiment_registered", "actor": "orchestrator", "id": "E002", "hash": "sha256:9791c87bf3c318015dd0908d40ab5455137c4d084f68859e5d0aee8f6ef87d73", "by": "founder"}
+{"ts": "2026-10-16T05:42:26+00:00", "event": "inbox_resolved", "actor": "founder", "id": "I0049", "status": "approved", "note": "Founder (2026-10-15): register E002 (Richardson-extrapolated L2 reference; n=90 sealed, 4 checked layouts, conv_tol 1 %, FS 1.25; ~172 VM CPU-h under D0005). Re-validated on main after T0103: exp check, --selftest, smoke all pass."}
+{"ts": "2026-10-16T05:42:33+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0051", "kind": "decision", "subject": "E002 needs burst compute (~172 CPU-h)"}
+{"ts": "2026-10-16T05:42:33+00:00", "event": "burst_requested", "actor": "orchestrator", "task": "T0077", "experiment": "E002", "cpu_hours": 172.0}

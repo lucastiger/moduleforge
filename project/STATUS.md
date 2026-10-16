@@ -1,24 +1,22 @@
 # ModuleForge status
-_generated 2026-10-16T22:18:21+00:00 from repository state — do not edit_
+_generated 2026-10-16T23:03:07+00:00 from repository state — do not edit_
 
-## Founder inbox (1 open)
-- **I0051** [decision] E002 needs burst compute (~172 CPU-h)
+## Founder inbox (0 open)
+- nothing needs you
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | active | - | 0/3 | $280.66/$315 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | evaluating | PASS | 1/3 | $280.66/$315 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 22, done: 75, failed: 3, needs_founder: 1, todo: 4
+cancelled: 22, done: 76, failed: 3, running: 2, todo: 4
 
-- T0077 `needs_founder` none/experiment: Run E002: L1 vs L2 loop-inductance ranking on sealed generated layouts (attempt 3)
+- T0106 `running` critic/review: Review EV-O001-01 (physics) (attempt 1)
+- T0107 `running` critic/review: Review EV-O001-01 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-16T02:23:05+00:00 sleep_detected {"gap_s": 3660, "runs_extended": 0}
-- 2026-10-16T03:23:50+00:00 sleep_detected {"gap_s": 3645, "runs_extended": 0}
-- 2026-10-16T04:24:55+00:00 sleep_detected {"gap_s": 3665, "runs_extended": 0}
 - 2026-10-16T04:30:59+00:00 sleep_detected {"gap_s": 363, "runs_extended": 0}
 - 2026-10-16T04:37:54+00:00 sleep_detected {"gap_s": 416, "runs_extended": 0}
 - 2026-10-16T04:53:12+00:00 sleep_detected {"gap_s": 918, "runs_extended": 0}
@@ -31,3 +29,6 @@ cancelled: 22, done: 75, failed: 3, needs_founder: 1, todo: 4
 - 2026-10-16T05:42:33+00:00 burst_requested {"task": "T0077", "experiment": "E002", "cpu_hours": 172.0}
 - 2026-10-16T14:49:57+00:00 sleep_detected {"gap_s": 547, "runs_extended": 0}
 - 2026-10-16T22:18:18+00:00 sleep_detected {"gap_s": 333, "runs_extended": 0}
+- 2026-10-16T23:03:04+00:00 evaluation {"objective": "O001", "id": "EV-O001-01", "verdict": "PASS"}
+- 2026-10-16T23:03:06+00:00 run_started {"run": "T0106-critic-20261016T160306-a74b", "task": "T0106", "role": "critic", "session": "28d5aa3e-f91f-444d-adab-6034135f34fe"}
+- 2026-10-16T23:03:07+00:00 run_started {"run": "T0107-critic-20261016T160307-3500", "task": "T0107", "role": "critic", "session": "7bfb20a5-4e4e-4562-8ac7-7de3efe8ad35"}

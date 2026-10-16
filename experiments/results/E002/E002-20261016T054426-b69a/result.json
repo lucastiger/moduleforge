@@ -1,0 +1,545 @@
+{
+  "experiment_id": "E002",
+  "run_id": "E002-20261016T054426-b69a",
+  "status": "complete",
+  "seed": 1408736999,
+  "config": {
+    "n_layouts": 90,
+    "freq_hz": 20000000.0,
+    "freqs_secondary_hz": [
+      5000000.0,
+      80000000.0
+    ],
+    "l2_refinement": 1,
+    "check_strata": [
+      "u_shaped:6",
+      "interleaved:6",
+      "side_by_side:6",
+      "side_by_side:2"
+    ],
+    "conv_tol": 0.01,
+    "roache_fs": 1.25,
+    "step_resolve_min": 0.0001,
+    "l2_tol_max": 0.001,
+    "l2_tol_max_check": 0.002,
+    "cv_min": 0.3,
+    "area_tol": 1e-9,
+    "l1_hmax_fine_m": [
+      0.002,
+      0.001,
+      0.0005
+    ],
+    "ref_case": "C1",
+    "ref_refinement": 2,
+    "ref_tol": 0.02,
+    "ref_freqs_hz": [
+      5000000.0,
+      20000000.0,
+      80000000.0
+    ],
+    "c1_layout_refinement": 1,
+    "c1_layout_cell_m": 0.0007,
+    "c1_layout_tol": 0.005,
+    "band_grid": 101,
+    "n_boot": 2000,
+    "boot_seed": 20261008,
+    "jobs": 4,
+    "threads": 8
+  },
+  "provenance": {
+    "git_commit": "59d3ce741b28eec552bde00e02fbab2d36bbaf59",
+    "git_dirty": false,
+    "git_branch": "HEAD",
+    "spec_hash": "sha256:9791c87bf3c318015dd0908d40ab5455137c4d084f68859e5d0aee8f6ef87d73",
+    "lock_hash": "4d231621bdeed59452bca941b571b16fdf51a476777308aef7e08ec0274f5e5b",
+    "python": "3.12.3",
+    "platform": "Linux-7.0.0-1014-gcp-x86_64-with-glibc2.39",
+    "host": "mf-burst-e002-1792129374.us-east1-b.c.moduleforge-burst.internal",
+    "packages": {
+      "numpy": "2.5.3",
+      "scipy": "1.18.1",
+      "jax": "0.11.2",
+      "pydantic": "2.13.5",
+      "shapely": "2.1.2"
+    },
+    "tools": {
+      "moduleforge-l2-layout": "0.3.0 source_sha256=ed0288b6744de1289c60e7057abc3fbe7c9c8b0f6da3bf04efce60260e458a8e",
+      "moduleforge-l2-exact-kernel": "0.2.0",
+      "e001_reference.py": "4cff1bf8130d56117ca6e6ac7952926506b662ec625565ab26e7d880e1024051"
+    },
+    "started": "2026-10-16T05:44:29+00:00",
+    "finished": "2026-10-16T23:02:49+00:00"
+  },
+  "metrics": {
+    "cpu_hours_total": {
+      "value": 172.7186601892364,
+      "ci": null,
+      "level": 0.95,
+      "n": 186,
+      "unit": ""
+    },
+    "l2_wall_hours": {
+      "value": 17.296477436310557,
+      "ci": null,
+      "level": 0.95,
+      "n": 186,
+      "unit": ""
+    },
+    "spearman_rho_Lloop": {
+      "value": 0.9958513396715644,
+      "ci": [
+        0.9897220464162575,
+        0.9975624829898619
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "mape_Lloop": {
+      "value": 0.09716125400004091,
+      "ci": [
+        0.09211873099611177,
+        0.10200817473666855
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "top_decile_recall": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "spearman_rho_Lloop_vs_kstar": {
+      "value": 0.9968226530024283,
+      "ci": [
+        0.9919928607340028,
+        0.998073372853757
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "mape_Lloop_vs_kstar": {
+      "value": 0.11225446971295482,
+      "ci": [
+        0.1073595021502385,
+        0.11681360079854929
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "top_decile_recall_vs_kstar": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "spearman_rho_Lloop_vs_kstar_m1": {
+      "value": 0.9973823928880109,
+      "ci": [
+        0.9929329219434466,
+        0.998386505177272
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "mape_Lloop_vs_kstar_m1": {
+      "value": 0.12269683276535043,
+      "ci": [
+        0.117906017547297,
+        0.1273220126796482
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "top_decile_recall_vs_kstar_m1": {
+      "value": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "spearman_L2inf_vs_L2kstar": {
+      "value": 0.9997036671193975,
+      "ci": [
+        0.9985333240648155,
+        0.9999505766469702
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "l2_contraction_mean": {
+      "value": 0.5836352944660564,
+      "ci": null,
+      "level": 0.95,
+      "n": 4,
+      "unit": ""
+    },
+    "l2_contraction_obs_min": {
+      "value": 0.5737810857658048,
+      "ci": null,
+      "level": 0.95,
+      "n": 4,
+      "unit": ""
+    },
+    "l2_contraction_obs_max": {
+      "value": 0.6013926043910807,
+      "ci": null,
+      "level": 0.95,
+      "n": 4,
+      "unit": ""
+    },
+    "l2_contraction_band_lo": {
+      "value": 0.5618652838173388,
+      "ci": null,
+      "level": 0.95,
+      "n": 4,
+      "unit": ""
+    },
+    "l2_contraction_band_hi": {
+      "value": 0.6146701658459267,
+      "ci": null,
+      "level": 0.95,
+      "n": 4,
+      "unit": ""
+    },
+    "l2_extrap_loo_err_max": {
+      "value": 0.0014888688703909025,
+      "ci": null,
+      "level": 0.95,
+      "n": 4,
+      "unit": ""
+    },
+    "l2_extrap_loo_err_worst_tol_max": {
+      "value": 0.002388599044906181,
+      "ci": null,
+      "level": 0.95,
+      "n": 4,
+      "unit": ""
+    },
+    "l2_ref_pred_err_max": {
+      "value": 0.003370969049234881,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "l2_kstar_bias_mean": {
+      "value": 0.016984784003576794,
+      "ci": [
+        0.016061149082965468,
+        0.017945520295726654
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "l2_kstar_bias_max": {
+      "value": 0.03194209966399564,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "l2_kstar_bias_side_by_side": {
+      "value": 0.014627187227007999,
+      "ci": null,
+      "level": 0.95,
+      "n": 30,
+      "unit": ""
+    },
+    "l2_kstar_bias_interleaved": {
+      "value": 0.016049567558081505,
+      "ci": null,
+      "level": 0.95,
+      "n": 30,
+      "unit": ""
+    },
+    "l2_kstar_bias_u_shaped": {
+      "value": 0.02027759722564088,
+      "ci": null,
+      "level": 0.95,
+      "n": 30,
+      "unit": ""
+    },
+    "l2_ref_band_rel_lo": {
+      "value": -0.013495494993669421,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "l2_ref_band_rel_hi": {
+      "value": 0.010025073952858898,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "l2_d1_ratio_max": {
+      "value": 1.1859204716346003,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "spearman_rho_Lloop_refband_lo": {
+      "value": 0.988996376240977,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "spearman_rho_Lloop_refband_hi": {
+      "value": 0.9977601568548645,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "mape_Lloop_refband_lo": {
+      "value": 0.08547058746629743,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "mape_Lloop_refband_hi": {
+      "value": 0.10668731842669091,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "top_decile_recall_refband_lo": {
+      "value": 1.0,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "top_decile_recall_refband_hi": {
+      "value": 1.0,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "spearman_rho_within_family": {
+      "value": 0.9870967741935485,
+      "ci": [
+        0.9628892115702748,
+        0.9924185481201592
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "cv_L2": {
+      "value": 0.35944549526264724,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "cv_loop_area": {
+      "value": 0.3577918286866369,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "spearman_L1_5MHz_vs_20MHz": {
+      "value": 0.999934148248755,
+      "ci": [
+        0.9994564584064767,
+        1.0
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "spearman_L1_80MHz_vs_20MHz": {
+      "value": 0.9999835370621888,
+      "ci": [
+        0.9997529440321464,
+        1.0
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "l1_mesh_bias_mean": {
+      "value": 0.02768348136535059,
+      "ci": null,
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "resid_spearman_loop_area": {
+      "value": 0.20137714176711122,
+      "ci": [
+        -0.024251128222651692,
+        0.41018491903832666
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "resid_fine_spearman_loop_area": {
+      "value": 0.16362715925632101,
+      "ci": [
+        -0.06709303008630134,
+        0.37618535731268643
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "resid_spearman_plane_dist": {
+      "value": -0.11226039631850021,
+      "ci": [
+        -0.32901748455654933,
+        0.09511169340789678
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "resid_fine_spearman_plane_dist": {
+      "value": -0.08222166447379776,
+      "ci": [
+        -0.30528418938581253,
+        0.1359292441942414
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "resid_spearman_dies": {
+      "value": -0.3344818397037188,
+      "ci": [
+        -0.4998016915082265,
+        -0.13078283267969806
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "resid_fine_spearman_dies": {
+      "value": -0.4657342071823933,
+      "ci": [
+        -0.6090034061974465,
+        -0.29044808297755237
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    },
+    "l1_mesh_bias_spearman_dies": {
+      "value": 0.5594858982385893,
+      "ci": [
+        0.3814296800970631,
+        0.6972619691050534
+      ],
+      "level": 0.95,
+      "n": 90,
+      "unit": ""
+    }
+  },
+  "sanity": [
+    {
+      "name": "all_drc_valid",
+      "passed": true,
+      "value": 0.0,
+      "threshold": 0.0,
+      "detail": "moduleforge.drc.check violations 0 on 90 layouts; traces, plane outlines and die footprints off the L2 lattice at levels [0, 1, 2]: 0 []"
+    },
+    {
+      "name": "l2_reference_valid",
+      "passed": true,
+      "value": 0.0002357223191871999,
+      "threshold": 0.02,
+      "detail": "E001 C1 re-solved with moduleforge.solvers.l2 0.2.0 at refinement 2, f = [5000000.0, 20000000.0, 80000000.0] Hz: L = [1.4777573813854966e-08, 1.4394382058634884e-08, 1.4200012350430157e-08] H vs E001 closed form [1.4774262354565007e-08, 1.439161535363208e-08, 1.4196665879424333e-08] H, rel err [0.0002241370303631896, 0.00019224422935297235, 0.0002357223191871999]; e001_reference.py sha256 4cff1bf8130d56117ca6e6ac7952926506b662ec625565ab26e7d880e1024051 (registered 4cff1bf8130d56117ca6e6ac7952926506b662ec625565ab26e7d880e1024051); GMRES ok True"
+    },
+    {
+      "name": "l2_layout_reference_valid",
+      "passed": true,
+      "value": 0.003810767970509943,
+      "threshold": 0.005,
+      "detail": "E001 C1 through the l2_layout internals (filament-bundle wire, plane slab on the shared grid, precorrected-FFT wire<->grid, LayoutSystem, GMRES + a-posteriori bound; as test_c1_layout_internals_vs_l2_solve_same_refinement: refinement 1, 0.7 mm cells, 20MHz): L = 1.445788e-08 H vs l2.solve at the same refinement 1.440299e-08 H (rel 3.81e-03 <= 0.005) and vs the E001 closed form 1.439162e-08 H (rel 4.60e-03 <= 0.02); solver_tol rel 1.4e-05 (layout, <= 0.005) / 6.2e-07 (l2, < 1e-5); GMRES ok True.  Not exercised here (covered by all_drc_valid and l2_solver_ok): lattice mapping, contacts, die shorts, multi-slab stacks"
+    },
+    {
+      "name": "l2_extrapolation_verified",
+      "passed": true,
+      "value": 0.0014888688703909025,
+      "threshold": 0.01,
+      "detail": "4 checked layouts ['u_shaped:6', 'interleaved:6', 'side_by_side:6', 'side_by_side:2']: both steps resolvable, 0 < d2/d1 < 1, r inside the other checked layouts' band (widened by their solver bounds), |two-level (leave-one-out common ratio) / three-level limit - 1| < 0.01; contraction band [0.5618652838173388, 0.6146701658459267] inside (0, 1).  Failures: none.  Rows: [{\"i\": 0, \"family\": \"u_shaped\", \"dies\": 6, \"d1\": -0.01862022500297372, \"d2\": -0.010683932919409847, \"r\": 0.5737810857658048, \"r_lo\": 0.5700016222652629, \"r_hi\": 0.5775746783015895, \"r_loo\": 0.5869200306994736, \"loo_band\": [0.5618652838173388, 0.6146701658459267], \"in_band\": true, \"loo_err\": -0.0014252914856891508, \"loo_err_worst_tol\": 0.001821947185342676, \"tol\": [1.6066540577497653e-05, 1.8374012735081975e-05, 3.2546477995503655e-05], \"why\": []}, {\"i\": 4, \"family\": \"interleaved\", \"dies\": 6, \"d1\": -0.015606894655687535, \"d2\": -0.008975732058126747, \"r\": 0.5751132596295042, \"r_lo\": 0.5687192975068224, \"r_hi\": 0.5815465819096802, \"r_loo\": 0.586475972744907, \"loo_band\": [0.5618652838173388, 0.6146701658459267], \"in_band\": true, \"loo_err\": -0.001031091903497705, \"loo_err_worst_tol\": 0.00159154033993969, \"tol\": [2.3906395040550044e-05, 2.360981287175492e-05, 4.938779586847138e-05], \"why\": []}, {\"i\": 12, \"family\": \"side_by_side\", \"dies\": 6, \"d1\": -0.010418602430868342, \"d2\": -0.006265670450015156, \"r\": 0.6013926043910807, \"r_lo\": 0.5883025261817346, \"r_hi\": 0.6146701658459267, \"r_loo\": 0.577716191157715, \"loo_band\": [0.5618652838173388, 0.6071115540363128], \"in_band\": true, \"loo_err\": 0.0014888688703909025, \"loo_err_worst_tol\": 0.002388599044906181, \"tol\": [3.40383931994863e-05, 3.968692313665217e-05, 5.344685687607538e-05], \"why\": []}, {\"i\": 5, \"family\": \"side_by_side\", \"dies\": 2, \"d1\": -0.007523943610002984, \"d2\": -0.004395895865963459, \"r\": 0.5842542280778359, \"r_lo\": 0.5618652838173388, \"r_hi\": 0.6071115540363128, \"r_loo\": 0.5834289832621299, \"loo_band\": [0.5687192975068224, 0.6146701658459267], \"in_band\": true, \"loo_err\": 3.623497079541238e-05, \"loo_err_worst_tol\": 0.00108994507823712, \"tol\": [3.606141228906913e-05, 4.155384894713422e-05, 8.350461440815771e-05], \"why\": []}]"
+    },
+    {
+      "name": "l2_converged",
+      "passed": true,
+      "value": 0.003370969049234881,
+      "threshold": 0.01,
+      "detail": "predicted reference error e_i = |D1_i| max|rho(r_hat +- dr) - rho(r_hat)| / L2_inf + solver bounds < 0.01 on 90 layouts (r_hat 0.5836, dr 0.0237 = the largest leave-one-out contraction deviation of the checked layouts); max 0.3371% at layout 47; failing 0"
+    },
+    {
+      "name": "l2_solver_ok",
+      "passed": true,
+      "value": 0.00008350461440815771,
+      "threshold": 0.002,
+      "detail": "every L2 layout solve: GMRES flags 0; solver_tol_rel_L_max <= 0.001 (k*, k*-1) and <= 0.002 (k*+1); represented copper area of every net and plane equal to the exact area (rel <= 1e-09); one short per die, each on a single net; violations []; failed or not run 0: []"
+    },
+    {
+      "name": "l2_provenance_consistent",
+      "passed": true,
+      "value": null,
+      "threshold": null,
+      "detail": "children source_sha256 ['ed0288b6744de1289c60e7057abc3fbe7c9c8b0f6da3bf04efce60260e458a8e'], tool_version ['0.3.0']; parent ed0288b6744de1289c60e7057abc3fbe7c9c8b0f6da3bf04efce60260e458a8e 0.3.0 at start, ed0288b6744de1289c60e7057abc3fbe7c9c8b0f6da3bf04efce60260e458a8e now; layout solves failed or not run: 0"
+    },
+    {
+      "name": "all_finite",
+      "passed": true,
+      "value": 0.0,
+      "threshold": 0.0,
+      "detail": "814 L1 / L2 / L2_inf values finite and > 0 (L1 default True, fine meshes True, L2_inf True; L1 error None); aborted: None; failed solves 0: {}"
+    },
+    {
+      "name": "sample_diverse",
+      "passed": true,
+      "value": 0.35944549526264724,
+      "threshold": 0.3,
+      "detail": "CV of the reference at 20MHz = 0.359 (>= 0.3, F2); CV of loop_area_proxy 0.358; stratum counts [6] (expected 6 each)"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "e002_rows.json",
+      "sha256": "7e0826feee737c9813ebbe510604174e8c98634f6c3375f48d58484503892e6a",
+      "bytes": 258120
+    },
+    {
+      "name": "e002_reference.json",
+      "sha256": "6892673f32d163f5bdd9c798cc3c3aaa6ce0409914232563dfda312c7d7541c5",
+      "bytes": 17493
+    }
+  ],
+  "notes": "Dry pass over every analysis path on placeholder values: ok (5 s). Reference band s in [0.9618, 1.9940] (point 1.4017); recall evaluated at 15 order-constant points. n=90, k_top=9, w_top=18, checked [0, 4, 12, 5]. L1 default hmax 0.004 m, fine [0.002, 0.001, 0.0005] m; jobs 4 x threads 8; phases: 1 = checked layouts + C1 references, 2 = the rest. "
+}

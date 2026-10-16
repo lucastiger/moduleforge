@@ -1,0 +1,33 @@
+id: T0106
+objective: O001
+title: Review EV-O001-01 (physics)
+type: review
+agent: critic
+status: running
+depends_on: []
+description: 260d468b3dac88e2d052eb91f8bad381225c8d41
+context_files: []
+deliverables: []
+touches: []
+definition_of_done: []
+experiment: null
+risk: low
+model: null
+budget_usd: 3.0
+max_turns: 60
+wall_minutes: null
+attempts: 1
+max_attempts: 3
+branch: null
+pr: null
+runs:
+- T0106-critic-20261016T160306-a74b
+created_by: orchestrator
+created_at: '2026-10-16T23:03:04+00:00'
+protected_approved: false
+approval: null
+target: EV-O001-01
+lens: physics
+trigger: null
+rationale: ''
+history: []

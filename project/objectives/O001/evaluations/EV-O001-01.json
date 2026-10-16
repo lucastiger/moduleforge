@@ -1,0 +1,100 @@
+{
+  "id": "EV-O001-01",
+  "objective": "O001",
+  "timestamp": "2026-10-16T23:03:04+00:00",
+  "criteria_hash": "sha256:d12d77462acca9647d13f7a7092953f9d7aa450fde02ede714f7cca52ac2ad61",
+  "evaluator_version": "1.0.0",
+  "results_used": {
+    "E001": "E001-20261006T055428-8f45",
+    "E002": "E002-20261016T054426-b69a",
+    "E003": "E003-20261011T193042-f91e"
+  },
+  "validity_problems": [],
+  "pass_checks": [
+    {
+      "id": "A1",
+      "metric": "E001.max_rel_err_vs_analytic",
+      "comparator": "<=",
+      "threshold": 0.02,
+      "value": 0.0001329408580513237,
+      "bound_used": 0.0001329408580513237,
+      "verdict": "satisfied"
+    },
+    {
+      "id": "A2",
+      "metric": "E002.spearman_rho_Lloop",
+      "comparator": ">=",
+      "threshold": 0.85,
+      "value": 0.9958513396715644,
+      "bound_used": 0.9897220464162575,
+      "verdict": "satisfied"
+    },
+    {
+      "id": "A3",
+      "metric": "E002.spearman_rho_Lloop",
+      "comparator": ">=",
+      "threshold": 0.9,
+      "value": 0.9958513396715644,
+      "bound_used": 0.9958513396715644,
+      "verdict": "satisfied"
+    },
+    {
+      "id": "A4",
+      "metric": "E002.mape_Lloop",
+      "comparator": "<=",
+      "threshold": 0.12,
+      "value": 0.09716125400004091,
+      "bound_used": 0.10200817473666855,
+      "verdict": "satisfied"
+    },
+    {
+      "id": "A5",
+      "metric": "E002.top_decile_recall",
+      "comparator": ">=",
+      "threshold": 0.7,
+      "value": 1.0,
+      "bound_used": 1.0,
+      "verdict": "satisfied"
+    },
+    {
+      "id": "A6",
+      "metric": "E003.l1_eval_ms_p50",
+      "comparator": "<=",
+      "threshold": 50.0,
+      "value": 22.392729530110955,
+      "bound_used": 22.392729530110955,
+      "verdict": "satisfied"
+    }
+  ],
+  "fail_checks": [
+    {
+      "id": "K1",
+      "metric": "E002.spearman_rho_Lloop",
+      "comparator": "<",
+      "threshold": 0.8,
+      "value": 0.9958513396715644,
+      "bound_used": 0.9975624829898619,
+      "verdict": "undetermined"
+    },
+    {
+      "id": "K2",
+      "metric": "E002.mape_Lloop",
+      "comparator": ">",
+      "threshold": 0.2,
+      "value": 0.09716125400004091,
+      "bound_used": 0.09211873099611177,
+      "verdict": "undetermined"
+    },
+    {
+      "id": "K3",
+      "metric": "E002.top_decile_recall",
+      "comparator": "<",
+      "threshold": 0.5,
+      "value": 1.0,
+      "bound_used": 1.0,
+      "verdict": "not_satisfied"
+    }
+  ],
+  "verdict": "PASS",
+  "explanation": "All pass criteria met at the conservative bound"
+}

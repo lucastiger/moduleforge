@@ -3,7 +3,7 @@ objective: O001
 title: 'Run E002: L1 vs L2 loop-inductance ranking on sealed generated layouts'
 type: experiment
 agent: none
-status: needs_founder
+status: done
 depends_on:
 - T0076
 - T0072
@@ -101,3 +101,5 @@ history:
   summary: ~172 CPU-h exceeds local limit
   at: '2026-10-16T05:42:33+00:00'
   since: 1792129353.880436
+- outcome: experiment_complete
+  summary: E002-20261016T054426-b69a on mf-burst-e002-1792129374.us-east1-b.c.moduleforge-burst.internal

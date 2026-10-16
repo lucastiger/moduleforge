@@ -1,11 +1,15 @@
-status: active
+status: evaluating
 approved_by: founder
 approved_at: '2026-09-29T21:47:40+00:00'
 criteria_hash: sha256:d12d77462acca9647d13f7a7092953f9d7aa450fde02ede714f7cca52ac2ad61
-evaluations: []
-last_verdict: null
-evaluated_runs: {}
-pending_evaluation: null
+evaluations:
+- EV-O001-01
+last_verdict: PASS
+evaluated_runs:
+  E001: E001-20261006T055428-8f45
+  E002: E002-20261016T054426-b69a
+  E003: E003-20261011T193042-f91e
+pending_evaluation: EV-O001-01
 replans: 4
 max_replans: 3
 needs_replan: false

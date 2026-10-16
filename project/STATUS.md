@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-16T04:31:00+00:00 from repository state — do not edit_
+_generated 2026-10-16T04:37:56+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0049** [experiment_registration] register E002 (pre-registration)
@@ -15,7 +15,6 @@ cancelled: 22, done: 75, failed: 3, todo: 5
 
 
 ## Recent events
-- 2026-10-15T14:38:16+00:00 sleep_detected {"gap_s": 424, "runs_extended": 0}
 - 2026-10-15T15:16:42+00:00 sleep_detected {"gap_s": 960, "runs_extended": 0}
 - 2026-10-15T16:28:58+00:00 sleep_detected {"gap_s": 4302, "runs_extended": 0}
 - 2026-10-15T19:16:06+00:00 sleep_detected {"gap_s": 5266, "runs_extended": 0}
@@ -30,3 +29,4 @@ cancelled: 22, done: 75, failed: 3, todo: 5
 - 2026-10-16T03:23:50+00:00 sleep_detected {"gap_s": 3645, "runs_extended": 0}
 - 2026-10-16T04:24:55+00:00 sleep_detected {"gap_s": 3665, "runs_extended": 0}
 - 2026-10-16T04:30:59+00:00 sleep_detected {"gap_s": 363, "runs_extended": 0}
+- 2026-10-16T04:37:54+00:00 sleep_detected {"gap_s": 416, "runs_extended": 0}

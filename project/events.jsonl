@@ -904,3 +904,4 @@
 {"ts": "2026-10-16T23:03:04+00:00", "event": "evaluation", "actor": "orchestrator", "objective": "O001", "id": "EV-O001-01", "verdict": "PASS"}
 {"ts": "2026-10-16T23:03:06+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0106-critic-20261016T160306-a74b", "task": "T0106", "role": "critic", "session": "28d5aa3e-f91f-444d-adab-6034135f34fe"}
 {"ts": "2026-10-16T23:03:07+00:00", "event": "run_started", "actor": "orchestrator", "run": "T0107-critic-20261016T160307-3500", "task": "T0107", "role": "critic", "session": "7bfb20a5-4e4e-4562-8ac7-7de3efe8ad35"}
+{"ts": "2026-10-16T23:08:43+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0106-critic-20261016T160306-a74b", "status": "completed", "cost": 2.281393, "subtype": "success", "report": "structured_output"}

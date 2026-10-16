@@ -1,0 +1,78 @@
+{
+  "verdict": "cannot_assess",
+  "findings": [
+    {
+      "severity": "blocker",
+      "title": "The E002 result behind A2\u2013A5 and K1\u2013K3 is not in the repository at this commit",
+      "detail": "EV-O001-01 relies on E002-20261016T054426-b69a for four of the six pass criteria and all three kill criteria. That run does not exist in this snapshot: experiments/results/ holds only E000, E001 and E003. The evaluation file is also missing; project/objectives/O001/ has no evaluations/ directory. Without the result I cannot check its git_dirty flag or spec_hash. I cannot check whether the gating sanity checks passed: all_drc_valid, l2_extrapolation_verified, l2_converged, l2_solver_ok, sample_diverse. I cannot recompute rho = 0.9959, MAPE = 0.0972 or recall = 1.0, or reproduce the PASS verdict. The evaluator (evaluate.select_results) checks neither that results are committed nor the runner hash recorded at run time, so its own validity_problems = [] does not establish provenance.",
+      "evidence": "`find . -name '*E002*'` returns only research/e002_design/E002-envelope-b.yaml and experiments/specs/E002.yaml. Grepping project, experiments, research, docs and .mfos for 'b69a' finds it only in the review packet. The snapshot has a single commit ('review snapshot'), and the E001/E003 result commits (6cc5821, 4c8cf3e) are not resolvable here.",
+      "suggested_check": "Commit experiments/results/E002/E002-20261016T054426-b69a (result.json, run.json, rows) to main, then rerun `mfos` evaluate from that commit and confirm the same values and an all-pass sanity list."
+    },
+    {
+      "severity": "major",
+      "title": "The pooled ranking metrics cannot tell layout-level ranking apart from sorting by topology and die count",
+      "detail": "Within the claimed scope, L is dominated by family and die count, both of which are fixed inputs, not the design choices a re-layout search ranks. I tested this on the pre-registered design pool. A predictor that knows only each layout's (family, dies) stratum mean, with zero within-stratum information, scores: pooled Spearman 0.967 (minimum 0.944 over 2000 stratified 90-layout draws), above A3 (0.90) and A2 (0.85); top-decile recall \u2265 0.70 in 99.3% of draws (A5), with recall = 1.0 in 51%; MAPE 5.5% (under A4); and within-family Spearman 0.85. So A2, A3 and A5, and even the secondary spearman_rho_within_family (which pools dies 2\u20136), would pass for a model that cannot rank two layouts with the same family and die count. The product use is derivative re-layouts at a fixed die count inside a fixed housing, which is a within-stratum decision. The observed 0.9959 fits roughly 2% independent per-layout error, which would mean within-stratum rho \u2248 0.89 (simulated), but that is inferred, not measured. E002's MAPE (9.7%) is larger than the within-stratum spread of L (CV 5\u201310%), so within-stratum ordering depends entirely on the L1 error being common-mode within each stratum. Nothing in the material shows that.",
+      "evidence": "research/e002_design/pool_l1.json: 1500 L1 values, 100 per stratum. 97.3% of log-L variance lies between (family, dies) strata, 2.7% within. Within-stratum CV of L: interleaved 5.7\u20136.1%, u_shaped 4.8\u20135.9%, side_by_side 7.2\u201310.4%. Noise simulation (6 layouts per stratum, 200 reps): independent multiplicative error sd 1/2/3% \u2192 pooled rho 0.9987/0.9962/0.9927, mean within-stratum rho 0.95/0.89/0.82.",
+      "suggested_check": "From the existing E002 L1/L2_inf rows (no new solves), report Spearman and top-k recall within each (family, dies) stratum and stratum-demeaned, and compare them with the stratum-only baseline."
+    },
+    {
+      "severity": "major",
+      "title": "A1 validates a different L2 code path from the one used as the E002 reference",
+      "detail": "A1 (max relative error 1.3e-4 against closed forms) is E001's metric for moduleforge.solvers.l2 on canonical bars, round-wire chains and a wire loop over an image plane. E002's reference is moduleforge.solvers.l2_layout (TOOL_VERSION 0.3.0). That is a separate path: top-Cu, backside-Cu and baseplate slabs on a shared lattice, a precorrected-FFT wire-to-grid operator, bilinear point contacts and die-short node merges, with its own change history (T0075 attempts 1\u20135). Its only analytic anchor in the material is the in-run C1 check: one Al wire loop over one plane slab, within 2% of the closed form and 0.5% of l2. No closed-form or independent check covers the top-Cu trace-over-plane slab inductance, which dominates these loops, or the contact and die-short treatment. E002 checks L2's convergence by Richardson extrapolation, but convergence is not correctness. A1 therefore does not support 'converged reference solver' for the solver actually used.",
+      "evidence": "src/moduleforge/solvers/l2_layout.py docstring; E001 spec cases A1\u2013C1 run through solvers.l2 (E001 result provenance 6cc5821, 2026-10-06); E002 sanity check l2_layout_reference_valid covers C1 only.",
+      "suggested_check": "Run l2_layout on E001's bar and strip cases (B-series), or on a straight strip over a ground plane against Wheeler or 2-D BEM values, with the cell sizes E002 used."
+    },
+    {
+      "severity": "major",
+      "title": "The claim covers AMB substrates, but no AMB layout was tested",
+      "detail": "The claim and scope_in name 'single DBC or AMB substrate'. generate.halfbridge._build always uses default_dbc_stack(): Al2O3, 0.38 mm ceramic, 0.3 mm Cu. default_amb_stack() (0.32 mm Si3N4) is never used by E002 or E003. One substrate outline (70\u00d740 mm) and one fixed pad placement are used throughout. L1's main stated bias, unresolved HF edge-current crowding, scales with the Cu-to-plane gap, and the L1 docstring reports it as family-dependent. So agreement on one DBC stack does not carry over to AMB without a test.",
+      "evidence": "src/moduleforge/generate/halfbridge.py line 109: `stack = default_dbc_stack()`. src/moduleforge/geometry/stack.py defines default_amb_stack (0.32 mm), which the generator never calls.",
+      "suggested_check": "Narrow the claim to the tested Al2O3 DBC stack, or run a small sealed E002-style comparison on default_amb_stack."
+    },
+    {
+      "severity": "minor",
+      "title": "A2 and A4 bounds exclude the reference-extrapolation uncertainty that the E002 design names as the reference-robust reading",
+      "detail": "The design note (research/notes/o001-e002-e003-design.md \u00a73.3) states: 'A2 iff spearman refband_lo \u2265 0.85; A4 iff mape refband_hi \u2264 0.12'. The spec's metric descriptions say the same. The evaluation instead reads the bootstrap CI of spearman_rho_Lloop and mape_Lloop, which covers sampling over layouts only, not the common-ratio Richardson band of L2_inf. A4's margin is 0.102 against 0.12. A band of about \u00b11% on L2_inf (the l2_converged limit) shifts MAPE by a similar amount, so A4 probably still holds. However, mape_Lloop_refband_hi cannot be checked because the result is missing.",
+      "evidence": "Evaluation A4 bound_used 0.10200817; objective A4 uses E002.mape_Lloop with uncertainty use: ci.",
+      "suggested_check": "Read mape_Lloop_refband_hi and spearman_rho_Lloop_refband_lo from the E002 result and confirm both clear their thresholds."
+    },
+    {
+      "severity": "minor",
+      "title": "No recorded link shows the timed L1 is the same code as the ranked L1",
+      "detail": "E003 ran at commit 4c8cf3e on 2026-10-12, four days before E002 was registered (2026-10-16). E003's result records no source hash for physics/peec, and neither commit is resolvable in this snapshot. If L1 changed between the runs, A6 timed a different model. The margin is large (p50 22.4 ms against 50 ms; the 6-die stratum p50 is 26.3 ms), and the L1 docstring's 'p50 ~25 ms on the 6-die benchmark' is consistent with it. The measurement was on an Apple M5 under macOS with no core pinning, which is conservative.",
+      "evidence": "experiments/results/E003/E003-20261011T193042-f91e/result.json provenance and notes.",
+      "suggested_check": "Record the sha256 of src/moduleforge/physics/peec/*.py in both the E002 and E003 results, or re-time at the E002 commit."
+    },
+    {
+      "severity": "note",
+      "title": "The E002 runner's SPEC constant points to a file that does not exist at this commit",
+      "detail": "SPEC = 'experiments/drafts/E002.yaml', and experiments/drafts/ is absent. A full run takes its config from MFOS_SPEC_JSON (the registered spec), so the evidence is unaffected. The --smoke and --selftest paths cannot run at this commit.",
+      "evidence": "experiments/runners/e002_ranking.py lines 78, 1042, 1234.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "Points in favour of the claim",
+      "detail": "L2 is physically independent of L1's key approximation: l2_layout meshes the backside Cu and baseplate as conducting slabs and uses no image planes. My hand calculation gives Cu skin depth \u03b4 = 14.8 \u00b5m at 20 MHz, so t/\u03b4 \u2248 20 for the 0.3 mm backside Cu. A single image plane at its top face is justified, with field transmission through it \u2248 1.5e-9. The neglected plane recession (~\u03b4/2 against the 0.38 mm gap, about 2%) is common-mode. E001 and E003 results are complete, report git_dirty = false and spec hashes matching the registered specs, and every declared sanity check passed. Their metric values equal the A1 and A6 values in the evaluation.",
+      "evidence": "",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Recomputed the sha256 of experiments/runners/e001_reference.py, e002_ranking.py and e003_timing.py: all three match the registered runner_files hashes.",
+    "Recomputed spec_hash for E001, E002 and E003 with mfos Store.spec_hash: all match. Recomputed the O001 criteria_hash: sha256:d12d7746\u2026, equal to the evaluation's.",
+    "Searched the repository for the E002 run ID and for any E002 result artifact: none exists. Only E000, E001 and E003 results are present, and the EV-O001-01 file is also absent.",
+    "Read the E001 and E003 result.json files: status complete, git_dirty false, spec hashes match, every sanity check passed. A1 = 1.329e-4 and A6 = 22.39 ms reproduce from the files.",
+    "Stratum-only baseline on research/e002_design/pool_l1.json (1500 L1 values): pooled Spearman 0.967 (minimum 0.944 over 2000 stratified 90-layout draws); top-decile recall \u2265 0.7 in 99.3% of draws; MAPE 0.055; within-family Spearman 0.85; 97.3% of log-L variance lies between strata.",
+    "Noise simulation mapping pooled rho to within-stratum rho (independent multiplicative error of 0.5\u20134%): the observed 0.9959 corresponds to about 2% error and within-stratum rho \u2248 0.89.",
+    "Read the generator: only default_dbc_stack() is used, so no AMB layouts were tested.",
+    "Read the L1 model (physics/peec/model.py, kernels.py) and the L2 layout solver documentation: L2 meshes the planes as slabs and uses no images, so it is independent of L1's image-plane approximation. Hand calculation: skin depth at 20 MHz = 14.8 \u00b5m, t/\u03b4 \u2248 20, so imaging only the backside Cu is justified.",
+    "Read mfos evaluate.py: the evaluator does not check that results are committed or the runner hash recorded at run time, and A2/A4 use the bootstrap CI rather than the refband readings."
+  ],
+  "caveats": [
+    "What is missing: the E002 result directory experiments/results/E002/E002-20261016T054426-b69a (result.json, run.json, per-layout L1/L2 rows) and project/objectives/O001/evaluations/EV-O001-01.json. Without them, A2\u2013A5, K1\u2013K3 and every E002 sanity check are unverifiable.",
+    "Running product code (L1 timing, L1 or L2 solves) was denied in this environment. I did not independently re-time L1 or re-solve any layout. The stratum-baseline analysis uses the pre-registered L1 design pool as a stand-in for the L2 distribution.",
+    "The snapshot contains one commit, so I could not check that the result commits (6cc5821, 4c8cf3e) are on main, or whether L1 changed between E003 and E002.",
+    "Even with the E002 artifact supplied and clean, the best obtainable verdict would be accept_with_caveats. The evidence supports pooled ranking across families and die counts on one Al2O3 DBC stack and one housing. It does not show ranking within a fixed family and die count, and it does not cover AMB substrates."
+  ]
+}

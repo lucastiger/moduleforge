@@ -13,7 +13,7 @@ pending_evaluation: EV-O001-01
 replans: 4
 max_replans: 3
 needs_replan: false
-spent_usd: 280.6566
+spent_usd: 282.938
 budget_override_usd: 314.94759999999997
 log:
 - 'founder answered I0003: (b): use the provisioned binary (MF_FASTHENRY_BIN, then PATH); no auto-build.

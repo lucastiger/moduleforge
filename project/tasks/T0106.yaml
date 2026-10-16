@@ -3,7 +3,7 @@ objective: O001
 title: Review EV-O001-01 (physics)
 type: review
 agent: critic
-status: running
+status: done
 depends_on: []
 description: 260d468b3dac88e2d052eb91f8bad381225c8d41
 context_files: []
@@ -30,4 +30,6 @@ target: EV-O001-01
 lens: physics
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: review:cannot_assess
+  summary: 8 findings

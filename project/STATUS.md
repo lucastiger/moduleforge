@@ -1,23 +1,20 @@
 # ModuleForge status
-_generated 2026-10-16T23:08:45+00:00 from repository state — do not edit_
+_generated 2026-10-16T23:11:58+00:00 from repository state — do not edit_
 
-## Founder inbox (0 open)
-- nothing needs you
+## Founder inbox (1 open)
+- **I0052** [decision] [O001] PASS verdict disputed by review
 
 ## Objectives
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | evaluating | PASS | 1/3 | $282.94/$315 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | needs_founder | PASS | 1/3 | $284.93/$315 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 22, done: 77, failed: 3, running: 1, todo: 4
+cancelled: 22, done: 78, failed: 3, todo: 4
 
-- T0107 `running` critic/review: Review EV-O001-01 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-16T04:37:54+00:00 sleep_detected {"gap_s": 416, "runs_extended": 0}
-- 2026-10-16T04:53:12+00:00 sleep_detected {"gap_s": 918, "runs_extended": 0}
 - 2026-10-16T05:01:54+00:00 sleep_detected {"gap_s": 522, "runs_extended": 0}
 - 2026-10-16T05:25:39+00:00 sleep_detected {"gap_s": 1147, "runs_extended": 0}
 - 2026-10-16T05:33:28+00:00 sleep_detected {"gap_s": 468, "runs_extended": 0}
@@ -31,3 +28,5 @@ cancelled: 22, done: 77, failed: 3, running: 1, todo: 4
 - 2026-10-16T23:03:06+00:00 run_started {"run": "T0106-critic-20261016T160306-a74b", "task": "T0106", "role": "critic", "session": "28d5aa3e-f91f-444d-adab-6034135f34fe"}
 - 2026-10-16T23:03:07+00:00 run_started {"run": "T0107-critic-20261016T160307-3500", "task": "T0107", "role": "critic", "session": "7bfb20a5-4e4e-4562-8ac7-7de3efe8ad35"}
 - 2026-10-16T23:08:43+00:00 run_finished {"run": "T0106-critic-20261016T160306-a74b", "status": "completed", "cost": 2.281393, "subtype": "success", "report": "structured_output"}
+- 2026-10-16T23:11:55+00:00 run_finished {"run": "T0107-critic-20261016T160307-3500", "status": "completed", "cost": 1.99605, "subtype": "success", "report": "structured_output"}
+- 2026-10-16T23:11:57+00:00 inbox_opened {"id": "I0052", "kind": "decision", "subject": "[O001] PASS verdict disputed by review"}

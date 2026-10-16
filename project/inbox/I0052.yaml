@@ -1,0 +1,13 @@
+id: I0052
+kind: decision
+subject: '[O001] PASS verdict disputed by review'
+summary: The deterministic evaluation passed but a blinded critic rejected the evidence. See project/reviews/EV-O001-01/.
+refs:
+- O001
+- EV-O001-01
+options: []
+recommendation: ''
+status: open
+response: ''
+created_at: '2026-10-16T23:11:57+00:00'
+resolved_at: null

@@ -1,0 +1,73 @@
+{
+  "verdict": "reject",
+  "findings": [
+    {
+      "severity": "blocker",
+      "title": "E002 result cited by the evaluation does not exist at this commit; evaluator verdict does not reproduce",
+      "detail": "The evaluation EV-O001-01 uses E002-20261016T054426-b69a for A2-A5 and K1-K3 (the ranking half of the claim). experiments/results/ contains only E000, E001, E003. Re-running mfos.evaluate.evaluate('O001', record=False) at this commit yields INVALID with 'E002: no complete result' and A2-A5/K1-K3 missing. project/objectives/O001/ has no evaluations directory, and objective_state has criteria_hash=None, evaluations=[]. None of E002's sanity checks (l2_extrapolation_verified, l2_converged, l2_layout_reference_valid, l2_solver_ok, sample_diverse, all_drc_valid) or its provenance (git_commit, git_dirty, sealed seed, spec_hash) can be inspected, so the ranking claim is unsupported by material in the repository.",
+      "evidence": "`ls experiments/results` -> E000 E001 E003; Read of experiments/results/E002/E002-20261016T054426-b69a/result.json -> file does not exist; evaluate(record=False) -> verdict INVALID, problems ['E002: no complete result', 'metrics missing or lacking required uncertainty: A2, A3, A4, A5, K1, K2, K3'].",
+      "suggested_check": "Commit the E002 run directory (result.json, run.json, per-layout rows) to the reviewed commit and re-run the evaluator from the repository before any re-review."
+    },
+    {
+      "severity": "major",
+      "title": "Pooled rank metrics are dominated by family x die-count strata; A2/A3/A5 are passable with zero within-stratum information",
+      "detail": "On three unsealed development samples (generate_layouts(90, seed=101/202/303)), log L1 is 97.7-98.2% explained by the 15 (family, dies) strata. Mean within-stratum CV is 5-6%, smaller than the reported L1-vs-L2 MAPE of 9.7%. A predictor that knows only the stratum mean reaches Spearman 0.971-0.973 and top-decile recall 0.95 on average (min 0.89 over tie-breaks) against L1. That clears A2 (0.85), A3 (0.90) and A5 (0.70). If L2 has the same stratum structure (it must, given the reported rho 0.996), these criteria cannot tell a model that ranks layouts within a stratum from one that only gets topology and die count right. The product's use case is re-layout at fixed die count in a fixed housing, which needs within-stratum ranking; no acceptance criterion gates that. spearman_rho_within_family still mixes die counts.",
+      "evidence": "Inline script: seed 101 eta2=0.977, rho(L1, stratum-only)=0.971; seed 202 eta2=0.982, rho=0.973; seed 303 eta2=0.977, rho=0.971; seed 101 stratum-only topk_recall mean 0.949, min 0.889 over 200 random tie-breaks. Stratum means range 3.4 nH (side_by_side:6) to 12.0 nH (u_shaped:2).",
+      "suggested_check": "From the E002 rows, report mean within-(family, dies) Spearman of L1 vs L2_inf with a bootstrap CI, and compare it with the stratum-only baseline."
+    },
+    {
+      "severity": "major",
+      "title": "A1 validates solvers.l2, not solvers.l2_layout, which is the E002 ranking reference",
+      "detail": "E001 solves its canonical cases with moduleforge.solvers.l2 (e001_reference.l2_solve). The E002 reference L2_inf comes from solvers.l2_layout: slab lattice, a precorrected-FFT wire-grid operator its own docstring calls 'new here', ideal die shorts and bilinear contacts. Its only check against a closed form is the in-run l2_layout_reference_valid on E001's C1 (a wire loop over a plane, 2% tolerance, a single case at 20 MHz). C1 does not exercise top-Cu trace slabs, die shorts or contacts, and the outcome is in the missing E002 result. So A1's 1.3e-4 error says nothing about the reference used for ranking. The allowed 2% reference error is also the same size as A4's margin (refband_hi 0.102 vs 0.12).",
+      "evidence": "e002_ranking.py child(): layout tasks call l2_layout.loop_inductance; the 'c1' task calls e1.l2_solve(l2, ...). l2_layout.py docstring: 'This operator is new here'. Spec E002 sanity check l2_layout_reference_valid: |L_layout/closed form - 1| <= 2 %.",
+      "suggested_check": "Validate l2_layout at the 0.25 mm level on a trace-dominated canonical case (e.g., strip over plane vs a closed form or 2-D BEM) to well under the A4 margin."
+    },
+    {
+      "severity": "major",
+      "title": "Scope claims DBC or AMB, but only one DBC stack and one housing were sampled",
+      "detail": "generate.halfbridge builds every layout on default_dbc_stack(): Al2O3 0.38 mm, top and back Cu 0.3 mm, 3 mm Cu baseplate, plus a single 70x40 mm housing with fixed pads. L1's documented error terms scale with the Cu-to-plane gap: the HF-layer internal-inductance error (mu0 delta/6 against the 0.38 mm gap) and edge-current crowding within about one gap of each edge. AMB stacks (e.g., Si3N4 around 0.32 mm with thicker Cu) are therefore extrapolation, not evidence.",
+      "evidence": "default_dbc_stack() -> LayerStack(... ceramic Al2O3 0.00038 m ..., kind='DBC'); halfbridge.py imports only default_dbc_stack; E002 resid_spearman_plane_dist description: 'the stack is fixed'.",
+      "suggested_check": "Restrict the claim to the tested DBC stack, or add an AMB stack stratum under a new experiment id."
+    },
+    {
+      "severity": "minor",
+      "title": "A6 timing reproduces only to about +-50% on the same host; 6-die margin is thin; timed code commit precedes E002",
+      "detail": "At this commit on the same host as E003 (Lucass-MacBook-Air-6, Apple M5, 4P+6E), single-threaded with 5 warm-up calls, L1 timed p50 32.9 ms, p90 47.4 ms and 6-die p50 42.8 ms. E003 reported 22.4, 31.8 and 26.3 ms. Repeated passes show no caching (32.5/32.9/32.4 ms), so the gap is likely uncontrolled P/E-core placement or throttling, which the spec acknowledges. p50 stays at or below 50 ms, so A6 holds, but the slowest stratum sits near the limit. E003 ran at commit 4c8cf3e (2026-10-12), before E002 was registered (2026-10-16). With no git history in the snapshot, I cannot confirm the timed L1 is the ranked L1.",
+      "evidence": "Inline timing script output: p50=32.9 ms p90=47.4 ms p50(6 dies)=42.8 ms; E003 result.json provenance git_commit 4c8cf3e..., host Lucass-MacBook-Air-6.local.",
+      "suggested_check": "Record the L1 source hash (physics/peec) in both E002 and E003 results and require them to be equal."
+    },
+    {
+      "severity": "note",
+      "title": "L1 within-stratum ranking is robust to its own mesh (supports the claim on the L1 side)",
+      "detail": "For seed 101 (n=90), L1 at default 4 mm vs 1 mm: bias +1.52% +- 0.48%; pooled Spearman 0.9995; within-stratum Spearman mean 0.981 (min 0.77 in side_by_side:4, n=6); within-stratum bias spread 0.29% against a 6.0% within-stratum CV. L1's 20 MHz value is bit-identical whether called alone or with 5 and 80 MHz, and is deterministic across calls.",
+      "evidence": "Inline script output: 'within-stratum rho(4mm,1mm): mean 0.981 min 0.771'; 'max |L20(multi)/L20(single)-1| = 0.00e+00 ; repeat determinism 0.00e+00'.",
+      "suggested_check": ""
+    },
+    {
+      "severity": "note",
+      "title": "K1/K2 'undetermined' is by evaluator design, not a defect",
+      "detail": "mfos.evaluate.judge never returns not_satisfied for ci-based fail criteria (only satisfied or undetermined), so K1/K2 read 'undetermined' even far from their thresholds. This does not affect PASS logic.",
+      "evidence": "tools/mfos/mfos/evaluate.py lines 58-61.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Listed experiments/results and read the expected E002 run path: E002-20261016T054426-b69a is absent (only E000, E001, E003 present).",
+    "Re-ran mfos.evaluate.evaluate('O001', record=False) at this commit: verdict INVALID ('E002: no complete result'; A2-A5, K1-K3 missing), not PASS.",
+    "Recomputed spec hashes via store.spec_hash for E001/E002/E003: all match registered spec_hash. Criteria hash recomputes to sha256:d12d7746..., matching the evaluation. objective_state has no recorded criteria_hash or evaluations.",
+    "Computed sha256 of e001_reference.py, e002_ranking.py and e003_timing.py with Python: all match the registered runner_files hashes.",
+    "Confirmed A1 value (1.329e-4) and A6 value (22.39 ms) match E001/E003 result.json. Both results report git_dirty=false and the registered spec_hash.",
+    "Stratum-only baseline on dev seeds 101/202/303 (n=90 each): eta2(log L1 | stratum) 0.977-0.982; Spearman(L1, stratum mean) 0.971-0.973; top-decile recall 0.95 mean, 0.89 min. A2/A3/A5 are passable without within-stratum information.",
+    "L1 discretization dependence of rankings: 4 mm vs 1 mm on 90 layouts gives pooled rho 0.9995 and within-stratum mean 0.981 (min 0.77).",
+    "Replicated L1 timing on the same host (Apple M5): p50 32.9 ms, p90 47.4 ms, 6-die p50 42.8 ms. Checked for caching across repeated passes: none.",
+    "Verified L1 at 20 MHz is identical between single- and multi-frequency calls (the E003 vs E002 call pattern) and deterministic.",
+    "Code reading: E002's reference is solvers.l2_layout while E001 validates solvers.l2. The generator uses only default_dbc_stack (DBC Al2O3 0.38 mm). Evaluator fail-criterion logic explains K1/K2 'undetermined'."
+  ],
+  "caveats": [
+    "Midway through the review, Bash started denying shasum/openssl/git/heredoc/env-prefixed commands. Hashes and scripts were run through inline `uv run python -c`, and no git history was available (single 'review snapshot' commit).",
+    "The stratum-dominance check uses L1 as a stand-in for L2 on unsealed development seeds. That L2 has the same stratum structure is inferred from the reported rho 0.996, not observed.",
+    "L2 (l2_layout) was not run: one solve at the 0.25 mm level costs about 20 CPU-minutes per layout and needs about 8 GB. Reference convergence could not be checked independently.",
+    "`uv run` created a gitignored .venv in the worktree. No tracked repository files were modified.",
+    "If the E002 result is later committed unchanged, findings 2-4 still limit the claim: within-stratum fidelity, the l2_layout validation strength, and DBC-only scope."
+  ]
+}

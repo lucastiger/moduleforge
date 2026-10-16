@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-15T23:52:11+00:00 from repository state — do not edit_
+_generated 2026-10-16T01:10:22+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0049** [experiment_registration] register E002 (pre-registration)
@@ -15,7 +15,6 @@ cancelled: 22, done: 75, failed: 3, todo: 5
 
 
 ## Recent events
-- 2026-10-15T03:26:56+00:00 inbox_opened {"id": "I0050", "kind": "protected_change", "subject": "T0103: merge needs founder approval"}
 - 2026-10-15T13:42:28+00:00 sleep_detected {"gap_s": 451, "runs_extended": 0}
 - 2026-10-15T13:51:11+00:00 sleep_detected {"gap_s": 524, "runs_extended": 0}
 - 2026-10-15T14:03:44+00:00 sleep_detected {"gap_s": 718, "runs_extended": 0}
@@ -30,3 +29,4 @@ cancelled: 22, done: 75, failed: 3, todo: 5
 - 2026-10-15T19:38:46+00:00 sleep_detected {"gap_s": 330, "runs_extended": 0}
 - 2026-10-15T23:13:33+00:00 sleep_detected {"gap_s": 772, "runs_extended": 0}
 - 2026-10-15T23:52:09+00:00 sleep_detected {"gap_s": 1891, "runs_extended": 0}
+- 2026-10-16T01:10:21+00:00 sleep_detected {"gap_s": 4692, "runs_extended": 0}

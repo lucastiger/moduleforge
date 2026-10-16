@@ -907,3 +907,4 @@
 {"ts": "2026-10-16T23:08:43+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0106-critic-20261016T160306-a74b", "status": "completed", "cost": 2.281393, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-10-16T23:11:55+00:00", "event": "run_finished", "actor": "orchestrator", "run": "T0107-critic-20261016T160307-3500", "status": "completed", "cost": 1.99605, "subtype": "success", "report": "structured_output"}
 {"ts": "2026-10-16T23:11:57+00:00", "event": "inbox_opened", "actor": "orchestrator", "id": "I0052", "kind": "decision", "subject": "[O001] PASS verdict disputed by review"}
+{"ts": "2026-10-16T23:53:28+00:00", "event": "sleep_detected", "actor": "orchestrator", "gap_s": 1248, "runs_extended": 0}

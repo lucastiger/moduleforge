@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-16T23:11:58+00:00 from repository state — do not edit_
+_generated 2026-10-16T23:53:30+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0052** [decision] [O001] PASS verdict disputed by review
@@ -15,7 +15,6 @@ cancelled: 22, done: 78, failed: 3, todo: 4
 
 
 ## Recent events
-- 2026-10-16T05:01:54+00:00 sleep_detected {"gap_s": 522, "runs_extended": 0}
 - 2026-10-16T05:25:39+00:00 sleep_detected {"gap_s": 1147, "runs_extended": 0}
 - 2026-10-16T05:33:28+00:00 sleep_detected {"gap_s": 468, "runs_extended": 0}
 - 2026-10-16T05:42:26+00:00 experiment_registered {"id": "E002", "hash": "sha256:9791c87bf3c318015dd0908d40ab5455137c4d084f68859e5d0aee8f6ef87d73", "by": "founder"}
@@ -30,3 +29,4 @@ cancelled: 22, done: 78, failed: 3, todo: 4
 - 2026-10-16T23:08:43+00:00 run_finished {"run": "T0106-critic-20261016T160306-a74b", "status": "completed", "cost": 2.281393, "subtype": "success", "report": "structured_output"}
 - 2026-10-16T23:11:55+00:00 run_finished {"run": "T0107-critic-20261016T160307-3500", "status": "completed", "cost": 1.99605, "subtype": "success", "report": "structured_output"}
 - 2026-10-16T23:11:57+00:00 inbox_opened {"id": "I0052", "kind": "decision", "subject": "[O001] PASS verdict disputed by review"}
+- 2026-10-16T23:53:28+00:00 sleep_detected {"gap_s": 1248, "runs_extended": 0}

@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-16T14:49:58+00:00 from repository state — do not edit_
+_generated 2026-10-16T22:18:21+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0051** [decision] E002 needs burst compute (~172 CPU-h)
@@ -16,7 +16,6 @@ cancelled: 22, done: 75, failed: 3, needs_founder: 1, todo: 4
 - T0077 `needs_founder` none/experiment: Run E002: L1 vs L2 loop-inductance ranking on sealed generated layouts (attempt 3)
 
 ## Recent events
-- 2026-10-16T01:21:34+00:00 sleep_detected {"gap_s": 673, "runs_extended": 0}
 - 2026-10-16T02:23:05+00:00 sleep_detected {"gap_s": 3660, "runs_extended": 0}
 - 2026-10-16T03:23:50+00:00 sleep_detected {"gap_s": 3645, "runs_extended": 0}
 - 2026-10-16T04:24:55+00:00 sleep_detected {"gap_s": 3665, "runs_extended": 0}
@@ -31,3 +30,4 @@ cancelled: 22, done: 75, failed: 3, needs_founder: 1, todo: 4
 - 2026-10-16T05:42:33+00:00 inbox_opened {"id": "I0051", "kind": "decision", "subject": "E002 needs burst compute (~172 CPU-h)"}
 - 2026-10-16T05:42:33+00:00 burst_requested {"task": "T0077", "experiment": "E002", "cpu_hours": 172.0}
 - 2026-10-16T14:49:57+00:00 sleep_detected {"gap_s": 547, "runs_extended": 0}
+- 2026-10-16T22:18:18+00:00 sleep_detected {"gap_s": 333, "runs_extended": 0}

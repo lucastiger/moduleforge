@@ -3,7 +3,7 @@ objective: O001
 title: 'BACKLOG (after E001): L2 hardening from reviews T0085/T0086 of T0071'
 type: implement
 agent: builder
-status: todo
+status: cancelled
 depends_on: []
 description: 'Low priority; do not start before E001 (T0072) has run, so the reference solver does not
   change under it. Findings from project/reviews/T0071/T0085.json and T0086.json:
@@ -31,6 +31,7 @@ risk: low
 model: null
 budget_usd: 3.0
 max_turns: 80
+wall_minutes: null
 attempts: 0
 max_attempts: 3
 branch: null
@@ -44,4 +45,6 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: cancelled
+  summary: objective passed

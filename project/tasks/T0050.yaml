@@ -3,7 +3,7 @@ objective: O001
 title: 'BACKLOG (low value): pin fingerprint values within fields (review T0048)'
 type: implement
 agent: builder
-status: todo
+status: cancelled
 depends_on:
 - T0037
 description: Backlog from the T0048 review of T0037 (project/reviews/T0037/T0048.json). The production
@@ -21,6 +21,7 @@ risk: low
 model: null
 budget_usd: 3.0
 max_turns: 80
+wall_minutes: null
 attempts: 0
 max_attempts: 3
 branch: null
@@ -34,4 +35,6 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: cancelled
+  summary: objective passed

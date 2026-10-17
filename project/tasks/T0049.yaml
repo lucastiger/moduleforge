@@ -3,7 +3,7 @@ objective: O001
 title: 'BACKLOG (do not start before vendor design rules): DRC findings of review T0046'
 type: implement
 agent: builder
-status: todo
+status: cancelled
 depends_on:
 - T0043
 description: Backlog from the T0046 review of T0043 (project/reviews/T0043/T0046.json); none is reachable
@@ -22,6 +22,7 @@ risk: low
 model: null
 budget_usd: 3.0
 max_turns: 80
+wall_minutes: null
 attempts: 0
 max_attempts: 3
 branch: null
@@ -35,4 +36,6 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: cancelled
+  summary: objective passed

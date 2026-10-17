@@ -4,7 +4,7 @@ title: 'BACKLOG (low): T0075 review leftovers - docstring, iteration comment, co
   exit'
 type: implement
 agent: builder
-status: todo
+status: cancelled
 depends_on: []
 description: 'Low priority; do not start before E002''s L2 runs are done, so the layout solver does not
   change under them. From reviews T0088, T0089, T0091 and T0092 of T0075 (project/reviews/T0075/):
@@ -46,4 +46,6 @@ target: null
 lens: null
 trigger: null
 rationale: ''
-history: []
+history:
+- outcome: cancelled
+  summary: objective passed

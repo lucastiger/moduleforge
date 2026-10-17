@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-17T00:21:47+00:00 from repository state — do not edit_
+_generated 2026-10-17T00:52:09+00:00 from repository state — do not edit_
 
 ## Founder inbox (1 open)
 - **I0052** [decision] [O001] PASS verdict disputed by review
@@ -15,7 +15,6 @@ cancelled: 22, done: 78, failed: 3, todo: 4
 
 
 ## Recent events
-- 2026-10-16T05:33:28+00:00 sleep_detected {"gap_s": 468, "runs_extended": 0}
 - 2026-10-16T05:42:26+00:00 experiment_registered {"id": "E002", "hash": "sha256:9791c87bf3c318015dd0908d40ab5455137c4d084f68859e5d0aee8f6ef87d73", "by": "founder"}
 - 2026-10-16T05:42:26+00:00 inbox_resolved {"id": "I0049", "status": "approved", "note": "Founder (2026-10-15): register E002 (Richardson-extrapolated L2 reference; n=90 sealed, 4 checked layouts, conv_t
 - 2026-10-16T05:42:33+00:00 inbox_opened {"id": "I0051", "kind": "decision", "subject": "E002 needs burst compute (~172 CPU-h)"}
@@ -30,3 +29,4 @@ cancelled: 22, done: 78, failed: 3, todo: 4
 - 2026-10-16T23:11:57+00:00 inbox_opened {"id": "I0052", "kind": "decision", "subject": "[O001] PASS verdict disputed by review"}
 - 2026-10-16T23:53:28+00:00 sleep_detected {"gap_s": 1248, "runs_extended": 0}
 - 2026-10-17T00:21:44+00:00 sleep_detected {"gap_s": 1663, "runs_extended": 0}
+- 2026-10-17T00:52:08+00:00 sleep_detected {"gap_s": 1823, "runs_extended": 0}

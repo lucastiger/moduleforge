@@ -1,5 +1,5 @@
 # ModuleForge status
-_generated 2026-10-17T00:56:05+00:00 from repository state — do not edit_
+_generated 2026-10-17T01:00:25+00:00 from repository state — do not edit_
 
 ## Founder inbox (0 open)
 - nothing needs you
@@ -8,16 +8,14 @@ _generated 2026-10-17T00:56:05+00:00 from repository state — do not edit_
 | id | status | verdict | evals | spent | title |
 |---|---|---|---|---|---|
 | O000 | passed | PASS | 1/2 | $0.50/$20 | Framework canary — the loop carries a known-answer hypothesis from plan to verdict |
-| O001 | evaluating | PASS | 1/3 | $284.93/$315 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
+| O001 | evaluating | PASS | 1/3 | $286.24/$315 | L1 PEEC ranks half-bridge layouts faithfully enough to drive layout search |
 
 ## Tasks
-cancelled: 22, done: 78, failed: 3, running: 2, todo: 4
+cancelled: 22, done: 79, failed: 3, running: 1, todo: 4
 
-- T0108 `running` critic/review: Review EV-O001-01 (physics) (attempt 1)
 - T0109 `running` critic/review: Review EV-O001-01 (numerics) (attempt 1)
 
 ## Recent events
-- 2026-10-16T22:18:18+00:00 sleep_detected {"gap_s": 333, "runs_extended": 0}
 - 2026-10-16T23:03:04+00:00 evaluation {"objective": "O001", "id": "EV-O001-01", "verdict": "PASS"}
 - 2026-10-16T23:03:06+00:00 run_started {"run": "T0106-critic-20261016T160306-a74b", "task": "T0106", "role": "critic", "session": "28d5aa3e-f91f-444d-adab-6034135f34fe"}
 - 2026-10-16T23:03:07+00:00 run_started {"run": "T0107-critic-20261016T160307-3500", "task": "T0107", "role": "critic", "session": "7bfb20a5-4e4e-4562-8ac7-7de3efe8ad35"}
@@ -32,3 +30,4 @@ cancelled: 22, done: 78, failed: 3, running: 2, todo: 4
 - 2026-10-17T00:55:58+00:00 inbox_resolved {"id": "I0052", "status": "answered", "note": "Founder (2026-10-16): the dispute's blocker was an orchestrator race (critics reviewed a snapshot taken before th
 - 2026-10-17T00:56:04+00:00 run_started {"run": "T0108-critic-20261016T175604-4ce3", "task": "T0108", "role": "critic", "session": "bcf9acc6-b524-473d-949e-d8ffceb9a739"}
 - 2026-10-17T00:56:05+00:00 run_started {"run": "T0109-critic-20261016T175605-40c5", "task": "T0109", "role": "critic", "session": "acb694eb-c793-4916-a2ba-fd832037a74f"}
+- 2026-10-17T01:00:24+00:00 run_finished {"run": "T0108-critic-20261016T175604-4ce3", "status": "completed", "cost": 1.310809, "subtype": "success", "report": "structured_output"}

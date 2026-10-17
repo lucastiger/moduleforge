@@ -1,0 +1,74 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "Ranking is reliable only for layouts that differ by more than about 5 % in L2",
+      "detail": "The headline Spearman of 0.996 comes from a very wide sample: CV of L2 is 0.36, and 3193 of the 4005 layout pairs differ by more than 10 %. Among pairs that are close in L2, L1 often puts them in the wrong order. For gaps under 2 %, 60 of 160 pairs are discordant (cross-family 23/54, about a coin flip). For gaps of 2\u20135 %, 29 of 243 are discordant (cross-family 19/98 = 19 %). Above a 5 % gap, none are. Within a single stratum (same family and die count, the situation a derivative re-layout optimiser faces), mean Spearman is 0.92 and the minimum is 0.77 (n=6 per stratum). 'Ranks consistently' therefore holds for coarse differences, not for picking between candidates a few percent apart.",
+      "evidence": "My recomputation from e002_rows.json and e002_reference.json, default 4 mm L1 vs L2_inf. Same-family pairs: <2 %: 37/106 discordant; 2\u20135 %: 10/145; 5\u201310 %: 0/263. Cross-family pairs: <2 %: 23/54; 2\u20135 %: 19/98; >5 %: 0/2548. Per-stratum rho values include 0.771 (interleaved:3, side_by_side:5).",
+      "suggested_check": "Report pairwise concordance against the L2 gap, and within-stratum Spearman, as limits on the claim; or test on a sample built from near-equivalent derivative layouts."
+    },
+    {
+      "severity": "major",
+      "title": "L1 reads 5\u201314 % low on every layout; the offset depends on family and die count, grows as the mesh is refined, and has no explanation",
+      "detail": "L1 is below L2_inf on all 90 layouts (signed error \u221214.4 % to \u22125.1 %, mean \u22129.7 %, so MAPE equals the mean signed error). The offset depends on family (u_shaped about \u22127.5 %, interleaved about \u221210 %, side_by_side about \u221211.7 %) and on die count (\u22127.8 % at 2 dies to \u221210.6 % at 6). Refining the L1 mesh moves it further from L2: MAPE is 10.1 / 11.1 / 12.1 % at 2 / 1 / 0.5 mm, and 12.1 % is just above A4's 0.12. The residual-vs-dies Spearman strengthens from \u22120.33 to \u22120.47. The L1 mesh steps are not contracting: the median ratio d(1\u21920.5 mm)/d(2\u21921 mm) is 1.04 and the maximum is 5.5. So L1's mesh-converged value is not established, and A4 passes at the default mesh partly because discretisation error offsets a model deficit. This contradicts the model docstring, which says all L1 biases are positive (L1 high). Both L1 and L2 use the same ideal die short and point-port model, so that shared model cannot be the source of the offset. It is a missing-physics signal (an untested guess: the infinite image plane versus the finite backside Cu, or the trace current being placed only on the plane-facing face). Ranking survives it here only because the side_by_side family, which has the lowest L, is also the most under-predicted, which widens rather than closes the gaps.",
+      "evidence": "From the rows: per-family mean signed error u_shaped \u22120.060\u2026\u22120.086, interleaved \u22120.084\u2026\u22120.107, side_by_side \u22120.090\u2026\u22120.129. L1 at 0.5 mm vs L2_inf: rho 0.9974, MAPE 0.1215. model.py lines 60\u201378 say 'All of these biases are positive (L1 high)'.",
+      "suggested_check": "Diagnose the \u221210 % offset against L2 on canonical sub-structures (one strip over the finite backside Cu, one wire bundle) before using L1 values for absolute decisions or across families."
+    },
+    {
+      "severity": "major",
+      "title": "The claimed scope includes AMB substrates, but only the DBC stack was tested",
+      "detail": "The claim covers 'a single DBC or AMB substrate'. The generator behind E002 and E003 hard-codes default_dbc_stack() (0.38 mm Al2O3). The AMB stack (0.32 mm Si3N4) changes the trace-to-image-plane gap, and the L1 docstring names that gap as the scale of the unresolved edge current crowding. No AMB layout was solved by L1 or L2. The E002 note says 'the stack is fixed'.",
+      "evidence": "src/moduleforge/generate/halfbridge.py:109 `stack = default_dbc_stack()`; default_amb_stack exists in geometry/stack.py but the generator never uses it.",
+      "suggested_check": "Narrow the scope to DBC (Al2O3 0.38 mm), or run an AMB stratum through E002's pipeline."
+    },
+    {
+      "severity": "minor",
+      "title": "The 50 ms timing was measured on one fast laptop CPU only",
+      "detail": "E003 ran on an Apple M5 with no core pinning (one of the fastest single-thread core types). The median is 22.4 ms overall and 26.3 ms for 6 dies, a margin of about 2.2x. The claim says 'one CPU core' without naming hardware, so a typical server core roughly 2x slower would bring the 6-die stratum close to 50 ms. edge_lanes=True, the docstring's fix for crowding, costs about 1.7x and would exceed the budget on such a core.",
+      "evidence": "E003 result.json provenance.tools.cpu_model 'Apple M5'. My re-timing at this commit on the review machine, without the single-thread environment variables: 14\u201329 ms per call on 10 E002 layouts.",
+      "suggested_check": "Name the CPU class in the claim, or repeat E003 on the x86 machine class used in E002."
+    },
+    {
+      "severity": "minor",
+      "title": "L2 'converged' means converged laterally only, and L2 shares L1's modelling abstractions",
+      "detail": "The l2_layout path used in E002 refines only the lateral cell size. Its top-Cu thickness layers (Z_s within 1.6 % of the exact slab) and wire filament bundles are fixed. Its own docstring records a 2.6 % shift in L(20 MHz) from the layer-grading choice alone. l2_converged and l2_extrapolation_verified bound only the lateral error. L2 also uses the same Layout.to_conductors() ports, ideal die shorts and equipotential die footprints ('a model assumption and is not bounded'). Agreement with L2 therefore cannot detect L1 errors that come from those shared choices. The impact on ranking is probably small, since Spearman of L2_inf vs L2(k*) is 0.9997.",
+      "evidence": "src/moduleforge/solvers/l2_layout.py docstring lines 49\u201365.",
+      "suggested_check": "Run one checked layout with the thickness layers and wire filaments refined, to bound the non-lateral part of the reference error."
+    },
+    {
+      "severity": "minor",
+      "title": "Provenance: the result commits are not in the review snapshot, and E002 does not record an L1 hash",
+      "detail": "E002 ran at 59d3ce7 and E003 at 4c8cf3e. Neither commit exists in this repository (only 'review snapshot' e75cc94), so I could not confirm they are on main or that L1 was the same in both runs. E002 provenance.tools records the L2 layout hash but not the L1 source. My own reproduction mitigates this: the current L1 reproduces E002's L1 values exactly, and its timing is consistent with E003.",
+      "evidence": "`git cat-file -t 59d3ce7` \u2192 not a valid object. E002 and E003 spec_hash values match the registered specs (sha256:9791c87b\u2026, sha256:f740a9c2\u2026). Regenerated layouts (recorded seed 1408736999) give L1 within 4e-13 of e002_rows on 10 layouts.",
+      "suggested_check": "Record an L1 source hash in E002/E003 provenance, and review with the result commits present."
+    },
+    {
+      "severity": "note",
+      "title": "The top-decile recall metric is lenient",
+      "detail": "A5/K3 count L1's 9 lowest-L layouts among L2's 18 lowest. Strict top-9 vs top-9 overlap is 8/9. All 18 of L2's best layouts are side_by_side, so A5 tests only within one family. The metric was pre-registered, so this is not a violation.",
+      "evidence": "Recomputed: recall(k=9, w=18) = 1.0; strict overlap 8/9; L2 top 18 are all side_by_side with 3\u20136 dies.",
+      "suggested_check": ""
+    }
+  ],
+  "independent_checks_performed": [
+    "Recomputed Spearman (0.99585), MAPE (0.09716) and top-decile recall (1.0) in pure Python from e002_rows.json and e002_reference.json; all match result.json and the evaluator values.",
+    "Computed the signed L1\u2212L2_inf error per layout, family and die count: negative on all 90 layouts, \u22125.1 % to \u221214.4 %, strongly dependent on family and die count.",
+    "Computed L1 accuracy against L2 at the fine meshes (2/1/0.5 mm) and the L1 mesh step ratios: the gap grows with refinement (MAPE 12.1 % at 0.5 mm) and the steps do not contract (median ratio 1.04).",
+    "Computed within-stratum (n=6) and within-family Spearman: stratum mean 0.92, minimum 0.77; family 0.979\u20130.995.",
+    "Computed pairwise discordance against the L2 gap, within and across families: about 38 % wrong for gaps under 2 %, 12 % for 2\u20135 %, 0 % above 5 %.",
+    "Regenerated the 90 E002 layouts from the recorded seed and re-ran L1 at this commit on 10 of them: values match e002_rows to 4e-13; wall time 14\u201329 ms per call.",
+    "Inspected the generator: only default_dbc_stack is used, so AMB is untested.",
+    "Checked that L2 does not import L1 (no physics.peec imports in solvers/l2*.py), and read the l2_layout docstring for what its convergence covers (lateral only) and which modelling choices it shares with L1 (ideal die shorts, equipotential footprints, ports).",
+    "Compared E002 and E003 spec_hash values against the registered specs (match); confirmed the result commits are absent from the review snapshot."
+  ],
+  "caveats": [
+    "Valid only for the fixed DBC stack (Al2O3 0.38 mm ceramic, 0.3 mm Cu); AMB is untested.",
+    "Ranking is reliable only for layout pairs whose reference L differs by about 5 % or more; below 2 % L1's ordering is close to chance, especially across families.",
+    "The pre-registered criteria A1\u2013A6 are met and reproduce from the result files, but the ranking evidence comes from a sample spread mostly by family and die count (CV 0.36), not from near-equivalent derivative layouts.",
+    "L1 is biased low by 5\u201314 %, with family- and die-dependent structure, and is not mesh-converged; its absolute values should not be used for decisions, and refining its mesh worsens the absolute agreement.",
+    "The \u226450 ms median was demonstrated on an Apple M5 core only (22 ms, 26 ms for 6 dies).",
+    "L1 is only compared with L2 at 20 MHz; 5/80 MHz evidence is L1 self-consistency only.",
+    "My reproduction run made `uv` create an untracked .venv in the worktree; `git status` is clean, so it is ignored and no tracked files changed."
+  ]
+}

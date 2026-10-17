@@ -14,7 +14,7 @@ pending_review_ref: c27e1da5e266a4f1dd2a0a7607a476f738986d90
 replans: 4
 max_replans: 3
 needs_replan: false
-spent_usd: 284.9341
+spent_usd: 286.2449
 budget_override_usd: 314.94759999999997
 log:
 - 'founder answered I0003: (b): use the provisioned binary (MF_FASTHENRY_BIN, then PATH); no auto-build.

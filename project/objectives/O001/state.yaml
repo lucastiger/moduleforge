@@ -1,4 +1,4 @@
-status: needs_founder
+status: evaluating
 approved_by: founder
 approved_at: '2026-09-29T21:47:40+00:00'
 criteria_hash: sha256:d12d77462acca9647d13f7a7092953f9d7aa450fde02ede714f7cca52ac2ad61
@@ -10,6 +10,7 @@ evaluated_runs:
   E002: E002-20261016T054426-b69a
   E003: E003-20261011T193042-f91e
 pending_evaluation: EV-O001-01
+pending_review_ref: c27e1da5e266a4f1dd2a0a7607a476f738986d90
 replans: 4
 max_replans: 3
 needs_replan: false
@@ -49,3 +50,8 @@ log:
 - diagnosis:T0090 of T0075 (implementation)
 - diagnosis:T0098 of T0077 (implementation)
 - diagnosis:T0099 of T0078 (implementation)
+- 'founder: re-review of EV-O001-01 at c27e1da5e2'
+- 'founder answered I0052: Founder (2026-10-16): the dispute''s blocker was an orchestrator race (critics
+  reviewed a snapshot taken before the E002 result and the evaluation were committed; fixed in dbcaff53).
+  Re-review of EV-O001-01 launched on a committed snapshot with the evidence and the exploratory within-stratum
+  note (research/notes/o001-e002-within-stratum-exploratory.md). No replan. (no replan)'

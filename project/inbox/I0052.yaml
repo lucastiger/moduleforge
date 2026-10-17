@@ -7,7 +7,10 @@ refs:
 - EV-O001-01
 options: []
 recommendation: ''
-status: open
-response: ''
+status: answered
+response: 'Founder (2026-10-16): the dispute''s blocker was an orchestrator race (critics reviewed a snapshot
+  taken before the E002 result and the evaluation were committed; fixed in dbcaff53). Re-review of EV-O001-01
+  launched on a committed snapshot with the evidence and the exploratory within-stratum note (research/notes/o001-e002-within-stratum-exploratory.md).
+  No replan.'
 created_at: '2026-10-16T23:11:57+00:00'
-resolved_at: null
+resolved_at: '2026-10-17T00:55:58+00:00'

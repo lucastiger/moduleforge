@@ -97,6 +97,7 @@ class ObjectiveState(_Strict):
     last_verdict: Optional[str] = None
     evaluated_runs: dict[str, str] = {}  # experiment id -> run id used by the last evaluation
     pending_evaluation: Optional[str] = None  # evaluation id awaiting critic review
+    pending_review_ref: Optional[str] = None  # commit the pending evaluation's critics review (snapshot binding)
     replans: int = 0
     max_replans: int = 3
     needs_replan: bool = True

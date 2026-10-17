@@ -513,3 +513,49 @@ def test_only_a_non_fast_forward_push_counts_as_divergence(sandbox):
     Orchestrator(s)._push()
     assert not (s.mfos / "push_diverged").exists()
     assert not [i for i in Store().inbox("open") if i.subject == DIVERGED_SUBJECT]
+
+
+def _high_risk_canary(sandbox):
+    p = sandbox / "project" / "objectives" / "O000" / "objective.yaml"
+    p.write_text(p.read_text().replace("risk: low", "risk: high"))  # a PASS then goes through blinded critics
+
+
+def test_evaluation_critics_review_a_snapshot_that_holds_the_evidence(sandbox):
+    """EV-O001-01, 2026-10-16: the critics of a PASS got a snapshot taken before the E002 result and the evaluation
+    file were committed, and both disputed the verdict for missing evidence."""
+    import subprocess
+    _high_risk_canary(sandbox)
+    setup_objective()
+    s = drive()
+    st = s.objective_state("O000")
+    assert st.status == "passed", st
+    ev = st.evaluations[-1]
+    reviews = [t for t in s.tasks("O000") if t.type == "review" and t.target == ev]
+    assert len(reviews) == 2
+    for t in reviews:
+        tree = subprocess.run(["git", "ls-tree", "-r", "--name-only", t.description], cwd=sandbox, capture_output=True,
+                              text=True, check=True).stdout
+        assert f"project/objectives/O000/evaluations/{ev}.json" in tree, t.id
+        assert "experiments/results/E000/" in tree, t.id
+
+
+def test_a_founder_rereview_counts_only_the_new_snapshot(sandbox):
+    """After a disputed PASS, `mfos objective rereview` re-runs the critics on a fresh committed snapshot; the stale
+    critics' verdicts must not decide it (EV-O001-01, 2026-10-16)."""
+    from mfos import models as m
+    _high_risk_canary(sandbox)
+    setup_objective()
+    s = drive()
+    st = s.objective_state("O000")
+    ev = st.evaluations[-1]
+    s.save_task(m.Task(id="T9400", objective="O000", title="stale", type="review", agent="critic", status="done",
+                       target=ev, lens="physics", description="0" * 40))
+    s.write_json(s.project / "reviews" / ev / "T9400.json",
+                 m.Review(verdict="reject", findings=[m.Finding(severity="blocker", title="missing evidence", detail="x")]))
+    st.status, st.pending_evaluation, st.pending_review_ref = "needs_founder", ev, None
+    s.save_objective_state("O000", st)
+    assert cli(["objective", "rereview", "O000"]) == 0
+    st = Store().objective_state("O000")
+    assert st.status == "evaluating" and st.pending_review_ref and st.pending_evaluation == ev
+    s = drive()
+    assert s.objective_state("O000").status == "passed"

@@ -63,6 +63,15 @@ def cmd_objective(a: argparse.Namespace) -> int:
         st.status = "needs_founder"
         s.save_objective_state(a.id, st)
         return 0
+    if a.action == "rereview":  # founder: the blinded review of a PASS ran on a stale or wrong snapshot
+        from .loop import Orchestrator
+        try:
+            ev_id, ref, n = Orchestrator(s).rereview_evaluation(a.id)
+        except ValueError as e:
+            print(e, file=sys.stderr)
+            return 1
+        print(f"{a.id}: {n} critics re-review {ev_id} at {ref[:10]}; the loop dispatches them")
+        return 0
     if a.action == "resume":
         st = s.objective_state(a.id)
         st.status = "active"
@@ -388,7 +397,7 @@ def _parser() -> argparse.ArgumentParser:
         return sp
 
     o = cmd("objective", cmd_objective, "create, approve (freeze), show, pause, resume an objective")
-    o.add_argument("action", choices=["new", "approve", "show", "pause", "resume"])
+    o.add_argument("action", choices=["new", "approve", "show", "pause", "resume", "rereview"])
     o.add_argument("id")
 
     i = cmd("inbox", cmd_inbox, "list or show founder decisions")

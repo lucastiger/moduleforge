@@ -711,9 +711,15 @@ class Orchestrator:
             lenses = [x.split(":", 1)[1] for x in self.pol.get("review_ladder", {}).get(obj.risk, [])
                       if x.startswith("critic:")]
             if lenses:
+                # The critics' snapshot must hold the evidence. Results copied back from burst compute and the
+                # evaluation file were still uncommitted when EV-O001-01's critics were created, so both reviewed a
+                # tree without the E002 result (2026-10-16). Commit first and bind the reviews to that commit.
+                self.s.save_objective_state(oid, st)
+                self._commit_state(f"evaluation {ev.id}")
+                ref = self.git.head()
                 for lens in lenses:
-                    self._create_review(oid, target=ev.id, lens=lens, ref=self.git.head())
-                st.status, st.pending_evaluation = "evaluating", ev.id
+                    self._create_review(oid, target=ev.id, lens=lens, ref=ref)
+                st.status, st.pending_evaluation, st.pending_review_ref = "evaluating", ev.id, ref
             else:
                 self._objective_passed(oid, obj, st, ev.id, [])
         elif ev.verdict == "INVALID":
@@ -728,13 +734,36 @@ class Orchestrator:
             self._create_review(oid, target=ev.id, lens="statistics", ref=self.git.head())
         self.s.save_objective_state(oid, st)
 
+    def rereview_evaluation(self, oid: str) -> tuple[str, str, int]:
+        """Founder: re-run the blinded critics of the objective's last PASS evaluation on a fresh committed snapshot.
+        The review tasks exist before the objective turns 'evaluating', so the loop never sees an empty review set,
+        and only reviews of the new snapshot count. Returns (evaluation id, snapshot commit, number of critics)."""
+        obj, st = self.s.objective(oid), self.s.objective_state(oid)
+        ev_id = st.pending_evaluation or (st.evaluations[-1] if st.evaluations else None)
+        if not ev_id or st.last_verdict != "PASS":
+            raise ValueError(f"{oid} has no PASS evaluation to re-review")
+        lenses = [x.split(":", 1)[1] for x in self.pol.get("review_ladder", {}).get(obj.risk, []) if x.startswith("critic:")]
+        if not lenses:
+            raise ValueError(f"{oid}'s risk '{obj.risk}' has no critic lenses")
+        with self.s.lock("dispatch"):
+            self._commit_state(f"re-review {ev_id}")
+            ref = self.git.head()
+            for lens in lenses:
+                self._create_review(oid, target=ev_id, lens=lens, ref=ref)
+            st = self.s.objective_state(oid)
+            st.status, st.pending_evaluation, st.pending_review_ref = "evaluating", ev_id, ref
+            st.log.append(f"founder: re-review of {ev_id} at {ref[:10]}")
+            self.s.save_objective_state(oid, st)
+        self.s.event("evaluation_rereview", objective=oid, evaluation=ev_id, ref=ref, critics=len(lenses))
+        return ev_id, ref, len(lenses)
+
     def _pseudo(self, oid: str, ev_id: str) -> m.Task:
         return m.Task(id=ev_id, objective=oid, title=f"evaluation {ev_id}", type="experiment", agent="none")
 
     def _finish_evaluation_review(self, oid: str, obj: m.Objective, st: m.ObjectiveState) -> None:
         target = st.pending_evaluation or ""
-        rtasks, revs = self._reviews_for(target)
-        if any(x.status not in TERMINAL for x in rtasks):
+        rtasks, revs = self._reviews_for(target, ref=st.pending_review_ref)  # only the reviews of the bound snapshot
+        if not rtasks or any(x.status not in TERMINAL for x in rtasks):
             return
         bad = [r for r in revs if r.verdict in ("reject", "cannot_assess")]
         if bad or len(revs) < len(rtasks):
@@ -750,11 +779,11 @@ class Orchestrator:
     def _objective_passed(self, oid: str, obj: m.Objective, st: m.ObjectiveState, ev_id: str,
                           caveats: list[str]) -> None:
         st.status = "passed"
-        st.pending_evaluation = None
+        reviews = [x.id for x in self._reviews_for(ev_id, ref=st.pending_review_ref)[0]]
+        st.pending_evaluation, st.pending_review_ref = None, None
         self.s.save_objective_state(oid, st)
         self.s.add_claim(statement=obj.hypothesis.statement, scope="; ".join(obj.scope_in) or "as stated",
-                         status="supported", objective=oid, evaluation=ev_id,
-                         reviews=[x.id for x in self._reviews_for(ev_id)[0]], caveats=caveats)
+                         status="supported", objective=oid, evaluation=ev_id, reviews=reviews, caveats=caveats)
         self._commit_state(f"{oid} passed ({ev_id})")
         self.s.git("tag", "-f", "-a", f"{oid}-passed", "-m", f"{oid} passed: {ev_id}", check=False)
         self.s.event("objective_passed", objective=oid, evaluation=ev_id)

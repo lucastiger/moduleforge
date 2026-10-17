@@ -1,0 +1,40 @@
+id: C002
+statement: 'A fast quasi-static PEEC model (L1: rectangular trace cells with skin-depth-corrected resistance,
+  bond wires as round filaments with Grover partial inductances, and the stack''s conductive planes represented
+  by image planes) ranks DRC-valid wire-bonded half-bridge DBC/AMB layouts by commutation-loop inductance
+  at 20 MHz consistently with a converged reference solver (L2), at a median cost of at most 50 ms per
+  evaluation on one CPU core.'
+scope: two-level half-bridge on a single DBC or AMB substrate, 2–6 parallel dies per switch position;
+  wire-bonded top-side interconnect, fixed baseplate and housing, loop inductance at 20 MHz
+status: supported
+objective: O001
+evaluation: EV-O001-01
+reviews:
+- T0108
+- T0109
+caveats:
+- Valid only for the fixed DBC stack (Al2O3 0.38 mm ceramic, 0.3 mm Cu); AMB is untested.
+- Ranking is reliable only for layout pairs whose reference L differs by about 5 % or more; below 2 %
+  L1's ordering is close to chance, especially across families.
+- The pre-registered criteria A1–A6 are met and reproduce from the result files, but the ranking evidence
+  comes from a sample spread mostly by family and die count (CV 0.36), not from near-equivalent derivative
+  layouts.
+- L1 is biased low by 5–14 %, with family- and die-dependent structure, and is not mesh-converged; its
+  absolute values should not be used for decisions, and refining its mesh worsens the absolute agreement.
+- The ≤50 ms median was demonstrated on an Apple M5 core only (22 ms, 26 ms for 6 dies).
+- L1 is only compared with L2 at 20 MHz; 5/80 MHz evidence is L1 self-consistency only.
+- My reproduction run made `uv` create an untracked .venv in the worktree; `git status` is clean, so it
+  is ignored and no tracked files changed.
+- The claim is supported for ranking layouts whose loop inductances differ by more than about 5%. Below
+  that, L1 misorders 23–38% of pairs.
+- Supported only for the generator's three families on the single default DBC stack; AMB substrates and
+  other stack thicknesses are untested.
+- The L1 'model' must include its 4 mm default mesh. L1 does not converge on refinement, and its absolute
+  values are about 10% low; A4 (MAPE ≤ 12%) would fail at hmax 0.5 mm.
+- L1 has a bias that grows with die count, so it overstates the inductance benefit of adding dies by about
+  2–3.5 percentage points.
+- The 50 ms timing is shown on Apple silicon (M5, unpinned), both in E003 and in my rerun; it is not shown
+  on other CPUs.
+- Running `uv run` created an untracked .venv in the worktree; no tracked files were modified. My scratch
+  analysis ran as inline python -c commands, because file writes to /tmp were blocked.
+created_at: '2026-10-17T01:01:31+00:00'

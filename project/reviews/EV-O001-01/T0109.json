@@ -1,0 +1,75 @@
+{
+  "verdict": "accept_with_caveats",
+  "findings": [
+    {
+      "severity": "major",
+      "title": "L1's absolute accuracy depends on its coarse default mesh offsetting its model error, and L1 does not converge as the mesh is refined",
+      "detail": "L1 is below L2_inf on all 90 layouts, by 5.1\u201314.4% (mean -9.7%), so MAPE is simply the size of this bias. Refining the L1 mesh moves it further away from the reference: MAPE is 0.097, 0.101, 0.111 and 0.1215 at hmax 4, 2, 1 and 0.5 mm. At 0.5 mm the point value alone already exceeds the A4 threshold of 0.12. The refinement steps do not contract: the median step is -0.42%, -1.12% and -1.19%, so the 1\u21920.5 mm step is 1.03 times the 2\u21921 mm step, where a converging scheme would give about 0.25\u20130.5. This contradicts the model.py docstring's Richardson estimate (order p = 1..2, default mesh '+2.3..+5.4 % above the mesh-converged L1'). The mesh-converged L1 is therefore unknown and is at least 12% low. A4 passes only because the 4 mm mesh's positive discretisation bias partly cancels a larger negative model bias. The ranking claim survives, because Spearman rises from 0.9958 to 0.9974 as the mesh is refined, but L1 is only defined by its 4 mm default mesh, not by a converged model.",
+      "evidence": "Recomputed from e002_rows.json: mesh 4/2/1/0.5 mm gives rho 0.99585/0.99615/0.99700/0.99742 and MAPE 0.0972/0.1007/0.1109/0.1215; 100% of layouts have L1 < L2_inf; median step ratios 2.36 and 1.03.",
+      "suggested_check": "Record hmax = 4 mm as part of the L1 model definition in the claim, and diagnose the -10% bias (it is consistent with the plane-facing-face-only current layer) before quoting absolute L1 numbers."
+    },
+    {
+      "severity": "major",
+      "title": "L1 cannot reliably order layouts whose loop inductances differ by less than about 5%",
+      "detail": "Rho = 0.996 comes mostly from the large spread across families and die counts (CV of L2_inf 0.36; side_by_side 3.5\u20135.9 nH against 7.3\u201313.2 nH for the other families). Within one (family, dies) stratum the mean Spearman is 0.92 and the minimum is 0.77 (n = 6 each). Pairs of layouts that the reference puts within 2% of each other are ordered wrongly 37.5% of the time, close to a coin flip; pairs within 5% are wrong 22.6% of the time, and every misordered pair is within 4.4%. The scatter of L1's per-layout error is about 2% (sd within a die count). An optimizer refining a derivative re-layout near its optimum works exactly in this <5% regime.",
+      "evidence": "Pairwise analysis over 4005 pairs: 89 misordered (Kendall tau 0.956). Same-stratum pairs: 18 of 225 misordered. Within-family rho: interleaved 0.988, side_by_side 0.979, u_shaped 0.995.",
+      "suggested_check": "Limit the claim to 'orders layouts whose L differs by more than about 5%', or report the misordering rate as a function of the reference gap."
+    },
+    {
+      "severity": "minor",
+      "title": "L1's bias depends on die count and family, so it overstates the benefit of adding dies",
+      "detail": "The signed L1 error grows from -7.8% at 2 dies to -10.6% at 6 dies, and varies by family from -7.5% (u_shaped) to -11.7% (side_by_side). As a result L1 overstates how much L falls from 2 to 6 dies: in side_by_side L1 gives L(6)/L(2) = 0.768 against 0.803 from L2. The residual correlates with die count (resid_spearman_dies -0.33, -0.47 at the fine mesh; both CIs exclude 0). Interleaved and u_shaped overlap in L and differ in bias by about 2.5%, so close cross-family comparisons will lean towards interleaved.",
+      "evidence": "Per-dies mean error (default mesh): -0.078, -0.097, -0.101, -0.104, -0.106; at 0.5 mm: -0.099 to -0.134.",
+      "suggested_check": "Report die-count trade-off conclusions with this bias stated, or check them against L2."
+    },
+    {
+      "severity": "major",
+      "title": "Scope says 'DBC or AMB', but every tested layout uses one default DBC stack from one 3-family generator",
+      "detail": "generate/halfbridge.py builds every layout with default_dbc_stack(). No AMB stack and no alternative ceramic or copper thickness was sampled. L1's bias depends on the Cu-to-plane gap (bottom-face current layer, image plane fixed at the backside-Cu top face), so the size of the bias, and its spread across layouts, could change with a different stack. The evidence covers only this stack and the three generated topologies.",
+      "evidence": "halfbridge.py line 109: stack = default_dbc_stack(); no stack parameter in generate_layouts.",
+      "suggested_check": "Narrow the scope to the default DBC stack, or add an AMB stratum."
+    },
+    {
+      "severity": "minor",
+      "title": "The E002 reference is converged only in lateral refinement",
+      "detail": "The L2 refinement ladder refines lateral cells only. Thickness layers (10/6/6) and wire filaments are the same at every level, so the in-run l2_converged check does not cover them. Their sensitivity was measured outside the run on one or two layouts: -0.043% for +2 layers, -0.18% for doubled layers graded at 20 MHz, +0.02% for wire filaments. These are small enough not to threaten the ranking, but they are not part of the evidence for the 'converged reference' wording.",
+      "evidence": "l2_layout.py docstring lines 49-56; research/l2_layout_vm/solve_s7_d2_r1{,_layers_x2_f20}.json: 11.0292 vs 11.0095 nH; docs/notes/o001-l2-layout-cost.md line 189.",
+      "suggested_check": "Optional: add one vertical-refinement solve per family to a future E002-class run."
+    },
+    {
+      "severity": "minor",
+      "title": "Timing evidence was measured at a different commit, on unpinned Apple silicon, and saved no per-call data",
+      "detail": "E003 ran at commit 4c8cf3e on 2026-10-12, while E002 ran at 59d3ce7. This snapshot has a single commit, so the L1 code used for timing cannot be confirmed from git. E003 saved no artifacts (no per-call times or L values), so its median cannot be recomputed. The machine was an Apple M5 without core pinning. My local rerun covers the gap: at this commit L1 reproduces E002's L1 values to 1.5e-12 and gives p50 = 17.9 ms. The \u2264 50 ms claim holds on Apple silicon but is not shown for other CPUs (for example the x86 machines used for E002).",
+      "evidence": "E003 result.json: provenance git_commit 4c8cf3e, artifacts []; E002 git_commit 59d3ce7.",
+      "suggested_check": "Save per-call timings and the L1 source hash in future E003 runs."
+    },
+    {
+      "severity": "note",
+      "title": "The evaluator never reports 'not_satisfied' for CI-based fail checks",
+      "detail": "In evaluate.judge with as_fail=True, the outcome is either 'satisfied' or 'undetermined'. So K1 (rho CI [0.990, 0.998] against a kill at < 0.80) and K2 (MAPE CI [0.092, 0.102] against a kill at > 0.20) show as 'undetermined' even though both CIs clearly rule out the kill. This is cosmetic and does not affect PASS, because a kill can still be reported as 'satisfied'.",
+      "evidence": "tools/mfos/mfos/evaluate.py lines 58-61.",
+      "suggested_check": "Return not_satisfied when the opposite CI bound also fails the kill comparator."
+    }
+  ],
+  "independent_checks_performed": [
+    "Recomputed Spearman rho (0.99585) and MAPE (0.0972) from e002_rows.json using Richardson-extrapolated L2 (r_hat = 0.5836); both match result.json",
+    "Reproduced the paired bootstrap 95% CI of spearman_rho_Lloop with seed 20261008 and 2000 resamples: [0.98972, 0.99756], exactly as reported and as used by the A2 bound",
+    "Discretisation dependence of the ranking: rho of L1 against L2_inf at L1 hmax 4/2/1/0.5 mm, and of L1 against L2 at k0/k1/inf; rankings are stable, absolute errors are not",
+    "L1 mesh-convergence study from the stored fine-mesh values: step ratios 2.36 and 1.03, showing no contraction; MAPE at 0.5 mm is 0.1215",
+    "Pairwise misordering as a function of the reference gap, within-stratum and within-family Spearman, and Kendall tau",
+    "Signed L1 bias by die count and by family, and the implied error in L(6 dies)/L(2 dies)",
+    "Regenerated the 90 E002 layouts from the recorded seed: all 90 fingerprints match; L1 at this commit matches E002's L1 values to within 1.5e-12 relative",
+    "Independent single-process L1 timing on the 90 E002 layouts on this macOS machine (BLAS threads set to 1, no pinning): p50 17.9 ms, p90 23.4 ms, max 29.5 ms",
+    "Read the evaluator's judge() logic and checked the bound each A/K criterion used against the objective.yaml uncertainty settings",
+    "Checked that the L2 layout solver imports no L1 code, and reviewed the L2 docstring and research files for vertical and wire-filament mesh sensitivity",
+    "Checked the layout generator for stack variation: only the default DBC stack is used"
+  ],
+  "caveats": [
+    "The claim is supported for ranking layouts whose loop inductances differ by more than about 5%. Below that, L1 misorders 23\u201338% of pairs.",
+    "Supported only for the generator's three families on the single default DBC stack; AMB substrates and other stack thicknesses are untested.",
+    "The L1 'model' must include its 4 mm default mesh. L1 does not converge on refinement, and its absolute values are about 10% low; A4 (MAPE \u2264 12%) would fail at hmax 0.5 mm.",
+    "L1 has a bias that grows with die count, so it overstates the inductance benefit of adding dies by about 2\u20133.5 percentage points.",
+    "The 50 ms timing is shown on Apple silicon (M5, unpinned), both in E003 and in my rerun; it is not shown on other CPUs.",
+    "Running `uv run` created an untracked .venv in the worktree; no tracked files were modified. My scratch analysis ran as inline python -c commands, because file writes to /tmp were blocked."
+  ]
+}

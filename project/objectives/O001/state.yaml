@@ -1,4 +1,4 @@
-status: evaluating
+status: passed
 approved_by: founder
 approved_at: '2026-09-29T21:47:40+00:00'
 criteria_hash: sha256:d12d77462acca9647d13f7a7092953f9d7aa450fde02ede714f7cca52ac2ad61
@@ -9,12 +9,12 @@ evaluated_runs:
   E001: E001-20261006T055428-8f45
   E002: E002-20261016T054426-b69a
   E003: E003-20261011T193042-f91e
-pending_evaluation: EV-O001-01
-pending_review_ref: c27e1da5e266a4f1dd2a0a7607a476f738986d90
+pending_evaluation: null
+pending_review_ref: null
 replans: 4
 max_replans: 3
 needs_replan: false
-spent_usd: 286.2449
+spent_usd: 287.8615
 budget_override_usd: 314.94759999999997
 log:
 - 'founder answered I0003: (b): use the provisioned binary (MF_FASTHENRY_BIN, then PATH); no auto-build.
